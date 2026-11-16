@@ -249,3 +249,34 @@ resolved head/base/source identity, missing fields, log integrity, dirty snapsho
 and their printed digest, ignored-file exclusion, output placement, timeout,
 truncation, spawn failure and SIGINT/SIGTERM/SIGHUP cleanup. These
 capture facts do not establish proof sufficiency or malicious-code containment.
+
+## Receipt consumers
+
+Review, Implement and generated verification recipes follow
+`skills/axstack/references/capture-receipts.md`. After the capture above,
+reconcile its deliberate negative-check boundary through the installed inspector:
+
+```bash
+bun -e '
+const r = await Bun.file(process.env.EVIDENCE + "/capture-run.json").json();
+const item = { id: "negative-check", head: r.requested.head, base: r.requested.base,
+  boundary: "fixture child exits seven", changedAt: "2026-01-01T00:00:00Z",
+  raisedAt: "2026-01-02T00:00:00Z", acceptedProofKinds: ["fixture"],
+  sourceScope: "tracked+untracked-nonignored", expectedExitCode: 7, previousEvidence: [] };
+const packet = { schemaVersion: 1, repository: r.repository, head: item.head, base: item.base,
+  items: [item], dispositions: [{ id: item.id, head: item.head, base: item.base,
+    boundary: item.boundary, status: "proved", proof: { id: "negative-capture", itemId: item.id,
+      kind: "fixture", observedAt: new Date().toISOString(), receipt: r.receiptPath } }] };
+await Bun.write(process.env.EVIDENCE + "/ledger.json", JSON.stringify(packet, null, 2));'
+bun "$HOME/.agents/skills/axstack/scripts/evidence-inspector.js" \
+  --input "$EVIDENCE/ledger.json" > "$EVIDENCE/inspector.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/inspector.json").json();
+if (r.terms.length !== 1 || r.terms.some(t => t.id !== "negative-check" || t.status !== "pass" ||
+  t.disposition !== "proved" || t.reasonCode !== "capture-consistent")) throw Error("item not proved");'
+bun run test tests/workflows/receipt-wiring.test.js tests/workflows/evidence-inspector.test.js \
+  tests/workflows/evidence-inspector-cli.test.js > "$EVIDENCE/receipt-consumers.log" 2>&1
+```
+
+This offline fixture demonstrates citation and reconciliation, not the live review
+acceptance. The driver reviews this candidate using the new receipt, judges each
+term's disposition and proof sufficiency, and records that real review separately.
