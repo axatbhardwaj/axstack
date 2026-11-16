@@ -8,7 +8,7 @@
     },
     {
       "name": "PATH",
-      "value": "/opt/node-24/bin:/opt/rust/bin:/opt/cargo-tools/bin:/opt/jdk-25/bin:/opt/go/bin:/opt/gradle/gradle-9.6.0/bin:/opt/kotlin/kotlinc/bin:/opt/android/cmdline-tools/23.0/bin:/opt/android/platform-tools:/opt/foundry:/opt/terraform:/opt/python-3.12/bin:/usr/local/bin:/usr/bin:/bin"
+      "value": "/opt/node-24/bin:/opt/rust/bin:/opt/cargo-tools/bin:/opt/jdk-25/bin:/opt/go/bin:/opt/gradle/gradle-9.6.0/bin:/opt/kotlin/kotlinc/bin:/opt/android/cmdline-tools/23.0/bin:/opt/android/platform-tools:/opt/foundry:/opt/terraform:/opt/python-3.12/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib/postgresql/16/bin:/usr/lib/postgresql/17/bin:/usr/share/grafana/bin"
     },
     {
       "name": "LANG",
@@ -36,7 +36,7 @@
     },
     {
       "name": "GOCACHE",
-      "value": "/dependencies/go-build"
+      "value": "/work/.cache/go-build"
     },
     {
       "name": "GOMODCACHE",
@@ -44,7 +44,7 @@
     },
     {
       "name": "GRADLE_USER_HOME",
-      "value": "/dependencies/gradle"
+      "value": "/work/.gradle"
     },
     {
       "name": "JAVA_HOME",
@@ -68,7 +68,15 @@
     },
     {
       "name": "GRADLE_RO_DEP_CACHE",
-      "value": "/opt/gradle-cache/caches/modules-2"
+      "value": "/opt/gradle-cache/caches"
+    },
+    {
+      "name": "JAVA_TOOL_OPTIONS",
+      "value": "-Djava.io.tmpdir=/work -Djansi.tmpdir=/work -Duser.home=/work"
+    },
+    {
+      "name": "GOTMPDIR",
+      "value": "/work"
     }
   ],
   "workloadCaps": {
@@ -101,12 +109,12 @@
     "logDriver": "local",
     "restart": "no"
   },
-  "writableBytes": 268435456,
+  "writableBytes": 805306368,
   "dependencyBytes": 8589934592,
   "dependencyInodes": 1048576,
   "sourceMaxBytes": 268435456,
   "captureMaxBytes": 8388608,
-  "receiptMaxBytes": 4194304,
+  "receiptMaxBytes": 16777216,
   "wallTimeSeconds": 900,
   "graceSeconds": 10,
   "maxWallTimeSeconds": 910
