@@ -42,6 +42,22 @@ test('CLI distinguishes measured fail, unknown and invalid invocation', () => {
   }
 });
 
+test('null history entry yields a clear unknown term and preserves sibling results', () => {
+  const p = packet();
+  p.items[0].previousEvidence = [null];
+  Object.assign(p.dispositions[0], { status: 'proved', proof: {
+    id: 'new-run', itemId: 'one', kind: 'runtime', observedAt: '2026-01-03T00:00:00Z', receipt: {},
+  } });
+  p.items.push({ ...p.items[0], id: 'two', previousEvidence: [] });
+  p.dispositions.push({ id: 'two', head, base, boundary: item.boundary, status: 'open' });
+  const r = cli('--input', write('null-history.json', p));
+  expect(r.exitCode).toBe(2);
+  expect(r.stderr.toString()).toBe('');
+  expect(JSON.parse(r.stdout).terms.map(t => [t.id, t.status, t.reasonCode])).toEqual([
+    ['one', 'unknown', 'previous-evidence-invalid'], ['two', 'fail', 'limitation-open'],
+  ]);
+});
+
 test('real capture v1 consumed by relative receipt path, cached terms ignored, bytes unchanged', () => {
   const source = `${temporary}/source`, evidence = `${temporary}/capture`;
   mkdirSync(source, { mode: 0o700 }); mkdirSync(evidence, { mode: 0o700 });
