@@ -7,14 +7,14 @@
       "argv": [
         "sh",
         "-ec",
-        "printf 'sandbox:x:1000:1000:sandbox:/tmp:/bin/sh\\n' > /tmp/passwd; printf 'sandbox:x:1000:\\n' > /tmp/group; export NSS_WRAPPER_PASSWD=/tmp/passwd NSS_WRAPPER_GROUP=/tmp/group LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libnss_wrapper.so; initdb -D /var/lib/postgresql/data --username=postgres --auth=trust; exec postgres -D /var/lib/postgresql/data -c listen_addresses='*' -c unix_socket_directories=/tmp"
+        "printf 'sandbox:x:61234:61234:sandbox:/tmp:/bin/sh\\n' > /tmp/passwd; printf 'sandbox:x:61234:\\n' > /tmp/group; export NSS_WRAPPER_PASSWD=/tmp/passwd NSS_WRAPPER_GROUP=/tmp/group LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libnss_wrapper.so; initdb -D /var/lib/postgresql/data --username=postgres --auth=trust; exec postgres -D /var/lib/postgresql/data -c listen_addresses='*' -c unix_socket_directories=/tmp"
       ],
       "declaredVolumes": [
         {
           "path": "/var/lib/postgresql/data",
           "bytes": 536870912,
-          "uid": 1000,
-          "gid": 1000,
+          "uid": 61234,
+          "gid": 61234,
           "mode": "0700",
           "noexec": true
         }
@@ -26,14 +26,14 @@
       "argv": [
         "sh",
         "-ec",
-        "printf 'sandbox:x:1000:1000:sandbox:/tmp:/bin/sh\\n' > /tmp/passwd; printf 'sandbox:x:1000:\\n' > /tmp/group; export NSS_WRAPPER_PASSWD=/tmp/passwd NSS_WRAPPER_GROUP=/tmp/group LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libnss_wrapper.so; initdb -D /var/lib/postgresql/data --username=postgres --auth=trust; exec postgres -D /var/lib/postgresql/data -c listen_addresses='*' -c unix_socket_directories=/tmp"
+        "printf 'sandbox:x:61234:61234:sandbox:/tmp:/bin/sh\\n' > /tmp/passwd; printf 'sandbox:x:61234:\\n' > /tmp/group; export NSS_WRAPPER_PASSWD=/tmp/passwd NSS_WRAPPER_GROUP=/tmp/group LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libnss_wrapper.so; initdb -D /var/lib/postgresql/data --username=postgres --auth=trust; exec postgres -D /var/lib/postgresql/data -c listen_addresses='*' -c unix_socket_directories=/tmp"
       ],
       "declaredVolumes": [
         {
           "path": "/var/lib/postgresql/data",
           "bytes": 536870912,
-          "uid": 1000,
-          "gid": 1000,
+          "uid": 61234,
+          "gid": 61234,
           "mode": "0700",
           "noexec": true
         }
@@ -59,8 +59,8 @@
         {
           "path": "/data",
           "bytes": 268435456,
-          "uid": 1000,
-          "gid": 1000,
+          "uid": 61234,
+          "gid": 61234,
           "mode": "0700",
           "noexec": true
         }
@@ -85,8 +85,8 @@
         {
           "path": "/data",
           "bytes": 268435456,
-          "uid": 1000,
-          "gid": 1000,
+          "uid": 61234,
+          "gid": 61234,
           "mode": "0700",
           "noexec": true
         }
@@ -104,8 +104,8 @@
         {
           "path": "/prometheus",
           "bytes": 268435456,
-          "uid": 1000,
-          "gid": 1000,
+          "uid": 61234,
+          "gid": 61234,
           "mode": "0700",
           "noexec": true
         }
@@ -123,8 +123,8 @@
         {
           "path": "/var/lib/grafana",
           "bytes": 268435456,
-          "uid": 1000,
-          "gid": 1000,
+          "uid": 61234,
+          "gid": 61234,
           "mode": "0700",
           "noexec": true
         }
