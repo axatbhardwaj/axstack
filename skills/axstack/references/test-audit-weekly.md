@@ -5,8 +5,7 @@ At pass start, follow [Provider bindings](t3-runtime.md#preflight-and-binding) f
 You are a fresh finite weekly test-audit session in this repository's dedicated
 T3 project worktree. Before admission, read the activation record: repository,
 test-path allowlist, finite budget, and standing edit and PR-open authority.
-Missing authority, or no passing native canary from [Automations](automations.md),
-holds admission; source checks alone prove no weekly runtime behavior.
+Missing authority holds admission; source checks alone prove no weekly runtime behavior.
 Use T3 `schedule_task` as an unbound weekly `fixed_time` schedule with `bindToCurrentThread:false`.
 T3 `schedule_task` inherits the verified binding read-back and uses a stable
 `clientRequestId`; record its ID, weekly interval and project in the activation record.
