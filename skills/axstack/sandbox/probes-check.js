@@ -29,7 +29,7 @@ export function classifyConnection(result, target, expected) {
     if (!/^net:\[\d+\]$/.test(host) || !/^net:\[\d+\]$/.test(container)) return unknown();
     return { status: expected === 'deny' && host !== container ? 'pass' : 'fail', evidence: [JSON.stringify(result)] };
   }
-  let reachable;
+  let reachable, retained = result;
   if (target.protocol === 'icmp') {
     if (![0, 1].includes(result.exitCode)) return unknown();
     reachable = result.exitCode === 0;
@@ -45,12 +45,13 @@ export function classifyConnection(result, target, expected) {
   } else {
     let output;
     try { output = JSON.parse(result.stdout); } catch { return unknown(); }
+    retained = { ...result, stdout: JSON.stringify({ remote_ip: output.remote_ip, http_connect: output.http_connect, http_code: output.http_code }) };
     if (Number(output.http_connect) === 403) reachable = false;
     else if (output.remote_ip) reachable = true;
     else if ([6, 7, 28].includes(result.exitCode)) reachable = false;
     else return unknown();
   }
-  return { status: reachable === (expected === 'allow') ? 'pass' : 'fail', evidence: [JSON.stringify(result)] };
+  return { status: reachable === (expected === 'allow') ? 'pass' : 'fail', evidence: [JSON.stringify(retained)] };
 }
 
 export function createProbeChecker({ runner = execute, readText = (path) => Bun.file(path).text(), readNamespace = readlink, readProxyConfig = () => Bun.file(new URL('./proxy-config.json', import.meta.url)).json() } = {}) {
@@ -103,7 +104,7 @@ async function network(id, expected, target, proxyId) {
     argv = ['dig', ...(udpBefore ? ['-b', `${target.address.includes(':') ? '::' : '0.0.0.0'}#${udpProbePort}`] : []), `@${resolver}`, '-p', String(target.port ?? 53), '+time=2', '+tries=1', target.protocol === 'tcp' ? '+tcp' : '+notcp', target.kind === 'dns' ? target.address : 'example.com', 'A'];
   } else {
     const host = target.address.includes(':') ? `[${target.address}]` : target.address;
-    argv = ['curl', '--silent', '--show-error', '--insecure', '--connect-timeout', '2', '--max-time', '4', '--location', '--max-redirs', '5', '--output', '/dev/null', '--write-out', '%{json}', '--noproxy', '*'];
+    argv = ['curl', '--silent', '--show-error', '--insecure', '--connect-timeout', '2', '--max-time', '4', '--location', '--max-redirs', '5', '--output', '/dev/null', '--write-out', '{"remote_ip":"%{remote_ip}","http_connect":%{http_connect},"http_code":%{http_code}}', '--noproxy', '*'];
     if (proxyId) {
       const proxy = await liveContainer(proxyId);
       const peers = Object.entries(proxy.NetworkSettings.Networks).filter(([name]) => container.NetworkSettings.Networks[name]);
