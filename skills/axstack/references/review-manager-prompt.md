@@ -2,9 +2,9 @@
 
 First command of every pass, quiet check included: use an owned 0700 TMPDIR under the system temp dir (never under $HOME or a shared root); give each PR job its own TMPDIR. The login shell is fish; write shell commands in bash syntax and run them with bash.
 
-At the start of every pass, before any quiet exit, follow [Sandbox reap](../sandbox/reap.md).
+At start of every pass before quiet exit, follow [Sandbox reap](../sandbox/reap.md).
 
-Run the quiet check before invoking `axstack-review` or reading any `skills/**` file except the reap step above.
+Run the quiet check before invoking `axstack-review` or reading any `skills/**` file except reap.
 
 Resolve self: `gh api user --jq .login`, union two paginated `gh search prs`
 queries (`review-requested:@me` and `involves:@me`), each with `--limit 1000`,
@@ -17,6 +17,7 @@ descendants, by exact lane identity.
 Read `~/.local/share/axstack/runs/review-manager/progress.md` and
 compare Watermarks with inventory:
 
+- Run the full pass when reap fails or Docker is missing.
 - Run the full pass when the sorted list differs from `Quiet gate:`.
 - Run the full pass when any other lane thread is non-terminal.
 - Run the full pass only when the recorded prior pass thread is unsettled and no guard keeps it unsettled.
@@ -41,22 +42,23 @@ Otherwise run the full pass; incomplete evidence retains admission/cleanup holds
 
 ## Full pass
 
-Run a fresh finite T3 review-manager pass in `axstack-review-lane` on the VPS's existing
+Follow [Provider bindings](t3-runtime.md#preflight-and-binding).
+
+Run a fresh finite T3 review-manager pass in project `axstack-review-lane` on VPS's existing
 `axatbhardwaj/axstack` clone. Fetch first; this unbound
 pass worktree starts from `origin/main`. Enter through installed `axstack-review`,
-which loads `../axstack/references/automations.md` relatively. Read it
-and [T3 runtime](t3-runtime.md). Reconcile lane ownership and duplicate status,
-then follow [Provider bindings](t3-runtime.md#preflight-and-binding) for shared schedule
+which loads `../axstack/references/automations.md` relatively. Read [T3 runtime](t3-runtime.md). Reconcile lane ownership and duplicate status,
+then follow Provider bindings for shared schedule
 recreation and recorded instance update before verifying the recorded `axstack-owner`
 binding before admission. At pass start, every pass, including a duplicate,
 settles finished predecessor and duplicate pass threads under the Finite-session
 teardown guards before admission. Discover all eligible peer-review events and admit within measured host capacity.
-Use host-clone detached per-PR checkouts; retain ownership and receipts.
+Use host-clone detached per-PR checkouts; preserve exact ownership and receipts.
 Report retained worktree count and disable the schedule and hold past its
 authorized limit. Only the owner retires settled predecessors and saves/reads back
 `~/.local/share/axstack/runs/review-manager/progress.md` using
 `run-record.md#review-manager-continuity-template`.
-The full pass records Watermarks: `Quiet gate:` as the sorted list and
+Full pass records Watermarks: `Quiet gate:` as the sorted list and
 `Last full pass:` as UTC only as owner-of-record, then reads back the save.
 Settle descendants and end the finite turn. Stay quiet when unchanged.
 Never check out a PR branch here.
