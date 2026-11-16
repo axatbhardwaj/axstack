@@ -12,10 +12,10 @@ For separate aggregate and project-driver records, follow
 
 ## Location and identity
 
-In a Git repository, initialize with:
+From trusted cwd `/`, initialize for a Git repository:
 
 ```sh
-bun scripts/run-init.js --slug local-progress
+bun --no-env-file <installed-axstack>/scripts/run-init.js --repo <repo-path> --slug local-progress
 ```
 Prints JSON paths for a new shared private run record, evidence and owned scratch, plus revision/inputs.
 
