@@ -31,7 +31,11 @@ export function classifyConnection(result, target, expected) {
     return { status: expected === 'deny' && host !== container ? 'pass' : 'fail', evidence: [JSON.stringify(result)] };
   }
   let reachable, retained = result;
-  if (target.protocol === 'icmp') {
+  if (target.service && target.protocol === 'tcp') {
+    let output; try { output = JSON.parse(result.stdout); } catch { return unknown(); }
+    if (typeof output.tcpConnected !== 'boolean' || output.tcpConnected && !output.peerAddress) return unknown();
+    reachable = output.tcpConnected;
+  } else if (target.protocol === 'icmp') {
     if (![0, 1].includes(result.exitCode) && !(result.exitCode === 2 && /^ping: connect: Network is unreachable\s*$/.test(result.stderr))) return unknown();
     reachable = result.exitCode === 0;
   } else if (target.protocol === 'udp' || target.kind === 'dns') {
@@ -105,7 +109,10 @@ async function network(id, expected, target, proxyId) {
   const routeAbsent = udpDenied && await noRoute();
   const udpBefore = udpDenied && !routeAbsent ? await udpSnapshot(container, runner) : null;
   let argv, resolution;
-  if (target.protocol === 'icmp') {
+  if (target.service && target.protocol === 'tcp') {
+    const connect = `const [hostname, port] = Bun.argv.slice(1); const timer = setTimeout(() => { console.log(JSON.stringify({tcpConnected:false,error:'timeout'})); process.exit(0); }, 2000); try { const socket = await Bun.connect({hostname,port:Number(port),socket:{data(){},error(){},close(){}}}); console.log(JSON.stringify({tcpConnected:true,peerAddress:socket.remoteAddress})); socket.terminate(); } catch(error) { console.log(JSON.stringify({tcpConnected:false,error:String(error.code)})); } finally { clearTimeout(timer); }`;
+    argv = [process.execPath, '--eval', connect, '--', target.address, String(target.port)];
+  } else if (target.protocol === 'icmp') {
     argv = ['ping', '-n', '-c', '1', '-W', '2', target.address];
   } else if (udpBefore) {
     // send() reaches the kernel synchronously; the fresh terminal-drop counter,
@@ -166,7 +173,7 @@ if (import.meta.main) {
       if (mode === 'identity') result = await checker.identity(id);
       else if (mode === 'network') {
         const value = JSON.parse(raw);
-        const target = Array.isArray(value) ? Object.fromEntries(['kind', 'address', 'port', 'protocol', 'id', 'redirect'].map((key, i) => [key, value[i]])) : value;
+        const target = Array.isArray(value) ? Object.fromEntries(['kind', 'address', 'port', 'protocol', 'id', 'redirect', 'service'].map((key, i) => [key, value[i]])) : value;
         result = await checker.network(id, expected, target, proxyId);
       }
       else throw Error('invalid probe mode; use --help');
