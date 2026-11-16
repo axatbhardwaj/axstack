@@ -1,4 +1,7 @@
+import { readlink } from 'node:fs/promises';
 import { execute } from './probes-exec.js';
+
+const loopback = (address) => /^127\./.test(address) || address === '::1';
 
 /** Inspect every process returned by Docker top, including pid 1, without image tools. */
 export function inspectIdentity(statuses) {
@@ -18,8 +21,18 @@ export function inspectIdentity(statuses) {
 export function classifyConnection(result, target, expected) {
   const unknown = () => ({ status: 'unknown', evidence: [JSON.stringify(result)] });
   if (result.timedOut || result.truncated) return unknown();
+  // A socket to loopback in the container cannot identify a host listener.
+  // Prove distinct live network namespaces instead of probing the wrong endpoint.
+  if (loopback(target.address)) {
+    const { hostNetworkNamespace: host, containerNetworkNamespace: container } = result;
+    if (!/^net:\[\d+\]$/.test(host) || !/^net:\[\d+\]$/.test(container)) return unknown();
+    return { status: expected === 'deny' && host !== container ? 'pass' : 'fail', evidence: [JSON.stringify(result)] };
+  }
   let reachable;
-  if (target.protocol === 'udp' || target.kind === 'dns') {
+  if (target.protocol === 'icmp') {
+    if (![0, 1].includes(result.exitCode)) return unknown();
+    reachable = result.exitCode === 0;
+  } else if (target.protocol === 'udp' || target.kind === 'dns') {
     if (/status: (NOERROR|NXDOMAIN|REFUSED|SERVFAIL)/.test(result.stdout) && result.exitCode === 0) {
       reachable = target.kind === 'dns' ? /ANSWER:\s*[1-9]\d*/.test(result.stdout) : true;
     }
@@ -63,9 +76,16 @@ async function network(id, expected, target, proxyId) {
   if (!['allow', 'deny'].includes(expected)) throw Error('invalid expected outcome');
   const container = await liveContainer(id), pid = container.State.Pid;
   const start = await Bun.file(`/proc/${pid}/stat`).text();
+  if (loopback(target.address)) {
+    const [hostNetworkNamespace, containerNetworkNamespace] = await Promise.all([readlink('/proc/self/ns/net'), readlink(`/proc/${pid}/ns/net`)]);
+    if ((await liveContainer(id)).State.Pid !== pid) throw Error('container replaced during namespace observation');
+    return classifyConnection({ hostNetworkNamespace, containerNetworkNamespace }, target, expected);
+  }
   const prefix = ['nsenter', '--target', String(pid), '--net', '--', 'setpriv', '--reuid=65534', '--regid=65534', '--clear-groups', '--bounding-set=-all', '--inh-caps=-all', '--ambient-caps=-all', '--no-new-privs', '--'];
   let argv;
-  if (target.kind === 'dns' || target.protocol === 'udp') {
+  if (target.protocol === 'icmp') {
+    argv = ['ping', '-n', '-c', '1', '-W', '2', target.address];
+  } else if (target.kind === 'dns' || target.protocol === 'udp') {
     const resolver = target.kind === 'dns' ? target.id.includes('-stub:') ? '127.0.0.11' : target.id.startsWith('tailnet-dns:') ? '100.100.100.100' : '8.8.8.8' : target.address;
     argv = ['dig', `@${resolver}`, '-p', String(target.port ?? 53), '+time=2', '+tries=1', target.protocol === 'tcp' ? '+tcp' : '+notcp', target.kind === 'dns' ? target.address : 'example.com', 'A'];
   } else {
@@ -94,7 +114,7 @@ async function network(id, expected, target, proxyId) {
 if (import.meta.main) {
   const [mode, id, expected, raw, proxyId] = Bun.argv.slice(2);
   if (mode === '--help') {
-    console.log('Usage: bun probes-check.js identity CONTAINER | network CONTAINER allow|deny TARGET_JSON [PROXY_CONTAINER]\nTrusted synthetic probes only. Reads Docker inspect/top and /proc; starts bounded docker, nsenter, setpriv, curl/dig processes; temporarily enters the container network namespace only; drops user/capabilities before sockets. No mounts, files, rules or containers created. No cleanup assets. Requires host root, Docker, util-linux, curl and dnsutils. Outputs one pass/fail/unknown term; grants no authority. Exit 0 facts, 1 invalid input, 2 incomplete.');
+    console.log('Usage: bun probes-check.js identity CONTAINER | network CONTAINER allow|deny TARGET_JSON [PROXY_CONTAINER]\nTrusted synthetic probes only. Reads Docker inspect/top and /proc; starts bounded docker, nsenter, setpriv, curl/dig/ping processes; temporarily enters the container network namespace only; drops user/capabilities before sockets. No mounts, files, rules or containers created. No cleanup assets. Requires host root, Docker, util-linux, curl, dnsutils and iputils-ping. Outputs one pass/fail/unknown term; grants no authority. Exit 0 facts, 1 invalid input, 2 incomplete.');
   } else {
     let result;
     try {
