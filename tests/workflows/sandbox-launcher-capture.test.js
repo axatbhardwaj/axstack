@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from 'bun:test';
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { runCommand } from '../../skills/axstack/scripts/command-capture.js';
-import { saveReceipt, verifyCapture } from '../../skills/axstack/sandbox/launcher-capture.js';
+import { saveReceipt, verifyCapture, recordCapture } from '../../skills/axstack/sandbox/launcher-capture.js';
 import { createLauncher } from '../../skills/axstack/sandbox/launcher.js';
 import { fixture, planners } from './sandbox-launcher-fixture.js';
 
@@ -76,4 +76,13 @@ test('sandbox envelope is rejected before writing beyond the receipt directory c
   const p = createLauncher(planners()).plan(fixture()); p.policy.receiptMaxBytes = 1;
   await expect(saveReceipt({ schemaVersion: 1 }, root, p)).rejects.toMatchObject({ sandboxHold: true });
   expect(readdirSync(root)).toEqual([]);
+});
+
+test('a failed fresh D filesystem check prevents capture from spawning any PR command', async () => {
+  const { p, step } = await captured();
+  const evidence = step.receiptPath.slice(0, step.receiptPath.lastIndexOf('/'));
+  p.policy.receiptMaxBytes = 4 * 1024 ** 2;
+  let checked = false;
+  await expect(recordCapture(p, evidence, () => { if (!checked) throw Error('capture phase reached before storage check'); }, async () => { checked = true; throw Object.assign(Error('synthetic changed filesystem'), { sandboxHold: true }); })).rejects.toThrow('synthetic changed filesystem');
+  expect(checked).toBe(true);
 });
