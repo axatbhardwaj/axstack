@@ -1,4 +1,153 @@
 {
   "schemaVersion": 1,
-  "images": []
+  "images": [
+    {
+      "id": "postgres16",
+      "image": "docker.io/library/postgres@sha256:a49f7438ba03589f9b1ca062f2da82e899b48ea1dc50d2449fa09a70be83ebca",
+      "argv": [
+        "sh",
+        "-ec",
+        "printf 'sandbox:x:1000:1000:sandbox:/tmp:/bin/sh\\n' > /tmp/passwd; printf 'sandbox:x:1000:\\n' > /tmp/group; export NSS_WRAPPER_PASSWD=/tmp/passwd NSS_WRAPPER_GROUP=/tmp/group LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libnss_wrapper.so; initdb -D /var/lib/postgresql/data --username=postgres --auth=trust; exec postgres -D /var/lib/postgresql/data -c listen_addresses='*' -c unix_socket_directories=/tmp"
+      ],
+      "declaredVolumes": [
+        {
+          "path": "/var/lib/postgresql/data",
+          "bytes": 536870912,
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0700",
+          "noexec": true
+        }
+      ]
+    },
+    {
+      "id": "postgres17",
+      "image": "docker.io/library/postgres@sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+      "argv": [
+        "sh",
+        "-ec",
+        "printf 'sandbox:x:1000:1000:sandbox:/tmp:/bin/sh\\n' > /tmp/passwd; printf 'sandbox:x:1000:\\n' > /tmp/group; export NSS_WRAPPER_PASSWD=/tmp/passwd NSS_WRAPPER_GROUP=/tmp/group LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libnss_wrapper.so; initdb -D /var/lib/postgresql/data --username=postgres --auth=trust; exec postgres -D /var/lib/postgresql/data -c listen_addresses='*' -c unix_socket_directories=/tmp"
+      ],
+      "declaredVolumes": [
+        {
+          "path": "/var/lib/postgresql/data",
+          "bytes": 536870912,
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0700",
+          "noexec": true
+        }
+      ]
+    },
+    {
+      "id": "redis",
+      "image": "docker.io/library/redis@sha256:2e3eb11462c4e3759e6972678dd051d150ff54b1e60714b3c33b701260172a90",
+      "argv": [
+        "redis-server",
+        "--save",
+        "60 1",
+        "--appendonly",
+        "no",
+        "--protected-mode",
+        "no",
+        "--bind",
+        "0.0.0.0",
+        "--dir",
+        "/data"
+      ],
+      "declaredVolumes": [
+        {
+          "path": "/data",
+          "bytes": 268435456,
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0700",
+          "noexec": true
+        }
+      ]
+    },
+    {
+      "id": "azurite",
+      "image": "mcr.microsoft.com/azure-storage/azurite@sha256:830430c1da1a2d537e08f3e6764dd1f5ae00cf0346bcaf625b968ec3f0971fd5",
+      "argv": [
+        "azurite",
+        "--location",
+        "/data",
+        "--blobHost",
+        "0.0.0.0",
+        "--queueHost",
+        "0.0.0.0",
+        "--tableHost",
+        "0.0.0.0",
+        "--silent"
+      ],
+      "declaredVolumes": [
+        {
+          "path": "/data",
+          "bytes": 268435456,
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0700",
+          "noexec": true
+        }
+      ]
+    },
+    {
+      "id": "prometheus",
+      "image": "docker.io/prom/prometheus@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e",
+      "argv": [
+        "--config.file=/etc/prometheus/prometheus.yml",
+        "--storage.tsdb.path=/prometheus",
+        "--storage.tsdb.retention.size=128MB"
+      ],
+      "declaredVolumes": [
+        {
+          "path": "/prometheus",
+          "bytes": 268435456,
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0700",
+          "noexec": true
+        }
+      ]
+    },
+    {
+      "id": "grafana",
+      "image": "docker.io/grafana/grafana@sha256:b28bae15e219c998fb0e0424ed724930cc61b1f61fb404d47c862f9a23f9e572",
+      "argv": [
+        "cfg:default.paths.data=/var/lib/grafana",
+        "cfg:default.paths.logs=/tmp",
+        "cfg:default.paths.plugins=/var/lib/grafana/plugins"
+      ],
+      "declaredVolumes": [
+        {
+          "path": "/var/lib/grafana",
+          "bytes": 268435456,
+          "uid": 1000,
+          "gid": 1000,
+          "mode": "0700",
+          "noexec": true
+        }
+      ]
+    },
+    {
+      "id": "otel",
+      "image": "docker.io/otel/opentelemetry-collector@sha256:310a800ad69ee430e7c541796852a242c9c7db97aaad4daa5ccf843c525fbdb2",
+      "argv": [
+        "--config",
+        "yaml:receivers:\n  otlp:\n    protocols:\n      grpc:\n        endpoint: 0.0.0.0:4317\n      http:\n        endpoint: 0.0.0.0:4318\nexporters:\n  debug: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [debug]\n"
+      ],
+      "declaredVolumes": []
+    },
+    {
+      "id": "nginx",
+      "image": "docker.io/library/nginx@sha256:552e7481ca93ffccd046aa658dbbed22caefbc09c66fa7cd247cbb90b8a5c609",
+      "argv": [
+        "sh",
+        "-ec",
+        "printf '%s\\n' 'pid /tmp/nginx.pid; error_log /dev/stderr; events {} http { access_log /dev/stdout; client_body_temp_path /tmp/client; proxy_temp_path /tmp/proxy; fastcgi_temp_path /tmp/fastcgi; uwsgi_temp_path /tmp/uwsgi; scgi_temp_path /tmp/scgi; server { listen 8080; location / { return 200 \"sandbox\\n\"; } } }' > /tmp/nginx.conf; exec nginx -c /tmp/nginx.conf -g 'daemon off;'"
+      ],
+      "declaredVolumes": []
+    }
+  ]
 }
