@@ -193,13 +193,14 @@ git -C "$TMPDIR/capture-repo" -c user.name=Fixture -c user.email=f@x commit --al
 CAPTURE_HEAD=$(git -C "$TMPDIR/capture-repo" rev-parse HEAD)
 CAPTURE="$HOME/.agents/skills/axstack/scripts/check-run.js"
 bun "$CAPTURE" --help > "$EVIDENCE/capture-help.log"
-bun "$CAPTURE" --repo "$TMPDIR/capture-repo" --repository fixture:capture --head "$CAPTURE_HEAD" --base "$CAPTURE_HEAD" --out "$EVIDENCE/capture" -- bun -e 'process.exit(7)' > "$EVIDENCE/capture-run.json"
-bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/capture-run.json").json(); if (r.schemaVersion !== 1 || r.exitCode !== 7 || r.terms.some(t => t.status !== "pass")) throw Error("capture protocol mismatch");'
+bun "$CAPTURE" --repo "$TMPDIR/capture-repo" --repository fixture:capture --head HEAD --base HEAD --out "$EVIDENCE/capture" -- bun -e 'process.exit(7)' > "$EVIDENCE/capture-run.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/capture-run.json").json(); if (r.schemaVersion !== 1 || r.exitCode !== 7 || r.requested.head !== r.sourceBefore.head || r.requested.base !== r.sourceBefore.base || r.requestedRefs.head !== "HEAD" || r.terms.some(t => t.status !== "pass")) throw Error("capture protocol mismatch");'
 bun run test tests/workflows/capture.test.js tests/workflows/check-run.test.js > "$EVIDENCE/capture-tests.log" 2>&1
 env -u TMPDIR bun test tests/workflows/capture.test.js tests/workflows/check-run.test.js > "$EVIDENCE/capture-unset.log" 2>&1
 ```
 
 Proof: wrapper exit 0 retains child exit 7; negative fixtures cover repository,
-head/base/source identity, missing fields, log integrity, dirty snapshots,
-output placement, timeout, truncation, spawn failure and interruption. These
+resolved head/base/source identity, missing fields, log integrity, dirty snapshots
+and their printed digest, ignored-file exclusion, output placement, timeout,
+truncation, spawn failure and SIGINT/SIGTERM/SIGHUP cleanup. These
 capture facts do not establish proof sufficiency or malicious-code containment.
