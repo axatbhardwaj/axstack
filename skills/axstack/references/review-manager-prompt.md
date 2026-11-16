@@ -54,7 +54,8 @@ teardown guards before admission. Discover all eligible peer-review events and a
 Use host-clone detached per-PR checkouts; retain ownership and receipts.
 Report retained worktree count and disable the schedule and hold past its
 authorized limit. Only the owner retires settled predecessors and saves/reads back
-`~/.local/share/axstack/runs/review-manager/progress.md` using the template below.
+`~/.local/share/axstack/runs/review-manager/progress.md` using
+`run-record.md#review-manager-continuity-template`.
 The full pass records Watermarks: `Quiet gate:` as the sorted list and
 `Last full pass:` as UTC only as owner-of-record, then reads back the save.
 Settle descendants and end the finite turn. Stay quiet when unchanged.
