@@ -2,14 +2,28 @@ import { authorizeTunnel, proxyEnvironment } from './proxy-policy.js';
 import { resolveRegistry } from './proxy-dns.js';
 
 // B owns argv/caps. proxy-command.js bundles only these trusted package assets.
-export function startProxy({ port, hostAddresses, resolve = resolveRegistry, connect = Bun.connect }) {
+export function startProxy({ port, hostAddresses, resolve = resolveRegistry, connect = Bun.connect, listen = Bun.listen }) {
   const sessions = new Set();
-  // Bun can deliver a 512 KiB TCP read; retain at most 1 MiB per direction.
+  // Retain at most 1 MiB per direction, with peer reads paused on pressure.
   const maxBufferedBytes = 1048576;
   function close(session) {
     if (session.closed) return;
     session.closed = true;
     session.client?.terminate(); session.upstream?.terminate(); sessions.delete(session);
+  }
+  function finish(socket) {
+    if (!socket || socket.data.session.closed) return;
+    socket.data.ending = true;
+    if (!socket.data.pending.length) socket.end();
+  }
+  function ended(socket) {
+    const session = socket.data.session;
+    finish(socket === session.client ? session.upstream : session.client);
+  }
+  function disconnected(socket) {
+    const session = socket.data.session;
+    socket.data.disconnected = true; ended(socket);
+    if (!session.upstream || session.client.data.disconnected && session.upstream.data.disconnected) sessions.delete(session);
   }
   function flush(socket, bytes = Buffer.alloc(0), source) {
     const state = socket.data;
@@ -23,6 +37,7 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
     // Stop reading the peer while its destination is backpressured.
     // The fixed pending cap still rejects oversized/in-flight bursts.
     if (state.pending.length) state.source?.pause();
+    else if (state.ending) socket.end();
     else state.source?.resume();
   }
   function deny(session) {
@@ -46,10 +61,10 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
       const target = await authorizeTunnel({ authority: request[1], resolve, hostAddresses });
       if (session.closed) return;
       // Connect to the validated numeric address. No second DNS lookup or fallback.
-      const upstream = await connect({ hostname: target.addresses[0], port: 443, data: { session, pending: Buffer.alloc(0) }, socket: {
+      const upstream = await connect({ allowHalfOpen: true, hostname: target.addresses[0], port: 443, data: { session, pending: Buffer.alloc(0) }, socket: {
         data: (socket, bytes) => flush(session.client, Buffer.from(bytes), socket),
         drain: socket => flush(socket),
-        close: () => close(session), error: () => close(session), timeout: () => close(session),
+        end: ended, close: disconnected, error: () => close(session), timeout: () => close(session),
       } });
       if (session.closed) { upstream.terminate(); return; }
       session.upstream = upstream; upstream.timeout(30);
@@ -59,7 +74,7 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
       session.waiting = Buffer.alloc(0);
     } catch (error) { console.error('proxy tunnel denied:', String(error.message).slice(0, 256)); deny(session); }
   }
-  const listener = Bun.listen({ hostname: '::', port, data: undefined, socket: {
+  const listener = listen({ allowHalfOpen: true, hostname: '::', port, data: undefined, socket: {
     open(client) {
       const session = { client, upstream: null, waiting: Buffer.alloc(0), header: Buffer.alloc(0), connecting: false, closed: false };
       client.data = { session, pending: Buffer.alloc(0) };
@@ -86,7 +101,7 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
       void establish(session, header);
     },
     drain: socket => flush(socket),
-    close: socket => close(socket.data.session), error: socket => close(socket.data.session), timeout: socket => close(socket.data.session),
+    end: ended, close: disconnected, error: socket => close(socket.data.session), timeout: socket => close(socket.data.session),
   } });
   return { port: listener.port, stop() { for (const session of sessions) close(session); listener.stop(true); } };
 }
