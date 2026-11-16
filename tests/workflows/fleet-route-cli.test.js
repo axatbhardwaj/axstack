@@ -1,10 +1,11 @@
 import { expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { makeTempDir } from '../temp-dir.js';
 import { fixture, NOW } from './fleet-route-fixture.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/fleet-route.js`;
 function setup() {
-  const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/fleet-cli-`);
+  const dir = makeTempDir(`${process.env.TMPDIR ?? '/tmp'}/fleet-cli-`);
   const f = fixture();
   const save = (name, value) => {
     const path = `${dir}/${name}`;

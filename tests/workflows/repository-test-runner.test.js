@@ -17,6 +17,8 @@ function fixture(source) {
     mkdirSync(`${cwd}/skills/axstack/scripts`, { recursive: true });
     copyFileSync(`${repo}/${runner}`, `${cwd}/${runner}`);
   }
+  mkdirSync(`${cwd}/tests`);
+  copyFileSync(`${repo}/tests/run-all.js`, `${cwd}/tests/run-all.js`);
   return cwd;
 }
 
