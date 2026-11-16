@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 
 const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/live-run-`);
 const script = `${import.meta.dir}/../../skills/axstack/scripts/check-run.js`;
@@ -32,7 +32,7 @@ function fixture() {
     recordedAt: '2026-11-16T00:00:00Z', requested: { provider: 'codex', model: 'fixture-model', options: { effort: 'low' } } };
   const inputPath = json(`${dir}/before.json`, input);
   const capture = (...args) => cli(...binding, '--', process.execPath, script, ...args);
-  return { dir, repo, out, input, inputPath, expected, capture, binding };
+  return { dir, repo, out, input, inputPath, expected, capture, binding, git };
 }
 function prepared(f) {
   const r = f.capture('r5-plan', '--input', f.inputPath);
@@ -53,6 +53,20 @@ function resultFor(f, receipt) {
 function trace(f, receipt, result) {
   const resultPath = json(`${f.dir}/after.json`, result);
   return cli('r5-trace', '--plan-receipt', receipt.receiptPath, '--result', resultPath, ...f.expected);
+}
+function commitFixture(f) {
+  f.git('add', '-A');
+  f.git('-c', 'user.name=Fixture', '-c', 'user.email=f@x', 'commit', '-qm', 'fixture update');
+  const head = f.git('rev-parse', 'HEAD');
+  for (const args of [f.binding, f.expected]) for (const flag of ['--head', '--base']) args[args.indexOf(flag) + 1] = head;
+}
+function preparedDirty(f) {
+  const hold = f.capture('r5-plan', '--input', f.inputPath);
+  expect(hold.code).toBe(2);
+  const snapshot = hold.stderr.match(/--snapshot ([a-f0-9]{64})/)[1];
+  const r = cli(...f.binding, '--snapshot', snapshot, '--', process.execPath, script, 'r5-plan', '--input', f.inputPath);
+  expect(r.code).toBe(0);
+  return JSON.parse(r.stdout);
 }
 
 test('R5 plan selects catalog input, excludes the answer, and binds numeric one-attempt limits', () => {
@@ -278,6 +292,66 @@ test('release version declarations must agree with package.json at captured HEAD
   json(f.inputPath, { ...f.input, version: '9.9.9' });
   const before = prepared(f), result = { ...resultFor(f, before), version: '9.9.9' };
   expect(JSON.parse(trace(f, before, result).stdout).terms.find(t => t.id === 'installation').status).toBe('fail');
+});
+
+test.each(['ignored', 'git-metadata', 'untracked', 'edited'])('catalog bytes must exist at release HEAD: %s', kind => {
+  const f = fixture();
+  if (kind === 'ignored') {
+    writeFileSync(`${f.repo}/.gitignore`, 'ignored/\n'); commitFixture(f);
+    mkdirSync(`${f.repo}/ignored`);
+  }
+  const path = kind === 'ignored' ? `${f.repo}/ignored/catalog.json` : kind === 'git-metadata' ? `${f.repo}/.git/catalog.json`
+    : kind === 'untracked' ? `${f.repo}/untracked.json` : f.input.catalog;
+  json(path, { cases: [{ id: f.input.scenario, title: 'Forged easy scenario', input: { request: 'easy' } }] });
+  json(f.inputPath, { ...f.input, catalog: path });
+  const before = ['untracked', 'edited'].includes(kind) ? preparedDirty(f) : prepared(f);
+  const response = trace(f, before, resultFor(f, before)), report = JSON.parse(response.stdout);
+  expect(report.terms.find(t => t.id === 'catalog').status).toBe(kind === 'edited' ? 'fail' : 'unknown');
+  expect(response.code).toBe(kind === 'edited' ? 0 : 2);
+});
+
+function fakeBun(f, before) {
+  const plan = readFileSync(before.logPath, 'utf8');
+  const fake = `${f.dir}/bun`, payload = `${f.dir}/forged-plan.json`;
+  writeFileSync(payload, plan);
+  writeFileSync(fake, `#!/bin/sh\ncat '${payload}'\n`); chmodSync(fake, 0o700);
+  return fake;
+}
+test.each(['r5-plan', 'r5-trace'])('a fake bun cannot run the %s capture', mode => {
+  const f = fixture(), before = prepared(f), fake = fakeBun(f, before);
+  const capture = cli(...f.binding, '--', fake, script, mode, '--input', f.inputPath);
+  expect(capture.code).toBe(2);
+  expect(capture.stderr).toContain('Bun interpreter');
+});
+test('trace rejects an otherwise genuine planning receipt with a fake interpreter', () => {
+  const f = fixture(), before = prepared(f), fake = fakeBun(f, before);
+  const forged = { ...before, argv: [fake, ...before.argv.slice(1)] };
+  json(before.receiptPath, forged);
+  const report = JSON.parse(trace(f, forged, resultFor(f, forged)).stdout);
+  expect(report.terms.find(t => t.id === 'plan-kind').status).toBe('fail');
+});
+
+test('missing catalog at trace time is unknown, not an invocation error', () => {
+  const f = fixture(), before = prepared(f), result = resultFor(f, before);
+  rmSync(f.input.catalog);
+  const response = trace(f, before, result);
+  expect(response.code).toBe(2);
+  expect(JSON.parse(response.stdout).terms.find(t => t.id === 'catalog').status).toBe('unknown');
+});
+
+test('package absent from the captured head is unknown rather than a version mismatch', () => {
+  const f = fixture();
+  rmSync(`${f.repo}/package.json`); commitFixture(f);
+  const before = prepared(f), response = trace(f, before, resultFor(f, before));
+  expect(response.code).toBe(2);
+  expect(JSON.parse(response.stdout).terms.find(t => t.id === 'installation').status).toBe('unknown');
+});
+
+test('a title-less scenario uses its id as the display title', () => {
+  const f = fixture();
+  json(f.input.catalog, { cases: [{ id: f.input.scenario, input: 'scenario without a title' }] });
+  const plan = JSON.parse(cli('r5-plan', '--input', f.inputPath).stdout);
+  expect(plan.scenario.title).toBe(f.input.scenario);
 });
 
 test('R5 publication is never blocked: removal/inversion fail and rewording survives', () => {
