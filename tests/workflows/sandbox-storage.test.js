@@ -302,3 +302,10 @@ test('production workers wait for the cross-process lock before entering storage
     expect((await result).message).toBe('Modified storage plan');
   } finally { holder.kill(); }
 });
+
+
+test('a sole remaining loop holds before attachment when no further loop is allocatable', async () => {
+  const { api, input, state } = await fixture({ noSpare: true });
+  await expect(api.prepareStorage(input)).rejects.toMatchObject({ sandboxHold: true });
+  expect(state.attached).toBe(false);
+});
