@@ -40,3 +40,12 @@ test('Android platform uses its official package path so Gradle can discover the
   const step = provisionPlan(pins).find(p => p.id === 'android-sdk');
   expect(step.steps.at(-1).argv.at(-1)).toBe(platform.destination);
 });
+
+
+test('Linux Swift and SwiftLint builds compile and lint a real source before image completion', () => {
+  const steps = Object.fromEntries(provisionPlan(pins).map(p => [p.id, p.steps.flatMap(s => s.argv).join(' ')]));
+  expect(steps.swift).toContain('/opt/swift/usr/bin/swiftc');
+  expect(steps.swift).toContain('smoke.swift');
+  expect(steps.swiftlint).toContain('/opt/swiftlint/swiftlint');
+  expect(steps.swiftlint).toContain('lint --strict');
+});
