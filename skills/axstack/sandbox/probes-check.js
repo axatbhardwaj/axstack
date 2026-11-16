@@ -44,7 +44,7 @@ export function classifyConnection(result, target, expected) {
     try { output = JSON.parse(result.stdout); } catch { return unknown(); }
     if (Number(output.http_connect) === 403) reachable = false;
     else if (output.remote_ip) reachable = true;
-    else if ([7, 28].includes(result.exitCode)) reachable = false;
+    else if ([6, 7, 28].includes(result.exitCode)) reachable = false;
     else return unknown();
   }
   return { status: reachable === (expected === 'allow') ? 'pass' : 'fail', evidence: [JSON.stringify(result)] };
