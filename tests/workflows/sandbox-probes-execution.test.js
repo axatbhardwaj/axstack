@@ -108,3 +108,18 @@ test('an observer hold remains unknown in the host receipt rather than being rel
     expect(e.terms.at(-1).status).toBe('unknown');
   }
 });
+
+test('running containers with network none are explicitly inspected without inventing missing addresses', async () => {
+  const base = fixture(), id = 'e'.repeat(64);
+  const isolated = { Id: id, Name: '/run-none', Config: {}, HostConfig: { NetworkMode: 'none' }, NetworkSettings: { Networks: {} } };
+  const runner = async (argv) => {
+    if (argv[1] === 'ps') return { exitCode: 0, stdout: [...live.map((c) => c.Id), id].join('\n') };
+    if (argv[1] === 'inspect') {
+      expect(argv).toContain(id);
+      return { exitCode: 0, stdout: JSON.stringify([...live, isolated]) };
+    }
+    return base.runner(argv);
+  };
+  const result = await createProbeTools({ runner }).enumerateTargets({ runId: 'run', networks: [own] });
+  expect(result.terms.find((t) => t.id === 'docker-containers').status).toBe('pass');
+});
