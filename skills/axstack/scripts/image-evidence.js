@@ -1,18 +1,19 @@
 #!/usr/bin/env bun
 
 const help = `Usage: bun image-evidence.js --page FILE [--observations FILE]
-  --page FILE          Exact UTF-8 published HTML bytes; SHA-256 is computed before parsing.
+  --page FILE          Exact final UTF-8 HTML bytes before delivery; SHA-256 precedes parsing.
   --observations FILE  Saved Playwright MCP JSON: {sha256,resources:[{url,status,evidence}]}.
                        status: pass/fail/unknown; evidence: nonempty tool-result reference/detail.
                        url is the decoded authored URL, not the resolved/currentSrc URL.
-  --help               Show flags, input schema, limits and effects.
+  --help               Show flags, input schema, limits and effects; takes precedence over other args.
 Fact mode: static img/src/srcset, picture/source/srcset, input/image, video/poster,
-SVG image/feImage/use, object/embed, image link href/imagesrcset, inline CSS url().
-Local CSS/SVG-use fragments are excluded. Locations identify each occurrence.
+SVG image/feImage/use, object/embed, image link href/imagesrcset, legacy background,
+inline CSS url()/image-set(). CSS imports, font-face URLs and local fragments are excluded.
+Locations identify each occurrence; unmatched observations have source "observation-only".
 No script execution, CSS cascade, external stylesheet traversal or browser/network access.
 Dynamic resources and unsupported named HTML entities require reviewer coverage; unobserved
 and unselected candidates, stale digests or conflicting observations stay unknown.
-Reviewer uses Playwright MCP on exactly these published bytes, checks load AND image decode
+Reviewer uses Playwright MCP on exactly these final bytes before delivery, checks load AND image decode
 (complete/naturalWidth or decode()), including CSS images; an HTTP 200 alone is insufficient.
 Scroll lazy images; exercise relevant states. Inaccessible/unobservable resources stay unknown.
 Output: per-resource facts with evidence, SHA-256 and counts only; never an aggregate verdict.
@@ -22,11 +23,13 @@ Exit: 0 measured (including fail), 1 invalid input/error, 2 incomplete (unknown 
 `;
 
 const entities = { amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', Tab: '\t', NewLine: '\n' };
+const scalar = (point) => String.fromCodePoint(point > 0 && point <= 0x10ffff
+  && !(point >= 0xd800 && point <= 0xdfff) ? point : 0xfffd);
 function htmlValue(value) {
   return value.replace(/&(#x[\da-f]+|#\d+|[a-z][\da-z]+);/gi, (whole, key) => {
     if (!key.startsWith('#')) return Object.hasOwn(entities, key) ? entities[key] : whole;
     const point = key[1].toLowerCase() === 'x' ? Number.parseInt(key.slice(2), 16) : Number(key.slice(1));
-    return point > 0 && point <= 0x10ffff ? String.fromCodePoint(point) : '\ufffd';
+    return scalar(point);
   });
 }
 
@@ -47,17 +50,37 @@ function candidates(value) {
 
 function cssUrls(css) {
   const urls = [];
-  // Skip comments and standalone strings so their url(...) examples are not resources.
-  const tokens = /\/\*[\s\S]*?\*\/|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|(?<![\w-])url\(\s*(?:"((?:\\[\s\S]|[^"\\])*)"|'((?:\\[\s\S]|[^'\\])*)'|((?:\\[\s\S]|[^)\\])*))\s*\)/gi;
-  for (const token of css.matchAll(tokens)) {
-    if (token[1] === undefined && token[2] === undefined && token[3] === undefined) continue;
-    const url = (token[1] ?? token[2] ?? token[3]).trim().replace(
+  const add = (value) => {
+    const url = value.trim().replace(
       /\\([\da-f]{1,6}[\t\n\f\r ]?|[\s\S])/gi,
       (_, escaped) => /^[\da-f]/i.test(escaped)
-        ? String.fromCodePoint(Math.min(Number.parseInt(escaped.trim(), 16) || 0xfffd, 0x10ffff))
+        ? scalar(Number.parseInt(escaped.trim(), 16))
         : escaped.replace(/[\n\r\f]/g, ''),
     );
     if (!url.startsWith('#')) urls.push(url);
+  };
+  // Tokenize strings/comments atomically; only image-set candidate strings are URLs.
+  const tokens = /\/\*[\s\S]*?\*\/|(?<![\w-])url\(\s*(?:"((?:\\[\s\S]|[^"\\])*)"|'((?:\\[\s\S]|[^'\\])*)'|((?:\\[\s\S]|[^)\\])*))\s*\)|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|(?<![\w-])(?:-webkit-)?image-set\(|@import\b|@font-face\b|[{}();,]/gi;
+  const functions = [];
+  let depth = 0, fontDepth = null, fontPending = false, importing = false;
+  for (const token of css.matchAll(tokens)) {
+    const text = token[0], lower = text.toLowerCase();
+    if (text.startsWith('/*')) continue;
+    if (lower === '@import') { importing = true; continue; }
+    if (lower === '@font-face') { fontPending = true; continue; }
+    if (text === '{') { depth++; if (fontPending) fontDepth = depth; fontPending = false; continue; }
+    if (text === '}') { if (fontDepth === depth) fontDepth = null; depth--; continue; }
+    if (text === ';') { importing = false; functions.length = 0; continue; }
+    if (importing || fontDepth !== null) continue;
+    if (lower.endsWith('image-set(')) { functions.push({ imageSet: true, candidate: true }); continue; }
+    if (text === '(') { functions.push({ imageSet: false, candidate: false }); continue; }
+    if (text === ')') { functions.pop(); continue; }
+    const current = functions.at(-1);
+    if (text === ',') { if (current) current.candidate = true; continue; }
+    const url = token[1] ?? token[2] ?? token[3];
+    if (url !== undefined) add(url);
+    else if (current?.imageSet && current.candidate && /^["']/.test(text)) add(text.slice(1, -1));
+    if (current) current.candidate = false;
   }
   return urls;
 }
@@ -80,15 +103,16 @@ async function expectedResources(bytes) {
     const single = (name) => { const value = attr(name); if (value !== null) add(value, `${location}@${name}`); };
     const set = (name) => { for (const url of candidates(attr(name) ?? '')) add(url, `${location}@${name}`); };
     if (tag === 'img' && attr('src') === null && !attr('srcset')?.trim()) add('', `${location}@src (absent)`);
-    if (['img', 'embed'].includes(tag) || tag === 'input' && attr('type')?.toLowerCase() === 'image') single('src');
+    if (['img', 'image', 'embed'].includes(tag) || tag === 'input' && attr('type')?.toLowerCase() === 'image') single('src');
     if (['img', 'source'].includes(tag)) set('srcset');
     if (tag === 'video') single('poster');
     if (tag === 'object') single('data');
+    if (['body', 'table', 'td', 'th'].includes(tag)) single('background');
     if (['image', 'feimage', 'use'].includes(tag)) {
       const name = attr('href') !== null ? 'href' : 'xlink:href';
       if (tag !== 'use' || !attr(name)?.trim().startsWith('#')) single(name);
     }
-    if (tag === 'link' && (/\bicon\b/i.test(attr('rel') ?? '') || attr('as') === 'image')) {
+    if (tag === 'link' && (/\bicon\b/i.test(attr('rel') ?? '') || attr('as')?.toLowerCase() === 'image')) {
       single('href'); set('imagesrcset');
     }
     for (const url of cssUrls(attr('style') ?? '')) add(url, `${location}@style`);
@@ -122,6 +146,13 @@ export async function imageEvidence(bytes, observations) {
     else if (matches.length) { status = matches[0].status; evidence = matches.map((row) => row.evidence).join('; '); }
     return { ...resource, status, evidence };
   });
+  const extracted = new Set(resources.map((resource) => resource.url));
+  for (const row of observations?.resources ?? []) {
+    if (extracted.has(row.url)) continue;
+    resources.push({ ...row, source: 'observation-only', locations: ['observation-only'],
+      ...(observations.sha256 !== sha256
+        ? { status: 'unknown', evidence: 'SHA-256 differs from observed page bytes' } : {}) });
+  }
   const summary = { pass: 0, fail: 0, unknown: 0, 'n/a': 0 };
   for (const resource of resources) summary[resource.status]++;
   return { sha256, resources, summary };
@@ -130,7 +161,7 @@ export async function imageEvidence(bytes, observations) {
 if (import.meta.main) {
   try {
     const argv = process.argv.slice(2), args = {};
-    if (argv.length === 1 && argv[0] === '--help') console.log(help);
+    if (argv.includes('--help')) console.log(help);
     else {
       for (let i = 0; i < argv.length; i += 2) {
         if (!['--page', '--observations'].includes(argv[i]) || !argv[i + 1] || args[argv[i]]) {
