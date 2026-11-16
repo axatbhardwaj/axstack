@@ -431,3 +431,16 @@ test('bare bun resolves through a symlink first on the child PATH for both R5 ph
   expect(response.exitCode).toBe(0);
   expect(JSON.parse(response.stdout.toString()).terms.every(t => t.status === 'pass')).toBe(true);
 });
+
+
+test('release trace verifies installation and unavailable scenario outcomes stay unknown with or without IDs', () => {
+  const source = readFileSync(`${import.meta.dir}/../../skills/axstack/references/live-run.md`, 'utf8');
+  const verifies = text => /(?:verify|check) package version and installed skills/i.test(text) && !/never (?:verify|check) package version/i.test(text);
+  const unknown = text => /scenario outcome (?:stays|remains) unknown (?:either way|with or without IDs)/i.test(text) && !/scenario outcome (?:passes|succeeds)/i.test(text);
+  expect(verifies(source)).toBe(true); expect(unknown(source)).toBe(true);
+  expect(verifies(source.replace(/Verify package version and installed skills/i, 'Never verify package version and installed skills'))).toBe(false);
+  expect(unknown(source.replace(/scenario outcome stays unknown either way/i, 'scenario outcome passes'))).toBe(false);
+  expect(verifies(source.replace('Verify package version', 'Check package version'))).toBe(true);
+  expect(unknown(source.replace('stays unknown either way', 'remains unknown with or without IDs'))).toBe(true);
+  expect(unknown(source.replace(/Its scenario outcome stays unknown either way\./i, ''))).toBe(false);
+});
