@@ -1,0 +1,430 @@
+{
+  "schemaVersion": 1,
+  "host": "axat-vps",
+  "inventoryDate": "2026-11-16",
+  "freeze": {
+    "status": "unknown",
+    "meaning": "Repository declarations and hostname list frozen before smoke tests. This is not provisioning readiness; exact-pin gaps and every required smoke are open obligations.",
+    "scope": "Peer-review lane on this host; continuity union defi-com clones and 90-day GitHub PR discovery. Personal/upstream repositories explicitly excluded.",
+    "base": "08e9ce8b01a480fa8a04abb0cf6473b46a87477b",
+    "evidence": ["run-evidence:author-T21-A/github-search.json", "run-evidence:author-T21-A/discovery.json"]
+  },
+  "requiredToolchains": [
+    {"id": "node-24", "name": "Node.js", "version": "24.21.0", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/react-native/app/.nvmrc"], "note": "Exact mobile pin; also a candidate for Node 24 CI aliases, compatibility not smoke-tested."},
+    {"id": "node-22", "name": "Node.js", "version": "22.23.4", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZUREDASH/web/Dockerfile#L8"]},
+    {"id": "node-20", "name": "Node.js", "version": "20", "versionPrecision": "major", "availability": "unknown", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/.github/workflows/docs-pages.yml#L57"], "note": "Required docs workflow; local .nvmrc also says v20 while root engines/active setup say 24. Exact patch unresolved."},
+    {"id": "node-next", "name": "Node.js", "version": "^20.9", "versionPrecision": "constraint", "availability": "unknown", "evidence": ["https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/package.json#L53"], "note": "Preserved declared constraint; shared build-node default is 24. Do not treat this as an exact patch pin."},
+    {"id": "node-dashboard", "name": "Node.js", "version": ">=18", "versionPrecision": "constraint", "availability": "unknown", "evidence": ["https://github.com/defi-com/DeFi-Dashboard/blob/43ec31fa4d5bfa0b8f7613f0222d686dfd4d7103/package.json#L8"], "note": "Candidate outside continuity; no lockfile or CI pin."},
+    {"id": "bun-1.2.2", "name": "Bun", "version": "1.2.2", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/package.json#L92"]},
+    {"id": "bun-1.3.14", "name": "Bun", "version": "1.3.14", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/apps/defi-web/Dockerfile#L1"]},
+    {"id": "bun-1.4.4", "name": "Bun", "version": "1.4.4", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/apps/tradfi-server/Dockerfile#L1"]},
+    {"id": "pnpm", "name": "pnpm", "version": "9.15.4", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/package.json#L55"], "note": "Manifest includes a sha512 integrity suffix; full source is authoritative."},
+    {"id": "npm", "name": "npm", "version": "11.19.0", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/react-native/app/package.json#L44"]},
+    {"id": "python-312", "name": "Python", "version": "3.12", "versionPrecision": "minor", "availability": "unknown", "evidence": ["https://github.com/defi-com/defi-review-agent/blob/bcacdc51063819ecba0a212e00f28e1866ed3ca2/.github/workflows/ci.yml#L109"], "note": "No patch in CI or Python Docker tags. Exact image/toolchain patch must be selected and recorded before smoke tests."},
+    {"id": "python-313", "name": "Python", "version": "3.13", "versionPrecision": "minor", "availability": "unknown", "evidence": ["https://github.com/defi-com/metrics-dashboard/blob/25277e6d4587515070390e6106e768fcd2eaf492/docker-compose.yml"], "note": "Sample emitter uses python:3.13-alpine; patch is not pinned."},
+    {"id": "rust", "name": "Rust / Cargo / rustfmt / clippy", "version": "1.91.1", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/rust-toolchain.toml#L3"], "note": "Monorepo pins minor 1.91. Requires separate compatibility smoke; default stable in reusable workflow is not a pin."},
+    {"id": "terraform", "name": "Terraform", "version": "1.15.8", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/azure-baseline/blob/af1dc2ffec2482e470187d6da8a96d490e2d54c2/.github/workflows/validate.yml#L80"]},
+    {"id": "jdk-11", "name": "Temurin JDK", "version": "11", "versionPrecision": "major", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/.github/workflows/native-ci.yml#L163"], "note": "designtokens jvmToolchain(11); exact vendor build unresolved."},
+    {"id": "jdk-25", "name": "Temurin JDK", "version": "25", "versionPrecision": "major", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/gradle/gradle-daemon-jvm.properties#L12"], "note": "Gradle daemon; exact vendor build unresolved. Preinstall to avoid Foojay downloads."},
+    {"id": "gradle", "name": "Gradle", "version": "9.6.0", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/gradle/wrapper/gradle-wrapper.properties#L4"]},
+    {"id": "kotlin", "name": "Kotlin", "version": "2.2.10", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/gradle/libs.versions.toml#L10"]},
+    {"id": "agp", "name": "Android Gradle plugin", "version": "9.4.1", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/gradle/libs.versions.toml#L2"]},
+    {"id": "android-sdk", "name": "Android SDK platform", "version": "37", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/app/build.gradle.kts#L26"], "note": "Platform API number, not an SDK command-line-tools/build-tools revision; those pins are unresolved."},
+    {"id": "swift", "name": "Swift (Linux)", "version": "6.4.1", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/.github/workflows/native-ci.yml#L122"], "note": "CI pins noble image by sha256. Linux-capable packages remain required; Apple UI/Xcode tests are the scoped Swift-on-Linux limitation."},
+    {"id": "swiftlint", "name": "SwiftLintPlugins", "version": "0.65.1", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/iOS/app/Defi.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved#L10"], "note": "Public Git dependency at ef7d692fc6706e8f5628e26bcafaefa445c58a97; image-build content, no host fetch during reviews."},
+    {"id": "foundry", "name": "Foundry (forge / cast / anvil)", "version": "1.5.1", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/.github/workflows/rescue-tool-fork.yml#L150"], "note": "Rescue workflow pin; contracts clone has no Foundry release pin. Do not silently use latest."},
+    {"id": "solc", "name": "Solidity compiler", "version": "0.8.28", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/foundry.toml#L12"]},
+    {"id": "cargo-deny", "name": "cargo-deny", "version": "0.20.2", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/.github/workflows/ci.yml#L26"]},
+    {"id": "cargo-vet", "name": "cargo-vet", "version": "0.10.2", "versionPrecision": "exact", "availability": "unknown", "evidence": ["https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/.github/workflows/ci.yml#L28"]}
+  ],
+  "registryAllowlist": ["crates.io", "dl.google.com", "files.pythonhosted.org", "index.crates.io", "plugins-artifacts.gradle.org", "plugins.gradle.org", "pypi.org", "registry.npmjs.org", "registry.opentofu.org", "registry.terraform.io", "releases.hashicorp.com", "repo.maven.apache.org", "repo1.maven.org", "soldeer-revisions.s3.amazonaws.com", "static.crates.io"],
+  "registries": [
+    {"hostname": "registry.npmjs.org", "ecosystem": "npm", "basis": "resolved tarball URLs; also default for Bun/npm/pnpm text locks without custom registry", "evidence": ["https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZUREDASH/web/package-lock.json"]},
+    {"hostname": "pypi.org", "ecosystem": "PyPI", "basis": "pip default index and its artifact host; fetch/redirect probes still required", "evidence": ["https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZURE/requirements.txt", "https://github.com/defi-com/defi-review-agent/blob/bcacdc51063819ecba0a212e00f28e1866ed3ca2/agents/gateway/pyproject.toml", "https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-i"]},
+    {"hostname": "files.pythonhosted.org", "ecosystem": "PyPI", "basis": "pip default index and its artifact host; fetch/redirect probes still required", "evidence": ["https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZURE/requirements.txt", "https://github.com/defi-com/defi-review-agent/blob/bcacdc51063819ecba0a212e00f28e1866ed3ca2/agents/gateway/pyproject.toml", "https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-i"]},
+    {"hostname": "index.crates.io", "ecosystem": "crates.io", "basis": "Cargo crates.io registry source; sparse index/artifact/API endpoints", "evidence": ["https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/Cargo.lock", "https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/Cargo.lock", "https://index.crates.io/config.json"]},
+    {"hostname": "static.crates.io", "ecosystem": "crates.io", "basis": "Cargo crates.io registry source; sparse index/artifact/API endpoints", "evidence": ["https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/Cargo.lock", "https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/Cargo.lock", "https://index.crates.io/config.json"]},
+    {"hostname": "crates.io", "ecosystem": "crates.io", "basis": "Cargo crates.io registry source; sparse index/artifact/API endpoints", "evidence": ["https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/Cargo.lock", "https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/Cargo.lock", "https://index.crates.io/config.json"]},
+    {"hostname": "registry.terraform.io", "ecosystem": "Terraform", "basis": "tracked declaration / standard ecosystem endpoint", "evidence": ["https://github.com/defi-com/azure-baseline/blob/af1dc2ffec2482e470187d6da8a96d490e2d54c2/baseline/.terraform.lock.hcl"]},
+    {"hostname": "releases.hashicorp.com", "ecosystem": "Terraform provider artifacts", "basis": "HashiCorp provider download host; actual provider redirects need verification", "evidence": ["https://github.com/defi-com/azure-baseline/blob/af1dc2ffec2482e470187d6da8a96d490e2d54c2/baseline/.terraform.lock.hcl", "https://developer.hashicorp.com/terraform/internals/provider-registry-protocol"]},
+    {"hostname": "registry.opentofu.org", "ecosystem": "OpenTofu provider metadata", "basis": "tracked declaration / standard ecosystem endpoint", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/.terraform.lock.hcl"]},
+    {"hostname": "repo.maven.apache.org", "ecosystem": "Maven Central", "basis": "mavenCentral() plus Robolectric runtime artifacts; endpoint expansion not a measured fetch", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/.github/workflows/native-ci.yml"]},
+    {"hostname": "repo1.maven.org", "ecosystem": "Maven Central", "basis": "mavenCentral() plus Robolectric runtime artifacts; endpoint expansion not a measured fetch", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/.github/workflows/native-ci.yml"]},
+    {"hostname": "dl.google.com", "ecosystem": "Google Maven", "basis": "google() Maven repository; Android SDK downloads must instead be built into image", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts"]},
+    {"hostname": "plugins.gradle.org", "ecosystem": "Gradle Plugin Portal", "basis": "gradlePluginPortal() metadata and artifact host", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts"]},
+    {"hostname": "plugins-artifacts.gradle.org", "ecosystem": "Gradle Plugin Portal", "basis": "gradlePluginPortal() metadata and artifact host", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts"]},
+    {"hostname": "soldeer-revisions.s3.amazonaws.com", "ecosystem": "Soldeer", "basis": "Explicit resolved artifact URLs in tracked soldeer.lock; not a wildcard S3 allowlist. Registry metadata endpoints are not inferred or allowed.", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/soldeer.lock"]}
+  ],
+  "repositories": [
+    {
+      "name": "defi-com/ASI_CS",
+      "status": "pass",
+      "revision": "f0f3bea37c3f13462024ec1c3db07ea54b3113bf",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.md:135", "host-evidence:axat-vps:review-manager/progress.history.md:1697", "https://github.com/defi-com/ASI_CS/pull/23", "host-evidence:axat-vps:clone/ASI_CS/.git"],
+      "toolchains": ["node-22", "python-312", "terraform"],
+      "registries": ["files.pythonhosted.org", "pypi.org", "registry.npmjs.org"],
+      "privatePackages": [
+        {"name": "asi-azuredash-web", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZUREDASH/web/package.json"], "version": "0.1.0", "versionStatus": "pass"}
+      ],
+      "privateRegistryStatus": "n/a",
+      "services": [],
+      "notes": "Python source pins only 3.12; web Docker pins Node 22.23.4. CI unit tests have no declared database service; cloud integration/deployment needs separate isolated fixtures.",
+      "locks": [
+        {"path": "ASI_AZUREDASH/web/package-lock.json", "packages": 436, "method": "package-lock packages keys (includes root/workspaces)", "evidence": ["https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZUREDASH/web/package-lock.json"]}
+      ],
+      "inodeSizing": {"status": "unknown", "method": "Estimate: 136 entries per JS lock record (ceil(2 * 154801 / 2277)); 512 per Cargo/Swift pin heuristic; max alternative JS locks, add other ecosystems. Not a measured bound. Android/Gradle artifacts uncounted.", "estimatedEntries": 59296, "recommendedInodes": 1048576, "evidence": ["run-evidence:author-T21-A/dependency-sizing.json", "https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZUREDASH/web/package-lock.json"]}
+    },
+    {
+      "name": "defi-com/DeFi-Dashboard",
+      "status": "pass",
+      "revision": "43ec31fa4d5bfa0b8f7613f0222d686dfd4d7103",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "90-day-PR",
+      "evidence": ["https://github.com/defi-com/DeFi-Dashboard/pull/1", "host-evidence:axat-vps:clone/DeFi-Dashboard/.git"],
+      "toolchains": ["node-dashboard"],
+      "registries": ["registry.npmjs.org"],
+      "privatePackages": [
+        {"name": "defi-dashboard", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/DeFi-Dashboard/blob/43ec31fa4d5bfa0b8f7613f0222d686dfd4d7103/package.json"], "version": "1.0.0", "versionStatus": "pass"}
+      ],
+      "privateRegistryStatus": "n/a",
+      "services": [],
+      "notes": "90-day PR + existing clone candidate outside continuity. Node >=18; no tracked lockfile or CI/toolchain pin. Node dependency resolution has no deterministic existing lock.",
+      "locks": [],
+      "inodeSizing": {"status": "unknown", "method": "No installed dependency tree or countable package lock found. No defensible package-count estimate; non-documentation provisioning requires measurement.", "evidence": ["run-evidence:author-T21-A/dependency-sizing.json"]}
+    },
+    {
+      "name": "defi-com/azure-baseline",
+      "status": "pass",
+      "revision": "af1dc2ffec2482e470187d6da8a96d490e2d54c2",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.md:1091", "host-evidence:axat-vps:review-manager/progress.history.md:2131", "https://github.com/defi-com/azure-baseline/pull/47", "host-evidence:axat-vps:clone/azure-baseline/.git"],
+      "toolchains": ["terraform"],
+      "registries": ["registry.terraform.io", "releases.hashicorp.com"],
+      "privatePackages": [],
+      "privateRegistryStatus": "n/a",
+      "services": [],
+      "notes": "Terraform validation only; Azure provider versions are in baseline/platform lockfiles. No local service declared; authenticated cloud plan/apply is outside verification scope.",
+      "locks": [],
+      "inodeSizing": {"status": "unknown", "method": "No installed dependency tree or countable package lock found. No defensible package-count estimate; non-documentation provisioning requires measurement.", "evidence": ["run-evidence:author-T21-A/dependency-sizing.json"]}
+    },
+    {
+      "name": "defi-com/azure-next-hybrid",
+      "status": "pass",
+      "revision": "f6c302b839a420ffd2c3511e06d008bfdb0663b7",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.md:1091", "host-evidence:axat-vps:review-manager/progress.history.md:2193", "https://github.com/defi-com/azure-next-hybrid/pull/234", "host-evidence:axat-vps:clone/azure-next-hybrid/.git"],
+      "toolchains": ["node-next", "pnpm", "terraform"],
+      "registries": ["registry.npmjs.org"],
+      "privatePackages": [
+        {"name": "nextjs-hybrid-starter", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/package.json"], "version": "0.1.0", "versionStatus": "pass"}
+      ],
+      "privateRegistryStatus": "n/a",
+      "services": [],
+      "notes": "Conflicting lockfiles: Bun/package-lock/pnpm; manifest selects pnpm 9.15.4. Preserve Node ^20.9 constraint; shared build-node defaults to Node 24. Archived infra references are not active requirements.",
+      "locks": [
+        {"path": "bun.lock", "packages": 788, "method": "Bun text lock package-array records (includes peer variants)", "evidence": ["https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/bun.lock"]},
+        {"path": "package-lock.json", "packages": 713, "method": "package-lock packages keys (includes root/workspaces)", "evidence": ["https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/package-lock.json"]},
+        {"path": "pnpm-lock.yaml", "packages": 757, "method": "pnpm packages section top-level keys", "evidence": ["https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/pnpm-lock.yaml"]}
+      ],
+      "inodeSizing": {"status": "unknown", "method": "Estimate: 136 entries per JS lock record (ceil(2 * 154801 / 2277)); 512 per Cargo/Swift pin heuristic; max alternative JS locks, add other ecosystems. Not a measured bound. Android/Gradle artifacts uncounted.", "estimatedEntries": 107168, "recommendedInodes": 1048576, "evidence": ["run-evidence:author-T21-A/dependency-sizing.json", "https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/bun.lock", "https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/package-lock.json", "https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/pnpm-lock.yaml"]}
+    },
+    {
+      "name": "defi-com/ci-workflows",
+      "status": "pass",
+      "revision": "9c33150db9d47bc47d717e3f244990865a7d7fc6",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.md:295", "host-evidence:axat-vps:review-manager/progress.history.md:2131", "https://github.com/defi-com/ci-workflows/pull/118", "host-evidence:axat-vps:clone/ci-workflows/.git"],
+      "toolchains": ["node-24", "bun-1.2.2", "python-312", "rust", "terraform"],
+      "registries": ["crates.io", "files.pythonhosted.org", "index.crates.io", "pypi.org", "registry.npmjs.org", "registry.opentofu.org", "registry.terraform.io", "releases.hashicorp.com", "static.crates.io"],
+      "privatePackages": [],
+      "privateRegistryStatus": "n/a",
+      "services": [
+        {"name": "PostgreSQL (consumer integration)", "version": "17-alpine", "availability": "unknown", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/.github/workflows/test-rust-integration.yml"]},
+        {"name": "Redis (consumer integration)", "version": "alpine", "availability": "unknown", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/.github/workflows/test-rust-integration.yml"]},
+        {"name": "Azurite (optional consumer integration)", "version": "unversioned image tag", "availability": "unknown", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/.github/workflows/test-rust-integration.yml"]}
+      ],
+      "notes": "Review target is workflow/static Python/shell tests plus Terraform validate; reusable workflow inputs describe supported consumers. A generic stable Rust default is not an exact pin. Include OpenTofu registry named by old provider locks; Terraform binary remains required.",
+      "locks": [],
+      "inodeSizing": {"status": "unknown", "method": "No installed dependency tree or countable package lock found. No defensible package-count estimate; non-documentation provisioning requires measurement.", "evidence": ["run-evidence:author-T21-A/dependency-sizing.json"]}
+    },
+    {
+      "name": "defi-com/contracts",
+      "status": "pass",
+      "revision": "3f7c9f9354c05a7be0157f6d5395cdd1baea60c9",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "90-day-PR",
+      "evidence": ["https://github.com/defi-com/contracts/pull/61", "host-evidence:axat-vps:clone/contracts/.git"],
+      "toolchains": ["foundry", "solc"],
+      "registries": ["registry.npmjs.org", "soldeer-revisions.s3.amazonaws.com"],
+      "privatePackages": [
+        {"name": "defi.com-contracts", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/merkle-scripts", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/script/exclusion_lists/package.json"], "version": "0.0.1", "versionStatus": "pass"}
+      ],
+      "privateRegistryStatus": "n/a",
+      "services": [],
+      "notes": "90-day PR + clone candidate and private monorepo submodule target. Solc 0.8.28; Soldeer dependencies have explicit source versions. Foundry release is not pinned in this clone; rescue workflow contributes 1.5.1. RPC tests need isolated fixtures; no mainnet access.",
+      "locks": [
+        {"path": "bun.lock", "packages": 63, "method": "Bun text lock package-array records (includes peer variants)", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/bun.lock"]},
+        {"path": "script/exclusion_lists/bun.lock", "packages": 18, "method": "Bun text lock package-array records (includes peer variants)", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/script/exclusion_lists/bun.lock"]}
+      ],
+      "inodeSizing": {"status": "unknown", "method": "Estimate: 136 entries per JS lock record (ceil(2 * 154801 / 2277)); 512 per Cargo/Swift pin heuristic; max alternative JS locks, add other ecosystems. Not a measured bound. Android/Gradle artifacts uncounted.", "estimatedEntries": 8568, "recommendedInodes": 1048576, "evidence": ["run-evidence:author-T21-A/dependency-sizing.json", "https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/bun.lock", "https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/script/exclusion_lists/bun.lock"]}
+    },
+    {
+      "name": "defi-com/defi-review-agent",
+      "status": "pass",
+      "revision": "bcacdc51063819ecba0a212e00f28e1866ed3ca2",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.history.md:1027", "https://github.com/defi-com/defi-review-agent/pull/47", "host-evidence:axat-vps:clone/defi-review-agent/.git"],
+      "toolchains": ["python-312", "bun-1.3.14"],
+      "registries": ["files.pythonhosted.org", "pypi.org"],
+      "privatePackages": [],
+      "privateRegistryStatus": "unknown",
+      "services": [],
+      "notes": "Python gateway CI declares no local database service. Product Dockerfile includes agent/SDK installers and floating versions; do not execute that Dockerfile in review. Shared workflows and infra reference Azure. Scope decision for product image tooling remains open.",
+      "locks": [],
+      "inodeSizing": {"status": "unknown", "method": "No installed dependency tree or countable package lock found. No defensible package-count estimate; non-documentation provisioning requires measurement.", "evidence": ["run-evidence:author-T21-A/dependency-sizing.json"]}
+    },
+    {
+      "name": "defi-com/defi-website",
+      "status": "pass",
+      "revision": "d60897311445365c5f0ed61777a58ae94610636f",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.md:119", "host-evidence:axat-vps:review-manager/progress.history.md:2131", "https://github.com/defi-com/defi-website/pull/136", "host-evidence:axat-vps:clone/defi-website/.git"],
+      "toolchains": ["node-24", "bun-1.3.14"],
+      "registries": ["registry.npmjs.org"],
+      "privatePackages": [
+        {"name": "@deficom/defi-web-server", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/apps/defi-web-server/package.json"], "version": "0.0.0", "versionStatus": "pass"},
+        {"name": "@deficom/defi-web", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/apps/defi-web/package.json"], "version": "0.0.0", "versionStatus": "pass"},
+        {"name": "defi-website", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/common", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/packages/common/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/config-typescript", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/packages/config-typescript/package.json"], "version": "0.0.0", "versionStatus": "pass"},
+        {"name": "@deficom/storyblok", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/packages/storyblok/package.json"], "version": "0.0.1", "versionStatus": "pass"}
+      ],
+      "privateRegistryStatus": "n/a",
+      "services": [
+        {"name": "PostgreSQL", "version": "17-alpine", "availability": "unknown", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/docker-compose.dev.yml"]}
+      ],
+      "notes": "Bun 1.3.14, Node 24 alias. @deficom workspaces are local; Postgres 17 is the isolated dev DB. No evidence of an external private package registry.",
+      "locks": [
+        {"path": "bun.lock", "packages": 778, "method": "Bun text lock package-array records (includes peer variants)", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/bun.lock"]}
+      ],
+      "inodeSizing": {"status": "unknown", "method": "Estimate: 136 entries per JS lock record (ceil(2 * 154801 / 2277)); 512 per Cargo/Swift pin heuristic; max alternative JS locks, add other ecosystems. Not a measured bound. Android/Gradle artifacts uncounted.", "estimatedEntries": 105808, "recommendedInodes": 1048576, "evidence": ["run-evidence:author-T21-A/dependency-sizing.json", "https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/bun.lock"]}
+    },
+    {
+      "name": "defi-com/disaster-recovery",
+      "status": "pass",
+      "revision": "d0bb8a2b1977e1a9f79e650c39db4835948c6368",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.md:177", "host-evidence:axat-vps:review-manager/progress.history.md:2509", "https://github.com/defi-com/disaster-recovery/pull/2", "host-evidence:axat-vps:clone/disaster-recovery/.git"],
+      "toolchains": [],
+      "registries": [],
+      "privatePackages": [],
+      "privateRegistryStatus": "n/a",
+      "services": [],
+      "notes": "Only six tracked documentation files; no manifest, lockfile, CI, Dockerfile or required service found at snapshot. n/a sizing means documentation-only, not unknown access.",
+      "locks": [],
+      "inodeSizing": {"status": "n/a", "method": "No installed dependency tree or countable package lock found. No defensible package-count estimate; non-documentation provisioning requires measurement.", "evidence": ["run-evidence:author-T21-A/dependency-sizing.json"]}
+    },
+    {
+      "name": "defi-com/metrics-dashboard",
+      "status": "pass",
+      "revision": "25277e6d4587515070390e6106e768fcd2eaf492",
+      "inspection": "remote-tracked-files",
+      "laneEvidence": "90-day-PR",
+      "evidence": ["https://github.com/defi-com/metrics-dashboard/pull/1"],
+      "toolchains": ["python-313"],
+      "registries": [],
+      "privatePackages": [],
+      "privateRegistryStatus": "n/a",
+      "services": [
+        {"name": "PostgreSQL", "version": "17-alpine", "availability": "unknown", "evidence": ["https://github.com/defi-com/metrics-dashboard/blob/25277e6d4587515070390e6106e768fcd2eaf492/docker-compose.yml"]},
+        {"name": "Grafana", "version": "13.2.3", "availability": "unknown", "evidence": ["https://github.com/defi-com/metrics-dashboard/blob/25277e6d4587515070390e6106e768fcd2eaf492/grafana/Dockerfile"]},
+        {"name": "Prometheus", "version": "3.15.0", "availability": "unknown", "evidence": ["https://github.com/defi-com/metrics-dashboard/blob/25277e6d4587515070390e6106e768fcd2eaf492/prometheus/Dockerfile"]},
+        {"name": "OpenTelemetry Collector", "version": "0.162.0", "availability": "unknown", "evidence": ["https://github.com/defi-com/metrics-dashboard/blob/25277e6d4587515070390e6106e768fcd2eaf492/otel-collector/Dockerfile"]}
+      ],
+      "notes": "Remote-only involved-PR discovery; complete recursive tree inspected at SHA. Compose requires telemetry stack and Postgres; Python 3.13 emitter is standard-library code. No package lock or package registry declared.",
+      "locks": [],
+      "inodeSizing": {"status": "n/a", "method": "No installed dependency tree or countable package lock found. No defensible package-count estimate; non-documentation provisioning requires measurement.", "evidence": ["run-evidence:author-T21-A/remote-inspection.json"]}
+    },
+    {
+      "name": "defi-com/mobile",
+      "status": "pass",
+      "revision": "d6a6aa708368cdf815858a638792921061d528e6",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.md:279", "host-evidence:axat-vps:review-manager/progress.history.md:2131", "https://github.com/defi-com/mobile/pull/152", "host-evidence:axat-vps:clone/mobile/.git"],
+      "toolchains": ["node-24", "npm", "jdk-11", "jdk-25", "gradle", "kotlin", "agp", "android-sdk", "swift", "swiftlint"],
+      "registries": ["dl.google.com", "plugins-artifacts.gradle.org", "plugins.gradle.org", "registry.npmjs.org", "repo.maven.apache.org", "repo1.maven.org"],
+      "privatePackages": [
+        {"name": "app", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/react-native/app/package.json"], "version": "1.0.0", "versionStatus": "pass"}
+      ],
+      "privateRegistryStatus": "n/a",
+      "services": [],
+      "notes": "Native CI requires Linux Swift 6.4.1 and Android/JVM unit checks; Apple Xcode/iOS is the narrow Swift-on-Linux exception. React Native manifest pins npm and Node independently. Android SDK and JDK patch provisioning remain required.",
+      "locks": [
+        {"path": "native/iOS/app/Defi.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved", "packages": 1, "method": "Swift resolved pins", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/iOS/app/Defi.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"]},
+        {"path": "react-native/app/package-lock.json", "packages": 1058, "method": "package-lock packages keys (includes root/workspaces)", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/react-native/app/package-lock.json"]}
+      ],
+      "inodeSizing": {"status": "unknown", "method": "Estimate: 136 entries per JS lock record (ceil(2 * 154801 / 2277)); 512 per Cargo/Swift pin heuristic; max alternative JS locks, add other ecosystems. Not a measured bound. Android/Gradle artifacts uncounted.", "estimatedEntries": 144400, "recommendedInodes": 1048576, "evidence": ["run-evidence:author-T21-A/dependency-sizing.json", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/iOS/app/Defi.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/react-native/app/package-lock.json"]}
+    },
+    {
+      "name": "defi-com/monorepo",
+      "status": "pass",
+      "revision": "3fb6f228f04aca7c5510d5958def33b55fd3ed19",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.md:119", "host-evidence:axat-vps:review-manager/progress.history.md:1312", "https://github.com/defi-com/monorepo/pull/896", "host-evidence:axat-vps:clone/monorepo/.git"],
+      "toolchains": ["node-24", "node-20", "bun-1.2.2", "bun-1.3.14", "bun-1.4.4", "rust", "terraform", "foundry"],
+      "registries": ["crates.io", "index.crates.io", "registry.npmjs.org", "static.crates.io"],
+      "privatePackages": [
+        {"name": "defi-app", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/apps/defi-app/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "rescue-tool", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/apps/rescue-tool/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/tradfi-server", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/apps/tradfi-server/package.json"], "version": "0.0.0", "versionStatus": "pass"},
+        {"name": "@deficom", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/package.json"], "version": "0.1.0", "versionStatus": "pass"},
+        {"name": "@deficom/across-client", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/across-client/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/common", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/common/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/config-typescript", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/config-typescript/package.json"], "version": "0.0.0", "versionStatus": "pass"},
+        {"name": "@deficom/config", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/config/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/contracts-codegen", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/contracts-codegen/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/decentralised-icons", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/decentralised-icons/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/defi-aggregator", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/defi-aggregator/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/defi-id", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/defi-id/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/kernel-stealth-address-sdk", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/kernel-stealth-address-sdk/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/passkeys", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/passkeys/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/ptp", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/ptp/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/recovery-keys", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/recovery-keys/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/relay-client", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/relay-client/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/stocks", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/stocks/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/tokenlists", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/tokenlists/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/tokens", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/tokens/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@deficom/ui-kit", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/ui-kit/package.json"], "version": "0.0.1", "versionStatus": "pass"},
+        {"name": "@defi-com/def-1187-fork-probe", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/probes/def-1187-fork/package.json"], "version": null, "versionStatus": "unknown"},
+        {"name": "@defi-com/def-1187-recovery-probe", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/probes/def-1187/package.json"], "version": null, "versionStatus": "unknown"},
+        {"name": "@defi/release-gateway-prototype", "kind": "private-manifest-local-source", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/prototypes/release-gateway/package.json"], "version": "0.0.0", "versionStatus": "pass"},
+        {"name": "defi-com/contracts", "kind": "private-gitlink", "version": "337112c67af1a05c753af88c87d26bcdd7467562", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/.gitmodules", "run-evidence:author-T21-A/repository-access.json"]}
+      ],
+      "privateRegistryStatus": "unknown",
+      "services": [
+        {"name": "PostgreSQL", "version": "17-alpine", "availability": "unknown", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/docker-compose.dev.yml"]},
+        {"name": "PostgreSQL (passkey fixture)", "version": "16-alpine", "availability": "unknown", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/docker-compose.passkey.yml"]},
+        {"name": "Redis", "version": "alpine / 7-alpine", "availability": "unknown", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/docker-compose.passkey.yml"]},
+        {"name": "Azurite", "version": "unversioned image tag", "availability": "unknown", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/docker-compose.dev.yml"]},
+        {"name": "Nginx (passkey proxy)", "version": "alpine (floating tag)", "availability": "unknown", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/docker-compose.passkey.yml#L118"]}
+      ],
+      "notes": "Node .nvmrc v20 conflicts with engines/active setup 24; docs job still needs 20. Bun 1.2.2 CI, 1.3.14 build and 1.4.4 runtime are distinct requirements. Rust minor 1.91 versus wallet-core exact 1.91.1 needs compatibility check; private contracts gitlink is a restriction.",
+      "locks": [
+        {"path": "Cargo.lock", "packages": 751, "method": "Cargo.lock [[package]] records", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/Cargo.lock"]},
+        {"path": "bun.lock", "packages": 2277, "method": "Bun text lock package-array records (includes peer variants)", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/bun.lock"]},
+        {"path": "prototypes/release-gateway/package-lock.json", "packages": 4, "method": "package-lock packages keys (includes root/workspaces)", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/prototypes/release-gateway/package-lock.json"]}
+      ],
+      "inodeSizing": {"status": "pass", "method": "os.walk no symlink traversal; lstat entries; distinct (st_dev, st_ino), excludes root", "files": 139363, "entries": 154801, "uniqueInodes": 125367, "logicalBytes": 1339175730, "recommendedInodes": 1048576, "evidence": ["run-evidence:author-T21-A/dependency-sizing.json", "host-evidence:axat-vps:clone/monorepo/node_modules"]}
+    },
+    {
+      "name": "defi-com/wallet-core",
+      "status": "pass",
+      "revision": "dadef8904b1ec7031a038880bf388709799f0e70",
+      "inspection": "local-tracked-HEAD",
+      "laneEvidence": "continuity",
+      "evidence": ["host-evidence:axat-vps:review-manager/progress.md:1091", "host-evidence:axat-vps:review-manager/progress.history.md:1312", "https://github.com/defi-com/wallet-core/pull/20", "host-evidence:axat-vps:clone/wallet-core/.git"],
+      "toolchains": ["rust", "cargo-deny", "cargo-vet"],
+      "registries": ["crates.io", "index.crates.io", "static.crates.io"],
+      "privatePackages": [],
+      "privateRegistryStatus": "n/a",
+      "services": [],
+      "notes": "Exact Rust 1.91.1 + rustfmt/clippy; cargo-deny/vet pins in CI. No external service declared; WASM/UniFFI cross-target prerequisites need E image inspection rather than assuming installed.",
+      "locks": [
+        {"path": "Cargo.lock", "packages": 48, "method": "Cargo.lock [[package]] records", "evidence": ["https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/Cargo.lock"]}
+      ],
+      "inodeSizing": {"status": "unknown", "method": "Estimate: 136 entries per JS lock record (ceil(2 * 154801 / 2277)); 512 per Cargo/Swift pin heuristic; max alternative JS locks, add other ecosystems. Not a measured bound. Android/Gradle artifacts uncounted.", "estimatedEntries": 24576, "recommendedInodes": 1048576, "evidence": ["run-evidence:author-T21-A/dependency-sizing.json", "https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/Cargo.lock"]}
+    }
+  ],
+  "terraformProviders": [
+    {"repository": "defi-com/azure-baseline", "name": "registry.terraform.io/azure/azapi", "version": "2.12.0", "evidence": ["https://github.com/defi-com/azure-baseline/blob/af1dc2ffec2482e470187d6da8a96d490e2d54c2/baseline/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/azure-baseline", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/azure-baseline/blob/af1dc2ffec2482e470187d6da8a96d490e2d54c2/baseline/.terraform.lock.hcl#L26"]},
+    {"repository": "defi-com/azure-baseline", "name": "registry.terraform.io/hashicorp/azuread", "version": "3.9.0", "evidence": ["https://github.com/defi-com/azure-baseline/blob/af1dc2ffec2482e470187d6da8a96d490e2d54c2/platform/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/azure-baseline", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/azure-baseline/blob/af1dc2ffec2482e470187d6da8a96d490e2d54c2/platform/.terraform.lock.hcl#L29"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.64.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/.github/actions/secret-state-remove/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "5.7.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-modules/op-kv-sync/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "5.9.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-modules/private-github-runner/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/azure/azapi", "version": "2.13.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/asi-cs/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/asi-cs/.terraform.lock.hcl#L27"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/random", "version": "3.9.1", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/asi-cs/.terraform.lock.hcl#L49"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "5.5.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/azure-next-hybrid-website-dns/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "5.5.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/azure-next-hybrid/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "5.5.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/azure-next-hybrid/modules/frontdoor/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.79.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/defi-website/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/random", "version": "3.9.1", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/defi-website/.terraform.lock.hcl#L25"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo-agent/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo-production-edge/infra/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "5.6.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo-production-foundation/infra/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "5.6.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo-production-runtime/infra/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/random", "version": "3.9.1", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo-production-runtime/infra/.terraform.lock.hcl#L28"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/time", "version": "0.14.2", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo-production-runtime/infra/.terraform.lock.hcl#L52"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "5.6.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo-staging-runner/infra/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.opentofu.org/hashicorp/azurerm", "version": "4.64.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.opentofu.org/hashicorp/random", "version": "3.8.1", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/.terraform.lock.hcl#L41"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/analytics_app/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/analytics_report_route/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/analytics_vmss/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/apim/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/random", "version": "3.9.1", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/apim/.terraform.lock.hcl#L24"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/compute/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/data/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/random", "version": "3.9.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/data/.terraform.lock.hcl#L26"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "4.81.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/frontdoor/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/ci-workflows", "name": "registry.terraform.io/hashicorp/azurerm", "version": "5.7.0", "evidence": ["https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/modules/keyvault_existing_secret/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/defi-website", "name": "registry.opentofu.org/hashicorp/azurerm", "version": "4.79.0", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/infra-archive/defi-web/.terraform.lock.hcl#L4"]},
+    {"repository": "defi-com/defi-website", "name": "registry.opentofu.org/hashicorp/random", "version": "3.9.0", "evidence": ["https://github.com/defi-com/defi-website/blob/d60897311445365c5f0ed61777a58ae94610636f/infra-archive/defi-web/.terraform.lock.hcl#L41"]}
+  ],
+  "containerRegistryObservations": [
+    {"hostname": "docker.io", "use": "Public language/base/service images; resolve and pin by digest during E build, never add Docker socket or image pulls to workload.", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/docker-compose.dev.yml", "https://github.com/defi-com/metrics-dashboard/blob/25277e6d4587515070390e6106e768fcd2eaf492/grafana/Dockerfile"]},
+    {"hostname": "mcr.microsoft.com", "use": "Azurite sidecar; source tag is floating, E must pin by digest.", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/docker-compose.dev.yml"]},
+    {"hostname": null, "status": "unknown", "use": "Private Azure Container Registry names are configured dynamically in deploy workflows. No credentialed pulls or wildcard *.azurecr.io egress approved.", "evidence": ["https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/.github/workflows/ci.yml"]}
+  ],
+  "limitations": [
+    {"type": "swift-on-linux", "detail": "mobile: Linux Swift 6.4.1 packages remain required. Xcode 27 / Apple SDK / iOS app and simulator tests cannot run in the Linux review image; do not generalize this exception to Android/JVM or Linux Swift failures.", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/.github/workflows/native-ci.yml#L58", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/.github/workflows/native-ci.yml#L122"]},
+    {"type": "private-package", "detail": "monorepo packages/contracts gitlink 337112c67af1a05c753af88c87d26bcdd7467562 targets private defi-com/contracts. Never fetch on the host or inject credentials. Stale .gitmodules domains-json entry is a tracked blob, not a gitlink, and its remote is private. Workspace @deficom/* packages are local tracked source, not evidence of a private registry.", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/.gitmodules", "run-evidence:author-T21-A/repository-access.json", "run-evidence:author-T21-A/dependency-sizing.json"]},
+    {"type": "per-pr-non-registry-download", "detail": "Known candidates: SwiftLintPlugins Git dependency 0.65.1 at ef7d692fc6706e8f5628e26bcafaefa445c58a97; Gradle wrapper distributions/JDK Foojay URLs; Foundry/Solc/Soldeer downloads; Playwright browser and Prisma engine downloads; Terraform/OpenTofu provider release redirects. Prefer pinned image-build content. A PR needing additional content is held/reported individually without broader egress.", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/iOS/app/Defi.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/gradle/wrapper/gradle-wrapper.properties", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/gradle/gradle-daemon-jvm.properties", "https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/foundry.toml", "https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/packages/database/Dockerfile"]}
+  ],
+  "openObligations": [
+    {"id": "exact-pins", "status": "unknown", "detail": "E/integrator must select immutable image/build pins for source-only aliases: Node 20, Node ^20.9 and >=18, Python 3.12/3.13, JDK 11/25, and SDK command-line/build tools. Source declarations are frozen verbatim; they are not exact patch versions or smoke evidence.", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/.github/workflows/docs-pages.yml#L57", "https://github.com/defi-com/azure-next-hybrid/blob/f6c302b839a420ffd2c3511e06d008bfdb0663b7/package.json#L53", "https://github.com/defi-com/DeFi-Dashboard/blob/43ec31fa4d5bfa0b8f7613f0222d686dfd4d7103/package.json#L8", "https://github.com/defi-com/defi-review-agent/blob/bcacdc51063819ecba0a212e00f28e1866ed3ca2/.github/workflows/ci.yml#L109", "https://github.com/defi-com/metrics-dashboard/blob/25277e6d4587515070390e6106e768fcd2eaf492/docker-compose.yml", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/.github/workflows/native-ci.yml#L163", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/gradle/gradle-daemon-jvm.properties#L12", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/app/build.gradle.kts"]},
+    {"id": "go", "status": "unknown", "detail": "W3-4 explicitly requires Go but no reviewed repository has a go.mod/go.sum or setup-go pin at the inspected revisions. Driver must settle an exact supported Go version; absence is not an allowed limitation. Keep W3-4 incomplete until pinned and smoke-tested.", "evidence": ["https://github.com/axatbhardwaj/axstack/blob/08e9ce8b01a480fa8a04abb0cf6473b46a87477b/docs/specs/slop-meta.md#L514", "run-evidence:author-T21-A/local-inspection.json"]},
+    {"id": "toolchain-smokes", "status": "unknown", "detail": "Every required entry has availability unknown: this read-only package ran no toolchain, build, install or smoke test. E/integration must provision and smoke every required toolchain; a failure remains an open obligation, never an accepted limitation.", "evidence": ["run-evidence:author-T21-A/local-inspection.json", "run-evidence:author-T21-A/remote-inspection.json"]},
+    {"id": "sidecar-digests", "status": "unknown", "detail": "E must select and verify digest-pinned non-root sidecars: Postgres 16/17, Redis (7 and floating alpine), Azurite, Prometheus 3.15.0, Grafana 13.2.3 OTel Collector 0.162.0 and Nginx (passkey fixture, floating alpine). Existing Docker tags are observations, not launcher image authority.", "evidence": ["https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/docker-compose.dev.yml", "https://github.com/defi-com/monorepo/blob/3fb6f228f04aca7c5510d5958def33b55fd3ed19/docker-compose.passkey.yml", "https://github.com/defi-com/metrics-dashboard/blob/25277e6d4587515070390e6106e768fcd2eaf492/docker-compose.yml"]},
+    {"id": "registry-fetch", "status": "unknown", "detail": "C/integration must verify metadata, tarballs and redirects through the frozen explicit hostname list. Defaults are endpoint mappings, not observed successful downloads. GitHub, release CDNs, Foojay and browser/Prisma binaries are not blanket-allowlisted.", "evidence": ["https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZUREDASH/web/package-lock.json", "https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZURE/requirements.txt", "https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/ASI_AZURE/requirements.txt", "https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/Cargo.lock", "https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/Cargo.lock", "https://github.com/defi-com/wallet-core/blob/dadef8904b1ec7031a038880bf388709799f0e70/Cargo.lock", "https://github.com/defi-com/azure-baseline/blob/af1dc2ffec2482e470187d6da8a96d490e2d54c2/baseline/.terraform.lock.hcl", "https://github.com/defi-com/azure-baseline/blob/af1dc2ffec2482e470187d6da8a96d490e2d54c2/baseline/.terraform.lock.hcl", "https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/terraform-roots/monorepo/.terraform.lock.hcl", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/settings.gradle.kts"]},
+    {"id": "native-sdk", "status": "unknown", "detail": "Android SDK API 37, Gradle 9.6.0, Kotlin 2.2.10 and AGP 9.4.1 are required. Provision SDK/JDK/Gradle contents in the image; native Android Linux compilation/unit tests cannot be waived as Swift-on-Linux. No emulator or device execution was requested or proved.", "evidence": ["https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/native/android/app/build.gradle.kts", "https://github.com/defi-com/mobile/blob/d6a6aa708368cdf815858a638792921061d528e6/.github/workflows/native-ci.yml"]},
+    {"id": "legacy-tools", "status": "unknown", "detail": "The reviewed agent product image pins extra agent/analyzer/browser tools and installs floating Rust, Foundry, OpenTofu, node/npm. Full product-image-tools.json is private run evidence. These are product build inputs, not permission to run nested Docker/agents. Driver/E must decide which are required for Python/static review tests; every required unpinned tool needs an exact pin.", "evidence": ["https://github.com/defi-com/defi-review-agent/blob/bcacdc51063819ecba0a212e00f28e1866ed3ca2/agents/sandbox/Dockerfile"]},
+    {"id": "scope-candidates", "status": "unknown", "detail": "DeFi-Dashboard, contracts and metrics-dashboard are outside continuity but have 90-day PR discovery evidence (contracts also a private monorepo gitlink). Driver must confirm future lane membership. Personal/upstream discoveries are listed as exclusions, not silently discarded.", "evidence": ["run-evidence:author-T21-A/discovery.json", "run-evidence:author-T21-A/github-search.json"]},
+    {"id": "external-services", "status": "unknown", "detail": "Cloud/deployment workflows reference Azure and other live APIs. No credentials, production databases, RPCs or deployment operations are approved for the sandbox. Driver must select isolated test subsets/mocks; a required isolated service stays an obligation and cannot be renamed a limitation.", "evidence": ["https://github.com/defi-com/ASI_CS/blob/f0f3bea37c3f13462024ec1c3db07ea54b3113bf/.github/workflows/ci.yml", "https://github.com/defi-com/defi-review-agent/blob/bcacdc51063819ecba0a212e00f28e1866ed3ca2/.github/workflows/ci.yml", "https://github.com/defi-com/ci-workflows/blob/9c33150db9d47bc47d717e3f244990865a7d7fc6/.github/workflows/cd-template.yml"]},
+    {"id": "inode-validation", "status": "unknown", "detail": "D/integration must validate explicit ext4 inode count and bytes against a fresh largest dependency install inside containment. Existing tree sizing does not measure Rust builds, Android/Gradle transitive artifacts or two-run host capacity. Floor is guidance, not a proven cap.", "evidence": ["run-evidence:author-T21-A/dependency-sizing.json"]},
+    {"id": "public-submodule-content", "status": "unknown", "detail": "contracts has public gitlinks lib/forge-std at 8e40513d678f392f398620b3ef2b418648b33e89 and lib/openzeppelin-contracts at fcbae5394ae8ad52d8e580a3477db99814b9d565. E must prebuild pinned content without running its scripts. No .gitmodules URL mapping is tracked in this clone; upstream identities are inferred from names/foundry.lock and need immutable-tree confirmation. Private monorepo contracts gitlink stays restricted. Soldeer lock contains four entries but foundry.toml declares five: @solarity-solidity-lib 2.7.6 is not locked; do not guess its resolved artifact.", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/foundry.lock", "https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/soldeer.lock", "https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/foundry.toml"]}
+  ],
+  "inodeSizing": {
+    "status": "unknown",
+    "recommendedInodesPerRun": 1048576,
+    "method": "Round a 4x margin over largest measured directory-entry count (154801) up to power of two; do not assume host hardlinks survive export. Set ext4 inode count explicitly (mkfs.ext4 -N), validate with dumpe2fs/tune2fs in D. No filesystem formatted in A.",
+    "hostMemoryDiskBudget": "Not measured by A; B/D/E/integration own actual host caps and two-run budget.",
+    "evidence": ["run-evidence:author-T21-A/dependency-sizing.json"]
+  },
+  "solidityDependencies": [
+    {"name": "@openzeppelin-contracts", "version": "5.5.0", "url": "https://soldeer-revisions.s3.amazonaws.com/@openzeppelin-contracts/5_5_0_01-11-2025_09:56:40_contracts.zip", "checksum": "2ee78837130cf06b456d9ef7ab70753685d9c1c9c2c5b70f24bd4c16695d0337", "integrity": "da8336cf949f0e0667ae8360af849681e3a3e76d7e61e7a86b1a3414a158aeea", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/soldeer.lock"]},
+    {"name": "eth-infinitism-account-abstraction", "version": "0.9.0", "url": "https://soldeer-revisions.s3.amazonaws.com/eth-infinitism-account-abstraction/0_9_0_20-11-2025_00:23:28_eth-infinitism-account-abstraction-0.9.zip", "checksum": "2c10595b73d49df58e02a9413931652e62a6ecf9b9e11f2177392d55783c5a3b", "integrity": "a1e9e10b53563327b0bd696c4030e53d194008cd5ce6e2a3ae2388032cc83666", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/soldeer.lock"]},
+    {"name": "forge-std", "version": "1.12.0", "url": "https://soldeer-revisions.s3.amazonaws.com/forge-std/1_12_0_28-11-2025_13:04:44_forge-std-1.12.zip", "checksum": "81dccd87cb3303f28fa7f8158e3fed087afcdafa976e78ad1a8601a9883fe413", "integrity": "76ecadcacae000ba45c346835c9458cc572d3b1555ae0056a34537157111c204", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/soldeer.lock"]},
+    {"name": "solady", "version": "0.1.26", "url": "https://soldeer-revisions.s3.amazonaws.com/solady/0_1_26_25-08-2025_15:30:06_solady.zip", "checksum": "9872ac7cfd32c1eba32800508a1325c49f4a4aa8c6f670454db91971a583e26b", "integrity": "5da4b5ca9cbad98812a4b75ad528ff34c72a0b84433204be6d1420c81de1d6ff", "evidence": ["https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/soldeer.lock"]},
+    {"name": "lib/forge-std", "version": "8e40513d678f392f398620b3ef2b418648b33e89", "kind": "public-gitlink", "repository": "https://github.com/foundry-rs/forge-std", "evidence": ["https://github.com/defi-com/contracts/tree/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/lib/forge-std", "https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/foundry.lock"]},
+    {"name": "lib/openzeppelin-contracts", "version": "fcbae5394ae8ad52d8e580a3477db99814b9d565", "kind": "public-gitlink", "repository": "https://github.com/OpenZeppelin/openzeppelin-contracts", "evidence": ["https://github.com/defi-com/contracts/tree/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/lib/openzeppelin-contracts", "https://github.com/defi-com/contracts/blob/3f7c9f9354c05a7be0157f6d5395cdd1baea60c9/foundry.lock"]}
+  ],
+  "discoveryEvidence": {
+    "run": "20261115-slop-meta-improve",
+    "sources": ["run-evidence:author-T21-A/discovery.json", "run-evidence:author-T21-A/excluded-discoveries.json", "run-evidence:author-T21-A/product-image-tools.json"],
+    "meaning": "Historical evidence citations only. run-evidence resolves in the owning run record; no host path or evidence file is a runtime dependency of this JSON."
+  }
+}
