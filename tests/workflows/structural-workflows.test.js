@@ -62,7 +62,7 @@ test('structural: active PR parallelism has no fixed count', () => {
 test('structural: shared PR-shape reference preserves measurement and coherent themes', () => {
   const p = join(skillsDir, 'axstack', 'references', 'pr-shape.md');
   const shape = readFileSync(p, 'utf8');
-  expect(shape).toContain('bun scripts/pr-shape.js --base <base> --head <head>');
+  // Documented command execution is covered by trusted-cwd.test.js.
   expect(shape).toMatch(/actual PR base/i);
   expect(shape).toMatch(/stacked child[^.]*parent branch/i);
   expect(shape).toMatch(/root PR[^.]*actual target branch/i);

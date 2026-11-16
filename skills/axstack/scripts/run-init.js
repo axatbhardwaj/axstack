@@ -1,9 +1,10 @@
-import { gitArgv } from './git-argv.js';
+import { gitArgv, gitEnv } from './git-argv.js';
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 
-const help = `Usage: bun scripts/run-init.js --slug <slug> [--date YYYYMMDD]
-Example: bun scripts/run-init.js --slug cli-lessons --date 20261008
+const help = `Usage: bun scripts/run-init.js --slug <slug> --repo <path> [--date YYYYMMDD]
+Example: bun scripts/run-init.js --slug cli-lessons --date 20261008 --repo /path/to/repo
 
+--repo  Required Git checkout path; run the installed helper from a trusted cwd
 --slug  Required run slug: lowercase letters, digits and hyphens only
 --date  Valid calendar date in YYYYMMDD; defaults to today's UTC date
 --help  Show flags, side effects and exit codes without writing
@@ -23,7 +24,7 @@ function optionsFrom(argv) {
   const options = {};
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
-    if (!['--slug', '--date'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
+    if (!['--slug', '--date', '--repo'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
     const value = argv[i + 1];
     if (!value || value.startsWith('--')) throw new Error(`missing value; pass ${flag} <value>`);
     if (flag in options) throw new Error(`duplicate ${flag}; pass it once`);
@@ -32,17 +33,18 @@ function optionsFrom(argv) {
   if (!options['--slug'] || !/^[a-z0-9-]+$/.test(options['--slug'])) {
     throw new Error('pass --slug <slug> using only lowercase letters, digits and hyphens');
   }
+  if (!options['--repo']) throw new Error('pass --repo <Git-checkout-path>');
   const date = options['--date'] ?? new Date().toISOString().slice(0, 10).replaceAll('-', '');
   const iso = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
   const parsed = new Date(`${iso}T00:00:00Z`);
   if (!/^\d{8}$/.test(date) || Number.isNaN(parsed.valueOf()) || parsed.toISOString().slice(0, 10) !== iso) {
     throw new Error('pass --date YYYYMMDD with a valid calendar date');
   }
-  return { slug: options['--slug'], date };
+  return { repo: options['--repo'], slug: options['--slug'], date };
 }
 
-function git(...args) {
-  const result = Bun.spawnSync(gitArgv(...args), { stdout: 'pipe', stderr: 'pipe' });
+function git(repo, ...args) {
+  const result = Bun.spawnSync(gitArgv('-C', repo, ...args), { env: gitEnv(), stdout: 'pipe', stderr: 'pipe' });
   return result.exitCode === 0 ? result.stdout.toString().trim() : null;
 }
 
@@ -52,10 +54,10 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
       io.stdout(help);
       return 0;
     }
-    const { slug, date } = optionsFrom(argv);
-    const gitCommonDir = git('rev-parse', '--path-format=absolute', '--git-common-dir');
-    if (!gitCommonDir) throw new Error('not in a Git repository; run this helper from a Git checkout');
-    const head = git('rev-parse', '--verify', 'HEAD');
+    const { repo, slug, date } = optionsFrom(argv);
+    const gitCommonDir = git(repo, 'rev-parse', '--path-format=absolute', '--git-common-dir');
+    if (!gitCommonDir) throw new Error('not a Git repository; run with --repo <Git-checkout-path>');
+    const head = git(repo, 'rev-parse', '--verify', 'HEAD');
     const source = realpathSync(`${import.meta.dir}/../references/run-record.md`);
     const template = readFileSync(source, 'utf8').match(/^## Compact template\r?\n[\s\S]*?^```text\r?\n([\s\S]*?)^```/m)?.[1];
     if (!template) throw new Error('compact template missing; restore references/run-record.md');

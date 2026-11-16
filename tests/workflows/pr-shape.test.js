@@ -10,7 +10,7 @@ const audit = 'skills/axstack-audit/SKILL.md';
 const record = 'skills/axstack-audit/references/record.md';
 const docs = 'docs/workflows.md';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8')
-  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s+/g, ' ');
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replaceAll('--no-env-file', '--env-disabled').replace(/\s+/g, ' ');
 
 // Independent instruction contracts: the prior band checks enforced approval
 // gates. These protect informational sizing and coverage without simulating agents.

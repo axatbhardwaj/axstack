@@ -288,3 +288,29 @@ test('packaged instructions exclude the rejected force-recursive scratch command
     if (path.endsWith('.md')) expect(read(`skills/${path}`), path).not.toMatch(/\brm\s+-rf\b/);
   }
 });
+
+// Mask the CLI flag's "no": it is not a negation of the surrounding instruction.
+const helperRuleText = (text) => text.replace(/`/g, '').replaceAll('--no-env-file', '--env-disabled');
+for (const [name, concepts, rewording, inversions, prohibition] of [
+  ['installed helpers use trusted cwd, explicit repos and disabled dotenv',
+    [/run|execute/i, /installed helpers/i, /trusted (?:cwd|working directory)/i, /--repo/, /-C/, /--env-disabled/],
+    'Execute installed helpers with --repo/-C and --no-env-file from a trusted working directory.',
+    [[/run|execute/i, 'avoid'], [/trusted (?:cwd|working directory)/i, 'peer checkout']]],
+  ['Bun never starts in a peer checkout', [/start|launch/i, /Bun/i, /peer checkout/i],
+    'Never launch Bun in a peer checkout.', [[/never/i, 'always']], /never/i],
+  ['required in-peer startup blocks config and dotenv together',
+    [/if required there|when.*peer checkout/i, /use|run/i, /bun/i, /--config=<[^>]*empty[^>]*>/, /--env-disabled/],
+    'When Bun must start in a peer checkout, run bun --config=<empty-file> --no-env-file.',
+    [[/use|run/i, 'avoid'], [/--config=/, '--config '], [/--env-disabled/, '--env-enabled']]],
+  ['dotenv protection uses startup controls',
+    [/trusted (?:cwd|working directory)/i, /--env-disabled/, /block|prevent/i, /peer \.env/i],
+    'A trusted working directory with --no-env-file prevents peer .env loading.',
+    [[/block|prevent/i, 'permit']]],
+  ['Git scrub covers inherited GIT variables only', [/Git scrub/i, /covers/i, /inherited GIT_\*/, /only/i],
+    'The Git scrub covers inherited GIT_* only.', [[/only/i, 'and other variables']]],
+]) {
+  test(`helper startup rule: ${name}`, () => {
+    const accepts = (text) => prohibition ? prohibits(text, prohibition, ...concepts) : requires(text, ...concepts);
+    checkRule(helperRuleText(hygiene()), accepts, helperRuleText(rewording), inversions, concepts);
+  });
+}

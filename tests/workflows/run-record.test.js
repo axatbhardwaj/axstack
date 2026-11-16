@@ -21,7 +21,7 @@ test('run-record: shared reference exists and lifecycle links to it', () => {
 
 test('run-record: initialization pointer, ownership, fallback and archive stay local', () => {
   const text = read('skills/axstack/references/run-record.md');
-  expect(text).toMatch(/^bun scripts\/run-init\.js --slug [a-z0-9-]+$/m);
+  // Documented run-init execution is covered by trusted-cwd.test.js.
   const output = text.match(/^(?:Prints|Returns|Emits)\b[^\n]*/m)?.[0] ?? '';
   expect(output).toMatch(/JSON.*record.*evidence.*scratch/i);
   expect(output).not.toMatch(/\b(?:no|not|never|without)\b/i);

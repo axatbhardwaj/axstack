@@ -58,7 +58,7 @@ export async function executeDeclared(repo, revision, paths, criteria, manager, 
       const probe = await run('network-probe', argv, scratch, argv);
       if (probe.exitCode === 0 && !probe.timedOut && !probe.error) result.network = 'isolated';
     }
-    const clone = await run('clone', gitArgv('clone', '--no-hardlinks', '--no-checkout', '--', realpathSync(repo), cwd), scratch);
+    const clone = await run('clone', gitArgv('-C', scratch, 'clone', '--no-hardlinks', '--no-checkout', '--', realpathSync(repo), cwd), scratch);
     if (clone.exitCode !== 0 || clone.timedOut) throw new Error(`clone failed; see ${clone.logPath}`);
     const checkout = await run('checkout', gitArgv('-C', cwd, 'checkout', '--detach', revision), scratch);
     if (checkout.exitCode !== 0 || checkout.timedOut) throw new Error(`checkout failed; see ${checkout.logPath}`);

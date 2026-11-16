@@ -31,8 +31,8 @@ function block(base, head) {
   return `<!-- axstack:proof -->\nFiles: 2\nLines added: 3\nLines removed: 1\nCommits: 2\nHead SHA: ${head}\nBase SHA: ${base}\n<!-- /axstack:proof -->`;
 }
 function invoke(repo, args, env = {}) {
-  const result = Bun.spawnSync([process.execPath, script, '--proof', ...args], {
-    cwd: repo, env: { ...process.env, ...env },
+  const result = Bun.spawnSync([process.execPath, script, '--proof', ...(args.includes('--repo') ? [] : ['--repo', repo]), ...args], {
+    cwd: root, env: { ...process.env, ...env },
   });
   const stdout = result.stdout.toString();
   return { code: result.exitCode, stdout, stderr: result.stderr.toString(),

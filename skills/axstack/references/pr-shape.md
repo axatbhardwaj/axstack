@@ -1,9 +1,10 @@
 # PR shape
 
 ## Measure
-Actual PR base:
+Resolve `<installed-axstack>`: absolute installed `axstack` skill directory.
+Run examples from trusted cwd `/`; measure actual PR base:
 ```sh
-bun scripts/pr-shape.js --base <base> --head <head>
+bun --no-env-file <installed-axstack>/scripts/pr-shape.js --repo <path> --base <base> --head <head>
 ```
 JSON: SHAs, merge-base, total = additions + deletions over all files, renames, binaries, buckets and commands.
 
@@ -20,17 +21,13 @@ There is no universal safe LOC limit or fixed token percentage.
 
 ## Peer sync proof
 
-Run `pr-shape.js --base <base> --head <head> --source <source>`.
+Run `bun --no-env-file <installed-axstack>/scripts/pr-shape.js --repo <path> --base <base> --head <head> --source <source>`.
 The sync term grants no authority.
 Sync is eligible only for a user-recorded pair `<repo>: <source> -> <base>`
 in the manager durable record, or user-named for manual review.
 The head repo must equal the base repo.
 Source S is a fetched base-repo ref with its SHA recorded.
-Resolve B/H/S to base/head/source commit SHAs.
-Pass requires B <= H and either H <= S or both B <= S and equal H/S trees.
-Use `git merge-base --is-ancestor` for <= and `git rev-parse <sha>^{tree}` for trees.
-Ancestor exit 1 means fail, other Git errors or missing objects mean unknown,
-and absent `--source` means n/a. Preserve the helper's commands and SHAs.
+Preserve the helper's commands and SHAs.
 On sync pass, use no reviewer dispatch and submit nothing, record `sync skip`
 with event identity for dedupe, and leave the PR for the user.
 Sync fail or unknown takes ordinary review.
@@ -51,13 +48,13 @@ For repository title conventions, check recently merged PRs.
 
 Every own PR description must include a short `Proof` section:
 what was verified and how, with check-run receipt citations (paths/identities) for commands and observed results, CI or evidence links.
-Render its facts with
-`bun skills/axstack/scripts/pr-shape.js --proof --base <base> --head <head>`
-and paste the JSON `block` under `Proof`. Keep the returned per-term evidence.
-Check the published body against live GitHub facts with
-`bun skills/axstack/scripts/pr-shape.js --proof --pr <number> --repo <owner/repo>`.
-For a local body, use `--proof --base <base> --head <head> --body <path>`.
-Use `--proof --help` for the block format, fact definitions and unknown-data behavior.
+Render:
+`bun --no-env-file <installed-axstack>/scripts/pr-shape.js --proof --repo <path> --base <base> --head <head>`
+Paste JSON `block` under `Proof`; retain per-term evidence.
+Check published body against GitHub facts:
+`bun --no-env-file <installed-axstack>/scripts/pr-shape.js --proof --pr <number> --repo <owner/repo>`.
+Local body: add `--body <path>`.
+`--proof --help`: format, facts and unknown-data behavior.
 
 For UI-related changes, embed screenshots in the PR description
 (before/after where meaningful).

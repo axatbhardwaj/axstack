@@ -317,7 +317,7 @@ usage-limit holds without failover, with removal, inversion and rewording probes
 `runtime-safety.test.js` preserves the single-server keeper, sole stateless timer
 and model-discipline contracts with removal, inversion and rewording probes.
 Staged-file size advisory: `tests/workflows/staged-file-tokens.test.js` drives
-packaged `check-staged-file-tokens.js` in temporary Git repos. Successful
+packaged `check-staged-file-tokens.js` from trusted cwd with `--repo` selecting temporary Git repos. Successful
 measurements exit 0 with exactly one stdout line, `Staged-file token check passed.`,
 and report exact bytes above 20,000 on stderr, including new source,
 legacy edits, unchanged incoming merge blobs and docs/changelogs. The boundary

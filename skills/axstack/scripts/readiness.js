@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { gitArgv } from './git-argv.js';
+import { gitArgv, gitEnv } from './git-argv.js';
 import { readFileSync, mkdirSync, writeFileSync, lstatSync, realpathSync, renameSync, unlinkSync } from 'node:fs';
 import { executeDeclared } from './readiness-run.js';
 
@@ -9,7 +9,7 @@ const criteriaVersion = 1;
 /** @param {"ignore" | Uint8Array} [stdin] */
 function gitOutput(repo, args, stdin = 'ignore') {
   const argv = gitArgv('-C', repo, ...args);
-  const result = Bun.spawnSync(argv, { stdout: 'pipe', stderr: 'pipe', stdin });
+  const result = Bun.spawnSync(argv, { env: gitEnv(), stdout: 'pipe', stderr: 'pipe', stdin });
   if (result.exitCode !== 0) throw new Error(result.stderr.toString().trim());
   return result.stdout;
 }

@@ -1,7 +1,7 @@
 # Create run records and inspect repositories
 
 Entry points: `skills/axstack/scripts/{run-init,pr-shape,readiness,scratch,check-run}.js`;
-fixtures: `tests/workflows/{run-init,readiness,pr-shape-helper,scratch,scratch-consumers,capture,check-run}.test.js`
+fixtures: `tests/workflows/{run-init,readiness,pr-shape-helper,pr-shape-proof,git-hardening,trusted-cwd,scratch,scratch-consumers,capture,check-run}.test.js`
 and `tests/workflows/readiness-run/`.
 The pr-shape fixtures cover the optional `--source` sync term: fast-forward
 containment after source advancement, no-ff promotion trees, unrelated history,
@@ -10,7 +10,9 @@ missing source objects and absent-source n/a.
 They bind the proof to resolved SHAs and check that Git remains unchanged.
 Shape mode also emits `sandbox-path`: fail (user-merge hold) for the
 `skills/axstack/sandbox` entry or paths under it, including either rename endpoint; pass otherwise,
-unknown for unavailable Git evidence. Existing exits and proof mode stay unchanged.
+unknown for unavailable Git evidence. Local shape, proof and run-init require `--repo`;
+Git children scrub inherited `GIT_*` variables. The trusted-cwd fixture executes installed
+documented commands against a preload/dotenv peer and proves the old attack.
 Run `pr-shape-helper.test.js` and `watch-sandbox-path.test.js` for additions,
 modifications, deletions, renames in/out, untouched/empty diffs, the
 `sandbox-other/` near-miss, Git errors, bare symlink/gitlink entries and gitlink
@@ -136,8 +138,8 @@ printf 'fixture\n' > "$TMPDIR/reports-repo/README.md"
 git -C "$TMPDIR/reports-repo" add README.md
 git -C "$TMPDIR/reports-repo" -c user.name=Fixture \
   -c user.email=fixture@example.invalid commit -qm 'fixture feature'
-(cd "$TMPDIR/reports-repo"; bun "$SCRIPTS/run-init.js" \
-  --slug verify-fixture --date 20261008) > "$EVIDENCE/run-init.json"
+(cd /; bun --no-env-file "$HOME/.agents/skills/axstack/scripts/run-init.js" \
+  --repo "$TMPDIR/reports-repo" --slug verify-fixture --date 20261008) > "$EVIDENCE/run-init.json"
 (cd /; bun --no-env-file "$HOME/.agents/skills/axstack/scripts/pr-shape.js" \
   --repo "$TMPDIR/reports-repo" --base "$BASE" --head HEAD) > "$EVIDENCE/shape.json"
 bun -e 'const e = process.env.EVIDENCE; const r = await Bun.file(e + "/run-init.json").json(); const s = await Bun.file(e + "/shape.json").json(); if (r.terms.some(t => t.status !== "pass") || !(await Bun.file(r.recordPath).text()).includes("Run: " + r.runId) || s.totals.additions !== 1 || s.totals.deletions !== 0 || s["sandbox-path"].status !== "pass") throw Error("fixture report mismatch"); await Bun.write(e + "/fixture-progress.md", await Bun.file(r.recordPath).text());'

@@ -60,7 +60,7 @@ function invoke(repo, argv) {
   let stdout = '', stderr = '';
   try {
     process.chdir(repo);
-    const code = main(argv, { stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } });
+    const code = main(argv.includes('--repo') ? argv : ['--repo', repo, ...argv], { stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } });
     return { code, stdout, stderr, data: stdout.startsWith('{') ? JSON.parse(stdout) : null };
   } finally { process.chdir(cwd); }
 }
@@ -250,7 +250,7 @@ test.each([[], ['--base'], ['--base', 'main'], ['--head', 'HEAD'],
 test('outside Git and unresolved refs give actionable errors', () => {
   const outside = invoke(root, ['--base', 'main', '--head', 'HEAD']);
   expect(outside.code).toBe(1);
-  expect(outside.stderr).toMatch(/Git checkout/i);
+  expect(outside.stderr).toMatch(/--repo.*Git.checkout/i);
   expect(outside.data?.['sandbox-path']?.status).toBe('unknown');
   const { repo } = fixture();
   const invalid = invoke(repo, ['--base', 'missing', '--head', 'HEAD']);
@@ -354,7 +354,9 @@ test.each(['gitmodules', 'diff.ignoreSubmodules', 'global diff.ignoreSubmodules'
     writeFileSync(`${repo}/.gitmodules`, modules);
     git(repo, 'update-index', '--add', '--cacheinfo', `160000,${first},${path}`);
     const base = commit(repo, 'base gitlink');
-    const globalConfig = `${repo}/.git/global-config`;
+    const home = `${repo}/.git/home`;
+    mkdirSync(home);
+    const globalConfig = `${home}/.gitconfig`;
     writeFileSync(globalConfig, '');
     if (setting === 'gitmodules') writeFileSync(`${repo}/.gitmodules`, `${modules}ignore = all\n`);
     else if (setting === 'diff.ignoreSubmodules') git(repo, 'config', 'diff.ignoreSubmodules', 'all');
@@ -370,8 +372,11 @@ test.each(['gitmodules', 'diff.ignoreSubmodules', 'global diff.ignoreSubmodules'
     git(repo, 'update-index', '--cacheinfo', `160000,${second},${path}`);
     git(repo, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'PR head');
     const head = git(repo, 'rev-parse', 'HEAD');
+    const env = { ...process.env, HOME: home };
+    delete env.XDG_CONFIG_HOME;
+    delete env.GIT_CONFIG_GLOBAL;
     const result = Bun.spawnSync([process.execPath, `${import.meta.dir}/../../skills/axstack/scripts/pr-shape.js`,
-      '--base', base, '--head', 'HEAD'], { cwd: repo, env: { ...process.env, GIT_CONFIG_GLOBAL: globalConfig } });
+      '--repo', repo, '--base', base, '--head', 'HEAD'], { cwd: root, env });
     expect(result.exitCode, result.stderr.toString()).toBe(0);
     const data = JSON.parse(result.stdout.toString());
     expect(data.inputs.head).toBe(head);
@@ -455,4 +460,16 @@ test('three-layer chains and siblings preserve commit identity through parent/ba
   git(repo, 'merge', '--squash', 'parent');
   commit(repo, 'external squash loses reviewed parent identity');
   expect(ancestor(fixed, 'external-squash')).toBe(false);
+});
+
+test.each([
+  ['--base', 'main', '--head', 'HEAD'],
+  ['--base', 'main', '--head', 'HEAD', '--repo'],
+  ['--repo', '--base', 'main', '--head', 'HEAD'],
+])('missing repo errors ask for a checkout path: %j', (...argv) => {
+  let stderr = '';
+  const code = main(argv, { stdout: () => {}, stderr: text => { stderr += text; } });
+  expect(code).toBe(1);
+  expect(stderr).toContain('--repo <Git-checkout-path>');
+  expect(stderr).not.toContain('commit-or-branch');
 });

@@ -1,15 +1,15 @@
-import { gitArgv } from './git-argv.js';
+import { gitArgv, gitEnv } from './git-argv.js';
 import { existsSync, readFileSync } from 'node:fs';
 
 const lockfiles = ['bun.lock', 'bun.lockb', 'package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'];
 const sandboxDirectory = 'skills/axstack/sandbox';
 const sandboxPrefix = `${sandboxDirectory}/`;
-const help = `Usage: bun scripts/pr-shape.js --base <ref> --head <ref>
-Example: bun scripts/pr-shape.js --base main --head HEAD
+const help = `Usage: bun scripts/pr-shape.js --base <ref> --head <ref> --repo <path>
+Example: bun scripts/pr-shape.js --base main --head HEAD --repo /path/to/repo
 
 --base  Required actual PR base (parent branch for a stacked child)
 --head  Required candidate commit or branch
---repo  Optional Git checkout path for shape mode; defaults to the current repository
+--repo  Required Git checkout path; run the installed helper from a trusted cwd
 --source Optional source ref for the read-only sync term; no source means n/a
 --help  Show flags, example, bucket definitions and exit codes
 
@@ -36,24 +36,26 @@ Exit codes: 0 measured (including failed terms), 1 input/Git error,
 
 function optionsFrom(argv) {
   const options = {};
+  const missing = (flag) => new Error(flag === '--repo'
+    ? 'missing path; pass --repo <Git-checkout-path>' : `missing ref; pass ${flag} <commit-or-branch>`);
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
     if (!['--base', '--head', '--source', '--repo'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
     const value = argv[i + 1];
-    if (!value || value.startsWith('-')) throw new Error(`missing ref; pass ${flag} <commit-or-branch>`);
+    if (!value || value.startsWith('-')) throw missing(flag);
     if (flag in options) throw new Error(`duplicate ${flag}; pass it once`);
     options[flag] = value;
   }
-  for (const flag of ['--base', '--head']) {
-    if (!options[flag]) throw new Error(`missing ref; pass ${flag} <commit-or-branch>`);
+  for (const flag of ['--base', '--head', '--repo']) {
+    if (!options[flag]) throw missing(flag);
   }
   return options;
 }
 
-const command = (...args) => gitArgv('-c', 'core.attributesFile=/dev/null', ...args);
+const command = (repo, ...args) => gitArgv('-c', 'core.attributesFile=/dev/null', '-C', repo, ...args);
 function run(argv, input) {
   const result = Bun.spawnSync(argv, { stdin: input === undefined ? 'ignore' : new TextEncoder().encode(input),
-    stdout: 'pipe', stderr: 'pipe', env: { ...process.env, GIT_ATTR_NOSYSTEM: '1' } });
+    stdout: 'pipe', stderr: 'pipe', env: { ...gitEnv(), GIT_ATTR_NOSYSTEM: '1' } });
   return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };
 }
 
@@ -117,7 +119,7 @@ function summarize(rows, evidence) {
 
 const proofFields = { files: 'Files', additions: 'Lines added', deletions: 'Lines removed',
   commits: 'Commits', head: 'Head SHA', base: 'Base SHA' };
-const proofHelp = `Usage: bun scripts/pr-shape.js --proof --base <ref> --head <ref> [--body <path>]
+const proofHelp = `Usage: bun scripts/pr-shape.js --proof --repo <path> --base <ref> --head <ref> [--body <path>]
        bun scripts/pr-shape.js --proof --pr <number> --repo <owner/repo> [--body <path>]
 
 --proof Render/check PR Proof facts (separate from the unchanged shape mode)
@@ -125,7 +127,7 @@ const proofHelp = `Usage: bun scripts/pr-shape.js --proof --base <ref> --head <r
 --head  Current candidate ref, resolved with read-only Git
 --body  Optional UTF-8 PR body file to check; never modified
 --pr    Positive PR number; read-only gh api fetches current facts and body
---repo  Explicit owner/repo for --pr; cannot combine --pr with --base/--head
+--repo  Required Git checkout path, or owner/repo with --pr; --pr excludes --base/--head
 --help  Show this mode's flags, output and exit codes
 
 JSON: block (Markdown or null if facts unavailable), terms (each status, value,
@@ -158,8 +160,8 @@ function proofOptions(argv) {
   if (options['--pr']) {
     if (!/^[1-9]\d*$/.test(options['--pr']) || !/^[\w.-]+\/[\w.-]+$/.test(options['--repo'] ?? '') ||
         options['--base'] || options['--head']) throw Error('--pr requires --repo owner/repo and excludes --base/--head');
-  } else if (!options['--base'] || !options['--head'] || options['--repo']) {
-    throw Error('proof requires --base and --head, or --pr and --repo');
+  } else if (!options['--base'] || !options['--head'] || !options['--repo']) {
+    throw Error('proof requires --repo with --base and --head, or --pr');
   }
   return options;
 }
@@ -168,7 +170,7 @@ function proof(argv, io) {
   if (argv.includes('--help')) { io.stdout(proofHelp); return 0; }
   const options = proofOptions(argv);
   const terms = Object.keys(proofFields).map((id) => ({ id, status: 'unknown', value: null,
-    evidence: { cwd: process.cwd(), commands: [], results: [], reason: 'data unavailable' } }));
+    evidence: { cwd: options['--pr'] ? process.cwd() : options['--repo'], commands: [], results: [], reason: 'data unavailable' } }));
   const term = (id) => terms.find((t) => t.id === id);
   const query = (ids, args) => {
     for (const id of ids) term(id).evidence.commands.push(args);
@@ -218,19 +220,20 @@ function proof(argv, io) {
       else bodyError = 'PR body unavailable in gh response';
     } catch { bodyError = 'invalid gh JSON response'; }
   } else {
+    const gitCommand = (...args) => command(options['--repo'], ...args);
     for (const id of ['base', 'head']) {
-      const raw = query([id], command('rev-parse', '--verify', '--end-of-options', `${options[`--${id}`]}^{commit}`));
+      const raw = query([id], gitCommand('rev-parse', '--verify', '--end-of-options', `${options[`--${id}`]}^{commit}`));
       if (raw !== null) assign(id, raw.trim());
     }
     const counts = ['files', 'additions', 'deletions', 'commits'];
     if (term('base').value && term('head').value) {
       const base = term('base').value, head = term('head').value;
-      const commits = query(['commits'], command('rev-list', '--count', `${base}..${head}`, '--'));
+      const commits = query(['commits'], gitCommand('rev-list', '--count', `${base}..${head}`, '--'));
       if (commits !== null && /^\d+\s*$/.test(commits)) assign('commits', Number(commits));
       const ids = counts.slice(0, 3);
-      const merge = query(ids, command('merge-base', base, head));
+      const merge = query(ids, gitCommand('merge-base', base, head));
       if (merge !== null) {
-        const diff = query(ids, command('diff', '-M', '--no-relative', '--no-ext-diff', '--no-textconv', '--numstat', '-z', `${merge.trim()}..${head}`, '--'));
+        const diff = query(ids, gitCommand('diff', '-M', '--no-relative', '--no-ext-diff', '--no-textconv', '--numstat', '-z', `${merge.trim()}..${head}`, '--'));
         if (diff !== null) {
           const rows = numstat(diff);
           assign('files', rows.length);
@@ -281,10 +284,10 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
     const options = optionsFrom(argv);
     sandboxPath = { status: 'unknown', evidence: { prefix: sandboxPrefix, commands: [] } };
     const query = (argv) => { sandboxPath.evidence.commands.push(argv); return run(argv); };
-    const root = query(command(...(options['--repo'] ? ['-C', options['--repo']] : []), 'rev-parse', '--show-toplevel'));
-    if (root.code) throw new Error(options['--repo'] ? 'invalid --repo; pass --repo <Git-checkout-path>' : 'run this helper from a Git checkout');
+    const root = query(command(options['--repo'], 'rev-parse', '--show-toplevel'));
+    if (root.code) throw new Error('invalid --repo; pass --repo <Git-checkout-path>');
     const repo = root.stdout.replace(/\n$/, '');
-    const gitCommand = (...args) => command('-C', repo, ...args);
+    const gitCommand = (...args) => command(repo, ...args);
     const resolve = (flag) => {
       const result = query(gitCommand('rev-parse', '--verify', '--end-of-options', `${options[flag]}^{commit}`));
       if (result.code) throw new Error(`unresolved ${flag}; pass ${flag} <existing-commit-or-branch>`);
