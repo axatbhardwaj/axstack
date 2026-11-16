@@ -29,8 +29,8 @@ export function matches(value, rule) {
 export function validate(name, value) {
   if (!matches(value, definitions[name])) throw Error(`invalid ${name}`);
 }
-export function safePath(path) {
-  if (typeof path !== 'string' || !path.startsWith('/') || path === '/' || /[\0\n\r,:]/.test(path) || path.split('/').some(s => s === '.' || s === '..' || s === '.git')) throw Error(`unsafe absolute path: ${path}`);
+export function safePath(path, { allowGitMetadata = false } = {}) {
+  if (typeof path !== 'string' || !path.startsWith('/') || path === '/' || /[\0\n\r,:]/.test(path) || path.split('/').some(s => s === '.' || s === '..' || !allowGitMetadata && s === '.git')) throw Error(`unsafe absolute path: ${path}`);
   return path;
 }
 export function checkAssets(a) {
