@@ -198,7 +198,7 @@ actionable PR events
 within measured host capacity; waiting PRs remain covered without reserving slots.
 Bounded PR jobs use driver-made detached checkouts and settle after descendants.
 Build no custom scheduler, state engine or legacy fallback. See
-[Review manager](automations.md) for binding, canary, capacity and schedule health.
+[Review manager](automations.md) for binding, capacity and schedule health.
 
 ## Audit hook (close-out and meaningful checkpoints)
 
