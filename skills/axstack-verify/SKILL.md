@@ -52,8 +52,9 @@ Name the app, surface and invocation conditions in the description.
 - Doctor: give read-only checks for process, version, port ownership and test auth.
 - Drive: give the real user path with stable handles and observable end states.
   Keep browser recipes tool-neutral.
-- Evidence: follow the proof standards in
-  [UI verification](../axstack/references/ui-verification.md#proof-standards).
+- Evidence: follow [Capture receipts](../axstack/references/capture-receipts.md)
+  for command facts and limitations, and [UI verification](../axstack/references/ui-verification.md#proof-standards)
+  for interaction evidence.
 - Cleanup: stop only processes started by this run and remove owned scratch.
 - Helpers: explain each helper's purpose and working directory.
 
@@ -115,7 +116,7 @@ Retry once after a drift fix.
 If the retry fails, report the failure and hold acceptance.
 Check discovery and relative-helper execution in both Claude Code and Codex.
 If either harness is unavailable, report its checks unverified and hold acceptance.
-Return proof commands, observed outputs, evidence paths and cleanup confirmation.
+Return capture citations, limitation dispositions and cleanup confirmation.
 Record the bounded exception for generated-skill content on the implement §5 `TDD:` line.
 Keep `axstack-verify` prose-contract red/green tests.
 The exception covers the generated content's executed proof only.
@@ -174,7 +175,12 @@ Report `clean` only when every mapped feature has source and live coverage with 
 Report `changed` for one PR of proven corrections.
 Report `blocked` when coverage cannot finish or corrections cannot ship safely.
 Never report incomplete mapped coverage as `clean`.
-Return the feature coverage, gaps, proof commands, evidence paths and cleanup confirmation in the implementation receipt.
+Return feature coverage and cleanup confirmation with these recipe receipt fields:
+
+```text
+Acceptance: <check-run receipt paths + identities mapped to features>
+Unverified: <limitation ledger + inspector report/item dispositions, or none>
+```
 
 Ideas paraphrased from pstack's
 [create-verification-skill](https://github.com/cursor/plugins/blob/d0ef80d86795816da932a153458c5dbe192d294e/pstack/skills/create-verification-skill/SKILL.md) (MIT) and

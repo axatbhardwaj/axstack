@@ -1,0 +1,46 @@
+[
+  {
+    "pr": 643,
+    "url": "https://github.com/axatbhardwaj/axstack/pull/643",
+    "head": "62715cac352c57c852abb0bace404206f50d6853",
+    "base": "cb609f8ded4d927f9b4e5d6a4a03feb95bd674e7",
+    "source": "review-dup-pr-r3/receipt.md:11; audit-sol/audit.md:114",
+    "items": [
+      { "id": "643-driver-adherence", "boundary": "live driver follows the duplicate-PR rule", "kind": "runtime", "status": "proved", "expected": "pass" },
+      { "id": "643-rate-limit", "boundary": "search HTTP 403/429 path", "kind": "runtime", "status": "open", "expected": "fail" }
+    ]
+  },
+  {
+    "pr": 644,
+    "url": "https://github.com/axatbhardwaj/axstack/pull/644",
+    "head": "a93faa095ae31566f78778f401f59666eb968d6d",
+    "base": "1efb1593339bd0d4825697b454d28e3bb8473e56",
+    "source": "review-git-harden-r1/receipt.md; audit-sol/audit.md:201",
+    "items": [
+      { "id": "644-fsmonitor", "boundary": "helper does not execute planted fsmonitor", "kind": "fixture", "status": "proved", "expected": "pass" },
+      { "id": "644-git-prefix", "boundary": "all helper Git argv disable hooks and fsmonitor", "kind": "fixture", "status": "proved", "expected": "pass" }
+    ]
+  },
+  {
+    "pr": 645,
+    "url": "https://github.com/axatbhardwaj/axstack/pull/645",
+    "head": "efd9cf6a8911e0d9861d5acbadd6174b6e4ae86a",
+    "base": "36969b9577893760e5864c761f2dfc2062a0eccb",
+    "source": "review-fable-adviser-r2/receipt.md:12-13; audit-sol/audit.md:115",
+    "items": [
+      { "id": "645-provider-launch", "boundary": "actual provider accepts the requested adviser model", "kind": "runtime", "status": "proved", "missingReceipt": true, "expected": "unknown" },
+      { "id": "645-in-flight", "boundary": "real in-flight run across role reinstall", "kind": "runtime", "status": "proved", "reusedFixture": true, "expected": "fail" }
+    ]
+  },
+  {
+    "pr": 646,
+    "url": "https://github.com/axatbhardwaj/axstack/pull/646",
+    "head": "71d7180c1f2d338e0038ac264d6678d4fa1c2104",
+    "base": "3ba2b572056f79782f9a59359611359cc2c21bd0",
+    "source": "review-release-r1/receipt.md; audit-sol/audit.md:201",
+    "items": [
+      { "id": "646-version", "boundary": "package version and CLI assertion agree", "kind": "fixture", "status": "proved", "expected": "pass" },
+      { "id": "646-package", "boundary": "package inventory and full suite at release head", "kind": "fixture", "status": "proved", "expected": "pass" }
+    ]
+  }
+]

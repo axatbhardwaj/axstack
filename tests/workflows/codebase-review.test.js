@@ -1,4 +1,5 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
+import { checkRule, prohibits, requires } from './prose-contract.js';
 import { test, expect } from 'bun:test';
 
 
@@ -88,4 +89,23 @@ test('PR-only review gates remain scoped away from codebase reports', () => {
     const body = review.split(heading)[1]?.split('\n## ')[0] ?? '';
     expect(body).toMatch(/PR modes|PR review/i);
   }
+});
+
+
+for (const path of ['codebase-mode.md', 'codebase-brief.md', 'codebase-report.md']) {
+  test(`${path} records every unexamined or missing-evidence area as a limitation`, () => {
+    const concepts = [/record|mark/i, /every|each/i, /unexamined|uninspected/i,
+      /missing.evidence|evidence gaps?/i, /areas?/i, /limitations?/i];
+    checkRule(read(`skills/axstack-review/references/${path}`), text => requires(text, ...concepts),
+      'Mark each uninspected area or evidence gap as a limitation.',
+      [[/record|mark/gi, 'omit'], [/every|each/gi, 'selected']], concepts);
+  });
+}
+
+test('codebase mode forbids none when evidence is missing', () => {
+  const concepts = [/Limitations:\s*none/i, /unexamined|uninspected/i, /missing.evidence|evidence gaps?/i];
+  checkRule(read('skills/axstack-review/references/codebase-mode.md'),
+    text => prohibits(text, /never report/i, ...concepts),
+    'Never report Limitations: none for an uninspected area or evidence gap.',
+    [[/never report/gi, 'always report']], concepts);
 });

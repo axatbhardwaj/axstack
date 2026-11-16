@@ -48,7 +48,7 @@ test('blast-radius: review loads it under angle 3 and the receipt carries the sa
   expect(review).toMatch(/3\. Integration and regressions:[^.]*\(\.\.\/axstack\/references\/blast-radius\.md\)/);
   expect(review).toMatch(/below "ran it" is unproven/i);
   const receipt = read('skills/axstack-review/SKILL.md').split('## Template: review receipt')[1];
-  expect(receipt).toMatch(/^Safety fact: <[^\n]*> — <ladder step \+ proof \| unproven>$/m);
+  expect(receipt).toMatch(/^Safety fact:.*ladder step.*capture receipt path\/identity.*unproven/m);
 });
 
 test('blast-radius: explain and routing expose the direct "what could this break" route', () => {

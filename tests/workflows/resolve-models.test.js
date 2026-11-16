@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { makeTempDir } from '../temp-dir.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/resolve-models.js`;
 const capabilities = JSON.parse(readFileSync(`${import.meta.dir}/fixtures/t3-capabilities.json`, 'utf8'));
@@ -9,7 +10,7 @@ const entry = (id, optionId = 'reasoningEffort', values = ['high']) => ({
 });
 
 function resolve(data = capabilities, args = ['--class', 'sol'], provider = 'codex', effort = 'high') {
-  const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/axstack-capabilities-`);
+  const dir = makeTempDir(`${process.env.TMPDIR ?? '/tmp'}/axstack-capabilities-`);
   const path = `${dir}/capabilities.json`;
   if (data !== null) writeFileSync(path, typeof data === 'string' ? data : JSON.stringify(data));
   const result = Bun.spawnSync(['bun', script, '--provider', provider, '--capabilities', path,

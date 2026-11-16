@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
+import { makeTempDir } from '../temp-dir.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/pr-digest.js`;
 const pageInfo = { hasNextPage: false };
@@ -17,7 +18,7 @@ const pr = () => ({
 const response = (pullRequest) => ({ data: { repository: { pr0: pullRequest } } });
 
 function run(before, after) {
-  const dir = mkdtempSync(`${process.env.AXSTACK_TEST_TMP_ROOT ?? process.env.TMPDIR ?? '/tmp'}/axstack-pr-digest-`);
+  const dir = makeTempDir(`${process.env.AXSTACK_TEST_TMP_ROOT ?? process.env.TMPDIR ?? '/tmp'}/axstack-pr-digest-`);
   const watermark = `${dir}/watermark.json`;
   const input = `${dir}/input.json`;
   writeFileSync(watermark, JSON.stringify(response(before)));
@@ -73,7 +74,7 @@ test('unfollowed pagination makes readiness incomplete', () => {
 });
 
 test('GraphQL errors make readiness incomplete', () => {
-  const dir = mkdtempSync(`${process.env.AXSTACK_TEST_TMP_ROOT ?? process.env.TMPDIR ?? '/tmp'}/axstack-pr-digest-`);
+  const dir = makeTempDir(`${process.env.AXSTACK_TEST_TMP_ROOT ?? process.env.TMPDIR ?? '/tmp'}/axstack-pr-digest-`);
   const input = `${dir}/error.json`;
   writeFileSync(input, JSON.stringify({ errors: [{ message: 'rate limited' }] }));
   const result = Bun.spawnSync(['bun', script, '--input', input, '--watermark', `${dir}/missing.json`], { stdout: 'pipe', stderr: 'pipe' });

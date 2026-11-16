@@ -8,7 +8,6 @@ const review = readFileSync(`${import.meta.dir}/../../skills/axstack-review/SKIL
 const compactFields = (text) => text.trim().split('\n').map((line) =>
   line.trim().replace(/;/g, ',')).join('. ').replace(/\s+/g, ' ');
 const sections = [
-  ['candidate brief', review.split('## Template: candidate review brief')[1].split('## Template: review receipt')[0]],
   ['review receipt', review.split('## Template: review receipt')[1].split('## Prompt-only urgent escalation')[0]],
 ];
 
@@ -18,20 +17,6 @@ const fields = [
     [/Coverage:/i, /COMPLETE/, /INCOMPLETE/, /angles|lenses/i, /acceptance/i, /executable evidence|executed checks/i],
     'Coverage: COMPLETE | INCOMPLETE — report the lenses, acceptance and executed checks covered.',
     [[/COMPLETE \| INCOMPLETE/, 'COMPLETE only'], [/acceptance/i, 'file count']]],
-  ['changed behavior limitations',
-    [/Limitations:|limitation/i, /each|every/i, /changed.behavio[u]?r/i, /unexercised|untested/i,
-      /unverified|unconfirmed/i, /changed-behavior: unproven/, /whatever words|regardless of wording|however described/i],
-    'Limitations: tag every limitation leaving changed behavior untested or unconfirmed, however described, changed-behavior: unproven.',
-    [[/each|every/i, 'selected'], [/changed-behavior: unproven/, 'changed-behavior: proven'],
-      [/whatever words|regardless of wording|however described/i, 'only with these exact words']]],
-  ['reviewer check at final head',
-    [/Final-head check:/i, /command/i, /->/, /log path/i, /reviewer/i, /ran|run|executed/i, /final head/i],
-    'Final-head check: <command> -> <log path> for a check executed by the reviewer at the final head.',
-    [[/reviewer/i, 'author'], [/final head/i, 'earlier head']]],
-  ['check log retained in run evidence',
-    [/Final-head check:/i, /log/i, /kept|keep|retain/i, /run.?s? evidence folder/i],
-    "Final-head check: retain the log in the run's evidence folder.",
-    [[/kept|keep|retain/i, 'discard'], [/run.?s? evidence folder/i, 'temporary scratch folder']]],
   ['safety fact concerns the change',
     [/Safety fact:/i, /change itself/i, /rather than|instead of/i, /review process/i],
     'Safety fact: give evidence about the change itself instead of the review process.',
@@ -50,6 +35,17 @@ const fields = [
       [/(?:new|changed) head/i, 'initial head']]],
 ];
 
+test('review receipt tags every changed behavior limitation by meaning', () => {
+  const concepts = [/reviewer/i, /tags?|marks?/i, /each|every/i, /limitation/i,
+    /changed behavior/i, /unexercised|untested/i, /unverified|unconfirmed/i,
+    /whatever words|however described/i, /changed-behavior: unproven/i];
+  checkRule(sections[0][1], text => requires(text, ...concepts),
+    'The reviewer marks every limitation leaving changed behavior untested or unconfirmed, however described, changed-behavior: unproven.',
+    [[/tags?|marks?/gi, 'Drop'], [/each|every/gi, 'selected'],
+      [/whatever words|however described/gi, 'only with exact wording'],
+      [/changed-behavior: unproven/gi, 'changed-behavior: proven']], concepts);
+});
+
 for (const [section, text] of sections) {
   for (const [field, concepts, rewording, inversions] of fields) {
     test(`authored evidence ${section}: ${field} survives rewording and rejects removal/inversion`, () => {
@@ -58,8 +54,18 @@ for (const [section, text] of sections) {
   }
 }
 
-test('candidate brief keeps authored requirements inside the dispatched block before escalation', () => {
-  const block = sections[0][1].split('```text')[1].split('```')[0];
-  for (const [, concepts] of fields) expect(requires(compactFields(block), ...concepts)).toBe(true);
+test('candidate brief dispatches the review receipt contract before escalation', () => {
+  const brief = review.split('## Template: candidate review brief')[1].split('## Template: review receipt')[0];
+  const block = brief.split('```text')[1].split('```')[0];
+  checkRule(block, text => requires(text, /follow/i, /Review receipt/i),
+    'Follow Review receipt for authored requirements.', [[/follow/gi, 'ignore']], [/follow/i, /Review receipt/i]);
+  for (const [name, path] of [
+    ['Capture receipts', 'skills/axstack/references/capture-receipts.md'],
+    ['Review receipt', 'skills/axstack-review/references/review-receipt.md'],
+  ]) {
+    const accepts = text => requires(text, /follow/i, new RegExp(path.replaceAll('.', '\\.')), /resolved from/i, /absolute Workspace checkout/i);
+    checkRule(block, accepts, `Follow ${name} at ${path}, resolved from the absolute Workspace checkout.`,
+      [[/absolute Workspace checkout/gi, 'brief file directory']], []);
+  }
   expect(block.trim().split('\n').at(-1)).toMatch(/^Escalate to user:/);
 });
