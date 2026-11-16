@@ -1,5 +1,6 @@
 import { afterAll, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { checkRule, prohibits, requires } from './prose-contract.js';
 import { gitArgv } from '../../skills/axstack/scripts/git-argv.js';
 
 const temporary = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/axstack-inspector-cli-`);
@@ -22,6 +23,44 @@ test('help lists the only flags, reads no input and grants no authority', () => 
   expect(r.stdout.toString()).toContain('--help');
   expect(r.stdout.toString()).toMatch(/sibling logs[^.]*digest[^.]*identical honest logs fail closed/i);
   expect(r.stdout.toString()).toContain('cannot grant review/merge authority');
+});
+
+// The helper owns its public schema; consumer prose links here rather than copying it.
+for (const [name, concepts, rewording, inversions, prohibition] of [
+  ['item identity and policy',
+    [/Items:/i, /unique stable id/i, /head/i, /base/i, /boundary/i, /changedAt/i, /raisedAt/i,
+      /acceptedProofKinds/i, /sourceScope/i, /expectedExitCode/i, /previousEvidence/i],
+    'Items: unique stable id, head/base, boundary, changedAt, raisedAt, acceptedProofKinds, sourceScope, expectedExitCode and previousEvidence.',
+    [[/unique stable id/gi, 'reassigned id']]],
+  ['proved evidence fields', [/Proved:/i, /proof/i, /id/i, /itemId/i, /kind/i, /observedAt/i, /receipt/i],
+    'Proved: proof carries id, itemId, kind, observedAt and receipt.', [[/itemId/gi, 'siblingId']]],
+  ['decision binding', [/Decisions:/i, /decision/i, /itemId/i, /repository/i, /head/i, /base/i, /boundary/i, /role/i, /by/i, /at/i, /reason/i, /reference/i],
+    'Decisions: decision carries itemId, repository, head/base, boundary, role, by, at, reason and reference.',
+    [[/boundary/gi, 'siblingScope']]],
+  ['decision roles', [/role/i, /must be/i, /reviewer/i, /withdrawal/i, /user/i, /acceptance/i],
+    'The role must be reviewer for withdrawal and user for acceptance.', [[/reviewer/gi, 'author']]],
+  ['refresh preserves original identity and history',
+    [/rebind/i, /head\/base/i, /current/i, /preserving/i, /IDs/i, /boundaries/i, /previousEvidence/i],
+    'Rebind item head/base to current revisions while preserving IDs, boundaries and previousEvidence.',
+    [[/preserving/gi, 'discarding']]],
+  ['fresh evidence cannot reuse old IDs or logs',
+    [/new evidence/i, /postdate/i, /change/i, /limitation/i, /previous ID/i, /log digest/i],
+    'New evidence must postdate change and limitation and cannot reuse a previous ID or log digest.',
+    [[/cannot reuse/gi, 'can reuse']], /cannot reuse/i],
+  ['summary counts are not proven behavior',
+    [/summary.pass/i, /proved/i, /reviewer-withdrawn/i, /user-accepted-unproven/i],
+    'summary.pass includes proved, reviewer-withdrawn and user-accepted-unproven records and does not count proven behaviors.',
+    [[/does not count proven behaviors/gi, 'counts proven behaviors']], /does not count proven behaviors/i],
+  ['caller declarations do not attest chronology or kind',
+    [/timestamps/i, /proof kind/i, /caller declarations/i, /chronology/i],
+    'Timestamps and proof kind are caller declarations, capture v1 does not attest chronology or proof kind.',
+    [[/does not attest/gi, 'attests']], /does not attest/i],
+]) test(`help schema: ${name} survives rewording and rejects removal/inversion`, () => {
+  const text = cli('--help').stdout.toString().replace(/;/g, ',');
+  // optional qualifies one schema field, not whether readers follow the contract.
+  const accepts = text => prohibition ? prohibits(text, prohibition, ...concepts)
+    : requires(text.replace(/optional (?=expectedExitCode)/g, ''), ...concepts);
+  checkRule(text, accepts, rewording, inversions, concepts);
 });
 
 test('CLI distinguishes measured fail, unknown and invalid invocation', () => {
