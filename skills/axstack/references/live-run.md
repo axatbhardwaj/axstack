@@ -13,12 +13,16 @@ directory outside source/cwd/writable roots, and `RELEASE_HEAD` to the full
 release commit SHA. Keep the raw installed-version check and T3 receipts there.
 The catalog comes from that checkout's existing `tests/workflows/*scenarios.json`;
 tests are not installed with the package. No live-home edits are needed.
+Trace rechecks that catalog's realpath/hash inside the captured source, the
+package version at the captured head, and the planning helper's realpath/hash
+against the helper running the trace. Use the same installed helper in both phases.
 
 ## Before launch
 
 Write `$OUT/before.json` with this shape, substituting observed version/host,
 an existing catalog ID, explicit destination settings, current UTC time and a
-fresh nonce (at least 16 characters). Limits must be positive numeric integers;
+fresh nonce from `crypto.randomUUID()` (at least 16 characters; the literal
+placeholder below is rejected). Limits must be positive numeric integers;
 `attempt` must be `1`. Save the exact requested settings, including options.
 
 ```json
@@ -48,6 +52,8 @@ bun "$CAPTURE" --repo "$REPO" --repository "$(git -C "$REPO" remote get-url orig
 Read the receipt's `exitCode`, capture `terms`, and its `logPath` plan terms.
 Use `receiptPath` as `PLAN_RECEIPT`, `logPath` as `PLAN_LOG`. Resolve any failed
 planning terms before launch; missing prerequisites are recorded as unavailable.
+The helper stamps `plannedAt` from its own clock; callers cannot supply it.
+`recordedAt` must not be in the future, and the run must start at or after `plannedAt`.
 Compute `PLAN_SHA256` from the exact `PLAN_LOG` bytes with
 `bun -e 'console.log(new Bun.CryptoHasher("sha256").update(await Bun.file(process.argv[1]).arrayBuffer()).digest("hex"))' "$PLAN_LOG"`.
 
@@ -86,6 +92,8 @@ including its nonce line. `finishedAt` is the terminal observation time.
 ```
 
 Outcomes: `completed`, `failed`, `unavailable`, `budget-exhausted`, `cancelled`.
+An `unavailable` terminal with observed thread/run IDs is a terminal observation;
+absent IDs remain unknown. Its scenario outcome remains unknown in either case.
 Capture the trace without another scenario attempt:
 
 ```bash
