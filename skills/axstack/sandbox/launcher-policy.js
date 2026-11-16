@@ -4,9 +4,9 @@ import { proxyArgv } from './network.js';
 const definitions = JSON.parse(readFileSync(new URL('./launcher-contract.schema.json', import.meta.url), 'utf8')).$defs;
 export const fact = (id, status, evidence) => ({ id, status, evidence: [String(evidence)] });
 /** @returns {never} */
-export function hold(message) { throw Object.assign(Error(message), { sandboxHold: true }); }
+export function hold(message, terms = []) { throw Object.assign(Error(message), { sandboxHold: true, terms }); }
 export function requirePass(terms, context) {
-  if (!Array.isArray(terms) || !terms.length || terms.some(t => t.status !== 'pass' && t.status !== 'n/a')) hold(`${context}: failed/unknown facts`);
+  if (!Array.isArray(terms) || !terms.length || terms.some(t => t.status !== 'pass' && t.status !== 'n/a')) hold(`${context}: failed/unknown facts`, terms);
 }
 export function matches(value, rule) {
   if (rule.$ref) return matches(value, definitions[rule.$ref.split('/').at(-1)]);
