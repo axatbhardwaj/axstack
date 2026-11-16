@@ -27,12 +27,17 @@ export function createProbeTools({ runner = execute } = {}) {
       } catch (error) { terms.push({ id, status: 'unknown', evidence: [JSON.stringify(argv), String(error)] }); }
     }
     let addresses = [];
+    const hostZones = new Map();
     await observe('addresses', ['ip', '-j', 'address', 'show'], (out) => {
       const rows = JSON.parse(out);
       if (!Array.isArray(rows) || !rows.length) throw Error('missing host interfaces');
       addresses = rows.flatMap((row) => {
+        if (row.ifname) { hostZones.set(String(row.ifindex), row.ifname); hostZones.set(row.ifname, row.ifname); }
         if (!Array.isArray(row.addr_info)) throw Error('missing interface addresses');
-        return row.addr_info.filter((a) => ['inet', 'inet6'].includes(a.family)).map((a) => strip(a.local));
+        return row.addr_info.filter((a) => ['inet', 'inet6'].includes(a.family)).map((a) => {
+          if (a.family === 'inet6' && a.scope === 'link' && !row.ifname) throw Error('host link-local zone missing');
+          return strip(a.local) + (a.family === 'inet6' && a.scope === 'link' ? `%${row.ifname}` : '');
+        });
       });
       if (!addresses.length) throw Error('missing host addresses');
       for (const address of addresses) add('host-address', address, null, 'icmp', JSON.stringify({ observer: 'ip address show', address }));
@@ -42,7 +47,9 @@ export function createProbeTools({ runner = execute } = {}) {
         const fields = row.trim().split(/\s+/), protocol = fields[0];
         const local = fields[4]?.match(/^(.*):(\d+)$/);
         if (!['tcp', 'udp'].includes(protocol) || !local) throw Error(`unparsed listener: ${row}`);
-        const address = strip(local[1].replace(/^\[|\]$/g, '')), port = Number(local[2]);
+        const raw = local[1].replace(/^\[|\]$/g, ''), zone = raw.split('%')[1];
+        if (zone && !hostZones.has(zone)) throw Error('listener zone unknown');
+        const address = strip(raw) + (zone ? `%${hostZones.get(zone)}` : ''), port = Number(local[2]);
         const wildcard = ['*', '0.0.0.0', '::'].includes(address);
         const bound = wildcard ? addresses : [address];
         if (!bound.length) throw Error('wildcard listener without addresses');
