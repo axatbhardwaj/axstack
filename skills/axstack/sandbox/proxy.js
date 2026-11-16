@@ -12,9 +12,9 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
     session.client?.terminate(); session.upstream?.terminate(); sessions.delete(session);
   }
   function finish(socket) {
-    if (!socket || socket.data.session.closed) return;
+    if (!socket || socket.data.session.closed || socket.data.finished) return;
     socket.data.ending = true;
-    if (!socket.data.pending.length) socket.end();
+    if (!socket.data.pending.length) { socket.data.finished = true; socket.end(); }
   }
   function ended(socket) {
     const session = socket.data.session;
@@ -30,7 +30,7 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
   }
   function flush(socket, bytes = Buffer.alloc(0), source) {
     const state = socket.data;
-    if (state.session.closed) return;
+    if (state.session.closed || state.finished) return;
     if (source) state.source = source;
     const pending = state.pending.length ? Buffer.concat([state.pending, bytes]) : bytes;
     const sent = socket.write(pending);
@@ -40,7 +40,7 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
     // Stop reading the peer while its destination is backpressured.
     // The fixed pending cap still rejects oversized/in-flight bursts.
     if (state.pending.length) state.source?.pause();
-    else if (state.ending) socket.end();
+    else if (state.ending) finish(socket);
     else state.source?.resume();
   }
   function deny(session) {
