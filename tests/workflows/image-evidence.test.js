@@ -62,6 +62,11 @@ test('extracts image-set string and url candidates, including prefixed and neste
   expect(report.resources.map((r) => r.url).sort()).toEqual(['a.png', 'b.png', 'c.png', 'd.png', 'e.png']);
 });
 
+test('extracts successive quoted image-set candidates after commas', async () => {
+  const report = await imageEvidence('<style>.x{background:image-set("a.png" 1x, "b.png" 2x)}</style>');
+  expect(report.resources.map((r) => r.url)).toEqual(['a.png', 'b.png']);
+});
+
 test('link as is case-insensitive', async () => {
   const report = await imageEvidence('<link rel="preload" as="IMAGE" href="preload.png">');
   expect(report.resources.map((r) => r.url)).toEqual(['preload.png']);
@@ -147,13 +152,25 @@ test('extracts object, embed, image links and feImage declarations', async () =>
 
 test('stale bytes, conflicting results, and unsupported entities cannot produce a pass', async () => {
   const bytes = '<img src="same"><img src="other&NotEqual;image">';
-  const stale = await imageEvidence(bytes, saved('different bytes', [observed('same', 'pass')]));
+  const stale = await imageEvidence(bytes, saved('different bytes', [observed('same', 'pass'), observed('dyn.png', 'pass')]));
   expect(stale.resources[0].status).toBe('unknown');
   expect(stale.resources[0].evidence).toMatch(/SHA-256/i);
+  const dynamic = stale.resources.find((row) => row.url === 'dyn.png');
+  expect(dynamic).toMatchObject({ source: 'observation-only', status: 'unknown' });
+  expect(dynamic.evidence).toMatch(/SHA-256/i);
   const conflict = await imageEvidence(bytes, saved(bytes, [
     observed('same', 'pass'), observed('same', 'fail'), observed('other&NotEqual;image', 'pass'),
   ]));
   expect(conflict.resources.every((r) => r.status === 'unknown')).toBe(true);
+});
+
+test('conflicting observation-only rows share one unknown resource', async () => {
+  const bytes = '<script>new Image().src="dyn.png"</script>';
+  const report = await imageEvidence(bytes, saved(bytes, [observed('dyn.png', 'pass'), observed('dyn.png', 'fail')]));
+  expect(report.resources).toHaveLength(1);
+  expect(report.resources[0]).toMatchObject({ url: 'dyn.png', source: 'observation-only', status: 'unknown' });
+  expect(report.resources[0].evidence).toMatch(/Conflicting observations/i);
+  expect(report.summary).toEqual({ pass: 0, fail: 0, unknown: 1, 'n/a': 0 });
 });
 
 test('deduplicates expected URLs but retains their locations, rejects malformed observations', async () => {
