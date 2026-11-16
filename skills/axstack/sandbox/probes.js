@@ -35,7 +35,7 @@ export function createProbeTools({ runner = execute } = {}) {
         return row.addr_info.filter((a) => ['inet', 'inet6'].includes(a.family)).map((a) => strip(a.local));
       });
       if (!addresses.length) throw Error('missing host addresses');
-      for (const address of addresses) add('host-address', address, null, 'icmp', out);
+      for (const address of addresses) add('host-address', address, null, 'icmp', JSON.stringify({ observer: 'ip address show', address }));
     });
     await observe('listeners', ['ss', '-H', '-lntu'], (out) => {
       for (const row of out.trim().split('\n').filter(Boolean)) {
@@ -58,13 +58,14 @@ export function createProbeTools({ runner = execute } = {}) {
       inspected = JSON.parse(result.stdout);
       if (inspected.length !== ids.length || new Set(inspected.map((n) => n.Id)).size !== ids.length) throw Error('incomplete network inspect');
       for (const net of inspected) {
-        if (!ids.includes(net.Id) || !net.IPAM || !Array.isArray(net.IPAM.Config) || !net.Containers) throw Error('incomplete Docker network');
-        for (const config of net.IPAM.Config) if (config.Gateway) add('gateway', strip(config.Gateway), null, 'icmp', result.stdout);
+        const addressless = (net.Driver === 'host' && net.Name === 'host' || net.Driver === 'null' && net.Name === 'none') && net.IPAM?.Config === null;
+        if (!ids.includes(net.Id) || !net.IPAM || !addressless && !Array.isArray(net.IPAM.Config) || !net.Containers) throw Error('incomplete Docker network');
+        for (const config of net.IPAM.Config ?? []) if (config.Gateway) add('gateway', strip(config.Gateway), null, 'icmp', JSON.stringify({ networkId: net.Id, name: net.Name, ...config }));
         const own = networks.some((n) => n.id === net.Id || n.name === net.Name);
         for (const [id, container] of Object.entries(net.Containers)) {
           containerIds.push(id);
           for (const field of ['IPv4Address', 'IPv6Address']) if (container[field]) {
-            add(own ? 'fixed' : 'other-container', strip(container[field]), null, 'icmp', result.stdout, own ? `container|${container.Name}` : 'other-container');
+            add(own ? 'fixed' : 'other-container', strip(container[field]), null, 'icmp', JSON.stringify({ networkId: net.Id, name: net.Name, containerId: id, ...container }), own ? `container|${container.Name}` : 'other-container');
           }
         }
       }
@@ -117,11 +118,11 @@ export function createProbeTools({ runner = execute } = {}) {
       if (data.BackendState !== 'Running' || !data.Self?.DNSName || !data.Peer || data.Health?.length) throw Error('incomplete/unhealthy tailnet');
       for (const peer of [data.Self, ...Object.values(data.Peer)]) {
         if (!Array.isArray(peer.TailscaleIPs) || !peer.TailscaleIPs.length) throw Error('peer without addresses');
-        for (const address of peer.TailscaleIPs) add('tailnet', address, null, 'icmp', out);
+        for (const address of peer.TailscaleIPs) add('tailnet', address, null, 'icmp', JSON.stringify({ dnsName: peer.DNSName, address }));
       }
       for (const protocol of ['tcp', 'udp']) {
-        add('dns', data.Self.DNSName, 53, protocol, out, 'tailnet-dns');
-        add('dns', data.Self.DNSName, 53, protocol, out, 'tailnet-dns-stub');
+        add('dns', data.Self.DNSName, 53, protocol, JSON.stringify({ dnsName: data.Self.DNSName, resolver: '100.100.100.100' }), 'tailnet-dns');
+        add('dns', data.Self.DNSName, 53, protocol, JSON.stringify({ dnsName: data.Self.DNSName, resolver: '127.0.0.11' }), 'tailnet-dns-stub');
       }
     });
     for (const address of ['1.1.1.1', '2606:4700:4700::1111', '169.254.169.254', 'fd00:ec2::254', '127.0.0.1', '::1', '10.0.0.1', '172.16.0.1', '192.168.0.1', '100.64.0.1', 'fc00::1', 'fe80::1']) add('fixed', address, 443, 'tcp', 'W3-4 fixed destinations', 'direct');
@@ -182,8 +183,17 @@ export function createProbeTools({ runner = execute } = {}) {
     if (plan.enumeration?.runId !== plan.runId || identity(fresh) !== identity(plan.enumeration)) throw hold('target enumeration changed; replan this run', fresh.terms);
     const canonical = planProbes({ ...plan, enumeration: fresh });
     if (!canonical.length || JSON.stringify(canonical) !== JSON.stringify(plan.probes)) throw hold('probe plan incomplete or changed', []);
-    const results = [];
-    for (const probe of canonical) {
+    const results = new Array(canonical.length), serial = [], parallel = [];
+    const targets = new Map(fresh.targets.map(t => [t.id, t]));
+    canonical.forEach((probe, i) => {
+      const target = targets.get(probe.targetIds[0]);
+      // All reserved-source-port UDP proofs share one lane, including containers
+      // that share a bridge. Other trusted clients use at most fifteen lanes.
+      (probe.expected === 'deny' && target?.protocol === 'udp' && target.kind !== 'dns' ? serial : parallel).push(i);
+    });
+    let failed;
+    async function probeAt(i) {
+      const probe = canonical[i];
       let term;
       try {
         const r = await runner(probe.argv);
@@ -191,9 +201,14 @@ export function createProbeTools({ runner = execute } = {}) {
         const status = r.timedOut || r.truncated ? 'unknown' : reported === 'unknown' ? 'unknown' : r.exitCode !== 0 ? 'fail' : reported;
         term = { id: probe.id, status: ['pass', 'fail', 'unknown'].includes(status) ? status : 'unknown', evidence: [JSON.stringify(probe), JSON.stringify(r)] };
       } catch (error) { term = { id: probe.id, status: 'unknown', evidence: [JSON.stringify(probe), String(error)] }; }
-      results.push(term);
-      if (term.status !== 'pass') throw hold(`probe ${probe.id} ${term.status}`, results);
+      results[i] = term;
+      if (term.status !== 'pass' && !failed) failed = term;
     }
+    async function lane(queue) {
+      while (!failed && queue.length) await probeAt(queue.shift());
+    }
+    await Promise.all([lane(serial), ...Array.from({ length: Math.min(15, parallel.length) }, () => lane(parallel))]);
+    if (failed) throw hold(`probe ${failed.id} ${failed.status}`, [...results.filter(t => t && t !== failed), failed]);
     return results;
   }
   return { enumerateTargets, planProbes, runProbes };
