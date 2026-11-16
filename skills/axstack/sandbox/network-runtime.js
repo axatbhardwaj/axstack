@@ -77,28 +77,18 @@ export function createNetworkRuntime({ runner = commandRunner } = {}) {
         existing.push(network);
       }
     }
-    // Storage preparation can fail before this run creates any network/table.
-    // Prove global absence rather than treating a failed table read as absence.
-    if (!existing.length) {
-      const listed = await runner(['nft', '-j', 'list', 'tables']);
-      if (listed.exitCode !== 0) throw hold('Cannot enumerate firewall tables during cleanup');
-      let tables;
-      try { tables = JSON.parse(listed.stdout).nftables; if (!Array.isArray(tables)) throw Error(); }
-      catch { throw hold('Malformed cleanup table enumeration'); }
-      if (!tables.some(item => item.table?.family === 'inet' && item.table?.name === 'axstack_sandbox')) {
-        await assertContainersGone(owner);
-        return [pass('network-absent', ['Owned containers, networks and sandbox firewall table independently absent'])];
-      }
-    }
-    const snapshot = await firewall.checkChains();
-    // Verify the full initial ruleset before removal. A fully reaped run is idempotent.
-    if (existing.length) for (const rule of plan.rules) {
-      if (!await firewall.check(descriptor(rule))) {
-        // A concurrent reaper removes all networks before any rule. Re-read
-        // their absence to distinguish that race from lost live protection.
-        for (const network of plan.networks) if (await inspect(network)) throw hold(`Missing/changed rule at cleanup: ${rule.id}`);
-        break;
-      }
+    // Enumeration proves absence; failed/changed readback is never absence.
+    const listed = await runner(['nft', '-j', 'list', 'tables']);
+    if (listed.exitCode !== 0) throw hold('Cannot enumerate firewall tables during cleanup');
+    let tables;
+    try { tables = JSON.parse(listed.stdout).nftables; if (!Array.isArray(tables)) throw Error(); }
+    catch { throw hold('Malformed cleanup table enumeration'); }
+    const present = tables.some(item => item.table?.family === 'inet' && item.table?.name === 'axstack_sandbox');
+    const snapshot = present ? await firewall.checkChains({ allowAbsent: true }) : [];
+    // A failed install can leave any prefix. Validate every surviving rule
+    // before mutations, while independently proving all containers are gone.
+    if (present) for (const rule of plan.rules) {
+      if (!await firewall.check(descriptor(rule), { allowAbsent: true })) throw hold(`Changed rule at cleanup: ${rule.id}`);
     }
     await assertContainersGone(owner);
     const terms = [pass('containers-gone', ['Docker lists no running or stopped owned container']), pass('cleanup-rules-readback', [JSON.stringify(snapshot)])];
@@ -109,7 +99,7 @@ export function createNetworkRuntime({ runner = commandRunner } = {}) {
       terms.push(pass(`removed:${network.id}`, ['Docker network absence confirmed']));
     }
     await assertContainersGone(owner);
-    for (const rule of plan.rules) {
+    for (const rule of present ? plan.rules : []) {
       await firewall.remove(descriptor(rule));
       terms.push(pass(`removed:${rule.id}`, ['Rule handle absence confirmed']));
     }
