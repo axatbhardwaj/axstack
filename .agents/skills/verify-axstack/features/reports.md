@@ -17,6 +17,45 @@ forge retargeting or agent compliance.
 Prerequisites: Launch; a new local Git fixture, never the driver's run namespace.
 Run-init writes only its fixture Git common directory and owned scratch.
 
+## Reconcile limitation evidence
+
+Entry point: `skills/axstack/scripts/evidence-inspector.js`; fixtures:
+`tests/workflows/evidence-inspector{,-cli}.test.js` and
+`tests/workflows/fixtures/evidence-inspector/`. After Launch/Doctor and install:
+
+```bash
+doctor > "$EVIDENCE/inspector-doctor.log" 2>&1
+INSPECTOR="$HOME/.agents/skills/axstack/scripts/evidence-inspector.js"
+bun "$INSPECTOR" --help > "$EVIDENCE/inspector-help.txt"
+bun -e 'const head = "a".repeat(40), base = "b".repeat(40);
+  const item = {id:"rate-limit",head,base,boundary:"HTTP 403/429",
+    acceptedProofKinds:["runtime"],sourceScope:"external",
+    changedAt:"2026-01-01T00:00:00Z",raisedAt:"2026-01-02T00:00:00Z"};
+  await Bun.write(process.env.EVIDENCE + "/inspector-input.json", JSON.stringify({
+    schemaVersion:1,repository:"https://github.com/example/project.git",head,base,
+    items:[item],dispositions:[{id:item.id,head,base,boundary:item.boundary,status:"open"}]}));'
+cp "$EVIDENCE/inspector-input.json" "$TMPDIR/inspector-before.json"
+bun "$INSPECTOR" --input "$EVIDENCE/inspector-input.json" > "$EVIDENCE/inspector-run.json"
+cmp "$TMPDIR/inspector-before.json" "$EVIDENCE/inspector-input.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/inspector-run.json").json();
+  if (r.terms.length !== 1 || r.terms[0].id !== "rate-limit" || r.terms[0].status !== "fail" ||
+      r.summary.fail !== 1 || Object.keys(r).sort().join() !== "schemaVersion,summary,terms")
+    throw Error("inspector must measure the open item without granting authority");'
+bun run test tests/workflows/evidence-inspector.test.js \
+  tests/workflows/evidence-inspector-cli.test.js tests/workflows/run-record.test.js \
+  > "$EVIDENCE/inspector-tests.log" 2>&1
+```
+
+Proof: installed fact mode measures an open item as fail with exit 0 and leaves
+input unchanged. Fixtures preserve #643/#645 closure regressions and #644/#646
+holdout outcomes; sibling IDs or reused capture logs cannot close another item.
+The CLI fixture creates and consumes a real W3-1 receipt, revalidates its log,
+ignores cached terms, checks unchanged bytes, and distinguishes exits 0/1/2.
+Synthetic historical adapters are labeled; they do not replay those executions.
+Ignored bytes stay unbound. Capture v1 does not attest chronology; timestamps,
+item policy and reviewer/user decision identities are caller declarations.
+Semantic proof sufficiency and review/merge authority remain human judgments.
+
 ## Run commands in owned scratch
 
 After Launch/Doctor and the install feature, invoke the installed helper:
