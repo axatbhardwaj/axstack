@@ -12,6 +12,8 @@ const consumers = [
   ['codebase review', 'skills/axstack-review/references/codebase-mode.md'],
   ['implementation', 'skills/axstack-implement/SKILL.md'],
   ['verification recipes', 'skills/axstack-verify/SKILL.md'],
+  ['watch gate', 'skills/axstack-watch/references/proven-verification.md'],
+  ['workflow mirror', 'docs/workflows.md'],
 ];
 
 // Instruction handoff contracts; not evidence of live agent compliance.
@@ -34,7 +36,7 @@ const rules = [
     'Reference every check-run capture by receiptPath and identity: repository, requested head/base, sourceBefore snapshot and logSha256.',
     [[/each|every/gi, 'selected'], [/logSha256/gi, 'invented hash']]],
   ['facts come from captures',
-    [/read|derive/i, /argv/i, /cwd/i, /exitCode/i, /test counts/i, /log/i, /receipt/i],
+    [/read|derive/i, /argv/i, /cwd/i, /exitCode/i, /test counts?/i, /log/i, /receipt/i],
     'Derive argv, cwd, exitCode and test counts from the receipt and its captured log.',
     [[/read|derive/gi, 'guess'], [/captured log/gi, 'memory']]],
   ['inspector consumes the ledger',
@@ -47,15 +49,15 @@ const rules = [
     [[/each|every/gi, 'selected'], [/disposition/gi, 'summary.pass']]],
 
   ['capture helper owns flags and effects',
-    [/use|run/i, /check-run/i, /--help/i, /flags/i, /effects/i],
+    [/use|run/i, /check-run/i, /--help/i, /flags?/i, /effects?/i],
     'Run check-run for evidence and consult --help for flags and effects.',
     [[/use|run/gi, 'ignore'], [/--help/gi, 'memory']]],
   ['owned evidence capture folder at pinned revisions',
-    [/create|make/i, /owned/i, /0700/i, /subfolder/i, /run.?s evidence folder/i, /outside source and writable mounts/i, /check-run/i, /--out/i, /pinned head\/base/i],
+    [/create|make/i, /owned/i, /0700/i, /subfolder/i, /run.?s evidence folder/i, /outside source and writable mounts?/i, /check-run/i, /--out/i, /pinned head\/base/i],
     'Make an owned 0700 subfolder in the runs evidence folder outside source and writable mounts for check-run --out at the pinned head/base.',
-    [[/0700/gi, '0755'], [/outside source and writable mounts/gi, 'inside source'], [/pinned head\/base/gi, 'any revision']]],
+    [[/0700/gi, '0755'], [/outside source and writable mounts?/gi, 'inside source'], [/pinned head\/base/gi, 'any revision']]],
   ['JSON Pointer citations replace copied identity hashes',
-    [/use/i, /JSON Pointer/i, /references/i, /instead of/i, /transcribing hashes/i],
+    [/use/i, /JSON Pointer/i, /references?/i, /instead of/i, /transcribing hash(?:es)?/i],
     'Use JSON Pointer references instead of transcribing hashes.',
     [[/JSON Pointer/gi, 'free-form'], [/instead of/gi, 'alongside']]],
   ['stated child result has its own citation',
@@ -63,21 +65,21 @@ const rules = [
     'A stated child result requires a citation to #/exitCode.',
     [[/requires/gi, 'discards'], [/#\/exitCode/gi, '#/wrapperExit']]],
   ['inspector help owns the schema and refresh rules',
-    [/follow|read/i, /evidence-inspector/i, /--help/i, /ledger/i, /dispositions/i, /refresh rules/i],
+    [/follow|read/i, /evidence-inspector/i, /--help/i, /ledger/i, /dispositions?/i, /refresh rules?/i],
     'Read evidence-inspector --help for the item ledger, dispositions and refresh rules.',
     [[/follow|read/gi, 'ignore'], [/--help/gi, 'a duplicate schema']]],
   ['open failed or unknown items remain gaps',
-    [/keep/i, /open/i, /fail/i, /unknown/i, /items/i, /gaps/i, /owning workflow/i, /holds/i],
-    'Keep open, fail and unknown items as gaps under the owning workflow holds.',
-    [[/keep/gi, 'drop'], [/gaps/gi, 'passes']]],
+    [/keep/i, /open/i, /fail/i, /unknown/i, /items?/i, /gaps?/i, /owning workflow/i, /holds?/i],
+    "Keep every open, fail or unknown item as a gap under the owning workflow's holds.",
+    [[/keep/gi, 'drop'], [/gaps?/gi, 'passes']]],
   ['zero limitations use none and n/a',
-    [/zero limitations/i, /record/i, /none/i, /inspector/i, /n\/a/i],
+    [/zero limitations?/i, /record/i, /none/i, /inspector/i, /n\/a/i],
     'For zero limitations record none and inspector n/a.',
     [[/record/gi, 'drop'], [/n\/a/gi, 'pass']]],
   ['limitation citations bind ledger report and item IDs',
-    [/cite/i, /ledger path/i, /inspector report/i, /item IDs/i, /Limitations/i, /Unverified/i],
-    'Cite ledger path, inspector report and item IDs in Limitations/Unverified.',
-    [[/cite/gi, 'discard'], [/item IDs/gi, 'summary']]],
+    [/cite/i, /ledger path/i, /inspector report/i, /item IDs?/i, /Limitations/i, /Unverified/i],
+    'Cite ledger path, inspector report and item ID in Limitations/Unverified.',
+    [[/cite/gi, 'discard'], [/item IDs?/gi, 'summary']]],
   ['reviewer judges proof sufficiency',
     [/reviewer/i, /judges|assesses/i, /proof kind/i, /semantic sufficiency/i, /coverage/i, /safety/i],
     'The reviewer assesses proof kind, semantic sufficiency, coverage and safety.',
@@ -142,19 +144,38 @@ test('safety fact references limitation items only when applicable', () => {
 
 
 test('PR proof command facts cite capture identities', () => {
-  const concepts = [/Proof.*section/i, /check-run/i, /receipt/i, /paths/i, /identities/i];
+  const concepts = [/Proof.*section/i, /check-run/i, /receipt/i, /paths?/i, /identit(?:y|ies)/i];
   checkRule(read('skills/axstack/references/pr-shape.md'), text => requires(text, ...concepts),
     'A Proof section cites check-run receipt paths/identities.',
     [[/check-run/gi, 'hand-written']], concepts);
 });
 
 test('review producer and both watch gates share the capture citation contract', () => {
-  const concepts = [/Final-head check/i, /check-run receipt path/i, /identity/i,
+  const concepts = [/Final-head check/i, /check-run receipt path/i, /identity/i, /cited fields?/i,
     /#\/argv/i, /->/i, /#\/logPath/i, /#\/exitCode/i];
   for (const path of ['skills/axstack-review/references/review-receipt.md',
     'skills/axstack-watch/references/proven-verification.md', 'docs/workflows.md']) {
     checkRule(read(path), text => requires(text, ...concepts),
-      'Final-head check: cite check-run receipt path + identity (#/argv -> #/logPath, #/exitCode).',
+      'Final-head check: cite check-run receipt path + identity + cited field: #/argv -> #/logPath, #/exitCode.',
       [[/check-run receipt path/gi, 'hand-written command']], concepts);
   }
+});
+
+
+test('watch gates bind receipt identity to the candidate revisions', () => {
+  const concepts = [/compare|match/i, /#\/requested\/head/i, /#\/requested\/base/i, /candidate head\/base/i];
+  for (const path of ['skills/axstack-watch/references/proven-verification.md', 'docs/workflows.md']) {
+    checkRule(read(path), text => requires(text, ...concepts),
+      'Match #/requested/head and #/requested/base with candidate head/base.',
+      [[/compare|match/gi, 'ignore']], concepts);
+  }
+});
+
+test('review limitations provide a per-item unproven tag slot', () => {
+  const line = read('skills/axstack-review/references/review-receipt.md').split('\n')
+    .find(line => line.startsWith('Limitations:'));
+  const concepts = [/items?/i, /tags?/i, /changed-behavior: unproven/i];
+  checkRule(line, text => requires(text, ...concepts),
+    'Limitations: list each item and its tag, including changed-behavior: unproven.',
+    [[/tags?/gi, 'summary']], concepts);
 });
