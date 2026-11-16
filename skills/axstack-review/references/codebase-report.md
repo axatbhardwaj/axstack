@@ -5,7 +5,8 @@ Revision: <exact source SHA>
 Inspected scope: <paths and question>
 Exclusions: <outside scope>
 Coverage: <COMPLETE | INCOMPLETE> — <lenses and receipt evidence>
-Limitations: <unverified boundaries and reasons>
+Checks: <capture receipt paths + identities>
+Limitations: <ledger path + inspector report + item IDs/dispositions, or none>
 Validated defects and risks: <location, evidence, consequence, check or none>
 Improvement opportunities: <location, benefit, tradeoff or none>
 Unverified leads: <location, hypothesis, next check or none>
