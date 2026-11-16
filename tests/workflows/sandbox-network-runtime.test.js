@@ -38,14 +38,45 @@ test('install and two concurrent cleanups preserve a live concurrent run without
   expect(host.commands.some(a => a.includes('flush') || a.includes('policy'))).toBe(false);
 });
 
-test('a lost rule holds before cleanup deletes anything', async () => {
+test('a never-installed rule is absent-success once owned containers are gone', async () => {
   const host = fakeNetworkHost([plan]);
   const runtime = createNetworkRuntime(host);
   await runtime.installNetwork({ owner, plan });
   host.rules.delete([...host.rules.keys()][0]);
-  host.commands.length = 0;
-  await expect(runtime.cleanupNetwork({ owner, plan })).rejects.toThrow('Missing/changed rule');
-  expect(host.commands.some(a => a.includes('delete') || a.includes('rm'))).toBe(false);
+  expect((await runtime.cleanupNetwork({ owner, plan })).every(t => t.status === 'pass')).toBe(true);
+  expect(host.networks.size).toBe(0);
+  expect(host.rules.size).toBe(0);
+});
+
+for (const stage of ['table', 'chain', 'network', 'rule']) test(`partial ${stage} install can be reaped without wedging admission`, async () => {
+  const host = fakeNetworkHost([plan]);
+  let count = 0, failed = false;
+  const runtime = createNetworkRuntime({ runner: async argv => {
+    const target = stage === 'network' ? argv.slice(0, 3).join(' ') === 'docker network create' : argv.slice(0, 3).join(' ') === `nft add ${stage}`;
+    if (target && ++count === (stage === 'table' ? 1 : 2) && !failed) {
+      failed = true; return { exitCode: 1, stdout: '', stderr: 'injected transient install failure' };
+    }
+    return host.runner(argv);
+  } });
+  await expect(runtime.installNetwork({ owner, plan })).rejects.toThrow();
+  expect(failed).toBe(true);
+  expect((await runtime.cleanupNetwork({ owner, plan })).every(t => t.status === 'pass')).toBe(true);
+  expect(host.networks.size).toBe(0); expect(host.rules.size).toBe(0);
+  await runtime.installNetwork({ owner, plan });
+  await runtime.cleanupNetwork({ owner, plan });
+});
+
+test('changed rules and unknown readback hold before cleanup mutates anything', async () => {
+  for (const unknown of [false, true]) {
+    const host = fakeNetworkHost([plan]);
+    await createNetworkRuntime(host).installNetwork({ owner, plan });
+    if (!unknown) [...host.rules.values()][0].expr = [{ accept: null }];
+    host.commands.length = 0;
+    const runtime = createNetworkRuntime({ runner: argv => unknown && argv[0] === 'nft' && argv[1] === '-j'
+      ? { exitCode: 1, stdout: '', stderr: 'unobservable' } : host.runner(argv) });
+    await expect(runtime.cleanupNetwork({ owner, plan })).rejects.toThrow();
+    expect(host.commands.some(a => a.includes('delete') || a.includes('rm'))).toBe(false);
+  }
 });
 
 test('changing the sandbox hook priority holds cleanup without rewriting the chain policy', async () => {
