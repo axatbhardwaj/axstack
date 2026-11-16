@@ -18,7 +18,9 @@ ENV PATH="/opt/node-24/bin:/opt/rust/bin:/opt/cargo-tools/bin:/opt/jdk-25/bin:/o
     JAVA_HOME="/opt/jdk-25" JAVA_11_HOME="/opt/jdk-11" ANDROID_HOME="/opt/android" \
     ANDROID_SDK_ROOT="/opt/android" SVM_HOME="/opt/svm" HOME="/sandbox-home" \
     GRADLE_USER_HOME="/tmp/gradle" GRADLE_RO_DEP_CACHE="/opt/gradle-cache/caches/modules-2" PYTHONDONTWRITEBYTECODE="1"
-RUN AXSTACK_IMAGE_BUILD=1 /opt/bootstrap/bun-linux-x64/bun /opt/axstack-image/probes-image-build.js --run
+RUN AXSTACK_IMAGE_BUILD=1 /opt/bootstrap/bun-linux-x64/bun /opt/axstack-image/probes-image-build.js --artifacts
+COPY probes-android-platform.xml /opt/android/platforms/android-37.0/package.xml
+RUN AXSTACK_IMAGE_BUILD=1 /opt/bootstrap/bun-linux-x64/bun /opt/axstack-image/probes-image-build.js --preload
 WORKDIR /work
 USER 1000:1000
 CMD ["/bin/bash"]
