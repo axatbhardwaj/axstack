@@ -35,7 +35,7 @@
     "lint": "biome lint . --error-on-warnings",
     "typecheck": "bun node_modules/typescript/bin/tsc --noEmit --project jsconfig.json",
     "test": "bun skills/axstack/scripts/test-repository.js",
-    "test:all": "bun skills/axstack/scripts/test-repository.js"
+    "test:all": "bun tests/run-all.js"
   },
   "license": "MIT",
   "devDependencies": {
