@@ -91,6 +91,9 @@ For each current head and base SHA, every merge-ready term must hold:
   evidence instead.
 - Proven verification: apply every receipt and acceptance term below, or its
   head-and-base-bound user acceptance, while every other gate still holds.
+- Sandbox: run `bun skills/axstack/scripts/pr-shape.js --base <base-sha> --head <head-sha>`
+  for the current head and base SHA. A `sandbox-path` fail requires user merge
+  on the forge. A `sandbox-path` unknown holds automatic merge.
 - Risky paths: `merge-base..head` touches none of database migrations,
   auth/authentication code, secrets or credential config, money/funds-moving
   paths, or production deploy config, or a head-and-base-bound user clearance
