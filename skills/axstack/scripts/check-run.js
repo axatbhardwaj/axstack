@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { realpathSync } from 'node:fs';
-import { captureVersion } from './capture-identity.js';
+import { readFileSync, realpathSync } from 'node:fs';
+import { captureTerms, captureVersion, sha256 } from './capture-identity.js';
 import { killGroup, runCommand } from './command-capture.js';
 
 export const help = `Usage: check-run.js --repo PATH --repository ORIGIN --head REF --base REF --out DIR [options] -- COMMAND [ARG...]
@@ -42,10 +42,118 @@ Exit: 0 measured (child may fail), 1 invocation/writer error, 2 hold/incomplete.
  Silence is valid. Timeout/spawn failure/interruption/truncation/incomplete drain
  leave capture unknown; changed source fails source identity. Neither closes a
  proof term that needs the missing evidence. No dispatch, retry, schedule or merge.
+
+R5 read-only modes (no child, writes, network, cleanup or runtime enforcement):
+  check-run.js r5-plan --input FILE
+  check-run.js r5-trace --plan-receipt FILE --result FILE --repository ORIGIN --head SHA --base SHA
+  --input FILE         Before JSON: catalog path, scenario id, version, host,
+                       tokenLimit, timeLimitMs, attempt:1, nonce, recordedAt,
+                       requested:{provider,model,options}. Limits are positive integers.
+  --plan-receipt FILE  Schema-v1 receipt of a captured r5-plan invocation
+  --result FILE        After JSON; see references/live-run.md for its fields
+  --repository ORIGIN --head SHA --base SHA  Independent full capture identities
+These modes read explicit local JSON/catalog/receipt/log files and print per-term
+facts and counts. Wrap each mode with ordinary check-run to retain schema-v1
+receipts; keep the before receipt before launching the scenario yourself.
+The trace binds result bytes to the plan hash and nonce and rechecks capture
+identity/log integrity. T3 observations are caller-supplied, never authenticated
+by this helper. Missing observations stay unknown. Failed criteria exit 0;
+unknown exits 2, invalid invocation/JSON exits 1. No publication verdict.
 `;
+
+const text = value => typeof value === 'string' && value.trim().length > 0;
+const positive = value => Number.isSafeInteger(value) && value > 0;
+const settings = value => value && text(value.provider) && text(value.model)
+  && value.options && typeof value.options === 'object' && !Array.isArray(value.options);
+const timestamp = value => typeof value === 'string' && /T.*(?:Z|[+-]\d\d:\d\d)$/.test(value) && Number.isFinite(Date.parse(value));
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map(k => [k, canonical(value[k])]));
+  return value;
+}
+const equal = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+const term = (id, ok, evidence) => ({ id, status: ok === null ? 'unknown' : ok ? 'pass' : 'fail', evidence });
+const readJSON = path => JSON.parse(readFileSync(path, 'utf8'));
+function r5Plan(input) {
+  const bytes = readFileSync(input.catalog);
+  const catalog = JSON.parse(bytes.toString());
+  const matches = catalog.cases?.filter(c => c.id === input.scenario) ?? [];
+  const scenario = matches.length === 1 ? matches[0] : null;
+  return { schemaVersion: 1, kind: 'r5-plan', version: input.version, host: input.host,
+    tokenLimit: input.tokenLimit, timeLimitMs: input.timeLimitMs, attempt: input.attempt,
+    nonce: input.nonce, recordedAt: input.recordedAt, requested: input.requested,
+    catalog: { path: realpathSync(input.catalog), sha256: sha256(bytes) },
+    scenario: scenario ? { id: scenario.id, title: scenario.title, input: scenario.input } : null,
+    terms: [
+      term('scenario', Boolean(scenario?.input && text(scenario.title)), { catalog: input.catalog, id: input.scenario, matches: matches.length }),
+      term('installation', text(input.version) && text(input.host), { version: input.version, host: input.host, basis: 'caller declaration; verify installed release before launch' }),
+      term('limits', positive(input.tokenLimit) && positive(input.timeLimitMs) && input.attempt === 1,
+        { tokenLimit: input.tokenLimit, timeLimitMs: input.timeLimitMs, attempt: input.attempt, enforcement: 'agent/runtime, not this helper' }),
+      term('settings', Boolean(settings(input.requested)), input.requested ?? null),
+      term('freshness', text(input.nonce) && input.nonce.length >= 16 && timestamp(input.recordedAt), { nonce: input.nonce, recordedAt: input.recordedAt }),
+    ] };
+}
+function r5Trace(flags) {
+  const receiptBytes = readFileSync(flags['plan-receipt']);
+  const receipt = JSON.parse(receiptBytes.toString());
+  const planBytes = readFileSync(receipt.logPath), before = JSON.parse(planBytes.toString());
+  const resultBytes = readFileSync(flags.result), after = JSON.parse(resultBytes.toString());
+  const unavailable = after.outcome === 'unavailable';
+  const elapsed = timestamp(after.startedAt) && timestamp(after.finishedAt) ? Date.parse(after.finishedAt) - Date.parse(after.startedAt) : null;
+  const terms = [
+    ...captureTerms(receipt, { repository: flags.repository, head: flags.head, base: flags.base }).map(t => ({ ...t, id: `plan-${t.id}` })),
+    term('plan-kind', before.schemaVersion === 1 && before.kind === 'r5-plan' && receipt.exitCode === 0
+      && receipt.tool?.name === 'check-run' && receipt.argv?.length === 5
+      && receipt.argv[1].endsWith('/check-run.js') && receipt.argv[2] === 'r5-plan' && receipt.argv[3] === '--input',
+      { kind: before.kind, exitCode: receipt.exitCode, argv: receipt.argv }),
+    ...(Array.isArray(before.terms) ? before.terms.map(t => ({ ...t, id: `before-${t.id}` })) : [term('before', null, 'missing plan terms')]),
+    term('installation', after.version === before.version && after.host === before.host,
+      { planned: { version: before.version, host: before.host }, observed: { version: after.version, host: after.host }, basis: 'caller-supplied T3 observations' }),
+    term('settings', !settings(after.effective) || !settings(after.requested) ? null : equal(after.requested, before.requested) && equal(after.effective, before.requested),
+      { requested: before.requested, observedRequested: after.requested ?? null, effective: after.effective ?? null }),
+    term('terminal', !text(after.threadId) || !text(after.runId) ? null : ['completed', 'failed', 'budget-exhausted', 'cancelled'].includes(after.outcome),
+      { outcome: after.outcome, threadId: after.threadId ?? null, runId: after.runId ?? null }),
+    term('stale-result', after.planSha256 === sha256(planBytes) && after.nonce === before.nonce && after.attempt === 1
+      && (unavailable || (typeof after.output === 'string' && after.output.split(/\r?\n/).includes(`nonce: ${before.nonce}`))),
+      { planSha256: sha256(planBytes), observedPlanSha256: after.planSha256, nonce: after.nonce, attempt: after.attempt, nonceEchoRequired: !unavailable }),
+    term('tokens', !Number.isSafeInteger(after.tokensUsed) || after.tokensUsed < 0 ? null : after.tokensUsed <= before.tokenLimit,
+      { used: after.tokensUsed ?? null, limit: before.tokenLimit }),
+    term('time', elapsed === null || !timestamp(before.recordedAt) ? null : Date.parse(after.startedAt) >= Date.parse(before.recordedAt) && elapsed >= 0 && elapsed <= before.timeLimitMs,
+      { recordedAt: before.recordedAt, startedAt: after.startedAt ?? null, finishedAt: after.finishedAt ?? null, elapsedMs: elapsed, limitMs: before.timeLimitMs }),
+    term('scenario-outcome', unavailable ? null : after.outcome === 'completed', { outcome: after.outcome, reason: after.reason ?? null }),
+  ];
+  return { schemaVersion: 1, kind: 'r5-trace',
+    planReceipt: { path: realpathSync(flags['plan-receipt']), sha256: sha256(receiptBytes) },
+    result: { path: realpathSync(flags.result), sha256: sha256(resultBytes) }, before, after, terms };
+}
+function r5Main(args, io) {
+  try {
+    const [mode, ...rest] = args;
+    const required = mode === 'r5-plan' ? ['input'] : ['plan-receipt', 'result', 'repository', 'head', 'base'];
+    /** @type {Record<string, string>} */
+    const flags = {};
+    for (let i = 0; i < rest.length; i += 2) {
+      const key = rest[i].slice(2);
+      if (!rest[i].startsWith('--') || !required.includes(key) || key in flags || !rest[i + 1]) throw Error(`invalid flag: ${rest[i]}`);
+      flags[key] = rest[i + 1];
+    }
+    for (const key of required) if (!flags[key]) throw Error(`--${key} required`);
+    const report = mode === 'r5-plan' ? r5Plan(readJSON(flags.input)) : r5Trace(flags);
+    report.counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map(status => [status, report.terms.filter(t => t.status === status).length]));
+    io.stdout(JSON.stringify(report, null, 2));
+    return report.terms.some(t => t.status === 'unknown') ? 2 : 0;
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'EACCES') {
+      io.stdout(JSON.stringify({ terms: [term('input', null, error.message)], counts: { pass: 0, fail: 0, unknown: 1, 'n/a': 0 } }, null, 2));
+      return 2;
+    }
+    io.stderr(error.message); return 1;
+  }
+}
 
 export async function main(args, io = { stdout: console.log, stderr: console.error }) {
   if (args.length === 1 && args[0] === '--help') { io.stdout(help); return 0; }
+  if (['r5-plan', 'r5-trace'].includes(args[0])) return r5Main(args, io);
   /** @type {Record<string, string>} */
   const flags = {};
   const writableRoots = [];
