@@ -48,4 +48,5 @@ test('Linux Swift and SwiftLint builds compile and lint a real source before ima
   expect(steps.swift).toContain('smoke.swift');
   expect(steps.swiftlint).toContain('/opt/swiftlint/swiftlint');
   expect(steps.swiftlint).toContain('lint --strict');
+  expect(steps.swiftlint).toContain('mv /opt/swiftlint/swiftlint-static /opt/swiftlint/swiftlint');
 });
