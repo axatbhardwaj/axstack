@@ -238,7 +238,7 @@
       "checksum": "ed8ebf7f8822a4de5686d427f237d2fa30ff7410",
       "source": "https://dl.google.com/android/repository/repository2-3.xml",
       "kind": "android",
-      "destination": "/opt/android/platforms/android-37"
+      "destination": "/opt/android/platforms/android-37.0"
     },
     {
       "id": "android-build-tools",
