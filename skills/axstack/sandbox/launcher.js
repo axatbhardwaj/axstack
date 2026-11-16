@@ -64,6 +64,7 @@ Pinned sidecars get a fixed 10-second startup grace inside the wall-time.
 Run checks fresh per-run containment probes before PR commands; no reused results.
 Reap removes only non-live labelled runs: containers before rules, volume before
 matching loop detach/readback and image deletion. No unrelated state is pruned.
+The owned inet axstack_sandbox table and input/forward chains persist after cleanup.
 Writable /work tmpfs permits execution; /tmp and declared data tmpfs use noexec.
 PID liveness uses /proc/<pid>/stat field 22 start ticks and the kernel boot ID;
 unreadable records hold: the owning driver must resolve them before another run.
