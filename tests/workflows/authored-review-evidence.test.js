@@ -35,6 +35,17 @@ const fields = [
       [/(?:new|changed) head/i, 'initial head']]],
 ];
 
+test('review receipt tags every changed behavior limitation by meaning', () => {
+  const concepts = [/reviewer/i, /tags?|marks?/i, /each|every/i, /limitation/i,
+    /changed behavior/i, /unexercised|untested/i, /unverified|unconfirmed/i,
+    /whatever words|however described/i, /changed-behavior: unproven/i];
+  checkRule(sections[0][1], text => requires(text, ...concepts),
+    'The reviewer marks every limitation leaving changed behavior untested or unconfirmed, however described, changed-behavior: unproven.',
+    [[/tags?|marks?/gi, 'Drop'], [/each|every/gi, 'selected'],
+      [/whatever words|however described/gi, 'only with exact wording'],
+      [/changed-behavior: unproven/gi, 'changed-behavior: proven']], concepts);
+});
+
 for (const [section, text] of sections) {
   for (const [field, concepts, rewording, inversions] of fields) {
     test(`authored evidence ${section}: ${field} survives rewording and rejects removal/inversion`, () => {
@@ -48,6 +59,13 @@ test('candidate brief dispatches the review receipt contract before escalation',
   const block = brief.split('```text')[1].split('```')[0];
   checkRule(block, text => requires(text, /follow/i, /Review receipt/i),
     'Follow Review receipt for authored requirements.', [[/follow/gi, 'ignore']], [/follow/i, /Review receipt/i]);
-  expect(block).toMatch(/\[Review receipt\]\(review-receipt\.md\)/);
+  for (const [name, path] of [
+    ['Capture receipts', 'skills/axstack/references/capture-receipts.md'],
+    ['Review receipt', 'skills/axstack-review/references/review-receipt.md'],
+  ]) {
+    const accepts = text => requires(text, /follow/i, new RegExp(path.replaceAll('.', '\\.')), /resolved from/i, /absolute Workspace checkout/i);
+    checkRule(block, accepts, `Follow ${name} at ${path}, resolved from the absolute Workspace checkout.`,
+      [[/absolute Workspace checkout/gi, 'brief file directory']], []);
+  }
   expect(block.trim().split('\n').at(-1)).toMatch(/^Escalate to user:/);
 });
