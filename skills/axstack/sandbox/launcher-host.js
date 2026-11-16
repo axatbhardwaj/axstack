@@ -77,6 +77,11 @@ function privateDirectory(path, create = false) {
 }
 export async function withAdmission(fn, directory = ownedDirectory) {
   privateDirectory(directory, true);
+  const lockPath = `${directory}/admission.lock`;
+  try { writeFileSync(lockPath, '', { flag: 'wx', mode: 0o600 }); }
+  catch (error) { if (error.code !== 'EEXIST') throw error; }
+  const lockStat = lstatSync(lockPath);
+  if (!lockStat.isFile() || lockStat.uid !== process.getuid() || lockStat.nlink !== 1 || lockStat.mode & 0o077) hold('unsafe admission lock');
   // The kernel drops flock when this helper exits, even after launcher SIGKILL.
   const p = Bun.spawn(['flock', '--exclusive', '--nonblock', `${directory}/admission.lock`, process.execPath, '-e', 'process.stdout.write("locked\\n"); await Bun.stdin.text();'], { env, stdin: 'pipe', stdout: 'pipe', stderr: 'ignore' });
   const reader = p.stdout.getReader();
@@ -91,11 +96,16 @@ export async function withAdmission(fn, directory = ownedDirectory) {
     clearTimeout(timer); reader.releaseLock(); p.stdin.end(); await p.exited;
   }
 }
-export async function records(a) {
+export async function records(a, observe = execute) {
   const runs = [];
   for (const entry of readdirSync(a.ownedDir, { withFileTypes: true })) {
-    if (entry.name === 'admission.lock') continue;
+    if (['admission.lock', '.axstack-storage.lock'].includes(entry.name)) {
+      const s = lstatSync(`${a.ownedDir}/${entry.name}`);
+      if (!s.isFile() || s.uid !== process.getuid() || s.nlink !== 1 || s.mode & 0o077) hold('unsafe owned lock file');
+      continue;
+    }
     if (entry.isFile() && entry.name.endsWith('.img')) continue; // Checked against records below.
+    if (entry.isFile() && entry.name.endsWith('.img.owner.json')) continue;
     if (!entry.isDirectory() || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(entry.name)) hold(`unknown owned state: ${entry.name}; driver must resolve`);
     try {
       privateDirectory(`${a.ownedDir}/${entry.name}`);
@@ -107,7 +117,13 @@ export async function records(a) {
     } catch (e) { hold(`unreadable run record ${entry.name}: ${e.message}; owning driver must resolve`); }
   }
   for (const file of readdirSync(a.ownedDir).filter(n => n.endsWith('.img'))) if (!runs.some(p => p.storage.imageFile === `${a.ownedDir}/${file}`)) hold(`orphan image file ${file}; owning driver must resolve`);
-  const r = await execute(['docker', 'ps', '-a', '--filter', 'label=axstack.sandbox=true', '--format', '{{.Names}}']);
+  for (const file of readdirSync(a.ownedDir).filter(n => n.endsWith('.img.owner.json'))) {
+    const path = `${a.ownedDir}/${file}`, stat = lstatSync(path);
+    if (!stat.isFile() || stat.uid !== process.getuid() || stat.nlink !== 1 || stat.mode & 0o077) hold('unsafe storage ownership record');
+    const record = JSON.parse(readFileSync(path, 'utf8'));
+    if (!runs.some(p => `${p.storage.imageFile}.owner.json` === path && record.imageFile === p.storage.imageFile && record.volumeName === p.storage.volumeName && JSON.stringify(record.owner) === JSON.stringify(p.owner) && record.bytes === p.storage.bytes && record.inodes === p.storage.inodes)) hold(`orphan/changed storage record ${file}; owning driver must resolve`);
+  }
+  const r = await observe(['docker', 'ps', '-a', '--filter', 'label=axstack.sandbox=true', '--format', '{{.Names}}']);
   if (r.exitCode !== 0 || typeof r.stdout !== 'string') hold('cannot enumerate labelled containers');
   for (const name of r.stdout.trim().split('\n').filter(Boolean)) if (!runs.some(p => p.containers.some(c => c.id === name))) hold(`labelled container lacks liveness record: ${name}`);
   return runs;
