@@ -138,7 +138,7 @@ export async function savePlan(p, evidenceDir, directory = ownedDirectory) {
   if (!existing && readdirSync(evidenceDir).length) hold('a new run requires an empty evidence directory');
   if (lstatSync(evidenceDir).dev !== lstatSync(directory).dev) hold('evidence and owned storage must use the budgeted filesystem');
   privateDirectory(dir, true);
-  const bytes = `${JSON.stringify(p, null, 2)}\n`;
+  const bytes = `${JSON.stringify(p)}\n`;
   if (new TextEncoder().encode(bytes).length * 2 > p.policy.receiptMaxBytes) hold('effective plan exceeds host receipt directory cap');
   writeFileSync(`${dir}/plan.json`, bytes, { mode: 0o600 });
   writeFileSync(`${evidenceDir}/${p.runId}-plan.json`, bytes, { mode: 0o600 });
