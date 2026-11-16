@@ -1,18 +1,21 @@
 #!/usr/bin/env bun
-import { gitArgv } from './git-argv.js';
+import { gitArgv, gitEnv } from './git-argv.js';
 // Read only the index. No hooks, configuration writes or working-tree reads.
 import { readFileSync } from 'node:fs';
 
 const ignoredPath = /(^|\/)(?:[^/]*\.lockb?|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|go\.sum)$|(^|\/)(?:dist|build|__mocks__|__fixtures__|fixtures|captures)\/|\.(?:min|generated|gen)\.|\.(?:map|snap)$/i;
 const asset = /\.(?:svg|png|jpe?g|gif|webp|avif|ico|bmp|tiff?|pdf|woff2?|ttf|otf|eot|mp[34]|wav|ogg|flac|webm|mov|avi|zip|gz|bz2|xz|7z|rar|tar|exe|dll|so|dylib|wasm|bin|class|jar|pyc|sqlite3?|db)$/i;
-let root = process.cwd();
+let root = process.argv[3];
 function git(...args) {
-  const result = Bun.spawnSync(gitArgv('--literal-pathspecs', ...args), { cwd: root });
+  const result = Bun.spawnSync(gitArgv('-C', root, '--literal-pathspecs', ...args), { env: gitEnv() });
   if (result.exitCode !== 0) throw Error(result.stderr.toString().trim());
   return result.stdout.toString();
 }
 
 try {
+  if (process.argv.length !== 4 || process.argv[2] !== '--repo' || !root || root.startsWith('-')) {
+    throw Error('pass --repo <Git-checkout-path> from a trusted cwd');
+  }
   root = git('rev-parse', '--show-toplevel').trim();
   const ignoreFile = git('rev-parse', '--path-format=absolute', '--git-path', 'info/token-limit-ignore').trim();
   let ignores = [];
