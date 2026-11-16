@@ -5,7 +5,6 @@ automation specs and plans describe retired designs and are not instructions.
 
 For optional weekly test audits, use the separate packaged
 [Weekly test-audit prompt](test-audit-weekly.md).
-The native canary below is also required before weekly activation.
 
 At every scheduled pass start, follow [Provider bindings](t3-runtime.md#preflight-and-binding)
 for provider binding.
@@ -119,8 +118,8 @@ follows the flag and alert rule below when its resume needs the user.
 Outside the wedged-pass recovery above, unknown liveness blocks admission,
 shared-record writes, takeover and cleanup, including when activity is recent.
 Preserve user-taken-over threads.
-This is prompt policy, not an atomic lock: the overlap canary must demonstrate
-one admission owner before activation. Count all unsettled PR jobs and descendants.
+This is prompt policy, not an atomic lock.
+Count all unsettled PR jobs and descendants.
 
 A failed scheduled run alone proves neither predecessor exit nor release.
 Predecessor exit requires exact thread/run identity and terminal run evidence;
@@ -455,19 +454,10 @@ template; read back all four sections and the save before ending the finite turn
 Waiting PRs occupy zero slots after their trees settle. Cleanup retention holds
 removal, not settled execution capacity. The next pass retires this settled pass.
 
-## Activation canary
+## Recovery and limits
 
-The canary runs two overlapping `run_scheduled_task_now` passes and proves one
-admission owner per PR. The canary reviews or correctly no-ops one real PR event.
-The canary reconciles a killed predecessor and demonstrates wedged-pass recovery:
-exactly one successor interrupts and retires a wedged predecessor.
-With a temporary limit equal to the current count, the canary disables the
-schedule and verifies that the following interval creates zero new pass worktrees.
-The previous review-manager automation is disabled, never deleted, only after all four T3 canary checks pass.
 A firing timestamp proves neither delivery nor useful completion.
 Source checks alone do not prove launch, overlap, recovery, or growth behavior.
-
-## Recovery and limits
 
 On a lost manager session, reconcile native T3 workers, task status, thread/run
 state, GitHub state, and the compact run record. Reuse valid unchanged receipts.
@@ -478,4 +468,3 @@ or takes over user work. Other unambiguous work can proceed.
 Use only native T3 schedules and orchestration. Add no daemon, shell precheck,
 watchdog script, custom scheduler, cursor or pending sidecar, runtime database,
 workflow state machine, programmatic decision interpreter, or programmatic escalation gate.
-Live VPS activation and the four canary outcomes remain unverified until exercised.
