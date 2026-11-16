@@ -1,119 +1,85 @@
 # R5 release trace
 
-For a release touching affected skills, the driver runs one capped T3 scenario
-against the installed released version. Failure, unavailability and exhausted
-budgets are recorded and never block publication. Helpers capture facts; they
-never launch T3, enforce runtime budgets, schedule, retry or grant authority.
+For releases touching affected skills, the driver runs one capped T3 scenario
+against the installed release. Failure, unavailability and exhausted budgets
+are recorded and never block publication. Helpers capture facts; they never
+launch T3, enforce runtime budgets, schedule, retry or grant authority.
 
-Use installed `scripts/check-run.js` for both phases. Set `REPO` to a clean
-release checkout at its tag and `RELEASE_HEAD` to its full commit SHA. Verify
-package version and installed skills with the release/install checks.
-Set `CAPTURE` to the absolute installed helper and `OUT` to an existing owned
-0700 evidence directory outside source/cwd/writable roots. Retain installed
-version checks and T3 receipts there. Use that checkout's existing
-`tests/workflows/*scenarios.json`; catalogs are not installed. No live-home edits.
-Trace checks catalog hashes and package version against captured-head bytes;
-unreadable bytes stay unknown. Replacement objects are disabled. It trusts
-the release checkout's object database as Git reads it, the Git environment
-and git binary. Overwritten loose objects and redirected `GIT_OBJECT_DIRECTORY`
-are undetected; `git fsck` in a clean environment helps but does not close the
-redirected-directory case. Verify independently.
-Use the same installed helper and Bun realpaths in both captures; helper
-hashes must match. Trace trusts its own interpreter: a fake bun earlier on PATH
-than the trace's own bun stays undetectable; verify it independently.
+Use installed `scripts/check-run.js` in both phases. Set:
+
+- `REPO`: clean release-tag checkout; `RELEASE_HEAD`: full tag commit SHA.
+- `CAPTURE`: absolute installed helper; `OUT`: existing owned 0700 evidence
+  directory outside source/cwd/writable roots.
+
+Verify package version and installed skills with release/install checks; retain
+those checks and T3 receipts in `OUT`. Use `REPO/tests/workflows/*scenarios.json`
+(catalogs are not installed). No live-home edits.
+Follow check-run `--help`, including captured-head validation, trust limits and
+independent verification of Git objects/environment/binary and trace's Bun.
+Both captures require identical helper/Bun realpaths and matching helper hashes.
 
 ## Before launch
 
-Write `$OUT/before.json` with this shape, substituting observed version/host,
-an existing catalog ID, explicit destination settings, current UTC time and a
-fresh nonce from `crypto.randomUUID()` (at least 16 characters; the literal
-placeholder below is rejected). Limits must be positive numeric integers;
-`attempt` must be `1`. Save the exact requested settings, including options.
-
-```json
-{
-  "catalog": "/absolute/released-checkout/tests/workflows/run-record-scenarios.json",
-  "scenario": "stale-evidence-hold",
-  "version": "0.68.0",
-  "host": "axat-vps",
-  "tokenLimit": 4000,
-  "timeLimitMs": 600000,
-  "attempt": 1,
-  "nonce": "replace-with-fresh-uuid",
-  "recordedAt": "2026-11-16T00:00:00Z",
-  "requested": { "provider": "codex", "model": "catalog-model-id", "options": { "reasoningEffort": "low" } }
-}
-```
-
-Capture the plan before launching. A dirty-source hold needs the exact printed
-`--snapshot` digest; it does not permit silently changing the release identity.
+Write `$OUT/before.json` in check-run `--help`'s Before JSON shape with observed
+version/host, absolute checkout catalog path and existing scenario ID, exact
+requested provider/model/options, current UTC time and fresh `crypto.randomUUID()`
+nonce (16+ characters; placeholder rejected). Limits are positive integers;
+`attempt` is `1`. Capture before launch. Dirty-source holds require the exact
+printed `--snapshot` digest; never silently change release identity.
 
 ```bash
-bun "$CAPTURE" --repo "$REPO" --repository "$(git -C "$REPO" remote get-url origin)" \
+ORIGIN=$(git -C "$REPO" remote get-url origin)
+bun "$CAPTURE" --repo "$REPO" --repository "$ORIGIN" \
   --head "$RELEASE_HEAD" --base "$RELEASE_HEAD" --out "$OUT" -- \
   bun "$CAPTURE" r5-plan --input "$OUT/before.json" > "$OUT/before-capture.json"
 ```
 
-Read the receipt's `exitCode`, capture `terms`, and its `logPath` plan terms.
-Use `receiptPath` as `PLAN_RECEIPT`, `logPath` as `PLAN_LOG`. Resolve any failed
-planning terms before launch; missing prerequisites are recorded as unavailable.
-The helper stamps `plannedAt` from its own clock; callers cannot supply it.
-`recordedAt` must not be in the future, and the run must start at or after `plannedAt`.
-Compute `PLAN_SHA256` from the exact `PLAN_LOG` bytes with
+Read receipt `exitCode`, capture `terms` and plan terms in `logPath`.
+Set `PLAN_RECEIPT=receiptPath`, `PLAN_LOG=logPath`. Resolve failed planning
+terms before launch; record missing prerequisites as unavailable. Only the
+helper stamps `plannedAt`; `recordedAt` cannot be future, and the run starts
+at/after `plannedAt`. Hash exact `PLAN_LOG` bytes into `PLAN_SHA256`:
 `bun -e 'console.log(new Bun.CryptoHasher("sha256").update(await Bun.file(process.argv[1]).arrayBuffer()).digest("hex"))' "$PLAN_LOG"`.
 
-The driver launches exactly one authorized T3 attempt under the runtime contract,
-using `plan.scenario.input`, the installed skill, requested settings and limits.
-Keep expected answers out of the worker prompt. Include `PLAN_SHA256` and the
-nonce; ask for a final line `nonce: <nonce>`. Bind and retain actual task/thread/run
-identities. If T3 cannot enforce a numeric cap, use the existing bounded run
-controls and report the enforcement gap. Do not claim a helper enforced it.
+Launch exactly one authorized T3 attempt under the runtime contract with
+`plan.scenario.input`, installed skill, requested settings/limits. Exclude
+expected answers; include `PLAN_SHA256` and nonce; request final `nonce: <nonce>`.
+Bind/retain actual task/thread/run IDs. If T3 cannot enforce numeric caps, use
+existing bounded controls and report the gap; never claim helper enforcement.
 
 ## After observation
 
-Save raw T3 observations and normalize them into `$OUT/after.json` below; take
-requested/effective settings from actual launch/readback, never infer equality.
-Use `null` for unavailable observations. `output` is the actual final response,
-including its nonce line. `finishedAt` is the terminal observation time.
+Retain raw T3 observations and normalize into `$OUT/after.json`: requested/
+effective settings from launch/readback (never infer equality), unavailable
+observations `null`, actual final response including nonce in `output`, terminal
+observation time in `finishedAt`:
 
 ```json
 {
-  "planSha256": "exact PLAN_SHA256",
-  "nonce": "the planned nonce",
-  "version": "observed installed release",
-  "host": "observed execution host",
-  "attempt": 1,
+  "planSha256": "exact PLAN_SHA256", "nonce": "planned nonce",
+  "version": "observed release", "host": "observed host", "attempt": 1,
   "requested": { "provider": "observed", "model": "observed", "options": {} },
-  "effective": null,
-  "outcome": "unavailable",
-  "threadId": null,
-  "runId": null,
-  "startedAt": null,
-  "finishedAt": "2026-11-16T00:00:02Z",
-  "tokensUsed": null,
-  "output": null,
-  "reason": "availability or enforcement gap; raw observation path"
+  "effective": null, "outcome": "unavailable", "threadId": null, "runId": null,
+  "startedAt": null, "finishedAt": "2026-11-16T00:00:02Z", "tokensUsed": null,
+  "output": null, "reason": "availability/enforcement gap; raw observation path"
 }
 ```
 
 Outcomes: `completed`, `failed`, `unavailable`, `budget-exhausted`, `cancelled`.
-An `unavailable` terminal with observed thread/run IDs is a terminal observation;
-absent IDs remain unknown. Its scenario outcome remains unknown in either case.
-Capture the trace without another scenario attempt:
+Unavailable with observed thread/run IDs is terminal; absent IDs stay unknown.
+Its scenario outcome stays unknown either way. Capture without another attempt:
 
 ```bash
-bun "$CAPTURE" --repo "$REPO" --repository "$(git -C "$REPO" remote get-url origin)" \
+bun "$CAPTURE" --repo "$REPO" --repository "$ORIGIN" \
   --head "$RELEASE_HEAD" --base "$RELEASE_HEAD" --out "$OUT" -- \
   bun "$CAPTURE" r5-trace --plan-receipt "$PLAN_RECEIPT" --result "$OUT/after.json" \
-    --repository "$(git -C "$REPO" remote get-url origin)" \
+    --repository "$ORIGIN" \
     --head "$RELEASE_HEAD" --base "$RELEASE_HEAD" > "$OUT/after-capture.json"
 ```
 
-The after receipt's `logPath` is the R5 trace file. Cite that receipt's
-`receiptPath` and trace `logPath` in the release record, alongside its term
-counts and observed outcome. Inspect child `exitCode` separately from capture
-completeness: failed criteria exit 0, unknown observations exit 2. Capture may
-complete even when its child reports unknown. Missing/truncated/interrupted
-capture is an evidence gap; record it without retrying the live scenario.
-These receipts bind local source/log bytes and caller-supplied observations;
-they do not authenticate T3 exports or independently prove live compliance.
+Cite after `receiptPath` and trace `logPath`, term counts and observed outcome
+in the release record. Inspect child `exitCode` separately: failed criteria exit
+0, unknown observations exit 2; capture can complete with an unknown child.
+Missing/truncated/interrupted capture is an evidence gap; record without live
+scenario retry. Receipts bind local source/log bytes and caller observations;
+they neither authenticate T3 exports nor independently prove live compliance.
