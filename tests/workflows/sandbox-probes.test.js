@@ -35,3 +35,11 @@ test('enumeration returns completeness terms even if a host observer is unavaila
   expect(observed.terms.length).toBeGreaterThanOrEqual(5);
   expect(observed.targets.some((t) => t.kind === 'fixed' && t.address === '169.254.169.254')).toBe(true);
 });
+
+test('network clients receive only endpoint data while the plan retains target provenance once', () => {
+  const p = planProbes({ runId: 'r', networks, containers, enumeration, storage });
+  const client = p.find(probe => probe.argv[2] === 'network');
+  expect(JSON.parse(client.argv[5])).toEqual({ kind: 'host-listener', address: '100.64.0.1', port: 22, protocol: 'tcp' });
+  expect(client.targetIds).toEqual(['host:22']);
+  expect(enumeration.targets[0].evidence).toEqual(['ss']);
+});
