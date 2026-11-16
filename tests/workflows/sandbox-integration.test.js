@@ -86,3 +86,17 @@ test('launcher literal PATH exposes the provisioned Node and JVM tools without h
   expect(env.PATH.split(':')).toContain('/opt/go/bin');
   expect(env.JAVA_HOME).toBe('/opt/jdk-25');
 });
+
+test('a full fleet listener inventory fits the fixed receipt budget without losing plan fields', async () => {
+  const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/sandbox-int-plan-size-`);
+  try {
+    const a = await input(), owned = `${root}/owned`, evidence = `${root}/evidence`, repo = `${root}/repo`;
+    for (const dir of [owned, evidence, repo]) mkdirSync(dir, { mode: 0o700 });
+    a.assets.ownedDir = owned; a.request.repo = repo;
+    a.enumeration.targets = Array.from({ length: 900 }, (_, i) => ({ id: `host-listener:100.64.0.1:${i + 1}:tcp`, kind: 'host-listener', address: '100.64.0.1', port: i + 1, protocol: 'tcp', evidence: [`tcp LISTEN 0 128 0.0.0.0:${i + 1} 0.0.0.0:*`] }));
+    const p = plan(a);
+    const bytes = await savePlan(p, evidence, owned);
+    expect(JSON.parse(bytes)).toEqual(p);
+    expect(new TextEncoder().encode(bytes).length * 2).toBeLessThanOrEqual(p.policy.receiptMaxBytes);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
