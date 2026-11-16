@@ -331,14 +331,36 @@
         }
       ],
       "checksumOrigin": "archive bytes independently matched to upstream Git tree; no upstream archive checksum published"
+    },
+    {
+      "id": "swift",
+      "version": "6.4.1",
+      "url": "https://download.swift.org/swift-6.4.1-release/ubuntu2204/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-ubuntu22.04.tar.gz",
+      "algorithm": "sha256",
+      "checksum": "e9ec2ff05ac0fc89bf2e7cecdee5da4d398898a768d7ee2b86a59d2a7f01c44b",
+      "source": "https://download.swift.org/swift-6.4.1-release/ubuntu2204/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-ubuntu22.04.tar.gz.sig",
+      "kind": "tar",
+      "destination": "/opt/swift",
+      "strip": 1,
+      "checksumOrigin": "SHA256 of archive verified with official Swift 6.x release signing key 52BB7E3DE28A71BE22EC05FFEF80A866B47A981F; run-evidence:author-T21-Int/repair-1/swift-signature.log"
+    },
+    {
+      "id": "swiftlint",
+      "version": "0.65.1",
+      "url": "https://github.com/realm/SwiftLint/releases/download/0.65.1/swiftlint_linux_amd64.zip",
+      "algorithm": "sha256",
+      "checksum": "caeed6f4a679c35539ffaf124f6c4ab4a8416917f7d8796279dc52b74026059d",
+      "source": "https://api.github.com/repos/realm/SwiftLint/releases/tags/0.65.1",
+      "kind": "zip",
+      "destination": "/opt/swiftlint"
     }
   ],
   "limitations": [
     {
-      "id": "swift",
-      "version": "6.4.1",
+      "id": "apple-platform",
+      "version": "Xcode 27",
       "status": "unknown",
-      "reason": "Recorded Swift-on-Linux limitation; SwiftLintPlugins 0.65.1 / Apple SDK not provisioned. Not a waiver for other tools."
+      "reason": "Apple SDK/iOS/Xcode builds require Apple platforms; Linux Swift and SwiftLint remain required."
     }
   ],
   "androidLicense": {
