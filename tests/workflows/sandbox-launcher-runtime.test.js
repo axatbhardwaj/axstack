@@ -129,3 +129,17 @@ test('network cleanup uncertainty still cleans bounded storage and retains the o
   expect(h.events).toContain('storage-clean');
   expect(h.events).not.toContain('record-clean');
 });
+
+test('launcher saves the final fresh probe plan before allowing its probes to continue', async () => {
+  const h = harness();
+  let saved;
+  h.deps.savePlan = async p => { saved = JSON.stringify(p); return saved; };
+  h.deps.runProbes = async ({ plan, onPlan }) => {
+    expect(typeof onPlan).toBe('function');
+    plan.enumeration.targets.push({ id: 'new-listener', kind: 'host-listener', address: '100.64.0.1', port: 9001, protocol: 'tcp', evidence: ['ss'] });
+    await onPlan(plan);
+    expect(JSON.parse(saved).enumeration.targets.at(-1).id).toBe('new-listener');
+    return plan.probes.map(p => pass(p.id));
+  };
+  await h.launcher().run({ plan: h.launcher().plan(h.input), evidenceDir: '/evidence' });
+});
