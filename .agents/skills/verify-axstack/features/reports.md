@@ -153,7 +153,9 @@ Entry: `skills/axstack/scripts/schedule-drift.js`; contracts:
 `tests/workflows/{schedule-drift,schedule-cadence,schedule-policy}.test.js`.
 After Doctor, run those three files with `bun run test` and retain the log.
 The synthetic saved export covers exact prompt bytes after explicit host-token
-binding, the 30-minute review interval, enabled state, project/host identity,
+binding, ignoring trailing LF only; interior text/blank lines, spaces and CRLF
+differences still fail. It also covers the 30-minute review interval, enabled state,
+project/host identity,
 missing schedules, stale/future/incomplete/unavailable input and read-only output.
 A host binding may declare `{promptFile,absent:true}` for an intentional exclusion;
 only fresh complete matching-host coverage yields four `n/a` terms. Include an
