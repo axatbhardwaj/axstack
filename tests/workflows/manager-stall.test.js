@@ -119,11 +119,6 @@ const recoveryRules = [
     /verified inactivity/i, /whole.tree/i, /wedge/i],
     'A wait showing verified inactivity for longer than an hour in its whole tree is a wedge, not a running wait.',
     [/not (?:a )?running wait/i, 'still a running wait'], /not (?:a )?running wait/i],
-  ['canary interrupts and retires a wedged predecessor', [/canary/i, /reconcil/i,
-    /killed/i, /predecessor/i, /wedged.pass recovery/i, oneSuccessor,
-    /interrupt/i, /retir/i, /wedged predecessor/i],
-    'The canary demonstrates wedged-pass recovery and reconciles a killed predecessor: a single successor must interrupt and retire a wedged predecessor.',
-    [/interrupt/i, 'preserve']],
 ];
 
 for (const [name, concepts, rewording, inversion, prohibition] of recoveryRules) {

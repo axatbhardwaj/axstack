@@ -4,6 +4,93 @@ import { readFileSync } from 'node:fs';
 const read = (path) => readFileSync(`${import.meta.dir}/../../${path}`, 'utf8');
 const compact = (path) => read(path).replace(/\s+/g, ' ');
 
+const hasRetiredActivationGate = (text) => sentences(text).some((sentence) => {
+  const clause = sentence.replace(/\bChrome Canary\b|\bcanary releases?\b/gi, '');
+  if (/\b(?:does|do|need) not (?:require|need|wait)\b|\bno longer\b/i.test(clause)) return false;
+  const schedule = /\b(?:activat\w*|enabl\w*|disabl\w*|paused|turn\b[^.;!?]*\bon)\b/i.test(clause);
+  // Weekly audit's removed canary condition used "admission". Ordinary
+  // per-pass ownership/admission proofs are outside this retirement guard.
+  const canary = /\bcanar(?:y|ies)\b/i.test(clause)
+    && (schedule || /\badmission\b/i.test(clause));
+  const outcome = schedule
+    && /\b(?:before|until|only (?:after|once)|requir\w*|needs?|must|gated|wait\w*)\b/i.test(clause)
+    && /\b(?:live|native|trial|prov\w*|verif\w*|validat\w*|demonstrat\w*|evidence|shown)\b/i.test(clause)
+    && /\b(?:overlap\w*|concurrent|simultaneous|killed[\s-]+predecessor|storage[\s-]+limit|temporary[\s-]+limit|real[\s-]+(?:PR|event)|host validation)\b/i.test(clause);
+  return canary || outcome;
+});
+
+test.each([
+  ['gate after a disclaimer', 'This is prompt policy, not an atomic lock: the overlap canary must demonstrate one admission owner before activation.', true],
+  ['reworded requirement', 'Before activation, a live trial must run two overlapping run_scheduled_task_now passes proving one admission owner, reconcile a killed predecessor, and show the limit disables the schedule.', true],
+  ['harmless product name', 'Chrome Canary builds are not supported.', false],
+  ['overlap prerequisite', 'Enablement requires live proof that simultaneous passes admit only one owner.', true],
+  ['predecessor prerequisite', 'Before enabling the schedule, a live trial must verify recovery of a killed predecessor.', true],
+  ['storage prerequisite', 'Activation waits for live evidence that a temporary storage limit disables the schedule.', true],
+  ['event prerequisite', 'Only after a live trial reviews one real PR event may activation proceed.', true],
+  ['negative enablement gate', 'Do not enable the schedule until live proof shows overlapping passes have one owner.', true],
+  ['negated requirement', 'Activation does not require live proof of overlapping passes.', false],
+  ['runtime uncertainty', 'Source checks do not prove live overlap or predecessor recovery.', false],
+  ['authority safeguard', 'Missing authority holds activation.', false],
+  ['undefined host validation', 'Activation needs live host validation.', true],
+  ['L1 weekly activation', 'The native canary below is also required before weekly activation.', true],
+  ['L2 manager activation', 'The review manager runs every 30 minutes and requires its separate native canary before activation.', true],
+  ['L3 named outcomes', 'The overlap, real-event, killed-predecessor, and storage-limit canaries must pass before activation.', true],
+  ['L4 operational contract', 'Activation still requires the native canary described by the operational contract.', true],
+  ['L5 weekly setup', 'Before enabling the schedule, pass the [native activation canary](../skills/axstack/references/automations.md): fresh pass threads, overlap admission, killed-predecessor recovery, capacity and bounded retained worktrees.', true],
+  ['L6 authority or canary', 'Missing authority, or no passing native canary, holds activation.', true],
+  ['L7 weekly admission', 'Missing authority, or no passing native canary from [Automations](automations.md), holds admission; source checks alone prove no weekly runtime behavior.', true],
+  ['R1 negative prerequisite', 'Activation must not proceed until a live trial shows overlapping passes keep one owner.', true],
+  ['R2 turn on', 'Turn the schedule on only once a live run has shown that a killed predecessor is reconciled.', true],
+  ['R3 disabled overlap', 'Keep the schedule disabled until a native test proves two concurrent passes admit one owner.', true],
+  ['R4 weekly canary', 'Weekly activation is gated on a passing live canary.', true],
+  ['R5 disabled storage', 'Leave the schedule disabled until the storage limit has been proven live to stop new pass worktrees.', true],
+  ['H1 canary release', 'A canary release ships the CLI to one host before the rest of the fleet.', false],
+  ['H2 per-pass admission', 'Admission requires verified evidence that any overlapping earlier pass has exited.', false],
+  ['H3 per-pass ownership', 'Before admission, verify that no overlapping pass owns the PR.', false],
+  ['H4 watch authority', 'Before enabling chat-run watch, verify the PR is open.', false],
+  ['H5 runtime disclaimer', 'Live overlap, recovery and storage-limit behavior remain unproven; the drift check proves only prompt bytes.', false],
+])('retirement guard: %s', (_name, text, gated) => {
+  expect(hasRetiredActivationGate(text)).toBe(gated);
+});
+
+// Frozen from 6589b7af: outcome sentences belong to this activation section.
+test('retired activation block is rejected in its original context', () => {
+  const block = [
+    '## Activation canary',
+    'The canary runs two overlapping `run_scheduled_task_now` passes and proves one admission owner per PR.',
+    'The canary reviews or correctly no-ops one real PR event.',
+    'The canary reconciles a killed predecessor and demonstrates wedged-pass recovery: exactly one successor interrupts and retires a wedged predecessor.',
+    'With a temporary limit equal to the current count, the canary disables the schedule and verifies that the following interval creates zero new pass worktrees.',
+    'The previous review-manager automation is disabled, never deleted, only after all four T3 canary checks pass.',
+    'Live VPS activation and the four canary outcomes remain unverified until exercised.',
+  ].join('\n');
+  expect(hasRetiredActivationGate(block)).toBe(true);
+});
+
+test('manager and weekly scheduling no longer require the retired activation canary', () => {
+  for (const path of [
+    'README.md',
+    'skills/axstack/references/automations.md',
+    'skills/axstack/references/lifecycle.md',
+    'skills/axstack/references/test-audit-weekly.md',
+    'docs/host-operations.md',
+    'docs/workflows.md',
+    'tests/workflows/pr-manager-scenarios.json',
+    'tests/workflows/tracking-scenarios.json',
+  ]) {
+    const sources = [];
+    if (path.endsWith('.json')) {
+      JSON.parse(read(path), (_key, value) => {
+        if (typeof value === 'string') sources.push(value);
+        return value;
+      });
+    } else sources.push(read(path));
+    for (const source of sources) {
+      expect(hasRetiredActivationGate(source), `${path}: ${source}`).toBe(false);
+    }
+  }
+});
+
 // Source-contract regression checks, not model or live-runtime proof.
 test('scheduled manager uses fresh T3 pass threads and guarded predecessor retirement', () => {
   const text = compact('skills/axstack/references/automations.md');
@@ -58,10 +145,7 @@ const safety = [
   'A firing timestamp proves neither delivery nor useful completion.',
   "The orphan sweep covers the run record's repositories plus registered repositories on this host.",
   'Past the authorized storage limit (default 20 retained lane worktrees), disable the schedule with `update_scheduled_task` using `enabled:false` and hold.',
-  'The previous review-manager automation is disabled, never deleted, only after all four T3 canary checks pass.',
-  'The canary reviews or correctly no-ops one real PR event.',
   'A repository without a host clone is a held job.',
-  'With a temporary limit equal to the current count, the canary disables the schedule and verifies that the following interval creates zero new pass worktrees.',
 ];
 for (const sentence of safety) {
   test(`T3 manager safety: ${sentence}`, () => {
@@ -95,12 +179,6 @@ const rules = [
     'The owner-of-record pass must retire settled predecessor passes.'],
   ['growth report', [/each pass/i, /report/i, /retained worktree count/i],
     'Each pass must report the retained worktree count.'],
-  ['overlap canary', [/canary/i, /two overlapping/i, /run_scheduled_task_now/, /one admission owner/i],
-    'The canary must demonstrate one admission owner with two overlapping run_scheduled_task_now passes.'],
-  ['killed predecessor canary', [/canary/i, /reconcil/i, /killed/i, /predecessor/i],
-    'A canary must reconcile a killed predecessor.'],
-  ['limit canary', [/canary/i, /temporary limit/i, /current count/i, /disabl/i, /following interval/i],
-    'With a temporary limit equal to current count, the canary must disable the schedule before the following interval.'],
 ];
 for (const [name, concepts, holdout] of rules) {
   test(`T3 manager rule: ${name}`, () => {
@@ -136,7 +214,7 @@ const duplicateRules = [
 for (const [name, accepts, rewording, inversions] of duplicateRules) {
   test(`terminal duplicate recovery: ${name}`, () => {
     const text = compact('skills/axstack/references/automations.md')
-      .split('## Finite-session teardown')[1].split('## Activation canary')[0];
+      .split('## Finite-session teardown')[1].split('## Recovery and limits')[0];
     checkRule(text, accepts, rewording, inversions);
   });
 }

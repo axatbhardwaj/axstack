@@ -44,8 +44,7 @@ Its bound T3 schedule uses the cadence in [Chat-run watch activation](#chat-run-
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
 Missing schedule capability holds activation.
 The optional review manager uses an unbound 30-minute T3 schedule
-(`everyMs:1800000`) and requires
-its separate native canary before activation. Installed guidance does not prove
+(`everyMs:1800000`). Installed guidance does not prove
 live behavior. See [Review manager](../skills/axstack/references/automations.md).
 
 ## Chat-run watch activation
@@ -127,8 +126,7 @@ Held or stuck passes stay unsettled. Only the owner retires eligible settled
 predecessors through `axstack-cleanup` and writes continuity; each pass records
 retained worktree count.
 Past the authorized storage limit (default 20 lane worktrees), disable the
-schedule with `enabled:false` and hold. The overlap, real-event, killed-predecessor,
-and storage-limit canaries must pass before activation.
+schedule with `enabled:false` and hold.
 
 Jobs use private owned `0700` scratch paths. Preserve evidence before exact
 cleanup; dirty source, ignored non-cache content, unpushed commits,
@@ -158,8 +156,7 @@ The review manager's alert command is named in its host instructions, for exampl
 
 These documents and their source-contract tests define expected decisions.
 Scenario fixtures are behavioral-evaluation inputs, not model-evaluation
-results, and neither form is live proof; activation still requires the native
-canary described by the operational contract.
+results, and neither form is live proof.
 
 ## Single T3 server
 
