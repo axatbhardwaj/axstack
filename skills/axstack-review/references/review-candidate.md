@@ -150,8 +150,8 @@ This section applies to peer and authored PR modes.
    [UI verification](../../axstack/references/ui-verification.md). A
    passing test is insufficient when it checks the wrong behavior. Call out
    seeded regressions, inadequate checks, and every unverified boundary. Every
-   mode-required receipt records concrete evidence and consequences, coverage,
-   limitations, and findings without a finding quota.
+   mode-required receipt follows [Capture receipts](../../axstack/references/capture-receipts.md)
+   and records judgment, coverage and findings without a finding quota.
 
    If a `verify-<app>` skill covers affected behavior, the authored reviewer runs its base-revision Launch and Doctor against the pinned final head in its detached checkout.
    For an `axstack-verify create` PR, the reviewer drives the candidate's recipe because the base has none.
