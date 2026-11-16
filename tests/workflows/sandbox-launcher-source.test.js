@@ -51,3 +51,30 @@ test('symlink expansion happens before dot-dot traversal, including an in-tree a
   h.commit();
   await expect(exportSource(h.p, h.runner)).rejects.toMatchObject({ sandboxHold: true });
 });
+
+test('absolute symlink targets hold before an export can expose a host file', async () => {
+  const h = setup();
+  writeFileSync(`${h.root}/host-file`, 'synthetic private fixture');
+  symlinkSync(`${h.root}/host-file`, `${h.repo}/absolute`); h.commit();
+  await expect(exportSource(h.p, h.runner)).rejects.toMatchObject({ sandboxHold: true });
+  expect(() => lstatSync(h.p.sourceExport.path)).toThrow();
+});
+
+test('a changed gitlink pin holds instead of silently omitting the new submodule dependency', async () => {
+  const h = setup(); writeFileSync(`${h.repo}/ok`, 'fixture'); h.commit();
+  const first = h.p.request.head;
+  mkdirSync(`${h.repo}/public-submodule`);
+  h.git('update-index', '--add', '--cacheinfo', `160000,${first},public-submodule`);
+  h.git('commit', '-qm', 'baseline submodule pin'); const base = h.git('rev-parse', 'HEAD');
+  h.git('update-index', '--cacheinfo', `160000,${base},public-submodule`);
+  h.git('commit', '-qm', 'changed submodule pin');
+  h.p.request.base = base; h.p.request.head = h.git('rev-parse', 'HEAD');
+  await expect(exportSource(h.p, h.runner)).rejects.toMatchObject({ sandboxHold: true });
+  expect(() => lstatSync(h.p.sourceExport.path)).toThrow();
+});
+
+test('a symlink cycle reports a hold rather than silently succeeding without an export', async () => {
+  const h = setup(); symlinkSync('b', `${h.repo}/a`); symlinkSync('a', `${h.repo}/b`); h.commit();
+  await expect(exportSource(h.p, h.runner)).rejects.toMatchObject({ sandboxHold: true });
+  expect(() => lstatSync(h.p.sourceExport.path)).toThrow();
+});
