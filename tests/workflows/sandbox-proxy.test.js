@@ -62,3 +62,34 @@ test('every A and AAAA answer is checked and validated addresses are pinned per 
   expect(resolved.addresses).toEqual(['104.16.26.34', '2606:4700::6810:1a22']);
   await expect(authorizeTunnel({ authority: 'registry.npmjs.org:443', resolve: async () => [], hostAddresses: [] })).rejects.toThrow();
 });
+
+test('proxy denial logs retain the bounded diagnostic without logging CONNECT headers', async () => {
+  const messages = [], original = console.error;
+  console.error = (...parts) => messages.push(parts.join(' '));
+  const server = startProxy({ port: 0, hostAddresses: [], resolve: async () => { throw Error('synthetic DNS failure'); } });
+  try {
+    expect(await request(server.port, 'CONNECT registry.npmjs.org:443 HTTP/1.1\r\nX-Secret: hidden\r\n\r\n')).toContain('403 Forbidden');
+    expect(messages.join(' ')).toContain('synthetic DNS failure');
+    expect(messages.join(' ')).not.toContain('hidden');
+  } finally { server.stop(); console.error = original; }
+});
+
+test('fixed DNS accepts an authoritative alias NODATA family while incomplete aliases still hold', async () => {
+  const name = value => Buffer.from([...value.split('.').flatMap(label => [label.length, ...Buffer.from(label)]), 0]);
+  const rr = (owner, type, data) => {
+    const header = Buffer.alloc(10); header.writeUInt16BE(type, 0); header.writeUInt16BE(1, 2); header.writeUInt16BE(data.length, 8);
+    return Buffer.concat([name(owner), header, data]);
+  };
+  for (const authority of [true, false]) {
+    const exchange = async query => {
+      const v6 = query.readUInt16BE(query.length - 4) === 28;
+      const answer = rr('registry.npmjs.org', v6 ? 5 : 1, v6 ? name('cdn.example.com') : Buffer.from([104, 16, 26, 34]));
+      const soa = rr('example.com', 6, Buffer.concat([name('ns.example.com'), name('hostmaster.example.com'), Buffer.alloc(20)]));
+      const response = Buffer.concat([query, answer, ...(v6 && authority ? [soa] : [])]);
+      response.writeUInt16BE(0x8180, 2); response.writeUInt16BE(1, 6); response.writeUInt16BE(v6 && authority ? 1 : 0, 8);
+      return response;
+    };
+    if (authority) expect(await resolveRegistry('registry.npmjs.org', { exchange })).toEqual(['104.16.26.34']);
+    else await expect(resolveRegistry('registry.npmjs.org', { exchange })).rejects.toThrow();
+  }
+});
