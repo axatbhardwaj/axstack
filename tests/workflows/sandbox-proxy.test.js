@@ -141,7 +141,7 @@ test('EOF drains both directions before ending the peer; errors still terminate'
   for (const fromClient of [false, true]) {
     let handlers, upstreamHandlers;
     const peer = () => ({ data: {}, capacity: Infinity, bytes: [], ended: false, terminated: false,
-      write(bytes) { const n = Math.min(this.capacity, bytes.length); this.bytes.push(Buffer.from(bytes.subarray(0, n))); return n; },
+      write(bytes) { if (this.ended) throw Error('write after FIN'); const n = Math.min(this.capacity, bytes.length); this.bytes.push(Buffer.from(bytes.subarray(0, n))); return n; },
       end() { this.ended = true; }, terminate() { this.terminated = true; }, timeout() {}, pause() {}, resume() {},
     });
     const client = peer(), upstream = peer();
@@ -162,6 +162,7 @@ test('EOF drains both directions before ending the peer; errors still terminate'
       destination.capacity = Infinity; destinationHandlers.drain(destination);
       expect(Buffer.concat(destination.bytes).toString()).toBe('complete registry transfer');
       expect(destination.ended).toBe(true);
+      expect(() => destinationHandlers.drain(destination)).not.toThrow();
       destinationHandlers.error(destination, Error('transport failed'));
       expect(destination.terminated).toBe(true);
     } finally { proxy.stop(); }
