@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 
 const definitions = JSON.parse(readFileSync(new URL('./launcher-contract.schema.json', import.meta.url), 'utf8')).$defs;
 export const fact = (id, status, evidence) => ({ id, status, evidence: [String(evidence)] });
+/** @returns {never} */
 export function hold(message) { throw Object.assign(Error(message), { sandboxHold: true }); }
 export function requirePass(terms, context) {
   if (!Array.isArray(terms) || !terms.length || terms.some(t => t.status !== 'pass' && t.status !== 'n/a')) hold(`${context}: failed/unknown facts`);
@@ -38,11 +39,12 @@ export function checkAssets(a) {
     validate(def, a[key]);
   }
   safePath(a.ownedDir);
+  if (!Array.isArray(a.registryAllowlist) || !a.registryAllowlist.length || a.registryAllowlist.some(s => typeof s !== 'string' || !/^[a-z0-9][a-z0-9.-]*$/.test(s))) hold('missing/invalid inventory registry allowlist');
   const p = a.policy;
   if (p.wallTimeSeconds + p.graceSeconds > p.maxWallTimeSeconds || p.maxWallTimeSeconds > 910) throw Error('wall-time plus grace exceeds fixed maximum 910');
   for (const c of [p.workloadCaps, p.proxyCaps, p.sidecarCaps]) if (c.memorySwapBytes !== c.memoryBytes) throw Error('memory swap must equal memory');
   const names = p.environment.map(e => e.name);
-  if (new Set(names).size !== names.length || names.some(n => !/^[A-Z_][A-Z0-9_]*$/.test(n))) throw Error('invalid literal environment');
+  if (new Set(names).size !== names.length || names.some(n => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(n))) throw Error('invalid literal environment');
   const ids = a.sidecars.images.map(s => s.id);
   if (new Set(ids).size !== ids.length) throw Error('duplicate sidecar IDs');
   for (const s of a.sidecars.images) {
@@ -68,6 +70,7 @@ function container({ id, role, image, networkIds, caps, declaredVolumes = [], en
   argv.push('--label', 'axstack.sandbox=true');
   // Docker defaults retain the daemon's seccomp profile and private PID namespace.
   argv.push('--network', networkIds.length ? networks.find(n => n.id === networkIds[0]).name : 'none');
+  if (role === 'proxy') argv.push('--network-alias', 'axstack-proxy');
   for (const e of environment) argv.push('--env', `${e.name}=${e.value}`);
   for (const t of tmpfs) argv.push('--tmpfs', `${t.path}:rw,nosuid,nodev,${t.noexec ? 'noexec' : 'exec'},size=${t.bytes},uid=${t.uid},gid=${t.gid},mode=${t.mode}`);
   if (role === 'fetch' || role === 'test') {
@@ -79,6 +82,7 @@ function container({ id, role, image, networkIds, caps, declaredVolumes = [], en
   return { id, role, image, networkIds, argv, caps: structuredClone(caps), tmpfs };
 }
 
+/** @returns {import('./launcher-contracts.js').Plan} */
 export function buildPlan(input, deps) {
   const { runId, owner, request, assets: a, host, enumeration } = input;
   checkAssets(a); validate('owner', owner); validate('request', request); validate('enumeration', enumeration);
@@ -102,13 +106,14 @@ export function buildPlan(input, deps) {
   };
   const common = { policy: a.policy, owner, source: sourceExport.path, storage, networks: network.networks };
   const definitions = [
-    { id: `${runId}-fetch`, role: 'fetch', image: a.workloadImage, networkIds: [findNetwork('fetch')], caps: a.policy.workloadCaps, environment: a.policy.environment },
+    { id: `${runId}-fetch`, role: 'fetch', image: a.workloadImage, networkIds: [findNetwork('fetch')], caps: a.policy.workloadCaps, environment: [...a.policy.environment, ...['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy'].map(name => ({ name, value: `http://axstack-proxy:${a.proxy.port}` }))] },
     { id: `${runId}-test`, role: 'test', image: a.workloadImage, networkIds: selected.length ? [findNetwork('service')] : [], caps: a.policy.workloadCaps, environment: a.policy.environment },
     { id: `${runId}-proxy`, role: 'proxy', image: network.proxy.image, networkIds: network.proxy.networkIds, caps: a.policy.proxyCaps, environment: [...a.policy.environment, ...network.proxy.environment], command: undefined },
     ...selected.map(s => ({ id: `${runId}-${s.id}`, role: 'sidecar', image: s.image, networkIds: [findNetwork('service')], caps: a.policy.sidecarCaps, declaredVolumes: s.declaredVolumes, environment: a.policy.environment, command: s.argv })),
   ];
   // Proxy image supplies a trusted ENTRYPOINT; no PR-supplied command is started yet.
   const containers = definitions.map(d => container({ ...common, ...d, command: d.role === 'proxy' ? [] : d.command }));
+  /** @type {import('./launcher-contracts.js').Caps} */
   const caps = { maxConcurrent: 2,
     // Conservative accounting also reserves tmpfs in addition to cgroup memory.
     perRunMemoryBytes: containers.reduce((s, c) => s + c.caps.memoryBytes + c.tmpfs.reduce((n, t) => n + t.bytes, 0), 0),
@@ -122,6 +127,7 @@ export function buildPlan(input, deps) {
     fact('free-capacity', !freeKnown ? 'unknown' : host.freeMemoryBytes >= caps.perRunMemoryBytes + b.reserveMemoryBytes && host.freeDiskBytes >= caps.perRunDiskBytes + b.reserveDiskBytes ? 'pass' : 'fail', 'free memory/disk must cover one run plus host reserves'),
     ...(host?.terms?.length ? host.terms : [fact('host-facts', 'unknown', 'host observations absent')])];
   const probes = deps.planProbes({ runId, containers, networks: network.networks, enumeration, storage });
+  /** @type {import('./launcher-contracts.js').Plan} */
   const result = { schemaVersion: 1, runId, owner, request, hostBinding: a.hostBinding, hostBudget: b, policy: a.policy, sourceExport, containers, networks: network.networks, rules: network.rules, storage, enumeration, probes, caps, terms };
   validate('plan', result);
   return structuredClone(result);
