@@ -18,12 +18,15 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
   }
   function ended(socket) {
     const session = socket.data.session;
+    socket.data.readEnded = true;
     finish(socket === session.client ? session.upstream : session.client);
   }
   function disconnected(socket) {
     const session = socket.data.session;
-    socket.data.disconnected = true; ended(socket);
-    if (!session.upstream || session.client.data.disconnected && session.upstream.data.disconnected) sessions.delete(session);
+    socket.data.disconnected = true;
+    if (!session.upstream) { close(session); return; }
+    ended(socket);
+    if (session.client.data.disconnected && session.upstream.data.disconnected) sessions.delete(session);
   }
   function flush(socket, bytes = Buffer.alloc(0), source) {
     const state = socket.data;
@@ -72,6 +75,7 @@ export function startProxy({ port, hostAddresses, resolve = resolveRegistry, con
       flush(session.client, Buffer.from('HTTP/1.1 200 Connection Established\r\n\r\n'));
       if (session.waiting.length) flush(upstream, session.waiting, session.client);
       session.waiting = Buffer.alloc(0);
+      if (session.client.data.readEnded) finish(upstream);
     } catch (error) { console.error('proxy tunnel denied:', String(error.message).slice(0, 256)); deny(session); }
   }
   const listener = listen({ allowHalfOpen: true, hostname: '::', port, data: undefined, socket: {
