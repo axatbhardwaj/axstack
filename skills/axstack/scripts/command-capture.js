@@ -10,10 +10,7 @@ export function killGroup(proc) {
 
 export async function runCommand(commands, paths, kind, argv, cwd, env, limits, state, spawnArgv = argv, binding = null) {
   let before = null;
-  if (binding) {
-    try { before = admitCapture(binding, paths.evidence, cwd); }
-    catch (error) { error.captureHold = true; throw error; }
-  }
+  if (binding) before = admitCapture(binding, paths.evidence, cwd);
   const capturedCwd = binding ? realpathSync(cwd) : cwd;
   const started = performance.now();
   const step = { kind, argv, spawnArgv, exitCode: null, durationMs: 0, logPath: `${paths.evidence}/${crypto.randomUUID()}-${kind}.log`, timedOut: false, logBytes: 0, omittedBytes: 0, logIncomplete: false };
