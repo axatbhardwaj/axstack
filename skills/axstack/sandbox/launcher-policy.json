@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "user": "61234:61234",
+  "environment": [
+    {
+      "name": "HOME",
+      "value": "/work"
+    },
+    {
+      "name": "PATH",
+      "value": "/opt/swift/usr/bin:/opt/swiftlint:/opt/node-24/bin:/opt/rust/bin:/opt/cargo-tools/bin:/opt/jdk-25/bin:/opt/go/bin:/opt/gradle/gradle-9.6.0/bin:/opt/kotlin/kotlinc/bin:/opt/android/cmdline-tools/23.0/bin:/opt/android/platform-tools:/opt/foundry:/opt/terraform:/opt/python-3.12/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib/postgresql/16/bin:/usr/lib/postgresql/17/bin:/usr/share/grafana/bin"
+    },
+    {
+      "name": "LANG",
+      "value": "C.UTF-8"
+    },
+    {
+      "name": "CI",
+      "value": "true"
+    },
+    {
+      "name": "TMPDIR",
+      "value": "/work"
+    },
+    {
+      "name": "npm_config_cache",
+      "value": "/dependencies/npm"
+    },
+    {
+      "name": "PIP_CACHE_DIR",
+      "value": "/dependencies/pip"
+    },
+    {
+      "name": "CARGO_HOME",
+      "value": "/dependencies/cargo"
+    },
+    {
+      "name": "GOCACHE",
+      "value": "/work/.cache/go-build"
+    },
+    {
+      "name": "GOMODCACHE",
+      "value": "/dependencies/go-mod"
+    },
+    {
+      "name": "GRADLE_USER_HOME",
+      "value": "/work/.gradle"
+    },
+    {
+      "name": "JAVA_HOME",
+      "value": "/opt/jdk-25"
+    },
+    {
+      "name": "JAVA_11_HOME",
+      "value": "/opt/jdk-11"
+    },
+    {
+      "name": "ANDROID_HOME",
+      "value": "/opt/android"
+    },
+    {
+      "name": "ANDROID_SDK_ROOT",
+      "value": "/opt/android"
+    },
+    {
+      "name": "SVM_HOME",
+      "value": "/opt/svm"
+    },
+    {
+      "name": "GRADLE_RO_DEP_CACHE",
+      "value": "/opt/gradle-cache/caches"
+    },
+    {
+      "name": "JAVA_TOOL_OPTIONS",
+      "value": "-Djava.io.tmpdir=/work -Djansi.tmpdir=/work -Duser.home=/work"
+    },
+    {
+      "name": "GOTMPDIR",
+      "value": "/work"
+    }
+  ],
+  "workloadCaps": {
+    "cpus": 2,
+    "memoryBytes": 2147483648,
+    "memorySwapBytes": 2147483648,
+    "pids": 256,
+    "logMaxBytes": 8388608,
+    "logMaxFiles": 1,
+    "logDriver": "local",
+    "restart": "no"
+  },
+  "proxyCaps": {
+    "cpus": 0.5,
+    "memoryBytes": 268435456,
+    "memorySwapBytes": 268435456,
+    "pids": 64,
+    "logMaxBytes": 8388608,
+    "logMaxFiles": 1,
+    "logDriver": "local",
+    "restart": "no"
+  },
+  "sidecarCaps": {
+    "cpus": 0.5,
+    "memoryBytes": 268435456,
+    "memorySwapBytes": 268435456,
+    "pids": 128,
+    "logMaxBytes": 8388608,
+    "logMaxFiles": 1,
+    "logDriver": "local",
+    "restart": "no"
+  },
+  "writableBytes": 805306368,
+  "dependencyBytes": 8589934592,
+  "dependencyInodes": 1048576,
+  "sourceMaxBytes": 268435456,
+  "captureMaxBytes": 8388608,
+  "receiptMaxBytes": 16777216,
+  "wallTimeSeconds": 900,
+  "graceSeconds": 10,
+  "maxWallTimeSeconds": 910
+}

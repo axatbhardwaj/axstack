@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "image": "oven/bun@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4",
+  "allowlistFile": "inventory.json",
+  "allowlistPointer": "/registryAllowlist",
+  "resolverIpv4": "1.1.1.1",
+  "resolverIpv6": "2606:4700:4700::1111",
+  "port": 3128
+}

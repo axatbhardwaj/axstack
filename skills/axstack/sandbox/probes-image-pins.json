@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 1,
+  "platform": "linux/amd64",
+  "resolvedAt": "2026-11-16",
+  "base": {
+    "image": "docker.io/library/debian@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2",
+    "source": "https://registry-1.docker.io/v2/library/debian/manifests/trixie-slim"
+  },
+  "artifacts": [
+    {
+      "id": "node-20",
+      "version": "20.20.2",
+      "url": "https://nodejs.org/dist/v20.20.2/node-v20.20.2-linux-x64.tar.xz",
+      "algorithm": "sha256",
+      "checksum": "df770b2a6f130ed8627c9782c988fda9669fa23898329a61a871e32f965e007d",
+      "source": "https://nodejs.org/dist/v20.20.2/SHASUMS256.txt",
+      "kind": "tar",
+      "destination": "/opt/node-20",
+      "strip": 1
+    },
+    {
+      "id": "node-22",
+      "version": "22.23.4",
+      "url": "https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-x64.tar.xz",
+      "algorithm": "sha256",
+      "checksum": "1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce",
+      "source": "https://nodejs.org/dist/v22.23.4/SHASUMS256.txt",
+      "kind": "tar",
+      "destination": "/opt/node-22",
+      "strip": 1
+    },
+    {
+      "id": "node-24",
+      "version": "24.21.0",
+      "url": "https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-x64.tar.xz",
+      "algorithm": "sha256",
+      "checksum": "fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6",
+      "source": "https://nodejs.org/dist/v24.21.0/SHASUMS256.txt",
+      "kind": "tar",
+      "destination": "/opt/node-24",
+      "strip": 1
+    },
+    {
+      "id": "bun-1.2.2",
+      "version": "1.2.2",
+      "url": "https://github.com/oven-sh/bun/releases/download/bun-v1.2.2/bun-linux-x64.zip",
+      "algorithm": "sha256",
+      "checksum": "3f4efb8afd1f84ac2a98c04661c898561d1d35527d030cb4571e99b7c85f5079",
+      "source": "https://github.com/oven-sh/bun/releases/download/bun-v1.2.2/SHASUMS256.txt",
+      "kind": "zip",
+      "destination": "/opt/bun-1.2.2"
+    },
+    {
+      "id": "bun-1.3.14",
+      "version": "1.3.14",
+      "url": "https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-linux-x64.zip",
+      "algorithm": "sha256",
+      "checksum": "951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f",
+      "source": "https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/SHASUMS256.txt",
+      "kind": "zip",
+      "destination": "/opt/bun-1.3.14"
+    },
+    {
+      "id": "bun-1.4.4",
+      "version": "1.4.4",
+      "url": "https://github.com/oven-sh/bun/releases/download/bun-v1.4.4/bun-linux-x64.zip",
+      "algorithm": "sha256",
+      "checksum": "bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c",
+      "source": "https://github.com/oven-sh/bun/releases/download/bun-v1.4.4/SHASUMS256.txt",
+      "kind": "zip",
+      "destination": "/opt/bun-1.4.4"
+    },
+    {
+      "id": "pnpm",
+      "version": "9.15.4",
+      "url": "https://registry.npmjs.org/pnpm/-/pnpm-9.15.4.tgz",
+      "algorithm": "sha512",
+      "checksum": "b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0",
+      "source": "https://registry.npmjs.org/pnpm/9.15.4",
+      "kind": "tar",
+      "destination": "/opt/pnpm",
+      "strip": 1
+    },
+    {
+      "id": "npm",
+      "version": "11.19.0",
+      "url": "https://registry.npmjs.org/npm/-/npm-11.19.0.tgz",
+      "algorithm": "sha512",
+      "checksum": "48377f8478372aa1c4e47b763475b135836da82436a5700f2e5e8eb5084fc840f93c7b117eb3ad3b5f7d3194c81b6710a10d59448f6ddbcb21ac3fb672bdc003",
+      "source": "https://registry.npmjs.org/npm/11.19.0",
+      "kind": "tar",
+      "destination": "/opt/npm",
+      "strip": 1
+    },
+    {
+      "id": "python-3.12",
+      "version": "3.12.16",
+      "url": "https://www.python.org/ftp/python/3.12.16/Python-3.12.16.tar.xz",
+      "algorithm": "sha256",
+      "checksum": "b5796915dc45ff745cfb4e990a7e7c93d6f546328a102ce31448d69ebc37575c",
+      "source": "https://www.python.org/ftp/python/3.12.16/Python-3.12.16.tar.xz.sigstore",
+      "kind": "python",
+      "destination": "/opt/python-3.12",
+      "strip": 1
+    },
+    {
+      "id": "python-3.13",
+      "version": "3.13.18",
+      "url": "https://www.python.org/ftp/python/3.13.18/Python-3.13.18.tar.xz",
+      "algorithm": "sha256",
+      "checksum": "abb0102e6d4ae027509bcb82327d9dd85515b44a3ba8ad538cfc5e9847029f68",
+      "source": "https://www.python.org/ftp/python/3.13.18/Python-3.13.18.tar.xz.sigstore",
+      "kind": "python",
+      "destination": "/opt/python-3.13",
+      "strip": 1
+    },
+    {
+      "id": "go",
+      "version": "1.27.4",
+      "url": "https://go.dev/dl/go1.27.4.linux-amd64.tar.gz",
+      "algorithm": "sha256",
+      "checksum": "7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840",
+      "source": "https://go.dev/dl/?mode=json",
+      "kind": "tar",
+      "destination": "/opt/go",
+      "strip": 1
+    },
+    {
+      "id": "jdk-11",
+      "version": "11.0.33+10",
+      "url": "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.33%2B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.33_10.tar.gz",
+      "algorithm": "sha256",
+      "checksum": "c4b8eaf56c93b95b689ffc08d155df1bcdbbffb666f8f71d21d97aedaea6f0ec",
+      "source": "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.33%2B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.33_10.tar.gz.sha256.txt",
+      "kind": "tar",
+      "destination": "/opt/jdk-11",
+      "strip": 1
+    },
+    {
+      "id": "jdk-25",
+      "version": "25.0.5+8.0.LTS",
+      "url": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz",
+      "algorithm": "sha256",
+      "checksum": "68982529869257d0ee6b824ec5aa270ff8b118bb438670da0b97ebdab178d7fb",
+      "source": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz.sha256.txt",
+      "kind": "tar",
+      "destination": "/opt/jdk-25",
+      "strip": 1
+    },
+    {
+      "id": "rust",
+      "version": "1.91.1",
+      "url": "https://static.rust-lang.org/dist/2025-11-10/rust-1.91.1-x86_64-unknown-linux-gnu.tar.xz",
+      "algorithm": "sha256",
+      "checksum": "db178028da493a663b2e344a142076fb0f72adea4120043983f488de9cf95214",
+      "source": "https://static.rust-lang.org/dist/channel-rust-1.91.1.toml",
+      "kind": "rust",
+      "destination": "/opt/rust",
+      "strip": 1
+    },
+    {
+      "id": "cargo-deny",
+      "version": "0.20.2",
+      "url": "https://static.crates.io/crates/cargo-deny/cargo-deny-0.20.2.crate",
+      "algorithm": "sha256",
+      "checksum": "e528dfcbe739af7ce37a77d3d6df1b29dd6887b1c701d888820c0f16b864f737",
+      "source": "https://crates.io/api/v1/crates/cargo-deny/0.20.2",
+      "kind": "cargo",
+      "destination": "/opt/cargo-tools",
+      "strip": 1
+    },
+    {
+      "id": "cargo-vet",
+      "version": "0.10.2",
+      "url": "https://static.crates.io/crates/cargo-vet/cargo-vet-0.10.2.crate",
+      "algorithm": "sha256",
+      "checksum": "dd93790018205cbbfa161f078ca4631afa8ed57fc8f32482268bcfdf0c0d7499",
+      "source": "https://crates.io/api/v1/crates/cargo-vet/0.10.2",
+      "kind": "cargo",
+      "destination": "/opt/cargo-tools",
+      "strip": 1
+    },
+    {
+      "id": "terraform",
+      "version": "1.15.8",
+      "url": "https://releases.hashicorp.com/terraform/1.15.8/terraform_1.15.8_linux_amd64.zip",
+      "algorithm": "sha256",
+      "checksum": "d25ce7b6902013ad905db3d2eab0be4cd905887fe88b81a6171b8d5503c31f3d",
+      "source": "https://releases.hashicorp.com/terraform/1.15.8/terraform_1.15.8_SHA256SUMS",
+      "kind": "zip",
+      "destination": "/opt/terraform"
+    },
+    {
+      "id": "gradle",
+      "version": "9.6.0",
+      "url": "https://services.gradle.org/distributions/gradle-9.6.0-bin.zip",
+      "algorithm": "sha256",
+      "checksum": "bbaeb2fef8710818cf0e261201dab964c572f92b942812df0c3620d62a529a01",
+      "source": "https://services.gradle.org/distributions/gradle-9.6.0-bin.zip.sha256",
+      "kind": "zip",
+      "destination": "/opt/gradle"
+    },
+    {
+      "id": "kotlin",
+      "version": "2.2.10",
+      "url": "https://github.com/JetBrains/kotlin/releases/download/v2.2.10/kotlin-compiler-2.2.10.zip",
+      "algorithm": "sha256",
+      "checksum": "302d1d8e671e5c3207e6ed62ff11fb555462a628e22a1158254dcaaf7e7394bc",
+      "source": "https://api.github.com/repos/JetBrains/kotlin/releases/tags/v2.2.10",
+      "kind": "zip",
+      "destination": "/opt/kotlin"
+    },
+    {
+      "id": "agp",
+      "version": "9.4.1",
+      "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/9.4.1/gradle-9.4.1.pom",
+      "algorithm": "sha256",
+      "checksum": "ee7d29e7d41cb389dc65b02518ffa8c806c522ca565510694eb8ee8dad7f938a",
+      "source": "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/9.4.1/gradle-9.4.1.pom.sha256",
+      "kind": "file",
+      "destination": "/opt/android-maven/com/android/tools/build/gradle/9.4.1/gradle-9.4.1.pom"
+    },
+    {
+      "id": "agpJar",
+      "version": "9.4.1",
+      "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/9.4.1/gradle-9.4.1.jar",
+      "algorithm": "sha256",
+      "checksum": "4021fa6ea76b6fac076dd0bdacbb3e1b76c31f33b6c392e1a49a2e42072196bf",
+      "source": "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/9.4.1/gradle-9.4.1.jar.sha256",
+      "kind": "file",
+      "destination": "/opt/android-maven/com/android/tools/build/gradle/9.4.1/gradle-9.4.1.jar"
+    },
+    {
+      "id": "android-sdk",
+      "version": "platforms;android-37.0 revision 2",
+      "url": "https://dl.google.com/android/repository/platform-37.0_r02.zip",
+      "algorithm": "sha1",
+      "checksum": "ed8ebf7f8822a4de5686d427f237d2fa30ff7410",
+      "source": "https://dl.google.com/android/repository/repository2-3.xml",
+      "kind": "android",
+      "destination": "/opt/android/platforms/android-37.0"
+    },
+    {
+      "id": "android-build-tools",
+      "version": "build-tools;37.0.0 revision 37.0.0",
+      "url": "https://dl.google.com/android/repository/build-tools_r37_linux.zip",
+      "algorithm": "sha1",
+      "checksum": "70954e99f4c3d9d46ee70fa32624672fe7cd6ebe",
+      "source": "https://dl.google.com/android/repository/repository2-3.xml",
+      "kind": "android",
+      "destination": "/opt/android/build-tools/37.0.0"
+    },
+    {
+      "id": "android-cmdline",
+      "version": "cmdline-tools;23.0 revision 23.0",
+      "url": "https://dl.google.com/android/repository/commandlinetools-linux-16111833_latest.zip",
+      "algorithm": "sha1",
+      "checksum": "e025545c62a8e64c7559119566a569fb1dec5f60",
+      "source": "https://dl.google.com/android/repository/repository2-3.xml",
+      "kind": "android",
+      "destination": "/opt/android/cmdline-tools/23.0"
+    },
+    {
+      "id": "android-platform-tools",
+      "version": "platform-tools revision 37.0.3",
+      "url": "https://dl.google.com/android/repository/platform-tools_r37.0.3-linux.zip",
+      "algorithm": "sha1",
+      "checksum": "e1579b288a7ae4e9bc28dedec6a154d78b3c04ed",
+      "source": "https://dl.google.com/android/repository/repository2-3.xml",
+      "kind": "android",
+      "destination": "/opt/android/platform-tools"
+    },
+    {
+      "id": "foundry",
+      "version": "1.5.1",
+      "url": "https://github.com/foundry-rs/foundry/releases/download/v1.5.1/foundry_v1.5.1_linux_amd64.tar.gz",
+      "algorithm": "sha256",
+      "checksum": "73640b01bd9ed29fdb4965085099371f8cf0dbbec3e2086cf54564efc4dcfe88",
+      "source": "https://api.github.com/repos/foundry-rs/foundry/releases/tags/v1.5.1",
+      "kind": "tar",
+      "destination": "/opt/foundry",
+      "strip": 0
+    },
+    {
+      "id": "solc",
+      "version": "0.8.28",
+      "url": "https://raw.githubusercontent.com/ethereum/solc-bin/gh-pages/linux-amd64/solc-linux-amd64-v0.8.28+commit.7893614a",
+      "algorithm": "sha256",
+      "checksum": "9a0fb7e0db2c0641dbae1c5cc645dc686820c83af516226abb1c0a2f76636f25",
+      "source": "https://raw.githubusercontent.com/ethereum/solc-bin/gh-pages/linux-amd64/list.json",
+      "kind": "file",
+      "destination": "/opt/svm/0.8.28/solc-0.8.28"
+    },
+    {
+      "id": "forge-std",
+      "version": "8e40513d678f392f398620b3ef2b418648b33e89",
+      "url": "https://api.github.com/repos/foundry-rs/forge-std/tarball/8e40513d678f392f398620b3ef2b418648b33e89",
+      "algorithm": "sha256",
+      "checksum": "bc2d6a47bbded6f2e83c0a0f5b0a77058260e581ce4cf6255a2940e540e79320",
+      "source": "https://api.github.com/repos/foundry-rs/forge-std/git/commits/8e40513d678f392f398620b3ef2b418648b33e89",
+      "kind": "content",
+      "destination": "/opt/solidity/forge-std",
+      "strip": 1,
+      "tree": "687124167e7a751417a320043c419e3894d61266",
+      "gitlinks": [],
+      "checksumOrigin": "archive bytes independently matched to upstream Git tree; no upstream archive checksum published"
+    },
+    {
+      "id": "openzeppelin",
+      "version": "fcbae5394ae8ad52d8e580a3477db99814b9d565",
+      "url": "https://api.github.com/repos/OpenZeppelin/openzeppelin-contracts/tarball/fcbae5394ae8ad52d8e580a3477db99814b9d565",
+      "algorithm": "sha256",
+      "checksum": "09a0c8bd9abc81efdaef7e115aa9add75bdab7deff220cde1d4da406908cb1e7",
+      "source": "https://api.github.com/repos/OpenZeppelin/openzeppelin-contracts/git/commits/fcbae5394ae8ad52d8e580a3477db99814b9d565",
+      "kind": "content",
+      "destination": "/opt/solidity/openzeppelin",
+      "strip": 1,
+      "tree": "86cb129aae0996e7301575060da9eb8328b5597a",
+      "gitlinks": [
+        {
+          "path": "lib/erc4626-tests",
+          "sha": "232ff9ba8194e406967f52ecc5cb52ed764209e9"
+        },
+        {
+          "path": "lib/forge-std",
+          "sha": "3b20d60d14b343ee4f908cb8079495c07f5e8981"
+        },
+        {
+          "path": "lib/halmos-cheatcodes",
+          "sha": "7328abe100445fc53885c21d0e713b95293cf14c"
+        }
+      ],
+      "checksumOrigin": "archive bytes independently matched to upstream Git tree; no upstream archive checksum published"
+    },
+    {
+      "id": "swift",
+      "version": "6.4.1",
+      "url": "https://download.swift.org/swift-6.4.1-release/ubuntu2204/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-ubuntu22.04.tar.gz",
+      "algorithm": "sha256",
+      "checksum": "e9ec2ff05ac0fc89bf2e7cecdee5da4d398898a768d7ee2b86a59d2a7f01c44b",
+      "source": "https://download.swift.org/swift-6.4.1-release/ubuntu2204/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-ubuntu22.04.tar.gz.sig",
+      "kind": "tar",
+      "destination": "/opt/swift",
+      "strip": 1,
+      "checksumOrigin": "SHA256 of archive verified with official Swift 6.x release signing key 52BB7E3DE28A71BE22EC05FFEF80A866B47A981F; run-evidence:author-T21-Int/repair-1/swift-signature.log"
+    },
+    {
+      "id": "swiftlint",
+      "version": "0.65.1",
+      "url": "https://github.com/realm/SwiftLint/releases/download/0.65.1/swiftlint_linux_amd64.zip",
+      "algorithm": "sha256",
+      "checksum": "caeed6f4a679c35539ffaf124f6c4ab4a8416917f7d8796279dc52b74026059d",
+      "source": "https://api.github.com/repos/realm/SwiftLint/releases/tags/0.65.1",
+      "kind": "zip",
+      "destination": "/opt/swiftlint"
+    }
+  ],
+  "limitations": [
+    {
+      "id": "apple-platform",
+      "version": "Xcode 27",
+      "status": "unknown",
+      "reason": "Apple SDK/iOS/Xcode builds require Apple platforms; Linux Swift and SwiftLint remain required."
+    }
+  ],
+  "androidLicense": {
+    "sha1": "9002c006f4b8d9a16e715a9fa4df30ddb8abf9d9",
+    "source": "https://dl.google.com/android/repository/repository2-3.xml#android-sdk-license"
+  }
+}

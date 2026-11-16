@@ -2,6 +2,8 @@
 
 ## Operating rules
 
+- Any PR editing `skills/axstack/sandbox/` or tests/workflows/sandbox-* stops at merge-ready for the user.
+
 - In this repository, a PR that changes `tests/workflows/prose-budget.json` or `tests/workflows/prose-size.test.js` stops at merge-ready for the user.
 - Use T3 Code as the only active runtime.
 - Route every delegated worker, reviewer, or cross-harness dispatch through the
@@ -102,6 +104,9 @@
   Agents never run `npm publish` locally.
 
 ## Interfaces
+
+- Docker is a prerequisite only for sandbox review execution on axat-vps;
+  installation, check and other helpers work without Docker.
 
 - Target Bun >=1.3.14 JavaScript with no runtime dependencies. Use only the
   narrow Bun-backed `node:fs` and `node:fs/promises` built-in exception; do not

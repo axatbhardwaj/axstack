@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "host": "axat-vps",
+  "inventoryDate": "2026-11-16",
+  "maxConcurrent": 2,
+  "memoryBudgetBytes": 25769803776,
+  "diskBudgetBytes": 107374182400,
+  "reserveMemoryBytes": 4294967296,
+  "reserveDiskBytes": 10737418240
+}
