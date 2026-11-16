@@ -50,6 +50,8 @@ async function fixture(options = {}) {
     if (argv[0] === 'modprobe') return ok(state.moduleOptions ?? 'options loop max_part=0');
     if (JSON.stringify(argv) === JSON.stringify(LOOP_LIST)) return ok(JSON.stringify({ loopdevices: state.loops }));
     if (argv[0] === 'lsblk') {
+      if (state.capacityThrows) throw Error('capacity process unavailable');
+      if (state.capacityNull) return ok(JSON.stringify({ blockdevices: [null] }));
       if (state.capacityError) return fail('capacity unavailable');
       if (state.capacityUnknown) return ok('{}');
       return ok(JSON.stringify({ blockdevices: [
@@ -328,7 +330,8 @@ test('a sole remaining loop holds before attachment when no further loop is allo
 
 
 for (const [name, options] of Object.entries({ 'unreadable capacity': { capacityError: true },
-  'incomplete capacity': { capacityUnknown: true }, 'duplicate candidate': { duplicateSpare: true },
+  'incomplete capacity': { capacityUnknown: true }, 'invalid capacity row': { capacityNull: true },
+  'capacity spawn failure': { capacityThrows: true }, 'duplicate candidate': { duplicateSpare: true },
   'missing spare node': { nodeMissing: '/dev/loop9' } })) {
   test(`${name} holds with evidence before creating storage`, async () => {
     const { api, input, state, plan } = await fixture(options);
