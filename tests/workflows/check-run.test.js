@@ -1,6 +1,8 @@
 import { afterAll, expect, test } from 'bun:test';
 import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 
+import { checkRule, prohibits } from './prose-contract.js';
+
 const script = `${import.meta.dir}/../../skills/axstack/scripts/check-run.js`;
 const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/check-run-`);
 function stopGroup(pid) {
@@ -147,4 +149,15 @@ test.each(['head', 'base'])('missing local --%s commit names the flag and value'
   expect(result.stderr).toContain(`--${flag}`);
   expect(result.stderr).toContain(missing);
   expect(readdirSync(f.out)).toEqual([]);
+});
+
+
+test('capture help separates child exit from proof sufficiency', () => {
+  const output = Bun.spawnSync([process.execPath, script, '--help'], { stdout: 'pipe', stderr: 'pipe' });
+  expect(output.exitCode).toBe(0);
+  const concepts = [/child exitCode/i, /separate/i, /capture facts/i, /proof sufficiency/i];
+  checkRule(output.stdout.toString().replace(/;/g, ','),
+    text => prohibits(text, /never/i, ...concepts),
+    'Child exitCode is separate, terms describe capture facts, never proof sufficiency.',
+    [[/never/gi, 'always']], concepts);
 });
