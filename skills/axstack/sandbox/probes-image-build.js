@@ -38,8 +38,7 @@ export function provisionPlan(pins) {
       command(['git', '-C', dest, 'write-tree']);
     }
     if (a.id === 'swift') command(['sh', '-ec', `printf 'print("Swift smoke")\\n' > ${stage}/smoke.swift; /opt/swift/usr/bin/swift --version; /opt/swift/usr/bin/swiftc ${stage}/smoke.swift -o ${stage}/smoke; ${stage}/smoke`]);
-    if (a.id === 'swiftlint') command(['mv', '/opt/swiftlint/swiftlint-static', '/opt/swiftlint/swiftlint']);
-    if (a.id === 'swiftlint') command(['sh', '-ec', `printf 'print("Swift smoke")\\n' > ${stage}/smoke.swift; /opt/swiftlint/swiftlint version; /opt/swiftlint/swiftlint lint --strict --no-cache --quiet ${stage}/smoke.swift`]);
+    if (a.id === 'swiftlint') command(['bash', '-euc', `set -o pipefail; printf 'print("Swift smoke")\\n' > ${stage}/smoke.swift; /opt/swiftlint/swiftlint version; /opt/swiftlint/swiftlint lint --strict --no-cache --quiet ${stage}/smoke.swift 2>&1 | tee ${stage}/lint.log >&2; ! grep -q 'Skipping enabled rule' ${stage}/lint.log`]);
     return { id: a.id, status: 'unknown', evidence: [a.source], stage, downloadArgv: ['curl', '--fail', '--silent', '--show-error', '--location', '--proto', '=https', '--proto-redir', '=https', '--max-time', '600', '--output', archive, a.url], verify: { path: archive, algorithm: a.algorithm, checksum: a.checksum }, steps, ...(a.tree ? { expectedTree: a.tree } : {}) };
   });
 }
