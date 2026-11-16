@@ -23,6 +23,9 @@ Use per-command `-c` overrides instead.
 Driver Git commands in a worktree a worker has written must pass
 `-c core.hooksPath=/dev/null -c core.fsmonitor=false`.
 
+Run installed helpers from a trusted cwd with `--repo`/`-C`; never start Bun in a peer checkout;
+if required there, use `bun --config=<empty-file> --no-env-file`.
+
 ## Safe deletion
 
 Use [scratch.js](../scripts/scratch.js) for command scratch. Repository commands
