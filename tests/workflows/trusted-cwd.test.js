@@ -115,10 +115,11 @@ test('equals-form empty config and no-env-file block both startup vectors inside
 
 test('installed-axstack resolves to an absolute installed skill directory at each new use site', () => {
   const shape = readFileSync(`${source}/skills/axstack/references/pr-shape.md`, 'utf8').replace(/`/g, '');
-  const concepts = [/resolve/i, /<installed-axstack>/, /absolute/i, /installed/i, /axstack/i, /skill directory/i];
+  const concepts = [/resolve/i, /<installed-axstack>/, /absolute/i, /installed axstack skill directory/i];
   checkRule(shape, text => requires(text, ...concepts),
     "Resolve <installed-axstack> as the installed axstack skill directory's absolute path.",
-    [[/installed axstack skill directory/i, 'peer checkout']], concepts);
+    [[/installed axstack skill directory/i, 'peer checkout'],
+      [/installed axstack skill directory/i, 'peer axstack skill directory']], concepts);
   const record = readFileSync(`${source}/skills/axstack/references/run-record.md`, 'utf8');
   expect(record).toMatch(/\[[^\]]+\]\(pr-shape\.md#measure\)/);
 });
