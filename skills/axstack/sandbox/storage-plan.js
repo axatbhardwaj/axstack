@@ -6,8 +6,7 @@ export const LOOP_LIST = ['losetup', '--list', '--json', '--output', 'NAME,BACK-
 export const LABEL = 'axstack.sandbox';
 
 export function storageLabels(owner) {
-  return { [LABEL]: 'true', [`${LABEL}.run-id`]: owner.runId, [`${LABEL}.pid`]: String(owner.pid),
-    [`${LABEL}.start-time-ticks`]: owner.startTimeTicks, [`${LABEL}.boot-id`]: owner.bootId };
+  return { [LABEL]: 'true', ...Object.fromEntries(Object.entries(owner).map(([key, value]) => [`${LABEL}.${key}`, String(value)])) };
 }
 
 export function storageNames(runId, ownedDir) {
@@ -22,7 +21,7 @@ export function validateOwner(owner) {
       !/^\d+$/.test(owner.startTimeTicks ?? '') || !/^[a-zA-Z0-9-]+$/.test(owner.bootId ?? '')) throw Error('Invalid storage owner');
 }
 
-/** @param {{runId:string, ownedDir:string, policy:import('./launcher-contracts.js').LaunchPolicy}} input
+/** @param {{runId:string, ownedDir:string, policy:Pick<import('./launcher-contracts.js').LaunchPolicy, 'user'|'dependencyBytes'|'dependencyInodes'>}} input
  * @returns {import('./launcher-contracts.js').StoragePlan} */
 export function planStorage({ runId, ownedDir, policy }) {
   const names = storageNames(runId, ownedDir);
@@ -74,5 +73,5 @@ export function volumeCreate(name, device, owner) {
     '--opt', 'type=ext4', '--opt', 'o=nosuid,nodev', '--opt', `device=${device}`, name];
 }
 export function containerList(runId) {
-  return ['docker', 'ps', '--all', '--quiet', '--filter', `label=${LABEL}=true`, '--filter', `label=${LABEL}.run-id=${runId}`];
+  return ['docker', 'ps', '--all', '--quiet', '--filter', `label=${LABEL}=true`, '--filter', `label=${LABEL}.runId=${runId}`];
 }
