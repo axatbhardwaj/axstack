@@ -44,11 +44,20 @@ async function fixture(options = {}) {
     const ok = stdout => ({ exitCode: 0, stdout: stdout ?? '', stderr: '' });
     const fail = stderr => ({ exitCode: 1, stdout: '', stderr });
     if (argv[0] === 'which') return state.missingBinary === argv[1] ? fail('not installed') : ok(`/usr/bin/${argv[1]}`);
-    if (argv[0] === 'test') return state.noControl ? fail('missing loop-control') : ok();
+    if (argv[0] === 'test') return state.noControl || state.nodeMissing === argv[2] ? fail('missing loop device') : ok();
     if (argv[0] === 'cat') return ok(argv[1] === '/proc/cmdline' ? (state.cmdline ?? 'quiet') : '8');
     if (argv[0] === 'modprobe' && state.moduleUnknown) return fail('config unreadable');
     if (argv[0] === 'modprobe') return ok(state.moduleOptions ?? 'options loop max_part=0');
     if (JSON.stringify(argv) === JSON.stringify(LOOP_LIST)) return ok(JSON.stringify({ loopdevices: state.loops }));
+    if (argv[0] === 'lsblk') {
+      if (state.capacityError) return fail('capacity unavailable');
+      if (state.capacityUnknown) return ok('{}');
+      return ok(JSON.stringify({ blockdevices: [
+        { path: snap.name, type: 'loop', size: 4096 },
+        { path: '/dev/loop8', type: 'loop', size: 0 },
+        ...(state.noSpare ? [] : [{ path: state.duplicateSpare ? '/dev/loop8' : '/dev/loop9', type: 'loop', size: 0 }]),
+      ] }));
+    }
     if (argv[0] === 'losetup' && argv.includes('--show')) {
       state.attached = true;
       state.loops.push({ name: '/dev/loop8', 'back-file': plan.imageFile, autoclear: state.autoclear ?? false });
@@ -305,7 +314,40 @@ test('production workers wait for the cross-process lock before entering storage
 
 
 test('a sole remaining loop holds before attachment when no further loop is allocatable', async () => {
-  const { api, input, state } = await fixture({ noSpare: true });
-  await expect(api.prepareStorage(input)).rejects.toMatchObject({ sandboxHold: true });
+  const { api, input, state, plan } = await fixture({ noSpare: true });
+  const error = await api.prepareStorage(input).then(() => null, error => error);
+  expect(error).toMatchObject({ sandboxHold: true, terms: [{ id: 'free-loop-reserve', status: 'unknown' }] });
+  expect(error.terms[0].evidence.join(' ')).toContain('/dev/loop8');
   expect(state.attached).toBe(false);
+  expect(state.loops).toEqual([snap]);
+  expect(state.volume).toBeNull();
+  expect(await exists(plan.imageFile)).toBe(false);
+  expect(await exists(`${plan.imageFile}.owner.json`)).toBe(false);
+  expect(state.calls.some(argv => ['truncate', 'fallocate', 'mkfs.ext4'].includes(argv[0]))).toBe(false);
+});
+
+
+for (const [name, options] of Object.entries({ 'unreadable capacity': { capacityError: true },
+  'incomplete capacity': { capacityUnknown: true }, 'duplicate candidate': { duplicateSpare: true },
+  'missing spare node': { nodeMissing: '/dev/loop9' } })) {
+  test(`${name} holds with evidence before creating storage`, async () => {
+    const { api, input, state, plan } = await fixture(options);
+    const error = await api.prepareStorage(input).then(() => null, error => error);
+    expect(error).toMatchObject({ sandboxHold: true, terms: [{ id: 'free-loop-reserve', status: 'unknown' }] });
+    expect(error.terms[0].evidence.length).toBeGreaterThan(0);
+    expect(state.attached).toBe(false);
+    expect(await exists(plan.imageFile)).toBe(false);
+    expect(await exists(`${plan.imageFile}.owner.json`)).toBe(false);
+    expect(state.volume).toBeNull();
+  });
+}
+
+test('the reserve observation precedes image allocation in both plan and execution', async () => {
+  const { api, input, state, plan } = await fixture();
+  const ids = plan.steps.map(step => step.id);
+  expect(ids.indexOf('reserve-before-attach')).toBeGreaterThan(ids.indexOf('free-loop'));
+  expect(ids.indexOf('reserve-before-attach')).toBeLessThan(ids.indexOf('truncate'));
+  await api.prepareStorage(input);
+  expect(state.calls.findIndex(argv => argv[0] === 'lsblk')).toBeGreaterThan(-1);
+  expect(state.calls.findIndex(argv => argv[0] === 'lsblk')).toBeLessThan(state.calls.findIndex(argv => argv[0] === 'truncate'));
 });
