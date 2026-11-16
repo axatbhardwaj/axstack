@@ -47,9 +47,9 @@ test('a silent UDP packet is denied only with a fresh owned drop-counter increme
   const result = await c.run();
   expect(result.status).toBe('pass');
   expect(c.events.filter(argv => argv[0] === 'nft').length).toBe(2);
-  const send = c.events.find(argv => argv.includes('dig'));
-  expect(send).toContain('-b');
-  expect(send).toContain('0.0.0.0#20053');
+  const send = c.events.find(argv => argv.includes('--eval'));
+  expect(send).toContain('20053');
+  expect(send).toContain(target.address);
 });
 
 test('missing, unchanged, noisy counters and observer failures cannot turn silent UDP into proof', async () => {
@@ -73,4 +73,11 @@ test('UDP in network-none uses positive kernel no-route readback and never mista
     expect(result.status).toBe(unreachable ? 'pass' : 'unknown');
     if (unreachable) expect(lookups).toBe(2);
   }
+});
+
+test('counter-based UDP denial sends one datagram without waiting for a silent endpoint timeout', async () => {
+  const c = checker(1, { result: { exitCode: 0, stdout: '{"udpSent":1}' } });
+  expect((await c.run()).status).toBe('pass');
+  expect(c.events.some(argv => argv.includes('dig'))).toBe(false);
+  expect(c.events.some(argv => argv.includes('--eval') && argv.includes('20053'))).toBe(true);
 });
