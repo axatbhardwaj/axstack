@@ -17,7 +17,8 @@ cookies), no modals or popups, and the exact-byte scan.
 Prototype pages retain both driver previews for layout, theme, height, network,
 and zero console errors.
 Prototype pages require semantic, accessible markup and the interactive
-`axstack-ui-verifier` pass.
+`axstack-ui-verifier` pass, which records resource observations with
+[image-evidence.js](../../axstack/scripts/image-evidence.js) on the exact final bytes before delivery.
 Prototype pages retain driver-only `html_render` using precisely the bytes checked
 by these gates.
 These kept rules cannot be exempted; every unlisted rule also stays in force.
@@ -78,8 +79,9 @@ Reject scan matches except local `url(#id)` references such as SVG markers and g
 Before publishing, run `html_preview` at 728px dark and 360px light.
 The driver's two previews are a named browser exception to delegated browser checks.
 Require correct layout, theme, height, network, word count, and zero console errors.
-The reviewing seat runs [image-evidence.js](../../axstack/scripts/image-evidence.js)
-on the exact published bytes and records resource observations through the Playwright MCP;
+For other pages, the reviewing seat (`axstack-explainer-review`) runs
+[image-evidence.js](../../axstack/scripts/image-evidence.js) on the exact final bytes
+before delivery and records resource observations through the Playwright MCP;
 unobservable resources report unknown.
 Check every claim against its source.
 Inspect both screenshots for clipping, overflow, and readable labels.
