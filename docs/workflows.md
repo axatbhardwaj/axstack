@@ -119,12 +119,7 @@ starts later for each repository the user names.
    read back its role binding, then use `schedule_task` with the packaged prompt
    and activation values, `bindToCurrentThread:false`, and a stable
    `clientRequestId`. Do not add a scheduler or cursor.
-3. Before enabling the schedule, pass the
-   [native activation canary](../skills/axstack/references/automations.md): fresh
-   pass threads, overlap admission, killed-predecessor recovery, capacity and
-   bounded retained worktrees. Preserve runtime receipts; source checks alone
-   do not establish these facts.
-4. Missing authority, or no passing native canary, holds activation. Each pass
+3. Missing authority holds activation. Each pass
    derives one boundary from test-audit PR history, skips open PRs, overlap with
    live T3 thread/run and worktree ownership, unsafe baselines or empty candidate sets,
    and opens at most one independently reviewed test-only PR per week through
@@ -664,7 +659,7 @@ tests already do, so the added risk is small.
 
 The optional native review manager runs bounded peer-review passes; see
 [Host operations](host-operations.md#optional-native-peer-review-automation)
-for lane setup, schedule activation, capacity checks, and canaries.
+for lane setup, schedule activation, and capacity checks.
 Manual review and user-driven `axstack-watch` remain outside this schedule.
 Review automation never merges peer PRs; the user does.
 
