@@ -9,6 +9,7 @@ Example: bun scripts/pr-shape.js --base main --head HEAD
 
 --base  Required actual PR base (parent branch for a stacked child)
 --head  Required candidate commit or branch
+--repo  Optional Git checkout path for shape mode; defaults to the current repository
 --source Optional source ref for the read-only sync term; no source means n/a
 --help  Show flags, example, bucket definitions and exit codes
 
@@ -16,6 +17,7 @@ Read-only Git; writes nothing, retains no state. Prints a bounded JSON summary:
 input refs and resolved SHAs, merge-base, full additions/deletions, rename and
 binary counts, and overlapping lockfile/generated buckets, with status and
 reproducing argv plus calculation instructions. No path inventory is emitted.
+For untrusted checkouts, use --repo from a trusted cwd with bun --no-env-file.
 Lockfiles match these exact basenames at any depth: ${lockfiles.join(', ')}.
 Generated means linguist-generated set or true in .gitattributes at the head;
 uses the destination path for renames. Unset, false and unspecified are excluded.
@@ -36,7 +38,7 @@ function optionsFrom(argv) {
   const options = {};
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
-    if (!['--base', '--head', '--source'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
+    if (!['--base', '--head', '--source', '--repo'].includes(flag)) throw new Error(`unexpected argument ${flag}; use --help`);
     const value = argv[i + 1];
     if (!value || value.startsWith('-')) throw new Error(`missing ref; pass ${flag} <commit-or-branch>`);
     if (flag in options) throw new Error(`duplicate ${flag}; pass it once`);
@@ -279,8 +281,8 @@ export function main(argv, io = { stdout: (text) => process.stdout.write(text), 
     const options = optionsFrom(argv);
     sandboxPath = { status: 'unknown', evidence: { prefix: sandboxPrefix, commands: [] } };
     const query = (argv) => { sandboxPath.evidence.commands.push(argv); return run(argv); };
-    const root = query(command('rev-parse', '--show-toplevel'));
-    if (root.code) throw new Error('run this helper from a Git checkout');
+    const root = query(command(...(options['--repo'] ? ['-C', options['--repo']] : []), 'rev-parse', '--show-toplevel'));
+    if (root.code) throw new Error(options['--repo'] ? 'invalid --repo; pass --repo <Git-checkout-path>' : 'run this helper from a Git checkout');
     const repo = root.stdout.replace(/\n$/, '');
     const gitCommand = (...args) => command('-C', repo, ...args);
     const resolve = (flag) => {
