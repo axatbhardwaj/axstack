@@ -104,7 +104,7 @@ async function network(id, expected, target, proxyId) {
     argv = ['dig', ...(udpBefore ? ['-b', `${target.address.includes(':') ? '::' : '0.0.0.0'}#${udpProbePort}`] : []), `@${resolver}`, '-p', String(target.port ?? 53), '+time=2', '+tries=1', target.protocol === 'tcp' ? '+tcp' : '+notcp', target.kind === 'dns' ? target.address : 'example.com', 'A'];
   } else {
     const host = target.address.includes(':') ? `[${target.address}]` : target.address;
-    argv = ['curl', '--silent', '--show-error', '--insecure', '--connect-timeout', '2', '--max-time', '4', '--location', '--max-redirs', '5', '--output', '/dev/null', '--write-out', '{"remote_ip":"%{remote_ip}","http_connect":%{http_connect},"http_code":%{http_code}}', '--noproxy', '*'];
+    argv = ['curl', '--silent', '--show-error', '--insecure', '--connect-timeout', '2', '--max-time', '4', '--location', '--max-redirs', '5', '--output', '/dev/null', '--write-out', '{"remote_ip":"%{remote_ip}","http_connect":"%{http_connect}","http_code":"%{http_code}"}', '--noproxy', '*'];
     if (proxyId) {
       const proxy = await liveContainer(proxyId);
       const peers = Object.entries(proxy.NetworkSettings.Networks).filter(([name]) => container.NetworkSettings.Networks[name]);
