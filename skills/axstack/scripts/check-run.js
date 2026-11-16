@@ -21,7 +21,10 @@ Capture v${captureVersion}; receipt schema v1. Flags:
 Effects: reads Git identity/status using local git subprocesses with hooks/fsmonitor
  disabled, and hashes tracked and non-ignored untracked files, modes and
  symlink targets. Ignored untracked files (e.g. node_modules) and .git metadata
- are not bound; ignored-file changes cannot be detected by source comparison. Starts one detached command without a
+ are not bound; ignored-file changes cannot be detected by source comparison.
+ The receipt snapshotScope names the ignore sources: .gitignore, .git/info/exclude
+ and core.excludesFile (or Git's user-ignore default); local/user excludes widen
+ the unbound set. Starts one detached command without a
  shell, with inherited environment, closed stdin, piped stdout/stderr and cwd.
  Creates two exclusive 0600 files (combined .log and schema-v1 .json) in --out;
  creates no directories, overwrites nothing, and retains both files for the caller.
