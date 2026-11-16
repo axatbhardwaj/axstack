@@ -35,3 +35,17 @@ test('service TCP reachability does not require a sidecar to speak HTTP, and pub
   expect(classifyConnection({ exitCode: 35, stdout: '{"remote_ip":"172.30.0.2","http_code":0}' }, { id: 'service|db:172.30.0.2:5432:tcp', kind: 'fixed', protocol: 'tcp' }, 'allow').status).toBe('pass');
   expect(classifyConnection({ exitCode: 0, stdout: ';; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 1\n;; flags: qr; QUERY: 1, ANSWER: 0, AUTHORITY: 1' }, { id: 'tailnet-dns-stub:axat-vps.test:53:udp', kind: 'dns', protocol: 'udp' }, 'deny').status).toBe('pass');
 });
+
+test('ICMP results use echo outcomes rather than a TCP curl response', () => {
+  const target = { protocol: 'icmp', kind: 'host-address' };
+  expect(classifyConnection({ exitCode: 0, stdout: '1 packets transmitted, 1 received' }, target, 'deny').status).toBe('fail');
+  expect(classifyConnection({ exitCode: 1, stdout: '1 packets transmitted, 0 received' }, target, 'deny').status).toBe('pass');
+  expect(classifyConnection({ exitCode: 2, stdout: '', stderr: 'socket: Operation not permitted' }, target, 'deny').status).toBe('unknown');
+});
+
+test('host loopback targets are distinguished from the container own loopback namespace', () => {
+  const target = { address: '127.0.0.1', protocol: 'icmp', kind: 'host-address' };
+  expect(classifyConnection({ hostNetworkNamespace: 'net:[1]', containerNetworkNamespace: 'net:[2]' }, target, 'deny').status).toBe('pass');
+  expect(classifyConnection({ hostNetworkNamespace: 'net:[1]', containerNetworkNamespace: 'net:[1]' }, target, 'deny').status).toBe('fail');
+  expect(classifyConnection({}, target, 'deny').status).toBe('unknown');
+});
