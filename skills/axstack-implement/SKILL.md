@@ -269,7 +269,8 @@ including evidence and retained complexity.
 
 Before every commit, the author runs the
 [staged-file size check](../axstack/scripts/check-staged-file-tokens.js)
-with `bun` from the target repository.
+from a trusted cwd with `bun`.
+Pass `--no-env-file <resolved-helper> --repo <target-repository>`.
 Successful staged-file size measurements, including files above 20,000 bytes,
 are advisory and exit 0.
 Never require splitting files solely for size.
