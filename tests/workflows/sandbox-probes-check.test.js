@@ -49,3 +49,9 @@ test('host loopback targets are distinguished from the container own loopback na
   expect(classifyConnection({ hostNetworkNamespace: 'net:[1]', containerNetworkNamespace: 'net:[1]' }, target, 'deny').status).toBe('fail');
   expect(classifyConnection({}, target, 'deny').status).toBe('unknown');
 });
+
+test('an external hostname cannot be reached when the restricted profile denies its DNS resolution', () => {
+  const target = { address: 'example.com', protocol: 'tcp', kind: 'fixed' };
+  expect(classifyConnection({ exitCode: 6, stdout: '{"remote_ip":""}', stderr: 'Could not resolve host: example.com' }, target, 'deny').status).toBe('pass');
+  expect(classifyConnection({ exitCode: 6, stdout: '{"remote_ip":""}' }, target, 'allow').status).toBe('fail');
+});
