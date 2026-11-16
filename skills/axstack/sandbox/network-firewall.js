@@ -18,7 +18,7 @@ export function createFirewall({ runner = commandRunner } = {}) {
   }
   // nft set ordering and object key ordering are not semantically significant.
   const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object'
-    ? Object.fromEntries(Object.keys(value).sort().map(key => [key, key === 'set' && Array.isArray(value[key]) ? value[key].map(canonical).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))) : canonical(value[key])])) : value;
+    ? Object.fromEntries(Object.keys(value).sort().map(key => [key, key === 'counter' && (value[key] === null || Number.isSafeInteger(value[key]?.packets) && Number.isSafeInteger(value[key]?.bytes)) ? null : key === 'set' && Array.isArray(value[key]) ? value[key].map(canonical).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))) : canonical(value[key])])) : value;
   const equal = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
   async function check(wanted) {
     const found = await matches(wanted);
