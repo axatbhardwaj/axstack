@@ -36,7 +36,7 @@ const rules = [
   ['proof diligence', [/verification requires/i, /diligence/i, /PASS/i, /exact head and base/i],
     'At the exact head and base, verification requires diligence PASS.', [/exact head and base/i, 'an earlier revision']],
   ['proof final-head execution', [/verification requires/i, /Final-head check/i, /check-run receipt path/i, /identity/i, /#\/argv/i, /->/i, /#\/logPath/i, /#\/exitCode/i, /reviewer ran/i, /final head/i, /run.?s evidence folder/i],
-    "Verification requires Final-head check: <check-run receipt path + identity (#/argv -> #/logPath, #/exitCode)> for a check the reviewer ran at the final head, with receipt and log in the run's evidence folder.", [/reviewer ran/i, 'author planned']],
+    "Verification requires Final-head check: <check-run receipt path + identity + cited fields: #/argv -> #/logPath, #/exitCode> for a check the reviewer ran at the final head, with receipt and log in the run's evidence folder.", [/reviewer ran/i, 'author planned']],
   ['proof acceptance evidence', [/each acceptance check/i, /requires passing evidence/i, /ticket or spec/i, /PR body/i, /adopted/i, /ticketless/i],
     'Each acceptance check requires passing evidence from ticket or spec criteria, or the PR body for adopted and ticketless PRs.', [/passing/i, 'pending']],
   ['proof lineage carryover', [/earlier.head/i, /red-to-green/i, /patch lineage/i, /counts only/i, /reviewer/i, /still applies/i, /final change/i],
