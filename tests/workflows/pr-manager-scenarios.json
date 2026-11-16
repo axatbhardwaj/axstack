@@ -1,7 +1,7 @@
 {
-  "version": 9,
+  "version": 10,
   "evidence": "behavioral evaluation inputs and expected decisions; this fixture is not a model evaluation result, scheduler implementation, or live-runtime receipt",
-  "migration": "v9 changes only the durable-review-decision trigger from architecture to credible serious funds risk for the accepted peer redesign; the prior holdout is preserved in the base revision. v8 explicitly migrates dedicated-workspace terminal-close holdouts to T3 pass threads, guarded Git retirement, and storage limits; v7 source corpus is preserved in the base revision.",
+  "migration": "v10 retires the four-part manager activation gate under W3-7; its v9 scenario remains in the base revision. v9 changes only the durable-review-decision trigger from architecture to credible serious funds risk for the accepted peer redesign; the prior holdout is preserved in the base revision. v8 explicitly migrates dedicated-workspace terminal-close holdouts to T3 pass threads, guarded Git retirement, and storage limits; v7 source corpus is preserved in the base revision.",
   "cases": [
     {
       "id": "thirty-peer-pr-coverage",
@@ -140,12 +140,6 @@
       "input": "Retained lane worktrees exceed authorized storage limit 20 after settled predecessor retirement.",
       "expected": ["report retained count", "update_scheduled_task enabled:false and hold", "read back disabled state"],
       "forbidden": ["continue admitting work", "delete active worktrees"]
-    },
-    {
-      "id": "four-part-canary",
-      "input": "The previous automation still runs; candidate T3 schedule needs activation evidence.",
-      "expected": ["two overlapping run_scheduled_task_now passes prove one owner", "one real PR event is reviewed or correctly no-ops", "reconcile killed predecessor", "temporary limit equal to current count disables schedule and next interval creates zero new pass worktrees"],
-      "forbidden": ["disable previous automation before all checks pass", "claim live canary from source tests"]
     },
     {
       "id": "missing-host-clone",
