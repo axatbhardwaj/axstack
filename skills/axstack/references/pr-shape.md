@@ -1,6 +1,7 @@
 # PR shape
 
 ## Measure
+Resolve `<installed-axstack>` to the absolute installed `axstack` skill directory.
 Run examples below from trusted cwd `/`. Measure the actual PR base:
 ```sh
 bun --no-env-file <installed-axstack>/scripts/pr-shape.js --repo <repo-path> --base <base> --head <head>
