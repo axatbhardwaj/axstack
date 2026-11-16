@@ -33,3 +33,13 @@ test('missing expected tmpfs and dependency mounts cannot pass effective mount r
   const h = harness();
   await expect(h.observers.inspectMounts(h.p)).rejects.toMatchObject({ sandboxHold: true });
 });
+
+test('local Docker Hub canonical names bind the same pinned digest without accepting another registry or digest', async () => {
+  const image = `docker.io/library/nginx@sha256:${'a'.repeat(64)}`;
+  for (const [reference, allowed] of [[image.replace('docker.io/library/', ''), true], [image.replace('docker.io/library/', 'evil.example/'), false], [image.replaceAll('a'.repeat(64), 'b'.repeat(64)), false]]) {
+    const observer = dockerObservers(async () => ({ exitCode: 0, stdout: JSON.stringify([{ Config: {}, RepoDigests: [reference] }]) }));
+    const result = observer.inspectImages({ containers: [{ image }] });
+    if (allowed) expect(await result).toEqual({ [image]: [] });
+    else await expect(result).rejects.toMatchObject({ sandboxHold: true });
+  }
+});
