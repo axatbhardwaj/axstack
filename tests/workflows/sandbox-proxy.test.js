@@ -98,10 +98,11 @@ test('large allowed tunnels preserve bytes under backpressure including upstream
  for (const finish of [false, true]) {
   const total = 16 * 1024 * 1024, chunk = Buffer.alloc(65536, 0x61);
   const send = socket => {
-    while (socket.data.sent < total) {
+    if (socket.data.sent < total) {
       const bytes = chunk.subarray(0, Math.min(chunk.length, total - socket.data.sent));
       const count = socket.write(bytes); if (count < 0) return;
       socket.data.sent += count; if (count < bytes.length) return;
+      setTimeout(() => send(socket), 1); return;
     }
     if (finish && !socket.data.ended) { socket.data.ended = true; socket.end(); }
   };
@@ -112,12 +113,20 @@ test('large allowed tunnels preserve bytes under backpressure including upstream
   let client, timer;
   try {
     const received = await new Promise((resolve, reject) => {
-      let headers = true, bytes = 0;
-      timer = setTimeout(() => resolve(bytes), 3000);
+      let header = Buffer.alloc(0), headers = true, bytes = 0;
+      timer = setTimeout(() => reject(Error(`transfer timed out after ${bytes} bytes`)), 3000);
       Bun.connect({ hostname: '127.0.0.1', port: server.port, socket: {
         open(socket) { client = socket; socket.write('CONNECT registry.npmjs.org:443 HTTP/1.1\r\n\r\n'); },
         data(socket, data) {
-          if (headers) { headers = false; socket.pause(); socket.write('start'); setTimeout(() => socket.resume(), 250); return; }
+          if (headers) {
+            header = Buffer.concat([header, data]);
+            const end = header.indexOf('\r\n\r\n');
+            if (end < 0) return;
+            expect(header.subarray(0, end).toString()).toContain('200 Connection Established');
+            data = header.subarray(end + 4); headers = false;
+            socket.pause(); socket.write('start'); setTimeout(() => socket.resume(), 250);
+          }
+          expect(data.every(byte => byte === 0x61)).toBe(true);
           bytes += data.length; if (bytes === total) resolve(bytes);
         }, close() { resolve(bytes); }, error(_socket, error) { reject(error); },
       } }).catch(reject);
@@ -126,3 +135,35 @@ test('large allowed tunnels preserve bytes under backpressure including upstream
   } finally { clearTimeout(timer); client?.terminate(); server.stop(); upstream.stop(true); }
  }
 }, 8000);
+
+
+test('EOF drains both directions before ending the peer; errors still terminate', async () => {
+  for (const fromClient of [false, true]) {
+    let handlers, upstreamHandlers;
+    const peer = () => ({ data: {}, capacity: Infinity, bytes: [], ended: false, terminated: false,
+      write(bytes) { const n = Math.min(this.capacity, bytes.length); this.bytes.push(Buffer.from(bytes.subarray(0, n))); return n; },
+      end() { this.ended = true; }, terminate() { this.terminated = true; }, timeout() {}, pause() {}, resume() {},
+    });
+    const client = peer(), upstream = peer();
+    const proxy = startProxy({ port: 0, hostAddresses: [], resolve: async () => ['104.16.26.34'],
+      listen(options) { handlers = options.socket; return { port: 0, stop() {} }; },
+      async connect(options) { upstreamHandlers = options.socket; upstream.data = options.data; return upstream; },
+    });
+    try {
+      handlers.open(client);
+      handlers.data(client, Buffer.from('CONNECT registry.npmjs.org:443 HTTP/1.1\r\n\r\n'));
+      await Bun.sleep(0);
+      const source = fromClient ? client : upstream, destination = fromClient ? upstream : client;
+      const sourceHandlers = fromClient ? handlers : upstreamHandlers, destinationHandlers = fromClient ? upstreamHandlers : handlers;
+      destination.bytes = []; destination.capacity = 3;
+      sourceHandlers.data(source, Buffer.from('complete registry transfer'));
+      sourceHandlers.end?.(source); sourceHandlers.close(source);
+      expect(destination.terminated).toBe(false); expect(destination.ended).toBe(false);
+      destination.capacity = Infinity; destinationHandlers.drain(destination);
+      expect(Buffer.concat(destination.bytes).toString()).toBe('complete registry transfer');
+      expect(destination.ended).toBe(true);
+      destinationHandlers.error(destination, Error('transport failed'));
+      expect(destination.terminated).toBe(true);
+    } finally { proxy.stop(); }
+  }
+});
