@@ -55,3 +55,10 @@ test('an external hostname cannot be reached when the restricted profile denies 
   expect(classifyConnection({ exitCode: 6, stdout: '{"remote_ip":""}', stderr: 'Could not resolve host: example.com' }, target, 'deny').status).toBe('pass');
   expect(classifyConnection({ exitCode: 6, stdout: '{"remote_ip":""}' }, target, 'allow').status).toBe('fail');
 });
+
+test('HTTP evidence keeps socket/CONNECT outcomes without retaining unrelated curl metadata', () => {
+  const result = classifyConnection({ exitCode: 0, stdout: JSON.stringify({ remote_ip: '1.1.1.1', http_connect: 0, http_code: 200, unrelated: 'x'.repeat(20000) }) }, { protocol: 'tcp', kind: 'fixed' }, 'allow');
+  expect(result.status).toBe('pass');
+  expect(result.evidence.join(' ')).toContain('1.1.1.1');
+  expect(JSON.stringify(result).length).toBeLessThan(1024);
+});
