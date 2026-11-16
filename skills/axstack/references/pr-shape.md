@@ -1,10 +1,10 @@
 # PR shape
 
 ## Measure
-Resolve `<installed-axstack>` to the absolute installed `axstack` skill directory.
-Run examples below from trusted cwd `/`. Measure the actual PR base:
+Resolve `<installed-axstack>`: absolute installed `axstack` skill directory.
+Run examples from trusted cwd `/`; measure the PR base:
 ```sh
-bun --no-env-file <installed-axstack>/scripts/pr-shape.js --repo <repo-path> --base <base> --head <head>
+bun --no-env-file <installed-axstack>/scripts/pr-shape.js --repo <path> --base <base> --head <head>
 ```
 JSON: SHAs, merge-base, total = additions + deletions over all files, renames, binaries, buckets and commands.
 
@@ -21,7 +21,7 @@ There is no universal safe LOC limit or fixed token percentage.
 
 ## Peer sync proof
 
-Run `bun --no-env-file <installed-axstack>/scripts/pr-shape.js --repo <repo-path> --base <base> --head <head> --source <source>`.
+Run `bun --no-env-file <installed-axstack>/scripts/pr-shape.js --repo <path> --base <base> --head <head> --source <source>`.
 The sync term grants no authority.
 Sync is eligible only for a user-recorded pair `<repo>: <source> -> <base>`
 in the manager durable record, or user-named for manual review.
@@ -48,13 +48,13 @@ For repository title conventions, check recently merged PRs.
 
 Every own PR description must include a short `Proof` section:
 what was verified and how, with check-run receipt citations (paths/identities) for commands and observed results, CI or evidence links.
-Render its facts with
-`bun --no-env-file <installed-axstack>/scripts/pr-shape.js --proof --repo <repo-path> --base <base> --head <head>`
-and paste the JSON `block` under `Proof`. Keep the returned per-term evidence.
-Check the published body against live GitHub facts with
+Render:
+`bun --no-env-file <installed-axstack>/scripts/pr-shape.js --proof --repo <path> --base <base> --head <head>`
+Paste JSON `block` under `Proof`; retain per-term evidence.
+Check published body against GitHub facts:
 `bun --no-env-file <installed-axstack>/scripts/pr-shape.js --proof --pr <number> --repo <owner/repo>`.
-For a local body, add `--body <path>` to the local command.
-Use `--proof --help` for the block format, fact definitions and unknown-data behavior.
+Local body: add `--body <path>`.
+`--proof --help`: format, facts and unknown-data behavior.
 
 For UI-related changes, embed screenshots in the PR description
 (before/after where meaningful).
