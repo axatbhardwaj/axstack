@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { inspectIdentity, classifyConnection } from '../../skills/axstack/sandbox/probes-check.js';
 import { planProbes } from '../../skills/axstack/sandbox/probes.js';
 
-const status = 'Uid:\t1000\t1000\t1000\t1000\nCapInh:\t0000000000000000\nCapPrm:\t0000000000000000\nCapEff:\t0000000000000000\nCapBnd:\t0000000000000000\nCapAmb:\t0000000000000000\nNoNewPrivs:\t1\n';
+const status = 'Uid:\t1000\t1000\t1000\t1000\nCapInh:\t0000000000000000\nCapPrm:\t0000000000000000\nCapEff:\t0000000000000000\nCapBnd:\t0000000000000000\nCapAmb:\t0000000000000000\nNoNewPrivs:\t1\nSeccomp:\t2\n';
 
 test('live process identity requires all user IDs non-root and every capability set empty', () => {
   expect(inspectIdentity([status]).status).toBe('pass');
@@ -77,4 +77,11 @@ test('redirect denial requires evidence that an allowed initial endpoint actuall
     expect(classifyConnection({ exitCode: 56, stdout: JSON.stringify({ http_connect: '403', num_redirects: String(redirects), remote_ip: '' }) }, target, 'deny').status).toBe(expected);
   }
   expect(classifyConnection({ exitCode: 0, stdout: '{"remote_ip":"1.1.1.1","num_redirects":"1","http_connect":"200"}' }, target, 'deny').status).toBe('fail');
+});
+
+
+test('identity requires active seccomp filtering for every process', () => {
+  expect(inspectIdentity([status]).status).toBe('pass');
+  for (const mode of ['0', '1']) expect(inspectIdentity([status, status.replace('Seccomp:\t2', `Seccomp:\t${mode}`)]).status).toBe('fail');
+  expect(inspectIdentity([status.replace('Seccomp:\t2\n', '')]).status).toBe('unknown');
 });
