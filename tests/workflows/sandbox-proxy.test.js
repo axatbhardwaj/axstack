@@ -167,3 +167,18 @@ test('EOF drains both directions before ending the peer; errors still terminate'
     } finally { proxy.stop(); }
   }
 });
+
+test('disconnect during asynchronous connection cannot leave an orphan upstream socket', async () => {
+  let handlers, release;
+  const socket = () => ({ data: {}, terminated: false, write: bytes => bytes.length, end() {}, terminate() { this.terminated = true; }, timeout() {}, pause() {}, resume() {} });
+  const client = socket(), upstream = socket();
+  const proxy = startProxy({ port: 0, hostAddresses: [], resolve: async () => ['104.16.26.34'],
+    listen(options) { handlers = options.socket; return { port: 0, stop() {} }; },
+    connect(options) { upstream.data = options.data; return new Promise(resolve => { release = () => resolve(upstream); }); },
+  });
+  try {
+    handlers.open(client); handlers.data(client, Buffer.from('CONNECT registry.npmjs.org:443 HTTP/1.1\r\n\r\n'));
+    await Bun.sleep(0); handlers.close(client); release(); await Bun.sleep(0);
+    expect(upstream.terminated).toBe(true);
+  } finally { proxy.stop(); }
+});
