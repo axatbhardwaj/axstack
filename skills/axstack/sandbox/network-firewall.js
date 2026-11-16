@@ -20,9 +20,9 @@ export function createFirewall({ runner = commandRunner } = {}) {
   const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object'
     ? Object.fromEntries(Object.keys(value).sort().map(key => [key, key === 'counter' && (value[key] === null || Number.isSafeInteger(value[key]?.packets) && Number.isSafeInteger(value[key]?.bytes)) ? null : key === 'set' && Array.isArray(value[key]) ? value[key].map(canonical).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))) : canonical(value[key])])) : value;
   const equal = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
-  async function check(wanted) {
+  async function check(wanted, { allowAbsent = false } = {}) {
     const found = await matches(wanted);
-    return found.length === 1 && equal(found[0].expr, wanted.expr);
+    return allowAbsent && found.length === 0 || found.length === 1 && equal(found[0].expr, wanted.expr);
   }
   async function remove(wanted) {
     const found = await matches(wanted);
@@ -53,10 +53,11 @@ export function createFirewall({ runner = commandRunner } = {}) {
       if (chain?.type !== 'filter' || chain.hook !== name || chain.prio !== -10 || chain.policy !== 'accept') throw hold(`Unexpected sandbox ${name} base chain; no policy changed`);
     }
   }
-  async function checkChains() {
+  async function checkChains({ allowAbsent = false } = {}) {
     const snapshot = await readTable();
     for (const name of ['input', 'forward']) {
       const chain = snapshot.find(item => item.chain?.name === name)?.chain;
+      if (!chain && allowAbsent) continue;
       if (chain?.type !== 'filter' || chain.hook !== name || chain.prio !== -10 || chain.policy !== 'accept') throw hold(`Changed sandbox ${name} base chain; no policy changed`);
     }
     return snapshot;
