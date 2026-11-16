@@ -40,3 +40,9 @@ test('ICMP uses ping in the run container namespace and loopback uses distinct n
   expect((await tools.network('test', 'deny', { id: 'host-loopback', kind: 'host-address', address: '127.0.0.1', protocol: 'icmp', port: null })).status).toBe('pass');
   expect(tools.calls.some((a) => a.includes('ping') || a.includes('curl'))).toBe(false);
 });
+
+test('explicit public DNS probes use the same fixed resolver as proxy destination resolution', async () => {
+  const tools = fixture();
+  await tools.network('proxy', 'allow', { id: 'external-dns:example.com:53:udp', kind: 'dns', address: 'example.com', protocol: 'udp', port: 53 });
+  expect(tools.calls.find(a => a.includes('dig'))).toContain('@9.9.9.9');
+});
