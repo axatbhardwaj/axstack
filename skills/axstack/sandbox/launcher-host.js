@@ -75,7 +75,7 @@ function privateDirectory(path, create = false, allowGitMetadata = false) {
   const s = lstatSync(path);
   if (!s.isDirectory() || s.isSymbolicLink() || s.uid !== process.getuid() || (s.mode & 0o777) !== 0o700 || realpathSync(path) !== path) hold(`require owned 0700 real directory: ${path}`);
 }
-export async function withAdmission(fn, directory = ownedDirectory) {
+export async function withAdmission(fn, directory = ownedDirectory, wait = false) {
   privateDirectory(directory, true);
   const lockPath = `${directory}/admission.lock`;
   try { writeFileSync(lockPath, '', { flag: 'wx', mode: 0o600 }); }
@@ -83,11 +83,11 @@ export async function withAdmission(fn, directory = ownedDirectory) {
   const lockStat = lstatSync(lockPath);
   if (!lockStat.isFile() || lockStat.uid !== process.getuid() || lockStat.nlink !== 1 || lockStat.mode & 0o077) hold('unsafe admission lock');
   // The kernel drops flock when this helper exits, even after launcher SIGKILL.
-  const p = Bun.spawn(['flock', '--exclusive', '--nonblock', `${directory}/admission.lock`, process.execPath, '-e', 'process.stdout.write("locked\\n"); await Bun.stdin.text();'], { env, stdin: 'pipe', stdout: 'pipe', stderr: 'ignore' });
+  const p = Bun.spawn(['flock', '--exclusive', ...(wait ? ['--wait', '30'] : ['--nonblock']), `${directory}/admission.lock`, process.execPath, '-e', 'process.stdout.write("locked\\n"); await Bun.stdin.text();'], { env, stdin: 'pipe', stdout: 'pipe', stderr: 'ignore' });
   const reader = p.stdout.getReader();
   let timer;
   try {
-    const first = await Promise.race([reader.read(), new Promise((_, reject) => { timer = setTimeout(() => reject(Error('admission lock timeout')), 5000); })]);
+    const first = await Promise.race([reader.read(), new Promise((_, reject) => { timer = setTimeout(() => reject(Error('admission lock timeout')), wait ? 35000 : 5000); })]);
     if (first.done || new TextDecoder().decode(first.value) !== 'locked\n') hold('host admission busy; retry in a later run');
     return await fn();
   } finally {
