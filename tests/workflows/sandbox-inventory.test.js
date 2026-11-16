@@ -60,6 +60,10 @@ function validate(data) {
     expect(text(entry.detail)).toBe(true);
     evidence(entry.evidence);
   }
+  for (const entry of data.resolvedObligations ?? []) {
+    expect(['pass', 'n/a'].includes(entry.status)).toBe(true);
+    expect(text(entry.detail)).toBe(true); evidence(entry.evidence);
+  }
   for (const entry of data.openObligations) {
     expect(text(entry.detail)).toBe(true);
     expect(entry.status).toBe('unknown');
@@ -95,4 +99,16 @@ test('selected build pins resolve source ranges without rewriting frozen reposit
     expect(selected.find(p => p.id === id)).toEqual({ id, version: pin.version, algorithm: pin.algorithm, checksum: pin.checksum, source: pin.source });
   }
   expect(inventory.requiredToolchains.find(t => t.id === 'node-20').version).toBe('20');
+});
+
+
+test('closed live obligations have resolutions; only Soldeer and Apple-platform obligations remain open', () => {
+  expect(inventory.openObligations.map(o => o.id).sort()).toEqual(['apple-platform', 'soldeer-solarity']);
+  for (const id of ['exact-pins', 'go', 'toolchain-smokes', 'sidecar-digests', 'registry-fetch', 'native-sdk', 'legacy-tools', 'scope-candidates', 'external-services', 'inode-validation', 'public-submodule-content']) {
+    const resolution = inventory.resolvedObligations?.find(o => o.id === id);
+    expect(resolution?.status, id).toMatch(/^(pass|n\/a)$/);
+    expect(resolution.evidence.length).toBeGreaterThan(0);
+  }
+  expect(inventory.requiredToolchains.every(t => t.availability === 'pass')).toBe(true);
+  expect(inventory.limitations.find(l => l.type === 'per-pr-non-registry-download').detail).toContain('@solarity-solidity-lib 2.7.6');
 });
