@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { processState, savePlan, withAdmission } from '../../skills/axstack/sandbox/launcher-host.js';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statfsSync, symlinkSync, writeFileSync } from 'node:fs';
+import { currentOwner, observeHost, processState, savePlan, withAdmission } from '../../skills/axstack/sandbox/launcher-host.js';
 import { createLauncher } from '../../skills/axstack/sandbox/launcher.js';
 import { fixture, planners } from './sandbox-launcher-fixture.js';
 
@@ -64,4 +64,44 @@ test('a new run cannot reuse an evidence directory containing retained bytes fro
     const p = createLauncher(planners()).plan(fixture()); p.request.repo = `${root}/repo`;
     await expect(savePlan(p, `${root}/evidence`, `${root}/owned`)).rejects.toMatchObject({ sandboxHold: true });
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+async function withHostObservation(check) {
+  const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/launcher-observation-`); chmodSync(root, 0o700);
+  try {
+    const assets = fixture().assets; assets.ownedDir = root;
+    assets.hostBinding.hostname = 'not-the-observed-host';
+    await check(await observeHost(assets), root);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+}
+test('host observation reads the real hostname independently of configured identity', async () => {
+  await withHostObservation(host => expect(host.hostname).toBe(readFileSync('/proc/sys/kernel/hostname', 'utf8').trim()));
+});
+
+test('host observation hashes trimmed machine-id bytes independently of configured hash', async () => {
+  const expected = new Bun.CryptoHasher('sha256').update(readFileSync('/etc/machine-id', 'utf8').trim()).digest('hex');
+  await withHostObservation(host => expect(host.machineIdSha256).toBe(expected));
+});
+
+test('host memory observation uses bytes rather than the proc kB count', async () => {
+  await withHostObservation(host => {
+    const now = Number(/^MemAvailable:\s+(\d+) kB$/m.exec(readFileSync('/proc/meminfo', 'utf8'))[1]) * 1024;
+    expect(host.freeMemoryBytes / now).toBeGreaterThan(0.5);
+    expect(host.freeMemoryBytes / now).toBeLessThan(1.5);
+  });
+});
+
+test('host disk observation multiplies available blocks by filesystem block size', async () => {
+  await withHostObservation((host, root) => {
+    const current = statfsSync(root), bytes = Number(current.bavail) * Number(current.bsize);
+    expect(host.freeDiskBytes / bytes).toBeGreaterThan(0.5);
+    expect(host.freeDiskBytes / bytes).toBeLessThan(1.5);
+  });
+});
+
+test('current launcher owner records a live PID start time and the real boot identity', async () => {
+  const owner = await currentOwner('adapter-owner-test');
+  expect(owner.pid).toBe(process.pid);
+  expect(owner.bootId).toBe(readFileSync('/proc/sys/kernel/random/boot_id', 'utf8').trim());
+  expect(processState(owner)).toBe('live');
 });
