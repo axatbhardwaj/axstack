@@ -144,7 +144,11 @@ test('frozen npm install resolves a committed local dependency without any regis
     'vendor/local-dependency/index.js': 'module.exports = 42;',
     'dependency.js': `import answer from 'local-dependency'; if (answer !== 42) process.exit(5); console.log('local dependency installed');`,
   });
-  const generate = Bun.spawnSync([npm, 'install', '--package-lock-only', '--offline', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: repo, stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
+  const generate = Bun.spawnSync([npm, 'install', '--package-lock-only', '--offline', '--ignore-scripts', '--no-audit', '--no-fund'], {
+    cwd: repo, stdin: 'ignore', stdout: 'pipe', stderr: 'pipe',
+    // npm's Node compile cache must share the fixture's cleanup boundary.
+    env: { ...process.env, NODE_COMPILE_CACHE: `${root}/node-compile-cache` },
+  });
   expect(generate.exitCode).toBe(0);
   command(repo, ['rm', 'bun.lock']);
   command(repo, ['add', '.']);

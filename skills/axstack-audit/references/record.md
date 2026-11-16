@@ -7,7 +7,7 @@ reason when evidence is missing; missing evidence is never a pass.
 ```text
 Run: <run identity + scope/authority + audit mode (end-of-run | checkpoint)>
 Baseline: <approved spec rev | peer mode | research mode | maintenance scope | nonrepo report scope + source SHA-256>
-Acceptance: <passed / failed / unverified + test + SHA traces>
+Acceptance: <passed / failed / unverified + check-run receipt paths/identities>
 Steps: <completed / deviated + why + approval per deviation>
 Advisers: <Codex/Claude adviser configured coverage / eligible uses + same-question receipts; Astra/Fable high-stakes AGREE coverage / eligible uses>
 Decisions: <escalation trigger + evidence pointers + outcome changed yes/no, or n/a>

@@ -1,9 +1,10 @@
 import { expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, readdirSync, lstatSync, readlinkSync, renameSync } from 'node:fs';
+import { makeTempDir } from '../temp-dir.js';
 import { main, summarizePillars } from '../../skills/axstack/scripts/readiness.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`;
-const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/readiness-`);
+const root = makeTempDir(`${process.env.TMPDIR ?? '/tmp'}/readiness-`);
 const fakeGh = `${root}/gh`;
 writeFileSync(fakeGh, `#!/usr/bin/env bun
 import { appendFileSync } from 'node:fs';
