@@ -1,5 +1,13 @@
 import { fact, hold } from './launcher-policy.js';
 
+function canonicalImage(reference) {
+  const [repository, digest] = reference.split('@');
+  const parts = repository.split('/');
+  if (!parts[0].includes('.') && !parts[0].includes(':') && parts[0] !== 'localhost') parts.unshift('docker.io');
+  if (parts[0] === 'docker.io' && parts.length === 2) parts.splice(1, 0, 'library');
+  return `${parts.join('/')}@${digest}`;
+}
+
 export function dockerObservers(execute) {
   const inspect = async (kind, id) => {
     const r = await execute(['docker', kind, 'inspect', id]);
@@ -20,7 +28,7 @@ export function dockerObservers(execute) {
       for (const c of p.containers) {
         if (Object.hasOwn(volumes, c.image)) continue;
         const image = await inspect('image', c.image);
-        if (!image?.Config || !image.RepoDigests?.includes(c.image)) hold(`image pin/config unavailable: ${c.image}`);
+        if (!image?.Config || !image.RepoDigests?.some(reference => canonicalImage(reference) === canonicalImage(c.image))) hold(`image pin/config unavailable: ${c.image}`);
         volumes[c.image] = Object.keys(image.Config?.Volumes ?? {});
       }
       return volumes;
