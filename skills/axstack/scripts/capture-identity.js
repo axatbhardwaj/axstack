@@ -1,10 +1,10 @@
 import { lstatSync, readdirSync, readFileSync, readlinkSync, realpathSync } from 'node:fs';
-import { gitArgv } from './git-argv.js';
+import { gitArgv, gitEnv } from './git-argv.js';
 
 export const captureVersion = '1.0.0';
 export const sha256 = (bytes) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex');
 function git(repo, ...args) {
-  const r = Bun.spawnSync(gitArgv('-C', repo, ...args), { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
+  const r = Bun.spawnSync(gitArgv('-C', repo, ...args), { env: gitEnv(), stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' });
   if (r.exitCode !== 0) throw Error(r.stderr.toString().trim() || 'git identity unavailable');
   return args.includes('-z') ? r.stdout.toString() : r.stdout.toString().trim();
 }
