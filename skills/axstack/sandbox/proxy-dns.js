@@ -42,7 +42,9 @@ export function parseDnsAnswer(packet, query) {
   const type = query.readUInt16BE(expected.end);
   let offset = questionName.end + 4;
   const records = [];
-  const count = packet.readUInt16BE(6);
+  const answers = packet.readUInt16BE(6), authorities = packet.readUInt16BE(8);
+  const count = answers + authorities;
+  const zones = [];
   if (count > 256) throw Error('Oversized DNS answer');
   for (let i = 0; i < count; i++) {
     const owner = nameAt(packet, offset); offset = owner.end;
@@ -50,6 +52,11 @@ export function parseDnsAnswer(packet, query) {
     const kind = packet.readUInt16BE(offset), klass = packet.readUInt16BE(offset + 2), size = packet.readUInt16BE(offset + 8);
     offset += 10;
     if (offset + size > packet.length || klass !== 1) throw Error('Invalid DNS record');
+    if (i >= answers && kind === 6) {
+      const primary = nameAt(packet, offset), contact = nameAt(packet, primary.end);
+      if (contact.end + 20 !== offset + size) throw Error('Invalid DNS SOA');
+      zones.push(owner.name);
+    }
     if ((kind === 1 && size !== 4) || (kind === 28 && size !== 16)) throw Error('Invalid DNS address length');
     let address;
     if (kind === 1 && size === 4) address = [...packet.subarray(offset, offset + size)].join('.');
@@ -59,13 +66,24 @@ export function parseDnsAnswer(packet, query) {
       if (cname.end !== offset + size) throw Error('Invalid DNS CNAME');
       records.push({ owner: owner.name, cname: cname.name });
     }
-    if (kind === type && address) records.push({ owner: owner.name, address });
+    if (i < answers && kind === type && address) records.push({ owner: owner.name, address });
     offset += size;
   }
   const reachable = new Set([expected.name]);
   for (let i = 0; i <= records.length; i++) for (const record of records) if (record.cname && reachable.has(record.owner)) reachable.add(record.cname);
   const addresses = records.filter(record => record.address && reachable.has(record.owner)).map(record => record.address);
-  if (records.some(record => record.cname) && !addresses.length) throw Error('Incomplete DNS alias answer');
+  if (!addresses.length) {
+    let terminal = expected.name;
+    const seen = new Set();
+    while (records.some(record => record.owner === terminal && record.cname)) {
+      if (seen.has(terminal)) throw Error('DNS alias cycle');
+      seen.add(terminal);
+      const aliases = records.filter(record => record.owner === terminal && record.cname);
+      if (aliases.length !== 1) throw Error('Ambiguous DNS alias');
+      terminal = aliases[0].cname;
+    }
+    if (!zones.some(zone => terminal === zone || terminal.endsWith(`.${zone}`))) throw Error('Incomplete DNS NODATA answer');
+  }
   return addresses;
 }
 
