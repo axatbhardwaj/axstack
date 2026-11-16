@@ -137,7 +137,14 @@ export async function imageEvidence(bytes, observations) {
       if (typeof row.evidence !== 'string' || !row.evidence.trim()) throw new Error('observation evidence required');
     }
   }
-  const resources = (await expectedResources(bytes)).map((resource) => {
+  const expected = await expectedResources(bytes);
+  const known = new Set(expected.map((resource) => resource.url));
+  for (const row of observations?.resources ?? []) {
+    if (known.has(row.url)) continue;
+    known.add(row.url);
+    expected.push({ ...row, source: 'observation-only', locations: ['observation-only'] });
+  }
+  const resources = expected.map((resource) => {
     const matches = observations?.resources.filter((row) => row.url === resource.url) ?? [];
     let status = 'unknown', evidence = 'No observation: absent or unobservable resource';
     if (observations && observations.sha256 !== sha256) evidence = 'SHA-256 differs from observed page bytes';
@@ -146,13 +153,6 @@ export async function imageEvidence(bytes, observations) {
     else if (matches.length) { status = matches[0].status; evidence = matches.map((row) => row.evidence).join('; '); }
     return { ...resource, status, evidence };
   });
-  const extracted = new Set(resources.map((resource) => resource.url));
-  for (const row of observations?.resources ?? []) {
-    if (extracted.has(row.url)) continue;
-    resources.push({ ...row, source: 'observation-only', locations: ['observation-only'],
-      ...(observations.sha256 !== sha256
-        ? { status: 'unknown', evidence: 'SHA-256 differs from observed page bytes' } : {}) });
-  }
   const summary = { pass: 0, fail: 0, unknown: 0, 'n/a': 0 };
   for (const resource of resources) summary[resource.status]++;
   return { sha256, resources, summary };
