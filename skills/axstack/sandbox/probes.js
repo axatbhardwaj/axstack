@@ -155,7 +155,8 @@ export function createProbeTools({ runner = execute } = {}) {
         const allowed = (registry && position === 'fetch') || (service && position === 'service') || (position === 'proxy-bypassed' && publicTarget && !target.id.startsWith('tailnet-dns'));
         const viaProxy = position === 'fetch' && (registry || target.id.startsWith('arbitrary-https:'));
         if (viaProxy && !proxy) throw Error('fetch proxy missing');
-        const args = ['network', c.id, allowed ? 'allow' : 'deny', JSON.stringify(target), ...(viaProxy ? [proxy.id] : [])];
+        const endpoint = { kind: target.kind, address: target.address, port: target.port, protocol: target.protocol, ...(target.kind === 'dns' ? { id: target.id } : {}) };
+        const args = ['network', c.id, allowed ? 'allow' : 'deny', JSON.stringify(endpoint), ...(viaProxy ? [proxy.id] : [])];
         add(c, position, allowed ? 'allow' : 'deny', [target.id], args);
       }
       const mounting = storage.volumeName && c.argv?.some(arg => arg.split(',').some(part => part === `source=${storage.volumeName}` || part === `src=${storage.volumeName}`));
