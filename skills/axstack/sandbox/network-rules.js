@@ -33,7 +33,7 @@ const destination = (family, address, op = '==') => {
 export function networkRules(networks, addresses, proxy, hash) {
   /** @type {import('./launcher-contracts.js').Rule[]} */
   const rules = [];
-  function rule(network, chain, tokens, expr, direction = 'iifname') {
+  function rawRule(network, chain, tokens, expr, direction = 'iifname') {
     const id = `axstack:${hash}:${rules.length}`;
     const expression = [direction, JSON.stringify(network.interface), ...tokens];
     const nftExpr = [match({ meta: { key: direction } }, network.interface), ...expr];
@@ -42,6 +42,13 @@ export function networkRules(networks, addresses, proxy, hash) {
       installArgv: ['nft', 'add', 'rule', 'inet', 'axstack_sandbox', chain, ...expression, 'comment', JSON.stringify(id)],
       checkArgv: [process.execPath, `${import.meta.dir}/network-firewall.js`, 'check', descriptor],
       removeArgv: [process.execPath, `${import.meta.dir}/network-firewall.js`, 'remove', descriptor] });
+  }
+  function rule(network, chain, tokens, expr, direction = 'iifname') {
+    if (direction === 'iifname' && tokens.at(-1) === 'drop') {
+      rawRule(network, chain, ['udp', 'sport', '20053', ...tokens.slice(0, -1), 'counter', 'drop'],
+        [match({ payload: { protocol: 'udp', field: 'sport' } }, 20053), ...expr.slice(0, -1), { counter: null }, { drop: null }]);
+    }
+    rawRule(network, chain, tokens, expr, direction);
   }
   for (const network of networks) {
     rule(network, 'input', ['drop'], [{ drop: null }]);
