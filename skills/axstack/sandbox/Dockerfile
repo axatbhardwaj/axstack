@@ -21,6 +21,8 @@ ENV PATH="/opt/node-24/bin:/opt/rust/bin:/opt/cargo-tools/bin:/opt/jdk-25/bin:/o
 RUN AXSTACK_IMAGE_BUILD=1 /opt/bootstrap/bun-linux-x64/bun /opt/axstack-image/probes-image-build.js --artifacts
 COPY probes-android-platform.xml /opt/android/platforms/android-37.0/package.xml
 RUN mkdir /tmp/axstack-image-cargo && AXSTACK_IMAGE_BUILD=1 /opt/bootstrap/bun-linux-x64/bun /opt/axstack-image/probes-image-build.js --preload
+# Gradle creates private cache modes as root during preload; runtime is uid 1000.
+RUN chmod -R a+rX /opt/gradle-cache
 WORKDIR /work
 USER 1000:1000
 CMD ["/bin/bash"]
