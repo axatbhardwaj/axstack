@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from 'bun:test';
-import { copyFileSync, linkSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, readFileSync, linkSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { inspectEvidence } from '../../skills/axstack/scripts/evidence-inspector.js';
 import history from './fixtures/evidence-inspector/history.json';
 import { fixture, pass } from './sandbox-launcher-fixture.js';
@@ -239,4 +239,24 @@ for (const [name, change] of [
 ]) test(`peer sandbox rejects ${name}`, () => {
   const p = packet(); p.review = sandboxReview(); change(p.review);
   expect(peerTerm(p).status).toBe('fail');
+});
+
+
+test('peer local test claim with an unavailable envelope or capture path fails', () => {
+  const p = packet();
+  p.review = { mode: 'peer', localTests: true, sandboxReceipt: `${temporary}/absent-envelope.json` };
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-receipt-unavailable' });
+  p.review = sandboxReview(); p.review.sandboxReceipt.capture.receiptPath = `${temporary}/absent-capture.json`;
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-receipt-unavailable' });
+});
+
+test('peer term rejects a capture for a different head with a valid envelope digest', () => {
+  const p = packet(); p.review = sandboxReview();
+  const reference = p.review.sandboxReceipt.capture;
+  const capture = JSON.parse(readFileSync(reference.receiptPath, 'utf8'));
+  const foreign = 'f'.repeat(40);
+  capture.requested.head = foreign;
+  for (const source of [capture.sourceBefore, capture.sourceAfter]) Object.assign(source, { head: foreign, requestedHead: foreign });
+  const bytes = JSON.stringify(capture); writeFileSync(reference.receiptPath, bytes); reference.receiptSha256 = hash(bytes);
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-validation-failed' });
 });
