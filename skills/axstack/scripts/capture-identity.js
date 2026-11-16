@@ -39,7 +39,7 @@ export function sourceIdentity(binding) {
     snapshot: snapshotTree(repo),
   };
 }
-const within = (path, root) => path === root || path.startsWith(`${root}/`);
+const within = (path, root) => path === root || path.startsWith(root === '/' ? '/' : `${root}/`);
 export function admitCapture(binding, evidence, cwd) {
   if (!binding.repo || !binding.repository || !binding.head || !binding.base) throw Error('missing capture identity: repo, repository, head and base required');
   const output = realpathSync(evidence);
