@@ -28,7 +28,7 @@ export function verifyCapture(path, p, argv) {
 }
 export async function recordCapture(p, evidenceDir, active, checkStorage = role => checkFilesystem({ storage: p.storage, containerId: p.containers.find(c => c.role === role).id })) {
   const registryPlanBytes = new TextEncoder().encode(`${JSON.stringify(p)}\n`).length;
-  if (receiptBytes(evidenceDir) + registryPlanBytes > p.policy.receiptMaxBytes / 2) hold('insufficient receipt directory budget');
+  if (receiptBytes(evidenceDir) + registryPlanBytes > p.policy.receiptMaxBytes) hold('insufficient receipt directory budget');
   const initial = sourceIdentity(p.request);
   const binding = { ...p.request, snapshot: initial.snapshot, tool: { name: 'axstack-sandbox', version: '1.0.0' }, sandboxImageDigest: p.containers.find(c => c.role === 'test').image.split('@')[1], writableRoots: [p.sourceExport.path] };
   const commands = [], state = { active: null, signal: null };
