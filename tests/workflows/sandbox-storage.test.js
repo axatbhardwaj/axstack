@@ -169,7 +169,7 @@ test('cleanup independently blocks while any owned or volume-mounting container 
 test('a foreign volume or owner record is never reaped', async () => {
   const { api, input, state, plan } = await fixture();
   await api.prepareStorage(input);
-  state.volume.Labels['axstack.sandbox.boot-id'] = 'another-boot';
+  state.volume.Labels['axstack.sandbox.bootId'] = 'another-boot';
   state.calls.length = 0;
   await expect(api.cleanupStorage(input)).rejects.toMatchObject({ sandboxHold: true });
   expect(state.calls.some(argv => argv[2] === 'rm' || argv.includes('--detach'))).toBe(false);
