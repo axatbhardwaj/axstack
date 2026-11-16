@@ -50,6 +50,35 @@ test('fresh complete export compares bound bytes, cadence and enabled state with
   expect(report.exportSha256).toMatch(/^[a-f0-9]{64}$/);
   expect(report).not.toHaveProperty('verdict');
 });
+for (const [name, packagedSuffix, liveSuffix] of [
+  ['live final newline stripped', '\n', ''],
+  ['multiple packaged trailing newlines', '\n\n\n', ''],
+  ['multiple live trailing newlines', '', '\n\n\n'],
+]) test(`${name} preserves prompt equality`, () => {
+  const { code, report } = run((d) => {
+    d.prompts['review-manager-prompt.md'] = '# Review\n\nContinuity: {{HOST_HOME}}/state.' + packagedSuffix;
+    d.export.tasks[0].prompt = '# Review\n\nContinuity: /fixture/home/state.' + liveSuffix;
+  });
+  expect(code).toBe(0);
+  expect(report.terms.every((t) => t.status === 'pass')).toBe(true);
+});
+for (const [name, livePrompt] of [
+  ['interior text change', '# Review\n\nContinuity: /fixture/home/other.'],
+  ['extra interior blank line', '# Review\n\n\nContinuity: /fixture/home/state.'],
+  ['removed interior blank line', '# Review\nContinuity: /fixture/home/state.'],
+  ['leading whitespace', ' # Review\n\nContinuity: /fixture/home/state.'],
+  ['trailing space', '# Review\n\nContinuity: /fixture/home/state. '],
+  ['CRLF line endings', '# Review\r\n\r\nContinuity: /fixture/home/state.\r\n'],
+  ['trailing CRLF only', '# Review\n\nContinuity: /fixture/home/state.\r\n'],
+]) test(`${name} still fails prompt comparison`, () => {
+  const { code, report } = run((d) => {
+    d.prompts['review-manager-prompt.md'] = '# Review\n\nContinuity: {{HOST_HOME}}/state.\n';
+    d.export.tasks[0].prompt = livePrompt;
+  });
+  expect(code).toBe(0);
+  expect(status(report, 'review-manager-prompt.md.prompt')).toBe('fail');
+  expect(report.counts).toEqual({ pass: 13, fail: 1, unknown: 0, 'n/a': 0 });
+});
 for (const [name, change, id] of [
   ['added UTF-8 BOM', (d) => { d.prompts['review-manager-prompt.md'] = `\uFEFF${d.prompts['review-manager-prompt.md']}`; }, 'review-manager-prompt.md.prompt'],
   ['edited packaged bytes', (d) => { d.prompts['review-manager-prompt.md'] += 'extra'; }, 'review-manager-prompt.md.prompt'],
