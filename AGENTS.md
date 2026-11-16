@@ -108,6 +108,7 @@
   introduce a Node.js runtime contract.
 - Run vendored Node-oriented anatomy code with Bun.
   Anatomy has no installer network or Git step; this exception adds no runtime dependencies.
+- Permit review-only Playwright MCP image checks against exact final page bytes before delivery; unobservable resources report unknown.
 - Permit only local read-only Git checks (`rev-parse` and `status --porcelain --ignored`)
   for legacy archify release.
 - Keep installer surfaces in `src/`, `bin/`, `package.json`, and

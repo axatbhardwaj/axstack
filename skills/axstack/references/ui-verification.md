@@ -1,6 +1,6 @@
 # UI verification
 
-Every Playwright, browser, or rendered-UI check outside the two named browser
+Every Playwright, browser, or rendered-UI check outside the three named browser
 exceptions, including a "confirm it in the browser" step, goes through async
 `delegate_task` to a configured UI verifier role.
 The configured UI verifier roles are `axstack-ui-verifier` and
@@ -24,7 +24,9 @@ The second named browser exception permits dispatched roles to use
 `html_preview` as a non-publishing self-check.
 Dispatched-role self-checks never replace the driver's two previews or the `axstack-ui-verifier` pass.
 Dispatched roles never call `html_render`.
-All other browser checks outside the two named exceptions remain delegated to configured UI verifier roles under the dual-run trigger below.
+The third named browser exception permits the reviewing seat (`axstack-explainer-review`)
+to run the inline-page image check through the Playwright MCP.
+All other browser checks outside the three named exceptions remain delegated to configured UI verifier roles under the dual-run trigger below.
 
 Read the [T3 runtime boundary](t3-runtime.md) before dispatch; for candidate
 checks use its driver-made disposable detached checkout at the pinned candidate SHA.
@@ -32,7 +34,7 @@ For explicit non-repository article or Improve discovery checks, use the local s
 owned SHA-256 snapshot in [Local artifacts](local-artifacts.md); no Git candidate
 is fabricated. Engineering candidate checks retain the checkout requirement.
 Use the configured verifier browser and honor the user browser-tool policy.
-Engineering candidate browser and visual checks must run in a delegated UI verifier role in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
+Engineering candidate browser and visual checks outside these exceptions must run in a delegated UI verifier role in its own detached checkout; outputs go to its private evidence folder, never the driver worktree.
 
 For every interactive page, require a real-browser `axstack-ui-verifier` interaction pass.
 Give the evidence path and SHA-256 of the exact bytes in the verifier brief.
