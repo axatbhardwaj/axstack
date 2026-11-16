@@ -1,7 +1,8 @@
 # Create run records and inspect repositories
 
-Entry points: `skills/axstack/scripts/{run-init,pr-shape,readiness,scratch}.js`;
-fixtures: `tests/workflows/{run-init,readiness,readiness-run,pr-shape-helper,scratch,scratch-consumers}.test.js`.
+Entry points: `skills/axstack/scripts/{run-init,pr-shape,readiness,scratch,check-run}.js`;
+fixtures: `tests/workflows/{run-init,readiness,pr-shape-helper,scratch,scratch-consumers,capture,check-run}.test.js`
+and `tests/workflows/readiness-run/`.
 The pr-shape fixtures cover the optional `--source` sync term: fast-forward
 containment after source advancement, no-ff promotion trees, unrelated history,
 lost base-only hotfixes, divergent head/source trees with a shared ancestor base,
@@ -55,7 +56,7 @@ process in cleanup, including when an assertion fails.
 ```bash
 doctor > "$EVIDENCE/reports-tests-doctor.log" 2>&1
 REPORT_STATUS=0
-bun run test tests/workflows/readiness.test.js tests/workflows/readiness-run.test.js \
+bun run test tests/workflows/readiness.test.js tests/workflows/readiness-run \
   > "$EVIDENCE/reports-tests.log" 2>&1 || REPORT_STATUS=$?
 printf '%s\n' "$REPORT_STATUS" > "$EVIDENCE/reports-tests-exit.txt"
 test "$REPORT_STATUS" -eq 0
@@ -178,3 +179,30 @@ Also drive intentional exclusion (n/a, exit 0), an excluded identity that exists
 exclusion (unknown, exit 2) through the installed helper.
 Never use live HOME, mutate schedules or commit a host export. Live T10 deployment
 and native schedule delivery remain separate, unverified boundaries.
+
+## Identity-bound command capture
+
+After temporary-home install, run the installed adapter against an owned Git
+fixture. The capture directory must stay outside source and command cwd.
+
+```bash
+doctor > "$EVIDENCE/capture-doctor.log" 2>&1
+mkdir "$TMPDIR/capture-repo"
+mkdir -m 700 "$EVIDENCE/capture"
+git -C "$TMPDIR/capture-repo" init -q
+git -C "$TMPDIR/capture-repo" remote add origin fixture:capture
+git -C "$TMPDIR/capture-repo" -c user.name=Fixture -c user.email=f@x commit --allow-empty -qm fixture
+CAPTURE_HEAD=$(git -C "$TMPDIR/capture-repo" rev-parse HEAD)
+CAPTURE="$HOME/.agents/skills/axstack/scripts/check-run.js"
+bun "$CAPTURE" --help > "$EVIDENCE/capture-help.log"
+bun "$CAPTURE" --repo "$TMPDIR/capture-repo" --repository fixture:capture --head HEAD --base HEAD --out "$EVIDENCE/capture" -- bun -e 'process.exit(7)' > "$EVIDENCE/capture-run.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/capture-run.json").json(); if (r.schemaVersion !== 1 || r.exitCode !== 7 || r.requested.head !== r.sourceBefore.head || r.requested.base !== r.sourceBefore.base || r.requestedRefs.head !== "HEAD" || !r.snapshotScope.ignoreSources.includes(".git/info/exclude") || r.terms.some(t => t.status !== "pass")) throw Error("capture protocol mismatch");'
+bun run test tests/workflows/capture.test.js tests/workflows/check-run.test.js > "$EVIDENCE/capture-tests.log" 2>&1
+env -u TMPDIR bun test tests/workflows/capture.test.js tests/workflows/check-run.test.js > "$EVIDENCE/capture-unset.log" 2>&1
+```
+
+Proof: wrapper exit 0 retains child exit 7; negative fixtures cover repository,
+resolved head/base/source identity, missing fields, log integrity, dirty snapshots
+and their printed digest, ignored-file exclusion, output placement, timeout,
+truncation, spawn failure and SIGINT/SIGTERM/SIGHUP cleanup. These
+capture facts do not establish proof sufficiency or malicious-code containment.
