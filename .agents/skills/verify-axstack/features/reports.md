@@ -8,12 +8,15 @@ containment after source advancement, no-ff promotion trees, unrelated history,
 lost base-only hotfixes, divergent head/source trees with a shared ancestor base,
 missing source objects and absent-source n/a.
 They bind the proof to resolved SHAs and check that Git remains unchanged.
-Shape mode also emits `sandbox-path`: fail (user-merge hold) for changed paths
-under `skills/axstack/sandbox/`, including either rename endpoint; pass otherwise,
+Shape mode also emits `sandbox-path`: fail (user-merge hold) for the
+`skills/axstack/sandbox` entry or paths under it, including either rename endpoint; pass otherwise,
 unknown for unavailable Git evidence. Existing exits and proof mode stay unchanged.
 Run `pr-shape-helper.test.js` and `watch-sandbox-path.test.js` for additions,
 modifications, deletions, renames in/out, untouched/empty diffs, the
-`sandbox-other/` near-miss, Git errors and the watch §5 consumer contract.
+`sandbox-other/` near-miss, Git errors, bare symlink/gitlink entries and gitlink
+changes despite PR `.gitmodules`, local/global diff or submodule-ignore settings.
+Status display settings also leave committed paths visible. Watch §5 resolves
+the installed helper independently of the PR checkout and holds every non-pass outcome.
 Ordinary-chain policy is in `skills/axstack/references/pr-chain.md`;
 contract checks exercise ancestor-first repair and genuine paraphrases with removal/
 inversion negatives; local history fixtures cover three layers, siblings,
