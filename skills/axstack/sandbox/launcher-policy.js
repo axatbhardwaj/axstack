@@ -59,7 +59,7 @@ export function checkAssets(a) {
 }
 export const sameHost = (binding, host) => binding?.hostname === 'axat-vps' && host?.hostname === binding.hostname && /^[a-f0-9]{64}$/.test(binding.machineIdSha256) && binding.machineIdSha256 === host.machineIdSha256;
 
-function container({ id, role, image, networkIds, caps, declaredVolumes = [], environment, policy, owner, source, storage, networks, command }) {
+function container({ id, role, image, networkIds, caps, declaredVolumes = [], environment, policy, owner, source, storage, networks, command, dns = [] }) {
   const [uid, gid] = policy.user.split(':').map(Number);
   const tmpfs = [{ path: '/tmp', bytes: Math.min(policy.writableBytes, 16777216), uid, gid, mode: '0700', noexec: true }, ...declaredVolumes];
   if (role === 'fetch' || role === 'test') tmpfs.push({ path: '/work', bytes: policy.writableBytes, uid, gid, mode: '0700', noexec: false });
@@ -72,6 +72,7 @@ function container({ id, role, image, networkIds, caps, declaredVolumes = [], en
   // Docker defaults retain the daemon's seccomp profile and private PID namespace.
   argv.push('--network', networkIds.length ? networks.find(n => n.id === networkIds[0]).name : 'none');
   if (role === 'proxy') argv.push('--network-alias', 'axstack-proxy');
+  for (const resolver of dns) argv.push('--dns', resolver);
   for (const e of environment) argv.push('--env', `${e.name}=${e.value}`);
   for (const t of tmpfs) argv.push('--tmpfs', `${t.path}:rw,nosuid,nodev,${t.noexec ? 'noexec' : 'exec'},size=${t.bytes},uid=${t.uid},gid=${t.gid},mode=${t.mode}`);
   if (role === 'fetch' || role === 'test') {
@@ -109,7 +110,7 @@ export function buildPlan(input, deps) {
   const definitions = [
     { id: `${runId}-fetch`, role: 'fetch', image: a.workloadImage, networkIds: [findNetwork('fetch')], caps: a.policy.workloadCaps, environment: [...a.policy.environment, ...['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy'].map(name => ({ name, value: `http://${runId}-proxy:${a.proxy.port}` })), ...['NO_PROXY', 'no_proxy'].map(name => ({ name, value: '' }))] },
     { id: `${runId}-test`, role: 'test', image: a.workloadImage, networkIds: selected.length ? [findNetwork('service')] : [], caps: a.policy.workloadCaps, environment: a.policy.environment },
-    { id: `${runId}-proxy`, role: 'proxy', image: network.proxy.image, networkIds: network.proxy.networkIds, caps: a.policy.proxyCaps, environment: [...a.policy.environment, ...network.proxy.environment], command: proxyArgv() },
+    { id: `${runId}-proxy`, role: 'proxy', image: network.proxy.image, networkIds: network.proxy.networkIds, caps: a.policy.proxyCaps, environment: [...a.policy.environment, ...network.proxy.environment], command: proxyArgv(), dns: [a.proxy.resolverIpv4, a.proxy.resolverIpv6] },
     ...selected.map(s => ({ id: `${runId}-${s.id}`, role: 'sidecar', image: s.image, networkIds: [findNetwork('service')], caps: a.policy.sidecarCaps, declaredVolumes: s.declaredVolumes, environment: a.policy.environment, command: s.argv })),
   ];
   const containers = definitions.map(d => container({ ...common, ...d }));
