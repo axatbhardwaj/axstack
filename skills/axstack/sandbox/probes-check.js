@@ -13,8 +13,9 @@ export function inspectIdentity(statuses) {
     const uid = text.match(/^Uid:\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$/m);
     const caps = ['CapInh', 'CapPrm', 'CapEff', 'CapBnd', 'CapAmb'].map((field) => text.match(new RegExp(`^${field}:\\s+([a-fA-F0-9]+)\\s*$`, 'm')));
     const nnp = text.match(/^NoNewPrivs:\s+([01])\s*$/m);
-    if (!uid || caps.some((c) => !c) || !nnp) return { status: 'unknown', evidence: ['missing process security fields'] };
-    if (uid.slice(1).some((id) => Number(id) === 0) || caps.some((c) => BigInt(`0x${c[1]}`) !== 0n) || nnp[1] !== '1') failed = true;
+    const seccomp = text.match(/^Seccomp:\s+([012])\s*$/m);
+    if (!uid || caps.some((c) => !c) || !nnp || !seccomp) return { status: 'unknown', evidence: ['missing process security fields'] };
+    if (uid.slice(1).some((id) => Number(id) === 0) || caps.some((c) => BigInt(`0x${c[1]}`) !== 0n) || nnp[1] !== '1' || seccomp[1] !== '2') failed = true;
   }
   return { status: failed ? 'fail' : 'pass', evidence: statuses };
 }
