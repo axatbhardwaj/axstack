@@ -20,7 +20,7 @@
     },
     {
       "name": "TMPDIR",
-      "value": "/tmp"
+      "value": "/work"
     },
     {
       "name": "npm_config_cache",
