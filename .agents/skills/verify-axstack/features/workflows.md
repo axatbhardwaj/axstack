@@ -10,6 +10,8 @@ sandbox, authored n/a and manager-only nonblocking reap before quiet exits.
 A failed reap/missing Docker forces a full pass that records the failure. Peer
 policy loads from installed skills; foreign-head and unavailable-receipt claims
 fail. Capture cwd remains unchecked because the envelope lacks an expected path.
+Contracts also preserve launcher exclusivity, current-pass identity and both
+failed-reap record destinations (pass evidence and continuity).
 Removal/inversion and equivalent wording checks protect the prompt contracts;
 the held-run fake runner compares full fixture clone bytes (including ignored
 files) and its container inventory. It makes no live Docker claim.
