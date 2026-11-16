@@ -76,14 +76,16 @@ export function createProbeTools({ runner = execute } = {}) {
     const sidecars = await Bun.file(new URL('./sidecars.json', import.meta.url)).json();
     await observe('docker-containers', ['docker', 'ps', '--no-trunc', '--format', '{{.ID}}'], async (out) => {
       const running = out.trim().split(/\s+/).filter(Boolean).sort();
-      if (running.some((id) => !containerIds.includes(id))) throw Error('running container absent from network snapshot');
-      if (!containerIds.length) return;
-      const result = await runner(['docker', 'inspect', '--type', 'container', ...containerIds]);
+      if (running.some((id) => !/^[a-f0-9]{12,64}$/.test(id))) throw Error('invalid running container identity');
+      const requested = [...new Set([...containerIds, ...running])].sort();
+      if (!requested.length) return;
+      const result = await runner(['docker', 'inspect', '--type', 'container', ...requested]);
       if (result.exitCode !== 0 || result.timedOut || result.truncated) throw Error('container inspect failed');
       const rows = JSON.parse(result.stdout);
-      if (rows.length !== containerIds.length || new Set(rows.map((c) => c.Id)).size !== containerIds.length) throw Error('incomplete container inspect');
+      if (rows.length !== requested.length || new Set(rows.map((c) => c.Id)).size !== requested.length) throw Error('incomplete container inspect');
       for (const c of rows) {
-        if (!containerIds.includes(c.Id) || !c.NetworkSettings?.Networks || !c.Config) throw Error('incomplete container facts');
+        if (!requested.includes(c.Id) || !c.NetworkSettings?.Networks || !c.Config) throw Error('incomplete container facts');
+        if (!Object.keys(c.NetworkSettings.Networks).length && !['none', 'host'].includes(c.HostConfig?.NetworkMode)) throw Error('container network mode unknown');
         for (const [name, net] of Object.entries(c.NetworkSettings.Networks)) {
           const snapshot = inspected.find((n) => n.Name === name);
           if (!snapshot?.Containers[c.Id]) throw Error('container membership changed');
