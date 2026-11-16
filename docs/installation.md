@@ -319,11 +319,12 @@ Use judges only for Rung 2 hard-to-reverse choices: round 1 needs Opus; round 2,
 if invoked, needs escalation Fable and Astra; a required seat that is unavailable
 holds that round. The current chat drives on whatever
 model runs it; no preset carries a driver role. Every other missing, invalid, unsupported, or unavailable role value holds only
-the affected work. Codex and Claude class resolution reads the saved T3 capabilities catalog via
-the command below; missing or malformed catalogs hold.
+the affected work. Run helper examples below from trusted cwd `/`, resolving
+`<installed-axstack>` in the installed skill tree. Codex and Claude class resolution
+reads the saved T3 capabilities catalog below; missing or malformed catalogs hold.
 
 ```text
-bun skills/axstack/scripts/resolve-models.js --provider <codex|claude|grok> --capabilities <saved-json> <--class <class>|--model <id|null>> --effort <level> [--exclude <id>]
+bun --no-env-file <installed-axstack>/scripts/resolve-models.js --provider <codex|claude|grok> --capabilities <saved-json> <--class <class>|--model <id|null>> --effort <level> [--exclude <id>]
 ```
 
 `--class` resolves a class; `--model` selects an exact ID or an explicitly
@@ -347,16 +348,15 @@ reference for provider option IDs and configuration read-back.
 ## Packaged driver helpers
 
 These Bun scripts support the driver; they do not create a workflow runtime.
-Run them from the bundle root, or replace the relative script path with its
-installed shared-root path. The [T3 runtime reference](../skills/axstack/references/t3-runtime.md)
+The [T3 runtime reference](../skills/axstack/references/t3-runtime.md)
 owns model/account authority; [Cleanup](../skills/axstack-cleanup/SKILL.md)
 owns evidence retirement authority.
 
 ### PR digest
 
 ```text
-bun skills/axstack/scripts/pr-digest.js --repo <owner/name> --prs <1,2> --watermark <private-json>
-bun skills/axstack/scripts/pr-digest.js --input <saved-graphql-json> --watermark <private-json>
+bun --no-env-file <installed-axstack>/scripts/pr-digest.js --repo <owner/name> --prs <1,2> --watermark <private-json>
+bun --no-env-file <installed-axstack>/scripts/pr-digest.js --input <saved-graphql-json> --watermark <private-json>
 ```
 
 Use `--repo` and `--prs` for live GitHub reads, or `--input` for a saved response.
@@ -369,7 +369,7 @@ An incomplete read leaves readiness unknown.
 ### Evidence archive
 
 ```text
-bun skills/axstack/scripts/archive-evidence.js --source-root <absolute-dir> --archive-root <absolute-private-dir> --repo <owner/name> <--pr <number>|--run <id> --task <id>> --head <full-sha> --dispatch <id> --file <relative-path> [--file <relative-path>] [--operation <archive|retire>] [--manifest-hash <sha256>]
+bun --no-env-file <installed-axstack>/scripts/archive-evidence.js --source-root <absolute-dir> --archive-root <absolute-private-dir> --repo <owner/name> <--pr <number>|--run <id> --task <id>> --head <full-sha> --dispatch <id> --file <relative-path> [--file <relative-path>] [--operation <archive|retire>] [--manifest-hash <sha256>]
 ```
 
 Choose either `--pr` or both `--run` and `--task`; `--file` repeats for each exact
