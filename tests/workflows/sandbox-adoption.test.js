@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSyn
 import { createLauncher } from '../../skills/axstack/sandbox/launcher.js';
 import { inspectEvidence } from '../../skills/axstack/scripts/evidence-inspector.js';
 import { fixture, planners } from './sandbox-launcher-fixture.js';
-import { checkRule, loadedReferences, prohibits, requires } from './prose-contract.js';
+import { checkRule, loadedReferences, prohibits, requires, sentences } from './prose-contract.js';
 
 const root = new URL('../../', import.meta.url);
 const read = path => readFileSync(new URL(path, root), 'utf8');
@@ -12,6 +12,8 @@ const managerPath = 'skills/axstack/references/review-manager-prompt.md';
 const banPath = 'skills/axstack/sandbox/host-execution.md';
 const reapPath = 'skills/axstack/sandbox/reap.md';
 const ban = read(banPath);
+const reapFailure = /failing reap|reap (?:fails|errors|exits nonzero)/i;
+const dockerUnavailable = /absent Docker|Docker is (?:missing|unavailable|absent)/i;
 
 for (const [name, prohibition, concepts, rewording] of [
   ['host execution ban', /never/i, [/peer-mode/i, /install dependencies/i, /build/i, /execute PR code/i, /on the host/i, /container.*starts itself/i],
@@ -29,9 +31,33 @@ test('brief and manager load the active peer clause and require sandbox receipts
     const source = read(path), url = new URL(path, root);
     expect(loadedReferences(source).some(link => new URL(link, url).pathname === new URL(banPath, root).pathname)).toBe(true);
   }
-  checkRule(ban, source => requires(source, /sandbox launcher/i, /execute.*peer tests/i, /attach.*receipt/i),
-    'Use the sandbox launcher to execute peer tests and attach its receipt.',
-    [[/attach/i, 'omit']], [/sandbox launcher/i, /peer tests/i, /receipt/i]);
+  checkRule(ban, source => requires(source, /attach/i, /host-written receipt/i),
+    'Attach its host-written receipt.',
+    [[/attach/i, 'omit']], [/attach/i, /host-written receipt/i]);
+});
+
+test('peer tests execute exclusively through sandbox launcher', () => {
+  const concepts = [/only|exclusively/i, /sandbox launcher/i, /execute/i, /peer tests/i];
+  checkRule(ban, text => sentences(text).some(unit => requires(unit, ...concepts)
+    // An alternative actor defeats exclusivity even when "only" survives.
+    && !/\bor\b/i.test(unit)),
+  'Peer tests execute exclusively through the sandbox launcher.',
+  [[/only|exclusively/i, 'also'], [/sandbox launcher/i, 'sandbox launcher or another fleet test host']], concepts);
+});
+
+test('manager identifies the current pass rather than launching another thread', () => {
+  const concepts = [/you are|you.re|this is/i, /fresh finite/i, /T3 review-manager pass/i];
+  checkRule(read(managerPath), text => requires(text, ...concepts),
+    'This is the fresh finite T3 review-manager pass in the review lane.',
+    [[/you are|you.re|this is/i, 'Launch'], [/^.*$/, 'Launch a new T3 review-manager pass thread.']], concepts);
+});
+
+test('failed reap records command evidence and continuity', () => {
+  const concepts = [reapFailure, dockerUnavailable, /record/i, /stdout\/stderr/i,
+    /exit/i, /limitation/i, /in pass evidence and continuity/i];
+  checkRule(read(reapPath), text => requires(text, ...concepts),
+    'If reap errors or Docker is unavailable, record stdout/stderr, exit and limitation in pass evidence and continuity.',
+    [[/record/i, 'discard'], [/in pass evidence and continuity/i, 'only in memory']], concepts);
 });
 
 test('held sandbox records unknown and hold while review continues from code and CI', () => {
@@ -59,10 +85,9 @@ test('only manager includes reap and does so before quiet-pass exit', () => {
 
 test('reap failure or missing Docker is recorded and full pass continues', () => {
   const source = read(reapPath);
-  const failure = /failing reap|reap fails/i, docker = /absent Docker|Docker is missing/i;
-  const concepts = [failure, docker, /record/i, /continue/i, /pass/i];
+  const concepts = [reapFailure, dockerUnavailable, /record/i, /continue/i, /pass/i];
   checkRule(source, text => requires(text, ...concepts),
-    'If reap fails or Docker is missing, record the limitation and continue the full pass.',
+    'If reap errors or Docker is unavailable, record the limitation and continue the full pass.',
     [[/continue/i, 'stop'], [/^.*$/, 'Stop the pass if reap fails.']], concepts);
   expect(source).toMatch(/bun --no-env-file <resolved-launcher> reap/);
   expect(source).toMatch(/trusted cwd\s+`\/`/);
@@ -99,8 +124,8 @@ for (const [name, path, prohibition, concepts, rewording, inversions] of [
     'Attach the sandbox receipt and inspector report.', [[/attach/i, 'omit']]],
   ...[managerPath, reapPath].map(path => [
     `reap failure forces full pass: ${path}`, path, null,
-    [/reap fails|failing reap/i, /Docker is missing|absent Docker/i, /run (?:the )?full pass/i],
-    'If reap fails or Docker is missing, run the full pass.', [[/run (?:the )?full pass/i, 'exit quietly']]]),
+    [reapFailure, dockerUnavailable, /run (?:the )?full pass/i],
+    'If reap errors or Docker is unavailable, run the full pass.', [[/run (?:the )?full pass/i, 'exit quietly']]]),
   ['peer inspector runs even without limitations', 'skills/axstack/references/capture-receipts.md', null,
     [/peer reviews/i, /supply/i, /review/i, /even (?:without|with zero) limitations/i],
     'Peer reviews supply inspector review even with zero limitations.', [[/supply/i, 'omit']]],
