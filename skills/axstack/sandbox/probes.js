@@ -127,6 +127,7 @@ export function createProbeTools({ runner = execute } = {}) {
     });
     for (const address of ['1.1.1.1', '2606:4700:4700::1111', '169.254.169.254', 'fd00:ec2::254', '127.0.0.1', '::1', '10.0.0.1', '172.16.0.1', '192.168.0.1', '100.64.0.1', 'fc00::1', 'fe80::1']) add('fixed', address, 443, 'tcp', 'W3-4 fixed destinations', 'direct');
     add('fixed', 'example.com', 443, 'tcp', 'W3-4 arbitrary HTTPS', 'arbitrary-https');
+    add('fixed', 'dl.google.com', 443, 'tcp', 'Inventoried allowed root redirects to www.google.com outside the frozen allowlist', 'redirect');
     for (const protocol of ['tcp', 'udp']) {
       add('dns', 'example.com', 53, protocol, 'W3-4 external DNS', 'external-dns');
       add('dns', 'example.com', 53, protocol, 'W3-4 embedded DNS', 'external-dns-stub');
@@ -143,19 +144,21 @@ export function createProbeTools({ runner = execute } = {}) {
     if (enumeration?.runId !== runId) throw Error('stale enumeration run identity');
     if (!containers.length || new Set(containers.map((c) => c.id)).size !== containers.length) throw Error('missing/duplicate containers');
     const probes = [], proxy = containers.find((c) => c.role === 'proxy');
-    const add = (container, position, expected, targetIds, args) => probes.push({ id: `${runId}:${container.id}:${probes.length}`, containerId: container.id, position, expected, targetIds, argv: [process.execPath, helper, ...args] });
+    const add = (container, position, expected, targetIds, args) => probes.push({ id: String(probes.length), containerId: container.id, position, expected, targetIds, argv: [process.execPath, helper, ...args] });
     for (const c of containers) {
       if (c.networkIds.some((id) => !networks.some((n) => n.id === id))) throw Error('unknown container network');
       const position = c.role === 'proxy' ? 'proxy-bypassed' : c.networkIds.length === 0 ? 'none' : c.networkIds.some((id) => networks.find((n) => n.id === id)?.profile === 'service') ? 'service' : 'fetch';
       add(c, position, 'non-root-empty-caps', [], ['identity', c.id]);
       for (const target of enumeration.targets) {
         if (target.id.startsWith('container|')) continue;
+        if (target.id.startsWith('redirect:') && position !== 'fetch') continue;
         const registry = target.id.startsWith('registry:'), service = target.id.startsWith('service|');
         const publicTarget = ['1.1.1.1', '2606:4700:4700::1111', 'example.com'].includes(target.address) || registry;
         const allowed = (registry && position === 'fetch') || (service && position === 'service') || (position === 'proxy-bypassed' && publicTarget && !target.id.startsWith('tailnet-dns'));
-        const viaProxy = position === 'fetch' && (registry || target.id.startsWith('arbitrary-https:'));
+        const redirect = target.id.startsWith('redirect:');
+        const viaProxy = position === 'fetch' && (registry || redirect || target.id.startsWith('arbitrary-https:'));
         if (viaProxy && !proxy) throw Error('fetch proxy missing');
-        const endpoint = { kind: target.kind, address: target.address, port: target.port, protocol: target.protocol, ...(target.kind === 'dns' ? { id: target.id } : {}) };
+        const endpoint = [target.kind, target.address, target.port, target.protocol, target.kind === 'dns' ? target.id : null, redirect];
         const args = ['network', c.id, allowed ? 'allow' : 'deny', JSON.stringify(endpoint), ...(viaProxy ? [proxy.id] : [])];
         add(c, position, allowed ? 'allow' : 'deny', [target.id], args);
       }
@@ -169,21 +172,25 @@ export function createProbeTools({ runner = execute } = {}) {
       if (mounting && !checks.length) throw Error(`missing capped filesystem check for ${c.id}`);
       for (const check of checks) {
         // D owns exact type/total-size verification and its non-root container argv.
-        probes.push({ id: `${runId}:${c.id}:${probes.length}`, containerId: c.id, position, expected: 'capped-filesystem', targetIds: [], argv: [...check.argv] });
+        probes.push({ id: String(probes.length), containerId: c.id, position, expected: 'capped-filesystem', targetIds: [], argv: [...check.argv] });
       }
     }
     return probes;
   }
 
-  async function runProbes({ plan }) {
+  async function runProbes({ plan, onPlan }) {
     validRun(plan.runId);
+    const original = planProbes(plan);
+    if (!original.length || JSON.stringify(original) !== JSON.stringify(plan.probes)) throw hold('probe plan incomplete or changed', []);
     const fresh = await enumerateTargets({ runId: plan.runId, networks: plan.networks });
     const incomplete = required.some((id) => !fresh.terms.some((t) => t.id === id && t.status === 'pass'));
     if (incomplete || fresh.terms.some((t) => t.status !== 'pass')) throw hold('incomplete target enumeration', fresh.terms);
     const identity = (e) => JSON.stringify(e.targets.map(({ evidence: _e, ...t }) => t).sort((a, b) => a.id.localeCompare(b.id)));
-    if (plan.enumeration?.runId !== plan.runId || identity(fresh) !== identity(plan.enumeration)) throw hold('target enumeration changed; replan this run', fresh.terms);
+    if (plan.enumeration?.runId !== plan.runId || !onPlan && identity(fresh) !== identity(plan.enumeration)) throw hold('target enumeration changed; replan this run', fresh.terms);
     const canonical = planProbes({ ...plan, enumeration: fresh });
-    if (!canonical.length || JSON.stringify(canonical) !== JSON.stringify(plan.probes)) throw hold('probe plan incomplete or changed', []);
+    // The launcher persists this exact fresh target set before any socket probe.
+    // Standalone callers without that binding still hold on changed targets.
+    if (onPlan) { plan.enumeration = fresh; plan.probes = canonical; await onPlan(plan); }
     const results = new Array(canonical.length), serial = [], parallel = [];
     const targets = new Map(fresh.targets.map(t => [t.id, t]));
     canonical.forEach((probe, i) => {
