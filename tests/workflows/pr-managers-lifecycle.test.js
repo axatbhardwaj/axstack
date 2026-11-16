@@ -40,8 +40,6 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
   expect(text).toMatch(/settlement[^.]*frees[^.]*slot|slot[^.]*freed[^.]*settled/i);
   expect(text).toMatch(/reconcile[^.]*workers[^.]*GitHub[^.]*compact (?:run )?record/i);
   expect(text).toMatch(/unknown ownership[^.]*only[^.]*affected PR|affected PR[^.]*unknown ownership/i);
-  expect(text).toMatch(/canary[^.]*two overlapping[^.]*run_scheduled_task_now[^.]*one admission owner/i);
-  expect(requires(text, /canary/i, /reconcil/i, /killed/i, /predecessor/i)).toBe(true);
   expect(text).not.toMatch(/`cursor\.json`|`pending\.json`|decision token|precheck\.log/i);
 });
 
@@ -107,7 +105,7 @@ test('execution settlement frees capacity independently of retained cleanup stat
 test('manager pass ends after compact continuity and PR resource cleanup', () => {
   const text = compact('skills/axstack/references/automations.md');
   expect(text).toMatch(/settle[^.]*descendants[^.]*before[^.]*manager/i);
-  const teardown = text.split('## Finite-session teardown')[1].split('## Activation canary')[0];
+  const teardown = text.split('## Finite-session teardown')[1].split('## Recovery and limits')[0];
   expect(teardown).toMatch(/Save continuity[^.]*last pass summary[\s\S]*?read back[\s\S]*?ending the finite turn/i);
   expect(text).not.toMatch(/terminal close --worktree|old pass worktree/i);
 });
@@ -154,7 +152,7 @@ test('manager continuity reuses valid state and keeps publication bounded', () =
 
 test('evaluation scenarios cover each accepted decision boundary', () => {
   const data = JSON.parse(read('tests/workflows/pr-manager-scenarios.json'));
-  expect(data.version).toBe(9);
+  expect(data.version).toBe(10);
   expect(data.migration).toMatch(/v8[^.]*T3 pass threads/i);
   expect(data.evidence).toMatch(/behavioral evaluation inputs/i);
   expect(data.evidence).toMatch(/not a model evaluation result|no model evaluation/i);
@@ -190,7 +188,7 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     'compact-continuity-archive',
     'workspace-local-temporary-files',
     'binding-mismatch', 'overlap-ordering-hold', 'retained-worktree-limit',
-    'four-part-canary', 'missing-host-clone',
+    'missing-host-clone',
   ]);
   for (const scenario of data.cases) {
     expect(scenario.input).toBeTruthy();
