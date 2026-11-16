@@ -96,3 +96,10 @@ test('altered network argv are rejected before any command, including during cle
     expect(commands).toEqual([]);
   }
 });
+
+test('cleanup before network preparation confirms absent table without creating firewall state', async () => {
+  const host = fakeNetworkHost([plan]);
+  const terms = await createNetworkRuntime(host).cleanupNetwork({ owner, plan });
+  expect(terms.every(t => t.status === 'pass')).toBe(true);
+  expect(host.commands.some(a => a.includes('add') || a.includes('delete') || a.includes('rm'))).toBe(false);
+});
