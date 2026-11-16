@@ -119,3 +119,40 @@ test('explicit owned evidence under run metadata is allowed while source paths s
     expect(() => plan(a)).toThrow('unsafe absolute path');
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test('provisioned compilers use writable private caches and executable JVM scratch within the host budget', async () => {
+  const a = await input(), p = plan(a), testContainer = p.containers.find(c => c.role === 'test'), env = environment(testContainer.argv);
+  expect(env.GOCACHE.startsWith('/work/')).toBe(true);
+  expect(env.GRADLE_USER_HOME.startsWith('/work/')).toBe(true);
+  expect(env.GRADLE_RO_DEP_CACHE).toBe('/opt/gradle-cache/caches');
+  expect(env.JAVA_TOOL_OPTIONS).toContain('-Djava.io.tmpdir=/work');
+  expect(env.GOTMPDIR).toBe('/work');
+  expect(testContainer.tmpfs.find(t => t.path === '/work').noexec).toBe(false);
+  expect(p.caps.perRunMemoryBytes * 2).toBeLessThanOrEqual(a.assets.hostBudget.memoryBudgetBytes);
+});
+
+test('the full inventoried sidecar plan fits the accounted host metadata limit with live-sized target sets', async () => {
+  const root = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/sandbox-int-services-`);
+  try {
+    const a = await input(), owned = `${root}/owned`, evidence = `${root}/evidence`, repo = `${root}/repo`;
+    for (const dir of [owned, evidence, repo]) mkdirSync(dir, { mode: 0o700 });
+    a.assets.ownedDir = owned; a.request.repo = repo;
+    a.request.sidecarIds = a.assets.sidecars.images.map(s => s.id);
+    a.enumeration.targets = Array.from({ length: 1400 }, (_, i) => ({ id: `listener:${i}`, kind: 'host-listener', address: '100.64.0.1', port: i + 1, protocol: 'udp', evidence: ['ss live-sized inventory'] }));
+    const p = plan(a);
+    expect(JSON.parse(await savePlan(p, evidence, owned)).containers.length).toBe(11);
+    expect(p.caps.perRunDiskBytes * 2).toBeLessThanOrEqual(a.assets.hostBudget.diskBudgetBytes);
+    expect(p.caps.perRunMemoryBytes * 2 + a.assets.hostBudget.reserveMemoryBytes).toBeLessThanOrEqual(a.assets.hostBudget.memoryBudgetBytes);
+    expect(p.terms.find(t => t.id === 'host-budget').status).toBe('pass');
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+
+test('fixed sidecar commands can find their pinned image binaries without host PATH forwarding', async () => {
+  const a = await input();
+  a.request.sidecarIds = a.assets.sidecars.images.map(s => s.id);
+  for (const c of plan(a).containers.filter(c => c.role === 'sidecar')) {
+    const path = environment(c.argv).PATH.split(':');
+    for (const bin of ['/usr/sbin', '/usr/share/grafana/bin', '/usr/lib/postgresql/16/bin', '/usr/lib/postgresql/17/bin']) expect(path).toContain(bin);
+  }
+});
