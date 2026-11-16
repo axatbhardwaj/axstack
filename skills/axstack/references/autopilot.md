@@ -161,6 +161,7 @@ Agents never run `npm publish` locally.
 A wake verifies the registry reports the expected package and version. Install on the named hosts, verify version
 and roles, then run Close-out last with release and install receipts and the
 installed version.
+For an affected-skills release, record the non-blocking [R5 live trace](live-run.md) against the installed release before Close-out.
 
 An existing version or tag, failed publish, uncertain
 registry result, missing host access, or failed install verification is a
