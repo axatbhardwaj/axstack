@@ -77,6 +77,9 @@ test('prototype pages explicitly retain the named safety and delivery checks', (
 });
 
 const rules = [
+  [0, 'prototype verifier records images from final page bytes',
+    [/prototype pages/i, /require|retain/i, /axstack-ui-verifier/i, /pass/i, /records?/i, /image-evidence\.js/i, /resource observations/i, /exact final bytes/i, /before delivery/i],
+    'Before delivery prototype pages require an axstack-ui-verifier pass that records resource observations with image-evidence.js on the exact final bytes.', [/require|retain/i, 'omit']],
   [0, 'top label and standalone colour fallback',
     [/prototype pages/i, /top/i, /(?:say|label|mark).*prototype/i, /colou?rs/i, /var\(--x, <fallback>\)/i, /standalone/i],
     'At the top, prototype pages say prototype and use colours with var(--x, <fallback>) for standalone use.', [/top/i, 'bottom']],
@@ -93,6 +96,13 @@ const rules = [
     [/prototype pages/i, /follow/i, /Inline pages/i, /prototype.page rules/i, /Delivery/i],
     'For prototype pages, follow Inline pages prototype-page rules and Delivery.', [/follow/i, 'ignore']],
 ];
+
+test('explain gates cannot restore the replaced missingImages contract', () => {
+  const accepted = (text) => !/\bmissingImages\b/.test(text);
+  for (const path of [...paths, 'skills/axstack/references/ui-verification.md']) expect(accepted(read(path)), path).toBe(true);
+  const text = read(paths[0]);
+  expect(accepted(`${text}\nRequire empty missingImages before delivery.`)).toBe(false);
+});
 for (const [index, name, terms, equivalent, inverse] of rules) {
   test(`prototype page contract: ${name}`, () => {
     const text = index === 2 ? read(paths[index]).split('## 3.')[1] : read(paths[index]);
