@@ -1,5 +1,6 @@
 import { readlink } from 'node:fs/promises';
 import { execute } from './probes-exec.js';
+import { udpSnapshot, udpDenial, udpProbePort } from './probes-udp.js';
 
 const loopback = (address) => /^127\./.test(address) || address === '::1';
 
@@ -37,7 +38,9 @@ export function classifyConnection(result, target, expected) {
       reachable = target.kind === 'dns' ? /ANSWER:\s*[1-9]\d*/.test(result.stdout) : true;
     }
     else if (target.kind === 'dns' && result.exitCode === 9 && /no servers could be reached|timed out/.test(result.stdout)) reachable = false;
-    // An arbitrary UDP listener may silently consume a packet. Silence proves nothing.
+    else if (target.protocol === 'udp' && target.kind !== 'dns' && expected === 'deny' && result.exitCode === 9 &&
+      (result.udpNoRoute === true || result.udpDenial?.sourcePort === udpProbePort && Number.isSafeInteger(result.udpDenial.before) && result.udpDenial.after === result.udpDenial.before + 1)) reachable = false;
+    // Silence alone, a stale/missing counter or unrelated/noisy traffic proves nothing.
     else return unknown();
   } else {
     let output;
@@ -83,12 +86,21 @@ async function network(id, expected, target, proxyId) {
     return classifyConnection({ hostNetworkNamespace, containerNetworkNamespace }, target, expected);
   }
   const prefix = ['nsenter', '--target', String(pid), '--net', '--', 'setpriv', '--reuid=65534', '--regid=65534', '--clear-groups', '--bounding-set=-all', '--inh-caps=-all', '--ambient-caps=-all', '--no-new-privs', '--'];
+  const udpDenied = target.protocol === 'udp' && target.kind !== 'dns' && expected === 'deny';
+  const noRoute = async () => {
+    const r = await runner([...prefix, 'ip', '-j', ...(target.address.includes(':') ? ['-6'] : ['-4']), 'route', 'get', target.address]);
+    return r.exitCode === 2 && !r.timedOut && !r.truncated && /RTNETLINK answers: Network is unreachable/.test(r.stderr);
+  };
+  // A disconnected namespace cannot hit a bridge's drop counter. A fresh kernel
+  // ENETUNREACH before and after the datagram is positive absence-of-path proof.
+  const routeAbsent = udpDenied && await noRoute();
+  const udpBefore = udpDenied && !routeAbsent ? await udpSnapshot(container, runner) : null;
   let argv, resolution;
   if (target.protocol === 'icmp') {
     argv = ['ping', '-n', '-c', '1', '-W', '2', target.address];
   } else if (target.kind === 'dns' || target.protocol === 'udp') {
     const resolver = target.kind === 'dns' ? target.id.includes('-stub:') ? '127.0.0.11' : target.id.startsWith('tailnet-dns:') ? '100.100.100.100' : '8.8.8.8' : target.address;
-    argv = ['dig', `@${resolver}`, '-p', String(target.port ?? 53), '+time=2', '+tries=1', target.protocol === 'tcp' ? '+tcp' : '+notcp', target.kind === 'dns' ? target.address : 'example.com', 'A'];
+    argv = ['dig', ...(udpBefore ? ['-b', `${target.address.includes(':') ? '::' : '0.0.0.0'}#${udpProbePort}`] : []), `@${resolver}`, '-p', String(target.port ?? 53), '+time=2', '+tries=1', target.protocol === 'tcp' ? '+tcp' : '+notcp', target.kind === 'dns' ? target.address : 'example.com', 'A'];
   } else {
     const host = target.address.includes(':') ? `[${target.address}]` : target.address;
     argv = ['curl', '--silent', '--show-error', '--insecure', '--connect-timeout', '2', '--max-time', '4', '--location', '--max-redirs', '5', '--output', '/dev/null', '--write-out', '%{json}', '--noproxy', '*'];
@@ -110,12 +122,17 @@ async function network(id, expected, target, proxyId) {
     }
     argv.push(`${target.port === 80 ? 'http' : 'https'}://${host}:${target.port ?? 443}/`);
   }
-  const result = { ...await runner([...prefix, ...argv]), ...(resolution ? { dns: resolution } : {}) };
+  const result = { udpDenial: null, udpNoRoute: false, ...await runner([...prefix, ...argv]), ...(resolution ? { dns: resolution } : {}) };
   const after = await liveContainer(id);
   if (after.State.Pid !== pid || await readText(`/proc/${pid}/stat`) !== start) {
     // /proc stat CPU counters may advance; compare start-time field, not all bytes.
     const ticks = (text) => text.slice(text.lastIndexOf(')') + 2).split(' ')[19];
     if (after.State.Pid !== pid || ticks(await readText(`/proc/${pid}/stat`)) !== ticks(start)) throw Error('container process replaced');
+  }
+  if (routeAbsent) result.udpNoRoute = await noRoute();
+  if (udpBefore) {
+    try { result.udpDenial = udpDenial(udpBefore, await udpSnapshot(await liveContainer(id), runner)); }
+    catch (error) { return { status: 'unknown', evidence: [JSON.stringify(result), String(error)] }; }
   }
   return classifyConnection(result, target, expected);
 }
@@ -128,7 +145,7 @@ const checker = createProbeChecker();
 if (import.meta.main) {
   const [mode, id, expected, raw, proxyId] = Bun.argv.slice(2);
   if (mode === '--help') {
-    console.log('Usage: bun probes-check.js identity CONTAINER | network CONTAINER allow|deny TARGET_JSON [PROXY_CONTAINER]\nTrusted synthetic probes only. Reads Docker inspect/top and /proc; starts bounded docker, nsenter, setpriv, curl/dig/ping processes; temporarily enters the container network namespace only; drops user/capabilities before sockets. No mounts, files, rules or containers created. No cleanup assets. Requires host root, Docker, util-linux, curl, dnsutils and iputils-ping. Outputs one pass/fail/unknown term; grants no authority. Exit 0 facts, 1 invalid input, 2 incomplete.');
+    console.log('Usage: bun probes-check.js identity CONTAINER | network CONTAINER allow|deny TARGET_JSON [PROXY_CONTAINER]\nTrusted synthetic probes only. Reads Docker inspect/top and /proc; starts bounded docker, nsenter, setpriv, curl/dig/ping processes; temporarily enters the container network namespace only; drops user/capabilities before sockets. Reads fresh owned UDP drop counters around reserved-source-port denial datagrams; fresh kernel no-route readback handles disconnected namespaces; silence alone stays unknown. No mounts, files, rules or containers created. No cleanup assets. Requires host root, Docker, util-linux, curl, dnsutils and iputils-ping. Outputs one pass/fail/unknown term; grants no authority. Exit 0 facts, 1 invalid input, 2 incomplete.');
   } else {
     let result;
     try {
