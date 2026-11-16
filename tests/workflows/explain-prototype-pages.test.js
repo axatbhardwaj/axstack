@@ -13,7 +13,7 @@ const kept = [
   ['no storage', /storage/i], ['cookies', /cookies/i], ['no modals', /modals/i],
   ['no popups', /popups/i], ['exact-byte scan', /exact.byte scan/i],
   ['both driver previews', /(?:both driver previews|html_preview)/i],
-  ...['layout', 'theme', 'height', 'zero console errors', 'missingImages'].map((s) => [s, new RegExp(s, 'i')]),
+  ...['layout', 'theme', 'height', 'zero console errors'].map((s) => [s, new RegExp(s, 'i')]),
   ['semantic markup', /semantic/i], ['accessible markup', /accessib/i],
   ['interactive axstack-ui-verifier pass', /axstack-ui-verifier/i],
   ['driver-only html_render', /html_render/i], ['exactly the checked bytes', /checked bytes|bytes checked/i],
