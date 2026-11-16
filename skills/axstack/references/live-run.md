@@ -5,21 +5,22 @@ against the installed released version. Failure, unavailability and exhausted
 budgets are recorded and never block publication. Helpers capture facts; they
 never launch T3, enforce runtime budgets, schedule, retry or grant authority.
 
-Use the installed `scripts/check-run.js` in both phases. Keep a clean release
-checkout at its tag (`REPO`); verify its package version and installed skills
-against the released package using the release/install checks. Set `CAPTURE` to
-the absolute installed check-run path, `OUT` to an existing owned 0700 evidence
-directory outside source/cwd/writable roots, and `RELEASE_HEAD` to the full
-release commit SHA. Keep the raw installed-version check and T3 receipts there.
-The catalog comes from that checkout's existing `tests/workflows/*scenarios.json`;
-tests are not installed with the package. No live-home edits are needed.
-Trace requires the current and planned catalog hashes to match its committed
-blob at the captured head; an unreadable blob remains unknown. A `--snapshot`
-cannot substitute different catalog bytes or a path absent from that commit.
-It also checks the package version at that head and the planning helper's
-realpath/hash against the trace helper. Use the same installed helper and Bun
-realpath in both captures. The trace trusts its own interpreter: a fake bun earlier
-on PATH than the trace's own bun stays undetectable; verify that interpreter independently.
+Use installed `scripts/check-run.js` for both phases. Set `REPO` to a clean
+release checkout at its tag and `RELEASE_HEAD` to its full commit SHA. Verify
+package version and installed skills with the release/install checks.
+Set `CAPTURE` to the absolute installed helper and `OUT` to an existing owned
+0700 evidence directory outside source/cwd/writable roots. Retain installed
+version checks and T3 receipts there. Use that checkout's existing
+`tests/workflows/*scenarios.json`; catalogs are not installed. No live-home edits.
+Trace checks catalog hashes and package version against captured-head bytes;
+unreadable bytes stay unknown. Replacement objects are disabled. It trusts
+the release checkout's object database as Git reads it, the Git environment
+and git binary. Overwritten loose objects and redirected `GIT_OBJECT_DIRECTORY`
+are undetected; `git fsck` in a clean environment helps but does not close the
+redirected-directory case. Verify independently.
+Use the same installed helper and Bun realpaths in both captures; helper
+hashes must match. Trace trusts its own interpreter: a fake bun earlier on PATH
+than the trace's own bun stays undetectable; verify it independently.
 
 ## Before launch
 
