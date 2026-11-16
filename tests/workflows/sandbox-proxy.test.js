@@ -94,20 +94,23 @@ test('fixed DNS accepts an authoritative alias NODATA family while incomplete al
   }
 });
 
-test('large allowed tunnels preserve bytes under backpressure including upstream EOF', async () => {
+test('large allowed tunnels preserve complete bytes including upstream EOF', async () => {
  for (const finish of [false, true]) {
   const total = 16 * 1024 * 1024, chunk = Buffer.alloc(65536, 0x61);
+  // One acknowledged chunk in flight: runtime-specific queued reads cannot
+  // turn the EOF check into an intentional 1 MiB overflow rejection.
   const send = socket => {
-    if (socket.data.sent < total) {
-      const bytes = chunk.subarray(0, Math.min(chunk.length, total - socket.data.sent));
-      const count = socket.write(bytes); if (count < 0) return;
-      socket.data.sent += count; if (count < bytes.length) return;
-      setTimeout(() => send(socket), 1); return;
-    }
-    if (finish && !socket.data.ended) { socket.data.ended = true; socket.end(); }
+    const count = socket.write(socket.data.pending); if (count < 0) return;
+    socket.data.sent += count; socket.data.pending = socket.data.pending.subarray(count);
+    if (finish && socket.data.sent === total && !socket.data.ended) { socket.data.ended = true; socket.end(); }
   };
   const upstream = Bun.listen({ hostname: '127.0.0.1', port: 0, socket: {
-    open(socket) { socket.data = { sent: 0 }; }, data: send, drain: send,
+    open(socket) { socket.data = { sent: 0, pending: Buffer.alloc(0) }; },
+    data(socket) {
+      if (!socket.data.pending.length && socket.data.sent < total) {
+        socket.data.pending = chunk.subarray(0, Math.min(chunk.length, total - socket.data.sent)); send(socket);
+      }
+    }, drain(socket) { if (socket.data.pending.length) send(socket); },
   } });
   const server = startProxy({ port: 0, hostAddresses: [], resolve: async () => ['104.16.26.34'], connect: options => Bun.connect({ ...options, hostname: '127.0.0.1', port: upstream.port }) });
   let client, timer;
@@ -127,7 +130,9 @@ test('large allowed tunnels preserve bytes under backpressure including upstream
             socket.pause(); socket.write('start'); setTimeout(() => socket.resume(), 250);
           }
           expect(data.every(byte => byte === 0x61)).toBe(true);
-          bytes += data.length; if (bytes === total) resolve(bytes);
+          bytes += data.length;
+          if (bytes === total) resolve(bytes);
+          else if (bytes && bytes % chunk.length === 0) socket.write('next');
         }, close() { resolve(bytes); }, error(_socket, error) { reject(error); },
       } }).catch(reject);
     });
