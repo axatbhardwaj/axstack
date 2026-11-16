@@ -2,6 +2,7 @@ import { lstatSync, readFileSync, readdirSync, realpathSync, writeFileSync } fro
 import { runCommand } from '../scripts/command-capture.js';
 import { captureTerms, sha256, sourceIdentity } from '../scripts/capture-identity.js';
 import { hold } from './launcher-policy.js';
+import { checkFilesystem } from './probes-storage.js';
 
 export function receiptBytes(evidenceDir) {
   let bytes = 0;
@@ -25,7 +26,7 @@ export function verifyCapture(path, p, argv) {
   if (step.cwd !== realpathSync(p.request.repo) || JSON.stringify(step.argv) !== JSON.stringify(argv) || JSON.stringify(step.spawnArgv) !== JSON.stringify(workloadExec(p, role, argv)) || step.sandboxImageDigest !== p.containers.find(c => c.role === 'test').image.split('@')[1] || step.tool.name !== 'axstack-sandbox' || step.tool.version !== '1.0.0') hold('capture does not match effective sandbox plan');
   return { schemaVersion: 1, receiptPath: realpathSync(path), receiptSha256: sha256(bytes) };
 }
-export async function recordCapture(p, evidenceDir, active) {
+export async function recordCapture(p, evidenceDir, active, checkStorage = role => checkFilesystem({ storage: p.storage, containerId: p.containers.find(c => c.role === role).id })) {
   const registryPlanBytes = new TextEncoder().encode(`${JSON.stringify(p, null, 2)}\n`).length;
   if (receiptBytes(evidenceDir) + registryPlanBytes > p.policy.receiptMaxBytes / 2) hold('insufficient receipt directory budget');
   const initial = sourceIdentity(p.request);
@@ -36,6 +37,7 @@ export async function recordCapture(p, evidenceDir, active) {
   for (const role of ['fetch', 'test']) {
     const argv = role === 'fetch' ? p.request.fetchArgv : p.request.testArgv;
     if (!argv.length) continue;
+    await checkStorage(role);
     active();
     const spawnArgv = workloadExec(p, role, argv);
     const reserveBytes = 16384 + 4 * new TextEncoder().encode(JSON.stringify({ binding, argv, spawnArgv, initial })).length;
