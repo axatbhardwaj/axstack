@@ -52,11 +52,11 @@ test('weekly F repairs use shared proof and mixed receipts keep both evidence pa
     && !/\b(?:may|should|must) (?:weaken|loosen)\b/i.test(sentence))).toBe(true);
 });
 
-test('weekly admission holds without authority or a canary and stops on exhausted budget', () => {
+test('weekly admission holds without authority and stops on exhausted budget', () => {
   expect(sentences(policy).some((sentence) =>
-    [/\bmissing\b/i, /\bauthority\b/i, /\b(?:no|without)\b/i, /\bpassing\b/i,
-      /\bnative canary\b/i, /\b(?:hold\w*|held)\b/i, /\badmission\b/i]
+    [/\bmissing\b/i, /\bauthority\b/i, /\b(?:hold\w*|held)\b/i, /\badmission\b/i]
       .every((concept) => concept.test(sentence))
+    && !/\bcanary\b/i.test(sentence)
     && !/\b(?:do not|never) hold\w*\b/i.test(sentence))).toBe(true);
   expect(sentences(policy).some((sentence) =>
     [/\bbudget\b/i, /\b(?:runs out|exhaust\w*)\b/i, /\bstop\w*\b/i, /\breport\w*\b/i]
