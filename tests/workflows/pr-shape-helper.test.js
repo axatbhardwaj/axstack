@@ -60,7 +60,7 @@ function invoke(repo, argv) {
   let stdout = '', stderr = '';
   try {
     process.chdir(repo);
-    const code = main(argv, { stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } });
+    const code = main(argv.includes('--repo') ? argv : ['--repo', repo, ...argv], { stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } });
     return { code, stdout, stderr, data: stdout.startsWith('{') ? JSON.parse(stdout) : null };
   } finally { process.chdir(cwd); }
 }
@@ -250,7 +250,7 @@ test.each([[], ['--base'], ['--base', 'main'], ['--head', 'HEAD'],
 test('outside Git and unresolved refs give actionable errors', () => {
   const outside = invoke(root, ['--base', 'main', '--head', 'HEAD']);
   expect(outside.code).toBe(1);
-  expect(outside.stderr).toMatch(/Git checkout/i);
+  expect(outside.stderr).toMatch(/--repo.*Git.checkout/i);
   expect(outside.data?.['sandbox-path']?.status).toBe('unknown');
   const { repo } = fixture();
   const invalid = invoke(repo, ['--base', 'missing', '--head', 'HEAD']);
@@ -371,7 +371,7 @@ test.each(['gitmodules', 'diff.ignoreSubmodules', 'global diff.ignoreSubmodules'
     git(repo, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'PR head');
     const head = git(repo, 'rev-parse', 'HEAD');
     const result = Bun.spawnSync([process.execPath, `${import.meta.dir}/../../skills/axstack/scripts/pr-shape.js`,
-      '--base', base, '--head', 'HEAD'], { cwd: repo, env: { ...process.env, GIT_CONFIG_GLOBAL: globalConfig } });
+      '--repo', repo, '--base', base, '--head', 'HEAD'], { cwd: root, env: { ...process.env, GIT_CONFIG_GLOBAL: globalConfig } });
     expect(result.exitCode, result.stderr.toString()).toBe(0);
     const data = JSON.parse(result.stdout.toString());
     expect(data.inputs.head).toBe(head);
