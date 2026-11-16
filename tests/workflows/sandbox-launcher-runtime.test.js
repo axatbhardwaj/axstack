@@ -100,3 +100,24 @@ test('reap caller assets cannot replace the packaged host binding', async () => 
   await expect(h.launcher().reap({ assets: callerAssets, host: h.input.host })).rejects.toMatchObject({ sandboxHold: true });
   expect(h.events).toEqual([]);
 });
+
+test('recorded two-run memory budget failure holds before admission or attachment', async () => {
+  const h = harness(), p = h.launcher().plan(h.input);
+  h.input.assets.hostBudget.memoryBudgetBytes = p.caps.perRunMemoryBytes * 2 + h.input.assets.hostBudget.reserveMemoryBytes - 1;
+  await expect(h.launcher().run({ plan: p, evidenceDir: '/evidence' })).rejects.toMatchObject({ sandboxHold: true });
+  expect(h.events).toEqual([]);
+});
+
+test('low free disk holds before admission even with sufficient memory and recorded budget', async () => {
+  const h = harness(), p = h.launcher().plan(h.input);
+  h.host({ ...h.input.host, freeDiskBytes: p.caps.perRunDiskBytes + h.input.assets.hostBudget.reserveDiskBytes - 1 });
+  await expect(h.launcher().run({ plan: p, evidenceDir: '/evidence' })).rejects.toMatchObject({ sandboxHold: true });
+  expect(h.events).toEqual([]);
+});
+
+test('unknown free capacity holds before admission rather than becoming a passing fact', async () => {
+  const h = harness(), p = h.launcher().plan(h.input);
+  h.host({ ...h.input.host, freeDiskBytes: NaN });
+  await expect(h.launcher().run({ plan: p, evidenceDir: '/evidence' })).rejects.toMatchObject({ sandboxHold: true });
+  expect(h.events).toEqual([]);
+});
