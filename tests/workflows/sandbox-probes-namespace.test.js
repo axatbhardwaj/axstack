@@ -89,3 +89,15 @@ test('host link-local endpoints retain their zone and prove off-link separation 
     else expect(curl.at(-1)).toContain('[fe80::1%25eth0]');
   }
 });
+
+test('declared plain TCP services use a positive socket handshake without assuming TLS or HTTP', async () => {
+  const calls = [], container = { State: { Running: true, Pid: 1234 }, NetworkSettings: { Networks: {} } };
+  const checker = createProbeChecker({ readText: async () => 'stable process', runner: async argv => {
+    calls.push(argv);
+    if (argv[0] === 'docker') return { exitCode: 0, stdout: JSON.stringify([container]) };
+    return { exitCode: 0, stdout: '{"tcpConnected":true,"peerAddress":"172.30.0.2"}' };
+  } });
+  expect((await checker.network('test', 'allow', { kind: 'fixed', address: '172.30.0.2', port: 5432, protocol: 'tcp', service: true })).status).toBe('pass');
+  expect(calls.some(a => a.includes('curl'))).toBe(false);
+  expect(calls.some(a => a.includes('--eval') && a.includes('172.30.0.2'))).toBe(true);
+});
