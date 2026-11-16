@@ -122,8 +122,8 @@ See [Host operations](docs/host-operations.md#chat-run-watch-activation) for wak
 See [Chat-run PR watch](docs/workflows.md#chat-run-pr-watch) for the lifecycle and quiet cadence.
 
 An optional native T3 review manager runs finite peer-review passes every 30 minutes
-(`everyMs:1800000`); the review automation never merges for you. Activation needs live
-host validation. See [PR-manager setup and safety](docs/host-operations.md#optional-native-peer-review-automation).
+(`everyMs:1800000`); the review automation never merges for you. Installed guidance
+does not prove live behavior. See [PR-manager setup and safety](docs/host-operations.md#optional-native-peer-review-automation).
 
 
 ## Automatic merge boundaries
