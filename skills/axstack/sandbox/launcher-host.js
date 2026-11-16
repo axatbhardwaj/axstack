@@ -69,8 +69,8 @@ export async function observeHost(a) {
     terms: [fact('host-addresses', addresses.length ? 'pass' : 'unknown', 'ip -j address show'), fact('host-memory', memory ? 'pass' : 'unknown', '/proc/meminfo MemAvailable'),
       fact('host-process-visibility', readFileSync('/proc/1/comm', 'utf8').trim() === 'systemd' ? 'pass' : 'unknown', 'approved host requires visible systemd PID 1; hidden host processes hold reaping')] };
 }
-function privateDirectory(path, create = false) {
-  safePath(path);
+function privateDirectory(path, create = false, allowGitMetadata = false) {
+  safePath(path, { allowGitMetadata });
   if (create) mkdirSync(path, { mode: 0o700, recursive: true });
   const s = lstatSync(path);
   if (!s.isDirectory() || s.isSymbolicLink() || s.uid !== process.getuid() || (s.mode & 0o777) !== 0o700 || realpathSync(path) !== path) hold(`require owned 0700 real directory: ${path}`);
@@ -129,7 +129,7 @@ export async function records(a, observe = execute) {
   return runs;
 }
 export async function savePlan(p, evidenceDir, directory = ownedDirectory) {
-  privateDirectory(evidenceDir);
+  privateDirectory(evidenceDir, false, true);
   const sourceRoot = realpathSync(p.request.repo);
   if (evidenceDir === sourceRoot || evidenceDir.startsWith(`${sourceRoot}/`) || evidenceDir === directory || evidenceDir.startsWith(`${directory}/`)) hold('evidence must be outside source and owned writable roots');
   const dir = `${directory}/${p.runId}`;
