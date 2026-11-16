@@ -426,5 +426,63 @@
     "run": "20261115-slop-meta-improve",
     "sources": ["run-evidence:author-T21-A/discovery.json", "run-evidence:author-T21-A/excluded-discoveries.json", "run-evidence:author-T21-A/product-image-tools.json"],
     "meaning": "Historical evidence citations only. run-evidence resolves in the owning run record; no host path or evidence file is a runtime dependency of this JSON."
-  }
+  },
+  "selectedProvisioning": [
+    {
+      "id": "node-20",
+      "version": "20.20.2",
+      "algorithm": "sha256",
+      "checksum": "df770b2a6f130ed8627c9782c988fda9669fa23898329a61a871e32f965e007d",
+      "source": "https://nodejs.org/dist/v20.20.2/SHASUMS256.txt"
+    },
+    {
+      "id": "python-3.12",
+      "version": "3.12.16",
+      "algorithm": "sha256",
+      "checksum": "b5796915dc45ff745cfb4e990a7e7c93d6f546328a102ce31448d69ebc37575c",
+      "source": "https://www.python.org/ftp/python/3.12.16/Python-3.12.16.tar.xz.sigstore"
+    },
+    {
+      "id": "python-3.13",
+      "version": "3.13.18",
+      "algorithm": "sha256",
+      "checksum": "abb0102e6d4ae027509bcb82327d9dd85515b44a3ba8ad538cfc5e9847029f68",
+      "source": "https://www.python.org/ftp/python/3.13.18/Python-3.13.18.tar.xz.sigstore"
+    },
+    {
+      "id": "go",
+      "version": "1.27.4",
+      "algorithm": "sha256",
+      "checksum": "7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840",
+      "source": "https://go.dev/dl/?mode=json"
+    },
+    {
+      "id": "jdk-11",
+      "version": "11.0.33+10",
+      "algorithm": "sha256",
+      "checksum": "c4b8eaf56c93b95b689ffc08d155df1bcdbbffb666f8f71d21d97aedaea6f0ec",
+      "source": "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.33%2B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.33_10.tar.gz.sha256.txt"
+    },
+    {
+      "id": "jdk-25",
+      "version": "25.0.5+8.0.LTS",
+      "algorithm": "sha256",
+      "checksum": "68982529869257d0ee6b824ec5aa270ff8b118bb438670da0b97ebdab178d7fb",
+      "source": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz.sha256.txt"
+    },
+    {
+      "id": "android-build-tools",
+      "version": "build-tools;37.0.0 revision 37.0.0",
+      "algorithm": "sha1",
+      "checksum": "70954e99f4c3d9d46ee70fa32624672fe7cd6ebe",
+      "source": "https://dl.google.com/android/repository/repository2-3.xml"
+    },
+    {
+      "id": "android-cmdline",
+      "version": "cmdline-tools;23.0 revision 23.0",
+      "algorithm": "sha1",
+      "checksum": "e025545c62a8e64c7559119566a569fb1dec5f60",
+      "source": "https://dl.google.com/android/repository/repository2-3.xml"
+    }
+  ]
 }
