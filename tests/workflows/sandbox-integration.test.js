@@ -100,3 +100,8 @@ test('a full fleet listener inventory fits the fixed receipt budget without losi
     expect(new TextEncoder().encode(bytes).length * 2).toBeLessThanOrEqual(p.policy.receiptMaxBytes);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test('the proxy embedded DNS forwards only to the fixed public resolvers, never the host tailnet resolver', async () => {
+  const a = await input(), p = plan(a), proxy = p.containers.find(c => c.role === 'proxy');
+  expect(proxy.argv.flatMap((v, i) => v === '--dns' ? [proxy.argv[i + 1]] : [])).toEqual([a.assets.proxy.resolverIpv4, a.assets.proxy.resolverIpv6]);
+});
