@@ -41,7 +41,7 @@ async function locked(action, input) {
   const [stdout, stderr, exitCode] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
   let result;
   try { result = JSON.parse(stdout); } catch { throw hold(`Storage lock/worker failed (${exitCode}): ${stderr}`); }
-  if (exitCode || result.error) throw Object.assign(Error(result.error ?? stderr), { sandboxHold: result.sandboxHold === true });
+  if (exitCode || result.error) throw Object.assign(Error(result.error ?? stderr), { sandboxHold: result.sandboxHold === true, terms: result.terms });
   return result.value;
 }
 
@@ -65,7 +65,7 @@ Exit: 0 facts, 1 invalid input/I/O, 2 containment or cleanup hold.`);
       const value = await createStorage()[process.argv[3]](input);
       console.log(JSON.stringify({ value }));
     } catch (error) {
-      console.log(JSON.stringify({ error: error.message, sandboxHold: error.sandboxHold === true }));
+      console.log(JSON.stringify({ error: error.message, sandboxHold: error.sandboxHold === true, terms: error.terms }));
       process.exitCode = error.sandboxHold ? 2 : 1;
     }
   } else {
