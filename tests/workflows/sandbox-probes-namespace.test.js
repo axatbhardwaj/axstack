@@ -71,3 +71,21 @@ test('registry socket proofs stop at the first response and explicit redirect pr
   await tools.network('fetch', 'deny', { kind: 'fixed', address: 'dl.google.com', port: 443, protocol: 'tcp', redirect: true });
   expect(tools.calls.find(a => a.includes('curl'))).toContain('--location');
 });
+
+test('host link-local endpoints retain their zone and prove off-link separation without testing another interface', async () => {
+  for (const scope of ['outside0', 'owned0']) {
+    const calls = [];
+    const container = { State: { Running: true, Pid: 1234 }, NetworkSettings: { Networks: { fetch: { GlobalIPv6Address: 'fd73::2' } } } };
+    const checker = createProbeChecker({ readText: async () => 'stable process', readNamespace: async path => path.includes('self') ? 'net:[1]' : 'net:[2]', runner: async argv => {
+      calls.push(argv);
+      if (argv[0] === 'docker') return { exitCode: 0, stdout: JSON.stringify(argv[1] === 'network' ? [{ Name: 'fetch', Driver: 'bridge', Options: { 'com.docker.network.bridge.name': 'owned0' } }] : [container]) };
+      if (argv.includes('ip')) return { exitCode: 0, stdout: JSON.stringify([{ ifname: 'eth0', addr_info: [{ local: 'fd73::2' }] }]) };
+      return { exitCode: 0, stdout: '{"remote_ip":"fe80::1","http_code":"200"}' };
+    } });
+    const result = await checker.network('fetch', 'deny', { kind: 'host-listener', address: `fe80::1%${scope}`, port: 443, protocol: 'tcp' });
+    expect(result.status).toBe(scope === 'outside0' ? 'pass' : 'fail');
+    const curl = calls.find(a => a.includes('curl'));
+    if (scope === 'outside0') expect(curl).toBeUndefined();
+    else expect(curl.at(-1)).toContain('[fe80::1%25eth0]');
+  }
+});
