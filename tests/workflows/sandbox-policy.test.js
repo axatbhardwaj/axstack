@@ -5,13 +5,13 @@ import { checkRule, prohibits, requires } from './prose-contract.js';
 const root = new URL('../../', import.meta.url).pathname;
 const agents = await Bun.file(`${root}AGENTS.md`).text();
 const path = 'skills/axstack/sandbox/';
-const mergeConcepts = [/PR/i, /chang|modif|touch/i, /any|every|all/i, /skills\/axstack\/sandbox\//, /stops?|halts?|holds?/i, /merge-ready/i, /user/i];
+const mergeConcepts = [/PR/i, /chang|modif|touch/i, /any|every|all/i, /skills\/axstack\/sandbox\//, /tests\/workflows\/sandbox-\*/, /stops?|halts?|holds?/i, /merge-ready/i, /user/i];
 const sandboxRule = (text, directoryExists) => directoryExists && requires(text, ...mergeConcepts);
 const holdsSandbox = (text) => sandboxRule(text, existsSync(`${root}${path}`));
 
 test('every sandbox path change stops at merge-ready for the user, and the directory must exist', () => {
   checkRule(agents, holdsSandbox,
-    'Every PR modifying any path under skills/axstack/sandbox/ halts at merge-ready for the user.',
+    'Every PR modifying any path under skills/axstack/sandbox/ or tests/workflows/sandbox-* halts at merge-ready for the user.',
     [[/stops?|halts?|holds?/i, 'continues'], [/for the user/i, 'for automated merging']], mergeConcepts);
   expect(sandboxRule(agents, false)).toBe(false);
 });
