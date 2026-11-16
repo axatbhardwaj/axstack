@@ -1,0 +1,36 @@
+import { expect, test } from 'bun:test';
+import { provisionPlan } from '../../skills/axstack/sandbox/probes-image-build.js';
+
+const pins = await Bun.file(new URL('../../skills/axstack/sandbox/probes-image-pins.json', import.meta.url)).json();
+
+test('provision plan verifies each frozen download before installing it and never executes content scripts', () => {
+  const plan = provisionPlan(pins);
+  expect(plan.length).toBe(pins.artifacts.length);
+  for (const artifact of pins.artifacts) {
+    const step = plan.find((s) => s.id === artifact.id);
+    expect(step.verify.checksum).toBe(artifact.checksum);
+    expect(step.downloadArgv.at(-1)).toBe(artifact.url);
+    expect(step.evidence).toContain(artifact.source);
+    expect(step.status).toBe('unknown');
+    if (artifact.kind === 'content') {
+      expect(step.steps.some((s) => s.argv.includes('write-tree'))).toBe(true);
+      expect(step.steps.some((s) => s.argv.some((a) => /(?:install|configure|build)\.sh/.test(a)))).toBe(false);
+      expect(step.expectedTree).toBe(artifact.tree);
+    }
+  }
+});
+
+test('required toolchains are provisioned with version and published checksum, apart from recorded Swift scope', async () => {
+  const inventory = await Bun.file(new URL('../../skills/axstack/sandbox/inventory.json', import.meta.url)).json();
+  const ids = new Set(pins.artifacts.map((a) => a.id));
+  for (const entry of inventory.requiredToolchains) {
+    const mapped = { 'node-next': 'node-20', 'node-dashboard': 'node-20', 'python-312': 'python-3.12', 'python-313': 'python-3.13' }[entry.id] ?? entry.id;
+    if (['swift', 'swiftlint'].includes(mapped)) continue;
+    expect(ids.has(mapped), entry.id).toBe(true);
+  }
+  for (const a of pins.artifacts) {
+    expect(a.version.length).toBeGreaterThan(0);
+    expect(a.source).toMatch(/^https:\/\//);
+    expect(a.checksum).toMatch(new RegExp(`^[a-f0-9]{${{ sha1: 40, sha256: 64, sha512: 128 }[a.algorithm]}}$`));
+  }
+});
