@@ -13,8 +13,8 @@ Evidence: <run dir>/evidence/<dispatch>/ (report and probe paths)
 Verdict: <APPROVE | REQUEST_CHANGES | INCOMPLETE>
 Scope: <PASS | FINDINGS | UNKNOWN | n/a — separate diligence>
 Coverage: COMPLETE | INCOMPLETE — <angles + acceptance + executable evidence checked>
-Limitations: <ledger path + inspector report + item IDs/dispositions, or none>
-Final-head check: <check-run receipt path + identity (#/argv -> #/logPath, #/exitCode) for the reviewer's final-head drive>
+Limitations: <ledger path + inspector report + item IDs/dispositions/tags, including changed-behavior: unproven where applicable, or none>
+Final-head check: <check-run receipt path + identity + cited fields: #/argv -> #/logPath, #/exitCode for the reviewer's final-head drive>
 Applicable verify-<app>: <Final-head check records the reviewer's local drive of each affected feature at the pinned final head>. Use n/a — <reason> when no skill covers the affected behavior.
 Findings: <severity + evidence + consequence each>
 Pre-existing: <each item with reference revision and evidence, or none>
