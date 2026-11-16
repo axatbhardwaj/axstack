@@ -31,21 +31,22 @@ export function classifyConnection(result, target, expected) {
   }
   let reachable, retained = result;
   if (target.protocol === 'icmp') {
-    if (![0, 1].includes(result.exitCode)) return unknown();
+    if (![0, 1].includes(result.exitCode) && !(result.exitCode === 2 && /^ping: connect: Network is unreachable\s*$/.test(result.stderr))) return unknown();
     reachable = result.exitCode === 0;
   } else if (target.protocol === 'udp' || target.kind === 'dns') {
     if (/status: (NOERROR|NXDOMAIN|REFUSED|SERVFAIL)/.test(result.stdout) && result.exitCode === 0) {
       reachable = target.kind === 'dns' ? /ANSWER:\s*[1-9]\d*/.test(result.stdout) : true;
     }
     else if (target.kind === 'dns' && result.exitCode === 9 && /no servers could be reached|timed out/.test(result.stdout)) reachable = false;
-    else if (target.protocol === 'udp' && target.kind !== 'dns' && expected === 'deny' && result.exitCode === 9 &&
+    else if (target.protocol === 'udp' && target.kind !== 'dns' && expected === 'deny' && (result.exitCode === 9 || result.exitCode === 0 && result.stdout.trim() === '{"udpSent":1}') &&
       (result.udpNoRoute === true || result.udpDenial?.sourcePort === udpProbePort && Number.isSafeInteger(result.udpDenial.before) && result.udpDenial.after === result.udpDenial.before + 1)) reachable = false;
     // Silence alone, a stale/missing counter or unrelated/noisy traffic proves nothing.
     else return unknown();
   } else {
     let output;
     try { output = JSON.parse(result.stdout); } catch { return unknown(); }
-    retained = { ...result, stdout: JSON.stringify({ remote_ip: output.remote_ip, http_connect: output.http_connect, http_code: output.http_code }) };
+    retained = { ...result, stdout: JSON.stringify({ remote_ip: output.remote_ip, http_connect: output.http_connect, http_code: output.http_code, ...(target.redirect ? { num_redirects: output.num_redirects } : {}) }) };
+    if (target.redirect && !(Number(output.num_redirects) >= 1)) return unknown();
     if (Number(output.http_connect) === 403) reachable = false;
     else if (output.remote_ip) reachable = true;
     else if ([6, 7, 28].includes(result.exitCode)) reachable = false;
@@ -99,12 +100,17 @@ async function network(id, expected, target, proxyId) {
   let argv, resolution;
   if (target.protocol === 'icmp') {
     argv = ['ping', '-n', '-c', '1', '-W', '2', target.address];
+  } else if (udpBefore) {
+    // send() reaches the kernel synchronously; the fresh terminal-drop counter,
+    // not waiting for a response, proves this single datagram was denied.
+    const send = `const [address, port, source] = Bun.argv.slice(1); const socket = await Bun.udpSocket({ hostname: address.includes(':') ? '::' : '0.0.0.0', port: Number(source) }); try { if (!socket.send(Buffer.alloc(12), Number(port), address)) throw Error('UDP send failed'); console.log('{"udpSent":1}'); } finally { socket.close(); }`;
+    argv = [process.execPath, '--eval', send, '--', target.address, String(target.port), String(udpProbePort)];
   } else if (target.kind === 'dns' || target.protocol === 'udp') {
     const resolver = target.kind === 'dns' ? target.id.includes('-stub:') ? '127.0.0.11' : target.id.startsWith('tailnet-dns:') ? '100.100.100.100' : (await readProxyConfig()).resolverIpv4 : target.address;
     argv = ['dig', ...(udpBefore ? ['-b', `${target.address.includes(':') ? '::' : '0.0.0.0'}#${udpProbePort}`] : []), `@${resolver}`, '-p', String(target.port ?? 53), '+time=2', '+tries=1', target.protocol === 'tcp' ? '+tcp' : '+notcp', target.kind === 'dns' ? target.address : 'example.com', 'A'];
   } else {
     const host = target.address.includes(':') ? `[${target.address}]` : target.address;
-    argv = ['curl', '--silent', '--show-error', '--insecure', '--connect-timeout', '2', '--max-time', '4', '--location', '--max-redirs', '5', '--output', '/dev/null', '--write-out', '{"remote_ip":"%{remote_ip}","http_connect":"%{http_connect}","http_code":"%{http_code}"}', '--noproxy', '*'];
+    argv = ['curl', '--silent', '--show-error', '--insecure', '--connect-timeout', '2', '--max-time', '4', ...(target.redirect ? ['--location', '--max-redirs', '5'] : []), '--output', '/dev/null', '--write-out', '{"remote_ip":"%{remote_ip}","http_connect":"%{http_connect}","http_code":"%{http_code}","num_redirects":"%{num_redirects}"}', '--noproxy', '*'];
     if (proxyId) {
       const proxy = await liveContainer(proxyId);
       const peers = Object.entries(proxy.NetworkSettings.Networks).filter(([name]) => container.NetworkSettings.Networks[name]);
@@ -151,7 +157,11 @@ if (import.meta.main) {
     let result;
     try {
       if (mode === 'identity') result = await checker.identity(id);
-      else if (mode === 'network') result = await checker.network(id, expected, JSON.parse(raw), proxyId);
+      else if (mode === 'network') {
+        const value = JSON.parse(raw);
+        const target = Array.isArray(value) ? Object.fromEntries(['kind', 'address', 'port', 'protocol', 'id', 'redirect'].map((key, i) => [key, value[i]])) : value;
+        result = await checker.network(id, expected, target, proxyId);
+      }
       else throw Error('invalid probe mode; use --help');
     } catch (error) { result = { status: 'unknown', evidence: [String(error)] }; }
     console.log(JSON.stringify(result));
