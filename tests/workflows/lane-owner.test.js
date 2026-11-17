@@ -5,7 +5,7 @@ const script = `${import.meta.dir}/../../skills/axstack/scripts/lane-owner.js`;
 const owner = (changes = {}) => ({ threadId: 'pass', latestRunId: 'run-1', projectId: 'lane',
   parentThreadId: null, status: 'completed', settled: true, ...changes });
 const job = (changes = {}) => owner({ threadId: 'job', latestRunId: 'review-1', parentThreadId: 'pass', ...changes });
-const saved = (threads) => ({ args: { projectId: 'lane', includeSubagents: true },
+const saved = (threads) => ({ preSettle: true, args: { projectId: 'lane', includeSubagents: true },
   value: { threads, nextCursor: null, total: threads.length } });
 function drive(input, extra = []) {
   const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/lane-owner-`);
@@ -22,18 +22,18 @@ function drive(input, extra = []) {
 const status = (result, id) => result.report.terms.find(t => t.id === id)?.status;
 
 test('live earlier pass blocks inactivity while a settled tree is measured inactive', () => {
-  const live = drive(saved([owner({ status: 'running', settled: false }), job()]));
+  const live = drive(saved([job(), owner({ status: 'running', settled: false })]));
   expect(live.exit).toBe(0);
   expect(status(live, 'owner.inactive')).toBe('fail');
   expect(status(live, 'owner.run')).toBe('pass');
-  const settled = drive(saved([owner(), job()]));
+  const settled = drive(saved([job(), owner()]));
   expect(settled.exit).toBe(0);
   expect(settled.report.terms.every(t => t.status === 'pass')).toBe(true);
   expect(settled.report.input.sha256).toMatch(/^[a-f0-9]{64}$/);
 });
 
 test('a terminal owner cannot hide live review jobs or grandchildren', () => {
-  const result = drive(saved([owner(), job(), job({ threadId: 'reviewer', parentThreadId: 'job', status: 'waiting', settled: false })]));
+  const result = drive(saved([job({ threadId: 'reviewer', parentThreadId: 'job', status: 'waiting', settled: false }), job(), owner()]));
   expect(status(result, 'owner.inactive')).toBe('pass');
   expect(status(result, 'jobs.inactive')).toBe('fail');
   expect(JSON.stringify(result.report.terms)).toContain('reviewer');
@@ -80,7 +80,7 @@ for (const change of [
   s => { delete s.value.threads[0].parentThreadId; }, s => { s.isError = true; },
 ]) {
   test('truncated, filtered or malformed inventory never proves release', () => {
-    const input = saved([owner(), job()]); change(input);
+    const input = saved([job(), owner()]); change(input);
     const result = drive(input);
     expect(result.exit).toBe(2);
     expect(result.report.terms.every(t => t.status === 'unknown')).toBe(true);
@@ -112,4 +112,24 @@ test('CLI help, invalid invocation, malformed JSON and missing file have distinc
     expect(call('--input', path, '--owner-thread', 'pass', '--owner-run', 'run-1').exitCode).toBe(1);
     expect(call('--input', `${dir}/missing`, '--owner-thread', 'pass', '--owner-run', 'run-1').exitCode).toBe(2);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+
+test('cyclic ancestry preserves unknown rather than accepting settled metadata', () => {
+  const result = drive(saved([job({ parentThreadId: 'other' }), job({ threadId: 'other', parentThreadId: 'job' }), owner()]));
+  expect(result.exit).toBe(2);
+  expect(result.report.terms.every(t => t.status === 'unknown')).toBe(true);
+});
+
+test('a settled review job without latestRunId cannot prove inactivity', () => {
+  const result = drive(saved([job({ latestRunId: null }), owner()]));
+  expect(result.exit).toBe(2);
+  expect(status(result, 'owner.run')).toBe('pass');
+  expect(status(result, 'jobs.inactive')).toBe('unknown');
+});
+
+test('a foreign-project child in a project-filtered snapshot makes coverage unknown', () => {
+  const result = drive(saved([job({ projectId: 'other' }), owner()]));
+  expect(result.exit).toBe(2);
+  expect(result.report.terms.every(t => t.status === 'unknown')).toBe(true);
 });
