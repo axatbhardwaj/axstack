@@ -19,7 +19,7 @@ before duplicate classification, then read back the identity save.
 After collection, the first decision step is the installed helper, from trusted cwd `/`:
 `bun --no-env-file <resolved-schedule-drift.js> quiet-facts --input <saved-input.json> --continuity <saved-progress.md>`.
 Lane scope is recorded pass/job identities and descendants, not the shared project.
-The helper reads saved evidence; PR comparison reuses `pr-digest.js`.
+PR comparison reuses `pr-digest.js`.
 
 The pass agent applies quiet/full/hold rules to these facts, which grant nothing:
 any fail or unknown runs the full pass; unknown discovery means full reconciliation,
@@ -53,6 +53,7 @@ authorized limit. Only the owner retires settled predecessors and saves/reads ba
 Resolve heads with `gh pr view --repo REPO NUMBER --json headRefOid` in the full pass.
 Full pass records Watermarks: `Quiet gate:` as the sorted list of JSON triples and
 `Last full pass:` as UTC only as owner-of-record, then reads back the save.
+Full passes record proven Non-lane roots for omitted idle parents.
 Settle descendants and end the finite turn. Stay quiet when unchanged.
 Never check out a PR branch here.
 Follow [Peer execution](../sandbox/host-execution.md) in every peer-review brief
