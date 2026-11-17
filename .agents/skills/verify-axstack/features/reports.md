@@ -365,7 +365,7 @@ scenario to turn its outcome green.
 
 ## In-turn quiet facts
 
-Run `tests/workflows/quiet-facts.test.js` and `pr-digest.test.js` with TMPDIR set
+Run `tests/workflows/{quiet-facts,quiet-lane,pr-digest}.test.js` with TMPDIR set
 and unset. After offline pack/install, drive `tests/workflows/fixtures/quiet-facts/raw.json` plus
 saved progress.md through installed `schedule-drift.js quiet-facts` from `/`
 with `bun --no-env-file`; compare source and installed facts and inspect `--help`.
@@ -373,6 +373,11 @@ Keep both gh arrays, the T29 `{args,value}` list and ONE prior read verbatim.
 Fixtures cover the 1000 cap, native liveness versus settlement, recorded guards,
 unknown ownership, watermarks, pending rows and reap ordering. Omitted heads
 remain unobserved; changed raw fingerprints fail. Live collection remains unverified.
+Also drive the filled run-record template with a fully paged five-status active
+inventory; the settled prior is absent from that list and supplied by its one read.
+Use `fixtures/quiet-facts/progress.md` for native IDs and a user-only hold.
+Compare unrelated shared-project work, recorded pass/job descendants and unknown
+lineage; expect pass, fail and unknown lane-idle facts respectively.
 
 ## Review admission facts
 
