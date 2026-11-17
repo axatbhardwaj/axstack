@@ -125,12 +125,12 @@ test('documented review-manager schedules run every 30 minutes', () => {
 });
 
 const decisions = [
-  ['fail or unknown requires full', [/any fail or unknown/i, /runs? the full pass/i],
-    'Any fail or unknown runs the full pass.', [[/runs? the full pass/i, 'permits quiet exit']]],
-  ['unknown discovery requires reconciliation', [/unknown discovery/i, /means full reconciliation/i],
-    'Unknown discovery means full reconciliation.', [[/full reconciliation/i, 'quiet exit']]],
-  ['unknown owner or prior forbids admission', [/unknown ownership or prior identity/i, /forbids competing admission/i],
-    'Unknown ownership or prior identity forbids competing admission.', [[/forbids/i, 'permits']]],
+  ['fail or unknown requires full', [/any fail or unknown|any (?:fact|term) fails? or is unknown/i, /runs? the full pass|execute the full pass/i],
+    'If any fact fails or is unknown, execute the full pass.', [[/runs? the full pass|execute the full pass/i, 'permits quiet exit']]],
+  ['unknown discovery requires reconciliation', [/unknown discovery|discovery (?:is|remains) unknown/i, /means full reconciliation|requires full reconciliation/i],
+    'When discovery is unknown, it requires full reconciliation.', [[/full reconciliation/i, 'quiet exit']]],
+  ['unknown owner or prior forbids admission', [/unknown ownership or prior identity|ownership or prior identity (?:is|remains) unknown/i, /forbids competing admission|competing admission is forbidden/i],
+    'If ownership or prior identity is unknown, competing admission is forbidden.', [[/forbids competing admission|competing admission is forbidden/i, 'permits competing admission']]],
   ['helper is first decision', [/after collection/i, /first decision step/i, /installed helper/i, /bun[^`]*schedule-drift\.js> quiet-facts --input/i],
     'After collection, use the installed helper as the first decision step: `bun --no-env-file <resolved-schedule-drift.js> quiet-facts --input FILE`.', [[/first decision step/i, 'optional later step']]],
   ['prior read precedes replacement', [/t3_thread_read/i, /prior pass/i, /once/i, /before replacing prior identity/i],
@@ -147,10 +147,10 @@ test('quiet facts grant nothing and guarded/user-only state alone never forces r
   const facts = /grant nothing|grant no authority/i;
   checkRule(source, text => sentences(text).some(s => facts.test(s) && requires(s.replace(facts, ''), /facts/i)),
     'These facts grant no authority.', [[facts, 'grant admission authority']], [/facts/i, facts]);
-  const rule = /do not force reconciliation by themselves|never force a full pass or failure report by themselves/i;
-  const concepts = [/guarded prior passes/i, /user-only holds/i];
+  const rule = /never (?:force|require) a full pass or failure report/i;
+  const concepts = [/guarded prior passes/i, /user-only holds/i, /by themselves|alone/i];
   checkRule(source, text => sentences(text).some(s => rule.test(s) && requires(s.replace(rule, ''), ...concepts)),
-    'Guarded prior passes and user-only holds never force a full pass or failure report by themselves.',
+    'Alone, user-only holds and guarded prior passes never require a full pass or failure report.',
     [[rule, 'always force full reconciliation']], [...concepts, rule]);
 });
 
