@@ -134,7 +134,8 @@ const QUIET_HELP = `schedule-drift quiet-facts — raw saved-input observations
     and only returned OIDs via pr-digest; new/changed fingerprints fail even without an OID.
     inventory is the T29 t3_thread_list {args,value} contract: merged pages, nextCursor:null,
     total matching threads.length; first args include includeSubagents:true and projectId
-    (or allProjects:true), cursor absent/0, no statuses/settled/snoozed/titleContains filters.
+    (or allProjects:true), cursor absent/0. statuses may be exactly the five busy statuses below;
+    no settled/snoozed/titleContains filters. Completeness covers that query, not all history.
     Keep native threadId/projectId/parentThreadId/status/settled/latestRunId and currentThreadId.
     prior is ONE raw t3_thread_read of the recorded prior thread, including its thread metadata;
     no other thread reads or caller-derived guard/liveness/completeness fields are required.
@@ -143,10 +144,15 @@ const QUIET_HELP = `schedule-drift quiet-facts — raw saved-input observations
     completed/failed/cancelled/interrupted/rolled_back are terminal. Idle has no active run.
     Unknown status is unknown. Descendants come from native parentThreadId relationships.
   --continuity FILE Saved progress.md with Lane state, Open holds, Watermarks, Last pass.
-    Lane state: '- threadId: ID' before replacement; '- Active PR jobs and descendants: none'
-    or recorded active jobs. Guards use recorded '- ID: held|flagged', '; state:' / '; guard:'
+    Lane state uses run-record.md's scheduledTaskId, threadId/runId, workspace and exact
+    terminal receipt: SCHEDULE, THREAD/RUN, WORKSPACE, RECEIPT; read before replacement.
+    Active PR jobs and descendants: none, or PR, TASK/CHILD/RUN, OWNER, REVISION, STATE.
+    Recorded pass/job IDs and native parent edges define the lane, never project membership.
+    Native scheduledTaskId, when present, identifies other passes; unknown lineage stays unknown.
+    Explicit non-scheduled user/MCP roots and their descendants are outside this lane.
+    The legacy '- threadId: ID' record is accepted during migration. Guards use recorded '- ID: held|flagged', '; state:' / '; guard:'
     or '; resume: user decision only' on that exact thread's line, never agent judgment.
-    Open holds: '- none' or one line per hold; only '; resume: user decision only' is user-only.
+    Open holds: '- none' or one line per hold; '; resume: user decision only' (optional final period) is user-only.
     Pending rows in Lane state/Watermarks/Open holds start with unserved/capacity-deferred/
     INCOMPLETE/re-eligible or use '; status: STATE'. Historical Last pass prose is not pending.
     Watermarks: '- Quiet gate: JSON [repo#number,headRefOid,updatedAt] triples';
@@ -192,7 +198,8 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
   const byId = new Map();
   let complete = fresh && call && Array.isArray(rows) && !snapshot.isError && !value.isError && value.complete !== false && !value.truncated && !value.hasMore &&
     value.nextCursor === null && value.total === rows.length && call.includeSubagents === true &&
-    (call.cursor === undefined || call.cursor === 0) && !['statuses', 'settled', 'snoozed', 'titleContains'].some(key => Object.hasOwn(call, key));
+    (call.cursor === undefined || call.cursor === 0) && !['settled', 'snoozed', 'titleContains'].some(key => Object.hasOwn(call, key)) &&
+    (call.statuses === undefined || Array.isArray(call.statuses) && equal([...call.statuses].sort(), [...activeRuns].sort()));
   for (const row of Array.isArray(rows) ? rows : []) {
     if (!nonempty(row?.threadId) || !nonempty(row?.projectId) || byId.has(row.threadId) ||
       !(row.parentThreadId === null || nonempty(row.parentThreadId)) || row.parentThreadId === row.threadId) { complete = false; continue; }
@@ -240,41 +247,59 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
   const elapsed = time(args['--now']) - time(sections.Watermarks?.match(/^- Last full pass: (.+)$/m)?.[1]);
   term('full-pass-age', !continuityKnown || !Number.isFinite(elapsed) ? 'unknown' : elapsed >= 0 && elapsed < 14400000 ? 'pass' : 'fail',
     { ageSeconds: Number.isFinite(elapsed) ? elapsed / 1000 : null });
-  const priorIds = [...(sections['Lane state'] ?? '').matchAll(/^- threadId: (\S+)$/gm)].map(m => m[1]);
+  const laneText = sections['Lane state'] ?? '';
+  const passRecords = [...laneText.matchAll(/^- scheduledTaskId, threadId\/runId, workspace and exact terminal receipt: ([^,]+), ([^/\s,]+)\/([^,]+), ([^,]+), (.+)$/gm)];
+  const priorIds = passRecords.length ? passRecords.map(m => m[2]) : [...laneText.matchAll(/^- threadId: (\S+)$/gm)].map(m => m[1]);
+  const schedules = new Set(passRecords.map(m => m[1]));
+  const jobs = laneText.match(/^- Active PR jobs and descendants: (.+)$/m)?.[1];
+  const jobRecords = jobs === 'none' ? [] : jobs?.split(/;\s*(?=[\w.-]+\/[\w.-]+#\d+,)/).map(row => row.match(/^[\w.-]+\/[\w.-]+#\d+, [^/\s,]+\/([^/\s,]+)\/[^,]+, [^,]+, [^,]+, .+$/));
+  const jobsKnown = jobs === 'none' || Array.isArray(jobRecords) && jobRecords.length > 0 && jobRecords.every(Boolean);
   const read = nativeValue(input.prior?.value ?? input.prior), prior = read?.thread;
   const knownStatus = row => row && [...terminalRuns, ...activeRuns, 'idle'].includes(row.status);
-  const priorKnown = identity && priorIds.length === 1 && prior?.threadId === priorIds[0] && prior.threadId !== self.threadId &&
+  const priorKnown = identity && priorIds.length > 0 && prior?.threadId === priorIds[0] && prior.threadId !== self.threadId &&
     prior.projectId === projectId && typeof prior.settled === 'boolean' && knownStatus(prior);
-  const laneIds = new Set([...byId.values()].filter(row => row.projectId === projectId).map(row => row.threadId));
-  // allProjects snapshots may contain cross-project descendants of this lane.
-  let added;
-  do {
-    added = false;
-    for (const row of byId.values()) if (laneIds.has(row.parentThreadId) && !laneIds.has(row.threadId)) { laneIds.add(row.threadId); added = true; }
-  } while (added);
-  const laneRows = [...laneIds].map(id => byId.get(id));
-  const laneKnown = identity && laneRows.every(knownStatus);
+  const laneIds = new Set([...priorIds, ...(jobRecords ?? []).filter(Boolean).map(m => m[1])]);
+  const membership = new Map();
+  function member(row, seen = new Set()) {
+    if (membership.has(row.threadId)) return membership.get(row.threadId);
+    if (laneIds.has(row.threadId)) return true;
+    if (nonempty(row.scheduledTaskId) && schedules.size) return schedules.has(row.scheduledTaskId);
+    if (seen.has(row.threadId)) return null;
+    seen.add(row.threadId);
+    if (laneIds.has(row.parentThreadId)) return true;
+    if (byId.has(row.parentThreadId)) return member(byId.get(row.parentThreadId), seen);
+    if (row.parentThreadId !== null) return null;
+    if (row.projectId !== projectId || row.scheduledTaskId === null ||
+      row.createdBy === 'user' || ['web', 'mobile', 'mcp'].includes(row.creationSource)) return false;
+    return null;
+  }
+  for (const row of byId.values()) membership.set(row.threadId, member(row));
+  const candidates = [...byId.values()].filter(row => row.threadId !== self?.threadId);
+  const laneRows = candidates.filter(row => membership.get(row.threadId) === true);
+  const ambiguous = candidates.filter(row => membership.get(row.threadId) === null && !terminalRuns.includes(row.status) && row.status !== 'idle');
+  const laneKnown = identity && priorIds.length > 0 && jobsKnown && ambiguous.length === 0 && laneRows.every(knownStatus);
   const threadsKnown = laneKnown && priorKnown;
-  const descendants = laneRows.filter(row => laneIds.has(row.parentThreadId)).map(row => row.threadId);
+  const descendants = laneRows.filter(row => row.parentThreadId !== null).map(row => row.threadId);
   term('thread-readbacks', threadsKnown ? 'pass' : 'unknown', { listed: laneRows.length, descendantThreadIds: descendants, priorThreadId: prior?.threadId ?? null, priorReads: prior ? 1 : 0 });
-  term('ownership', threadsKnown && continuityKnown ? 'pass' : 'unknown', { completeInventory: !!scoped, projectId: projectId ?? null, total: value?.total ?? null });
+  term('ownership', threadsKnown && continuityKnown ? 'pass' : 'unknown', { completeInventory: !!scoped, projectId: projectId ?? null, total: value?.total ?? null, ambiguousThreadIds: ambiguous.map(row => row.threadId) });
   const holds = sections['Open holds']?.trim().split('\n').filter(nonempty) ?? [];
-  const holdKnown = holds.length > 0 && holds.every(line => /^- .+/.test(line));
-  const priorLines = [...(sections['Lane state'] ?? '').split('\n'), ...holds].filter(line =>
-    priorIds[0] && line.split(/[^\w-]+/).includes(priorIds[0]));
-  const guarded = priorLines.some(line => /(?:^- \S+:\s*|;\s*(?:state|guard):\s*)(?:held|flagged|owned watch|pending receipt|wedged|stalled owner|protected)\b|;\s*resume: user decision only$/i.test(line));
+  const userOnly = line => /; resume: user decision only\.?$/i.test(line);
+  const holdKnown = holds.length > 0 && (holds.length === 1 && holds[0] === '- none' || holds.every(line => /^- .+: .+; resume: [^;]+$/.test(line)));
+  const priorLines = [...laneText.split('\n'), ...holds].filter(line => priorIds[0] &&
+    (line.startsWith(`- ${priorIds[0]}:`) || line === `- threadId: ${priorIds[0]}` || passRecords.some(m => m[2] === priorIds[0] && m[0] === line)));
+  const guarded = priorLines.some(line => /(?:^- \S+:\s*|;\s*(?:state|guard):\s*)(?:held|flagged|owned watch|pending receipt|wedged|stalled owner|protected)\b/i.test(line) || userOnly(line));
   const terminal = row => terminalRuns.includes(row.status);
   term('prior-pass', !priorKnown || !continuityKnown || !holdKnown ? 'unknown' : prior.settled || terminal(prior) && guarded ? 'pass' : 'fail',
     { threadId: prior?.threadId ?? null, status: prior?.status ?? null, settled: prior?.settled ?? null, recordedGuard: guarded });
   const nonterminal = row => activeRuns.includes(row.status);
   const busy = [...laneRows, ...(priorKnown ? [prior] : [])].filter(row => row.threadId !== self?.threadId && nonterminal(row)).map(row => row.threadId);
-  term('lane-idle', identity && busy.length ? 'fail' : !laneKnown ? 'unknown' : 'pass', { nonterminalThreadIds: [...new Set(busy)] });
+  term('lane-idle', identity && busy.length ? 'fail' : !laneKnown ? 'unknown' : 'pass', { nonterminalThreadIds: [...new Set(busy)], ambiguousThreadIds: ambiguous.map(row => row.threadId) });
   const recorded = [sections['Lane state'], sections.Watermarks, sections['Open holds']].filter(Boolean).join('\n');
   const event = /^- (?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b|;\s*status:\s*(?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b/gm;
-  const jobs = sections['Lane state']?.match(/^- Active PR jobs and descendants: (.+)$/m)?.[1];
-  const pending = event.test(recorded) || jobs !== 'none' || holds.some(line =>
-    !/^- none$/i.test(line) && !/; resume: user decision only$/i.test(line));
-  term('pending-work', !continuityKnown || !holdKnown || !nonempty(jobs) ? 'unknown' : pending ? 'fail' : 'pass',
+  const pendingEvent = event.test(recorded);
+  const pending = pendingEvent || jobs !== 'none' || holds.some(line =>
+    !/^- none$/i.test(line) && !userOnly(line));
+  term('pending-work', continuityKnown && pendingEvent ? 'fail' : !continuityKnown || !holdKnown || !nonempty(jobs) ? 'unknown' : pending ? 'fail' : 'pass',
     { activeJobs: jobs ?? null, holds, pending });
   const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map(s => [s, terms.filter(t => t.status === s).length]));
   return { version: 2, observedAt: args['--now'], terms, counts };
