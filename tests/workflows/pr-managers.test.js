@@ -125,6 +125,9 @@ test('documented review-manager schedules run every 30 minutes', () => {
 });
 
 const decisions = [
+  ['collect complete native active set', [/save/i, /t3_thread_list/i, /includeSubagents:true/i, /statuses:/i, /preparing\/queued\/starting\/running\/waiting/i],
+    'Save t3_thread_list with includeSubagents:true and statuses: preparing/queued/starting/running/waiting.',
+    [[/preparing\/queued\/starting\/running\/waiting/i, 'running']]],
   ['full pass records verified outsiders', [/full passes/i, /record proven/i, /Non-lane roots/i, /omitted idle parents/i],
     'For omitted idle parents, full passes record proven Non-lane roots.', [[/record proven/i, 'invent']]],
   ['full pass resolves heads', [/resolve heads|obtain head OIDs/i, /gh pr view/i, /--json headRefOid/i, /in the full pass|during full reconciliation/i],
@@ -141,6 +144,14 @@ const decisions = [
   ['prior read precedes replacement', [/t3_thread_read/i, /prior pass/i, /once/i, /before replacing prior identity/i],
     'Before replacing prior identity, read the prior pass once using t3_thread_read.', [[/before replacing/i, 'after replacing']]],
 ];
+test('quiet lane identity excludes shared-project membership', () => {
+  const concepts = [/lane scope/i, /recorded pass\/job identities/i, /descendants/i];
+  const exclusion = /not the shared project/i;
+  checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
+    source => sentences(source).some(s => exclusion.test(s) && requires(s.replace(exclusion, ''), ...concepts)),
+    'Lane scope follows recorded pass/job identities and descendants, not the shared project.',
+    [[exclusion, 'the entire shared project']], [...concepts, exclusion]);
+});
 for (const [name, concepts, rewording, inversions] of decisions) {
   test(`quiet decision: ${name}`, () => {
     checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
