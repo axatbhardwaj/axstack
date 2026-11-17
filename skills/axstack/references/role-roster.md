@@ -35,7 +35,7 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
 - `axstack-advisor-codex` (Astra high in mixed/codex-only) and
   `axstack-advisor-claude` (Fable 5.2 high in mixed/claude-only) advise and author candidates;
   `axstack-arena-candidate-grok` adds a family.
-  `axstack-arena-judge-opus` judges round 1; `axstack-escalation-fable`/`axstack-arena-judge-astra` judge round 2.
+  `axstack-escalation-fable` judges round 1; `axstack-arena-judge-opus`/`axstack-arena-judge-astra` judge round 2.
   Fable escalation starts at high effort in mixed/claude-only.
   High-stakes/trigger: fresh [contract](contracts.md) session.
   `axstack-auditor` audits; `axstack-checker` reports discrepancies.
