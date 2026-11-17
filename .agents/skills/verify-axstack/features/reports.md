@@ -362,3 +362,12 @@ with exit 2, and invalid invocation/JSON with exit 1. They write nothing and
 dispatch nothing. In live use cite the after capture receipt and trace log in
 the release record even for unavailable or exhausted runs; never retry the
 scenario to turn its outcome green.
+
+## In-turn quiet facts
+
+Run `tests/workflows/quiet-facts.test.js` and `pr-digest.test.js` with TMPDIR set
+and unset. After offline pack/install, invoke installed `schedule-drift.js quiet-facts
+--help` and drive saved JSON plus progress.md from `/` with `bun --no-env-file`.
+Compare installed facts with source facts. Fixtures cover discovery, ownership,
+prior/descendant readbacks, watermarks, age, pending work and reap ordering.
+These are saved observations; live T3 collection and driver decisions remain unverified.
