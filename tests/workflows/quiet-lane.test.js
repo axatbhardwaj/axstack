@@ -57,6 +57,7 @@ test('the writer template declares the reader watermark and hold grammar', () =>
   expect(source).toMatch(/Quiet gate:[^\n]*JSON[^\n]*headRefOid[^\n]*updatedAt/);
   expect(source).toMatch(/resume: user decision only/);
   expect(source).toMatch(/Last full pass:[^\n]*UTC[^\n]*ISO/);
+  expect(source).toMatch(/Non-lane roots:[^\n]*JSON[^\n]*threadId/);
 });
 test('prior settlement comes from its read, even when absent from active inventory', () => {
   expect(status(run(), 'prior-pass')).toBe('pass');
