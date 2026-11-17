@@ -179,3 +179,10 @@ test('known busy native lane is measured even when prior read is missing', () =>
   expect(status(r, 'lane-idle')).toBe('fail');
   expect(status(r, 'prior-pass')).toBe('unknown');
 });
+test('a known running thread stays busy alongside another unknown status', () => {
+  const r = run(d => { d.inventory.value.threads[0].status = 'running';
+    d.inventory.value.threads.push({ ...d.inventory.value.threads[0], threadId: 'unknown-child', parentThreadId: 'prior', status: 'mystery' });
+    d.inventory.value.total++; });
+  expect(status(r, 'lane-idle')).toBe('fail');
+  expect(status(r, 'ownership')).toBe('unknown');
+});
