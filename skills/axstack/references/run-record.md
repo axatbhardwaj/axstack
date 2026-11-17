@@ -227,6 +227,7 @@ in the adjacent history file, not below this template.
 ## Lane state
 - scheduledTaskId, threadId/runId, workspace and exact terminal receipt: <IDs>
 - Active PR jobs and descendants: <PR, taskId/childThreadId/runId, owner, revision, state>
+- Lane-owner facts: <report path, snapshot and exact identities>
 
 ## Open holds
 - <PR or lane, reason, evidence, owner, resume condition; or none>

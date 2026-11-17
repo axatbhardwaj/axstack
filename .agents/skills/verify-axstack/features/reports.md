@@ -363,6 +363,36 @@ dispatch nothing. In live use cite the after capture receipt and trace log in
 the release record even for unavailable or exhausted runs; never retry the
 scenario to turn its outcome green.
 
+## Lane-owner liveness facts
+
+Entry: `skills/axstack/scripts/lane-owner.js`; keeper:
+`tests/workflows/lane-owner{,-scoped,-contract}.test.js`. After Launch/Doctor, run
+`bun run test tests/workflows/lane-owner.test.js tests/workflows/lane-owner-scoped.test.js tests/workflows/lane-owner-contract.test.js tests/workflows/manager-pass-settlement.test.js`
+and repeat with TMPDIR unset.
+Fixtures cover live/settled passes, running review descendants, resumed
+usage-limited runs, missing settled metadata, non-true preSettle and unchanged input bytes.
+Contracts pin owner-thread/run Open holds, their recording exceptions and held-thread settlement guards.
+After pack and temporary-home install, require the helper in the pack listing,
+compare installed bytes, then run its `--help` from `/` with `bun --no-env-file`.
+Drive an installed fixture `--input` with `--owner-thread` and `--owner-run`:
+saved `{preSettle:true,args:{projectId:"lane",includeSubagents:true},value:{threads:[{
+threadId:"pass",projectId:"lane",parentThreadId:null,latestRunId:"run-1",
+status:"completed",settled:true}],nextCursor:null,total:1}}`.
+Expect exit 0, pass inventory/run/inactive-owner terms and n/a jobs; change status
+to running and settled to false for fail inactive-owner (measured exit 0).
+Set preSettle to false or remove it for all unknown (exit 2); also check nextCursor:1. Supply `--job-thread` for recorded
+jobs outside the ancestry tree; retain JSON facts and hashes. No live T3,
+process-exit, takeover or cleanup claim follows from these saved fixtures.
+Also drive the scoped form: primary args.statuses is exactly
+`idle,preparing,queued,starting,running,waiting`; add `unsettled:{args,value}`
+with the same scope, settled:false and no statuses. Fully page both views.
+Add `readbacks:[{args:{threadId},value:{thread,recentRuns}}]` for owner,
+recorded jobs and missing ancestors. Latest run IDs/statuses must match.
+Two empty views plus settled owner/job readbacks pass without historical rows;
+live settled descendants fail, terminal unsettled descendants stay unknown.
+Missing reads/ancestors, conflicting views or either truncated view stay unknown.
+Retain installed scoped facts and unchanged-input hashes alongside the full form.
+
 ## Review admission facts
 
 Entry point: `skills/axstack/scripts/pr-fresh.js`; fixtures:
