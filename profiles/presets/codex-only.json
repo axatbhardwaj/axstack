@@ -278,7 +278,7 @@
       "model": null,
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Fable escalation intentionally absent in codex-only; a required use holds without substitution. Read-only round 2 judge; never authors a candidate."
+      "notes": "Fable escalation intentionally absent in codex-only; a required use holds without substitution. Read-only round 1 judge; never authors a candidate."
     },
     {
       "id": "axstack-arena-judge-opus",
@@ -287,7 +287,7 @@
       "model": null,
       "modeId": "full-access",
       "thinkingOptionId": "xhigh",
-      "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging. Intentionally absent in the codex-only preset; round 1 holds without substitution."
+      "notes": "Read-only round 2 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging. Intentionally absent in the codex-only preset; round 2 holds without substitution."
     },
     {
       "id": "axstack-arena-candidate-grok",

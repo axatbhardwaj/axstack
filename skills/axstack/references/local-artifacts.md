@@ -61,7 +61,7 @@ before dispatch; helpers validate role scope, not those procedural facts.
 
 Use the selected preset's exact provider/model/effort/full-access bindings.
 Configured optional Grok follows the arena's fenced absence rule; an uncertain
-dispatch requires reconciliation. Fable is a required round-2 judge when that
+dispatch requires reconciliation. Fable is a required round-1 judge when that
 round applies, not an optional candidate. A missing required model or an
 intentional null-model absence holds the applicable round without substitution.
 An allowlisted role never makes an unavailable seat executable.
