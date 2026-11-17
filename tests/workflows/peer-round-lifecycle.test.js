@@ -43,8 +43,8 @@ const rules = [
     'For merged or closed PRs, run existing cleanup.', /existing cleanup/i, 'retain all active tasks'],
   [peer, [/new head/i, /new event/i, /restart inside the job/i],
     'A new head is a new event, never a restart inside the job.', /never/i, 'always', /never/i],
-  [peer, [/unknown facts/i, /hold/i, /never discard/i],
-    'Unknown facts hold, never discard.', /never discard/i, 'always discard', /never discard/i],
+  [peer, [/event facts/i, /open/i, /nonDraft/i, /unmerged/i, /pinnedHead/i, /baseUnchanged/i, /discard failures/i, /hold unknowns/i],
+    'For event facts open, nonDraft, unmerged, pinnedHead and baseUnchanged, discard failures and hold unknowns.', /hold unknowns/i, 'discard unknowns'],
   [peer, [/polling loop/i, /watcher/i],
     'Add no polling loop or watcher.', /no/i, 'a', /no/i],
 ];
