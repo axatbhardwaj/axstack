@@ -69,8 +69,7 @@ T3 sessions are exempt from Claude trust preflight.
 The owner-of-record performs guarded retirement in [Finite-session teardown](#finite-session-teardown).
 Lane identity requires exact thread/run identity, never a title or directory-name
 guess; never infer lane ownership from an empty local workspace.
-Reconcile saved state, current GitHub state, and native T3 threads, runs,
-delegated tasks and liveness across the whole lane before discovery or admission.
+Reconcile saved state, GitHub and native T3 lane before discovery or admission.
 Discovery reads every page of PRs and native threads.
 A truncated or failed inventory holds admission and cleanup.
 A pass never admits a PR owned by a live or uncertain earlier pass.
@@ -120,12 +119,11 @@ shared-record writes, takeover and cleanup, including when activity is recent.
 Preserve user-taken-over threads.
 This is prompt policy, not an atomic lock.
 
-Before admission/teardown, run [lane-owner](../scripts/lane-owner.js) from `/`
-with `bun --no-env-file`; `--help` defines snapshot/identity inputs. Save facts
-in continuity; fail/unknown retains ownership holds. Reconcile continuity before
-releasing ownership.
-Unknown facts hold at the durable decision location; never replace a
-potentially live owner.
+Before any settle, run [lane-owner](../scripts/lane-owner.js) from `/` with
+`bun --no-env-file` on a pre-settle snapshot. Pass recorded out-of-tree PR jobs via
+`--job-thread`. Log facts in continuity; fail/unknown retains ownership holds.
+This pass's settle never proves release; a completed or failed run row alone
+proves neither predecessor exit nor release. Reconcile continuity before release.
 
 ## Discovery and coverage
 
@@ -405,7 +403,7 @@ classification and on quiet exits; all other shared writes retain their existing
 Decisions outliving a finite manager pass retain their receipt and hold in durable
 continuity, with the flagged thread or GitHub as the action route.
 
-After lane reconciliation at pass start, every pass, including a duplicate,
+After lane reconciliation at pass start and pre-settle lane-owner facts, every pass, including a duplicate,
 uses `t3_thread_organize` to settle finished predecessor and duplicate lane pass
 threads as metadata only, before discovery or admission.
 Settle another lane pass thread only with terminal run evidence, no unsettled
