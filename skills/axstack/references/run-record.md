@@ -234,6 +234,7 @@ in the adjacent history file, not below this template.
 ## Watermarks
 - Quiet gate: <sorted JSON [repo#number, headRefOid, updatedAt] triples; [] when empty>
 - Last full pass: <UTC ISO timestamp of the last full pass>
+- Non-lane roots: <JSON threadId array proven outside this lane; [] if none>
 - <PR/event identity, exact head/base, last observed receipt; or none>
 
 ## Last pass
