@@ -11,6 +11,8 @@ Run from trusted cwd / with bun --no-env-file <installed-script> and explicit:
                  Supported version:1 review phase: {status:"known",headAgeThresholdSeconds:N,
                  clockSemantics:"head-commit-committed-date",pendingCheckTreatment:"defer"|"allow"}.
                  N is a nonnegative integer, inclusive. This clock is commit age, NOT push/settle age.
+                 Driver: recorded age < N defers; age >= N meets the age term. defer waits on
+                 pending checks; allow adds no pending gate. Unknown applicable gating terms hold.
                  status:"unknown" with all three gate fields null is unrecorded, with no gate.
                  policy.evidence.unrecorded distinguishes it from malformed/unavailable policy.
                  Both report unknown; the driver ignores non-event terms only for unrecorded phases.
@@ -105,7 +107,7 @@ function report(args) {
   for (const c of checks ?? []) {
     const name = c?.name ?? c?.context ?? '(unnamed)';
     if (c?.__typename === 'CheckRun' && ['QUEUED', 'IN_PROGRESS', 'WAITING', 'PENDING', 'REQUESTED'].includes(c.status) ||
-        c?.__typename === 'StatusContext' && c.state === 'PENDING') pending.push(name);
+        c?.__typename === 'StatusContext' && ['PENDING', 'EXPECTED'].includes(c.state)) pending.push(name);
     else if (c?.__typename === 'CheckRun' && c.status === 'COMPLETED' &&
         ['SUCCESS', 'NEUTRAL', 'SKIPPED', 'FAILURE', 'CANCELLED', 'TIMED_OUT', 'ACTION_REQUIRED', 'STALE', 'STARTUP_FAILURE'].includes(c.conclusion)) {
       terminal.push(name);
