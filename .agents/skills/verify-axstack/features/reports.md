@@ -362,3 +362,35 @@ with exit 2, and invalid invocation/JSON with exit 1. They write nothing and
 dispatch nothing. In live use cite the after capture receipt and trace log in
 the release record even for unavailable or exhausted runs; never retry the
 scenario to turn its outcome green.
+
+## Review admission facts
+
+Entry point: `skills/axstack/scripts/pr-fresh.js`; fixtures:
+`tests/workflows/pr-fresh.test.js` and `fixtures/pr-fresh.json` (synthetic policy).
+After Launch/Doctor and install, run from trusted `/`:
+
+```bash
+doctor > "$EVIDENCE/pr-fresh-doctor.log" 2>&1
+bun run test tests/workflows/pr-fresh.test.js tests/workflows/peer-round-lifecycle.test.js \
+  tests/workflows/review-modes.test.js tests/workflows/prose-size.test.js > "$EVIDENCE/pr-fresh-tests.log" 2>&1
+bun -e 'const f = await Bun.file(process.env.REPO + "/tests/workflows/fixtures/pr-fresh.json").json();
+  await Bun.write(process.env.EVIDENCE + "/pr-fresh-input.json", JSON.stringify(f.response));
+  await Bun.write(process.env.EVIDENCE + "/pr-fresh-policy.json", JSON.stringify(f.policy));'
+FRESH="$HOME/.agents/skills/axstack/scripts/pr-fresh.js"
+HEAD_SHA=$(bun -e 'console.log("a".repeat(40))')
+BASE_SHA=$(bun -e 'console.log("b".repeat(40))')
+cp "$EVIDENCE/pr-fresh-input.json" "$TMPDIR/pr-fresh-before.json"
+(cd /; bun --no-env-file "$FRESH" --repo example/project --pr 42 --head "$HEAD_SHA" \
+  --base "$BASE_SHA" --base-ref main --phase admission --now 2026-11-17T01:00:00Z \
+  --input "$EVIDENCE/pr-fresh-input.json" --policy "$EVIDENCE/pr-fresh-policy.json") > "$EVIDENCE/pr-fresh-installed.json"
+cmp "$TMPDIR/pr-fresh-before.json" "$EVIDENCE/pr-fresh-input.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/pr-fresh-installed.json").json();
+  if (r.terms.length !== 9 || r.terms.some(t => t.status !== "pass") || "verdict" in r) throw Error("facts differ");'
+```
+
+Proof: inclusive below/at/above age boundaries, pending/success/failed checks,
+head/base movement, retargeting, merged/draft state, phase selection and unchanged
+saved bytes. API errors, pagination gaps and missing/malformed policy stay unknown.
+The installed W2-1 policy currently records unknown clock/threshold/check treatment;
+it exits 2 while preserving observed state/check facts. Fixture policy proves no
+live policy authority or push/settle age. The driver owns admission/submission.
