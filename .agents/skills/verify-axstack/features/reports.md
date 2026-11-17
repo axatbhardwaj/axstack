@@ -366,7 +366,7 @@ scenario to turn its outcome green.
 ## In-turn quiet facts
 
 Run `tests/workflows/quiet-facts.test.js` and `pr-digest.test.js` with TMPDIR set
-and unset. After offline pack/install, drive `fixtures/quiet-facts/raw.json` plus
+and unset. After offline pack/install, drive `tests/workflows/fixtures/quiet-facts/raw.json` plus
 saved progress.md through installed `schedule-drift.js quiet-facts` from `/`
 with `bun --no-env-file`; compare source and installed facts and inspect `--help`.
 Keep both gh arrays, the T29 `{args,value}` list and ONE prior read verbatim.
