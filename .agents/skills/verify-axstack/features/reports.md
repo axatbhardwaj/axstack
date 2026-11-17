@@ -370,7 +370,8 @@ Entry: `skills/axstack/scripts/lane-owner.js`; keeper:
 `bun run test tests/workflows/lane-owner.test.js tests/workflows/lane-owner-contract.test.js tests/workflows/manager-pass-settlement.test.js`
 and repeat with TMPDIR unset.
 Fixtures cover live/settled passes, running review descendants, resumed
-usage-limited runs, incomplete/filtered inventories and unchanged input bytes.
+usage-limited runs, missing settled metadata, non-true preSettle and unchanged input bytes.
+Contracts pin owner-thread/run Open holds, their recording exceptions and held-thread settlement guards.
 After pack and temporary-home install, require the helper in the pack listing,
 compare installed bytes, then run its `--help` from `/` with `bun --no-env-file`.
 Drive an installed fixture `--input` with `--owner-thread` and `--owner-run`:
