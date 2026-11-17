@@ -135,9 +135,9 @@ test('a foreign-project child in a project-filtered snapshot makes coverage unkn
 });
 
 for (const state of ['completed', 'failed']) {
-  test(`a ${state} predecessor settled by this pass is not release evidence`, () => {
+  test(`a ${state} snapshot marked post-settle remains unknown`, () => {
     const input = saved([owner({ status: state })]);
-    input.preSettle = false; // The current pass wrote settled:true before this snapshot.
+    input.preSettle = false; // This timing assertion carries no settlement-writer identity.
     const result = drive(input);
     expect(result.exit).toBe(2);
     expect(result.report.terms.every(t => t.status === 'unknown')).toBe(true);
@@ -149,4 +149,21 @@ test('an unasserted snapshot cannot prove pre-settle ownership facts', () => {
   const result = drive(input);
   expect(result.exit).toBe(2);
   expect(result.report.terms.every(t => t.status === 'unknown')).toBe(true);
+});
+
+
+test('a terminal owner without settled metadata cannot read inactive', () => {
+  const row = owner(); delete row.settled;
+  const result = drive(saved([row]));
+  expect(result.exit).toBe(2);
+  expect(status(result, 'owner.inactive')).toBe('unknown');
+});
+
+test('truthy non-true preSettle assertions remain unknown', () => {
+  for (const value of ['true', 1, {}]) {
+    const input = saved([owner()]); input.preSettle = value;
+    const result = drive(input);
+    expect(result.exit).toBe(2);
+    expect(result.report.terms.every(t => t.status === 'unknown')).toBe(true);
+  }
 });
