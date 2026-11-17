@@ -19,16 +19,16 @@ On sync pass, use no reviewer dispatch and submit nothing, record `sync skip`
 with event identity, and leave the PR for the user.
 Sync fail or unknown enters ordinary review.
 
-Before each dispatch and reconcile (`admission`), and before submission (`submission`),
-run independently resolved installed [pr-fresh](../../axstack/scripts/pr-fresh.js)
-(`--help` gives inputs), using `bun --no-env-file` from trusted `/`. The driver applies
-[policy](../../axstack/references/schedule-policy.json); unknown policy holds.
-Failed `open`, `nonDraft`, `unmerged`, `pinnedHead` or `baseUnchanged` facts mean discard.
+Before dispatch/reconcile (`admission`) and submission (`submission`), run installed
+[pr-fresh](../../axstack/scripts/pr-fresh.js) outside candidate, from `/` via `bun --no-env-file` (`--help`).
+With `evidence.unrecorded:true`, ignore policy, headAge, pendingChecks and checksSuccessful.
+Absent/unreadable/malformed/unsupported policy holds.
+Age/pending/failed checks gate only on explicit recorded policy.
+Event facts (open, nonDraft, unmerged, pinnedHead, baseUnchanged): discard failures, hold unknowns.
 On discard, submit nothing; cancel owned tasks, verify
-[settlement](../../axstack/references/automations.md#held-job-settlement), preserve evidence and record `discarded: <reason>`.
-For merged or closed PRs, run existing cleanup.
-A new head is a new event, never a restart inside the job.
-Unknown facts hold, never discard.
+[settlement](../../axstack/references/automations.md), preserve evidence, record `discarded: <reason>`.
+Merged or closed: existing cleanup.
+New head: new event, never restart inside the job.
 Add no polling loop or watcher.
 
 A missing bot verdict marker selects the first review. An existing bot verdict
