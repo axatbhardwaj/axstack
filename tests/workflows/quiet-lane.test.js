@@ -71,6 +71,8 @@ test('unrelated native root in the shared project is outside the recorded lane',
 });
 test('an unidentifiable active root in the shared project stays unknown', () => {
   expect(status(run(d => add(d, { threadId: 'maybe-pass' })), 'lane-idle')).toBe('unknown');
+  // Live scheduled passes also use createdBy:agent, creationSource:mcp.
+  expect(status(run(d => add(d, { threadId: 'maybe-scheduled', createdBy: 'agent', creationSource: 'mcp' })), 'lane-idle')).toBe('unknown');
 });
 test('recorded scheduled pass and recorded PR-job descendants are lane activity', () => {
   expect(status(run(d => add(d, { threadId: 'prior' })), 'lane-idle')).toBe('fail');
