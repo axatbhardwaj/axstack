@@ -10,15 +10,16 @@ Save raw outputs per installed `schedule-drift.js quiet-facts --help`, with coll
 repository and login (`gh api user --jq .login`):
 `gh search prs --review-requested @me --state open --draft=false --json number,repository,updatedAt,isDraft,author --limit 1000`
 `gh search prs --involves @me --state open --draft=false --json number,repository,updatedAt,isDraft,author --limit 1000`
-Save the complete `t3_thread_list` as `{args,value}` (includeSubagents:true,
-merged pages, nextCursor:null, matching total; no filters), and continuity from
+Save `t3_thread_list` as `{args,value}` (includeSubagents:true, statuses:
+preparing/queued/starting/running/waiting; merged pages, nextCursor:null, matching total), and continuity from
 `~/.local/share/axstack/runs/review-manager/progress.md`.
 Read the recorded prior pass once with `t3_thread_read` before replacing prior identity.
 Record own pass threadId in review-manager continuity after reading the prior identity,
 before duplicate classification, then read back the identity save.
 After collection, the first decision step is the installed helper, from trusted cwd `/`:
 `bun --no-env-file <resolved-schedule-drift.js> quiet-facts --input <saved-input.json> --continuity <saved-progress.md>`.
-The helper reads saved evidence only; PR comparison reuses `pr-digest.js`.
+Lane scope is recorded pass/job identities and descendants, not the shared project.
+The helper reads saved evidence; PR comparison reuses `pr-digest.js`.
 
 The pass agent applies quiet/full/hold rules to these facts, which grant nothing:
 any fail or unknown runs the full pass; unknown discovery means full reconciliation,
@@ -35,7 +36,7 @@ Otherwise run the full pass; incomplete evidence retains admission/cleanup holds
 
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding).
 
-You are a fresh finite T3 review-manager pass in project `axstack-review-lane` on VPS's existing
+You are a fresh finite T3 review-manager pass in the recorded lane on VPS's
 `axatbhardwaj/axstack` clone. Fetch first; this unbound
 pass worktree starts from `origin/main`. Enter through installed `axstack-review`,
 which loads `../axstack/references/automations.md` relatively. Read [T3 runtime](t3-runtime.md). Reconcile lane ownership and duplicate status,
