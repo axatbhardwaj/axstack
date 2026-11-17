@@ -280,7 +280,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "high",
-      "notes": "Fable escalation seat for arena round 2, high-stakes plain AGREE, or the bounded escalation trigger. Fresh session per use; never reuses adviser or candidate context. Read-only round 2 judge: scores every candidate by label; never authors a candidate. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Fable escalation seat for arena round 1, high-stakes plain AGREE, or the bounded escalation trigger. Fresh session per use; never reuses adviser or candidate context. Read-only round 1 judge: scores every candidate by label; never authors a candidate. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "fable"
     },
     {
@@ -289,7 +289,7 @@
       "provider": "claude",
       "modeId": "bypassPermissions",
       "thinkingOptionId": "xhigh",
-      "notes": "Read-only round 1 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
+      "notes": "Read-only round 2 arena judge. Receives the rubric and every candidate by label, scores each criterion, and recommends a base with rationale. Never authors a candidate, never cross-reads another judge, never mutates; the driver compares its verdict without averaging. T3 resolves Claude classes from saved capabilities; a Claude rejection holds.",
       "modelClass": "opus"
     },
     {
