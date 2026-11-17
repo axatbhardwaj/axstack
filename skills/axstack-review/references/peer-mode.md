@@ -19,16 +19,16 @@ On sync pass, use no reviewer dispatch and submit nothing, record `sync skip`
 with event identity, and leave the PR for the user.
 Sync fail or unknown enters ordinary review.
 
-Before each dispatch, before reconcile and before submission, re-read PR state,
-head, base branch, base SHA and draft against the pinned event.
-Discard if merged or closed, head or base SHA moved, base retargeted, or draft.
-On discard, cancel owned tasks, verify settlement under
-[Held job settlement](../../axstack/references/automations.md#held-job-settlement),
-preserve evidence and record `discarded: <reason>`.
-On discard, submit nothing.
+Before each dispatch and reconcile (`admission`), and before submission (`submission`),
+run independently resolved installed [pr-fresh](../../axstack/scripts/pr-fresh.js)
+(`--help` gives inputs), using `bun --no-env-file` from trusted `/`. The driver applies
+[policy](../../axstack/references/schedule-policy.json); unknown policy holds.
+Failed `open`, `nonDraft`, `unmerged`, `pinnedHead` or `baseUnchanged` facts mean discard.
+On discard, submit nothing; cancel owned tasks, verify
+[settlement](../../axstack/references/automations.md#held-job-settlement), preserve evidence and record `discarded: <reason>`.
 For merged or closed PRs, run existing cleanup.
 A new head is a new event, never a restart inside the job.
-Unknown GitHub state holds, never discards.
+Unknown facts hold, never discard.
 Add no polling loop or watcher.
 
 A missing bot verdict marker selects the first review. An existing bot verdict
