@@ -366,18 +366,19 @@ scenario to turn its outcome green.
 ## Lane-owner liveness facts
 
 Entry: `skills/axstack/scripts/lane-owner.js`; keeper:
-`tests/workflows/lane-owner.test.js`. After Launch/Doctor, run
-`bun run test tests/workflows/lane-owner.test.js` and repeat with TMPDIR unset.
+`tests/workflows/lane-owner{,-contract}.test.js`. After Launch/Doctor, run
+`bun run test tests/workflows/lane-owner.test.js tests/workflows/lane-owner-contract.test.js tests/workflows/manager-pass-settlement.test.js`
+and repeat with TMPDIR unset.
 Fixtures cover live/settled passes, running review descendants, resumed
 usage-limited runs, incomplete/filtered inventories and unchanged input bytes.
 After pack and temporary-home install, require the helper in the pack listing,
 compare installed bytes, then run its `--help` from `/` with `bun --no-env-file`.
 Drive an installed fixture `--input` with `--owner-thread` and `--owner-run`:
-saved `{args:{projectId:"lane",includeSubagents:true},value:{threads:[{
+saved `{preSettle:true,args:{projectId:"lane",includeSubagents:true},value:{threads:[{
 threadId:"pass",projectId:"lane",parentThreadId:null,latestRunId:"run-1",
 status:"completed",settled:true}],nextCursor:null,total:1}}`.
 Expect exit 0, pass inventory/run/inactive-owner terms and n/a jobs; change status
 to running and settled to false for fail inactive-owner (measured exit 0).
-Set nextCursor to 1 for all unknown (exit 2). Supply `--job-thread` for recorded
+Set preSettle to false or remove it for all unknown (exit 2); also check nextCursor:1. Supply `--job-thread` for recorded
 jobs outside the ancestry tree; retain JSON facts and hashes. No live T3,
 process-exit, takeover or cleanup claim follows from these saved fixtures.
