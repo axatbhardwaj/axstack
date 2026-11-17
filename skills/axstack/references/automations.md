@@ -78,8 +78,8 @@ The earlier pass wins only when ordering evidence exists.
 Missing ordering or ownership evidence holds admission and never guesses a winner.
 
 Once identified as a duplicate, the new pass does no PR work, makes no further
-shared-record write and touches no PR-job thread or descendant owned by the
-live manager. Besides its private pass note and the flag and alert exception below, a duplicate's only shared mutation is pass-start settlement of eligible
+shared-record write except recording Open holds and touches no PR-job thread or descendant owned by the
+live manager. Besides recording Open holds, its private pass note and the flag and alert exception below, a duplicate's only shared mutation is pass-start settlement of eligible
 terminal lane pass threads under [Finite-session teardown](#finite-session-teardown).
 A duplicate pass admits nothing and runs read-only discovery
 into its own pass note in its private evidence folder, recording new eligible
@@ -114,16 +114,17 @@ jobs from GitHub and evidence. Only a verdict already published and read back
 counts as served. Otherwise the event is unserved/`INCOMPLETE` and re-eligible.
 A failed interrupt or unverified terminal state keeps the existing hold and
 follows the flag and alert rule below when its resume needs the user.
-Outside the wedged-pass recovery above, unknown liveness blocks admission,
-shared-record writes, takeover and cleanup, including when activity is recent.
+Outside wedged-pass recovery, unknown liveness blocks admission, shared-record
+writes except recording Open holds, takeover and cleanup even with recent activity.
 Preserve user-taken-over threads.
-This is prompt policy, not an atomic lock.
+No atomic lock.
 
 Before any settle, run [lane-owner](../scripts/lane-owner.js) from `/` with
-`bun --no-env-file` on a pre-settle snapshot. Pass recorded out-of-tree PR jobs via
-`--job-thread`. Log facts in continuity; fail/unknown retains ownership holds.
+`bun --no-env-file` on a pre-settle snapshot; pass out-of-tree PR jobs via
+`--job-thread`. Fail/unknown retains ownership holds: record an Open hold naming
+owner thread/run in continuity. Never replace a potentially live owner.
 This pass's settle never proves release; a completed or failed run row alone
-proves neither predecessor exit nor release. Reconcile continuity before release.
+proves neither predecessor exit nor release.
 
 ## Discovery and coverage
 
@@ -397,11 +398,10 @@ If identity, guards or readback are unavailable, preserve the thread and report
 that gap instead of settling it; the next eligible pass retries guarded verification.
 Keep unresolved prior threadIds in the same record until verified settled.
 Never guess thread identity from a title.
-The sole continuity-write exception records own pass threadId before duplicate
-classification and on quiet exits; all other shared writes retain their existing guards.
+Beyond recording Open holds, the sole continuity-write exception records own pass threadId
+before duplicate classification and on quiet exits.
 
-Decisions outliving a finite manager pass retain their receipt and hold in durable
-continuity, with the flagged thread or GitHub as the action route.
+Decisions outliving a finite manager pass retain receipt and hold in durable continuity, with flagged thread or GitHub as action route.
 
 After lane reconciliation at pass start and pre-settle lane-owner facts, every pass, including a duplicate,
 uses `t3_thread_organize` to settle finished predecessor and duplicate lane pass
