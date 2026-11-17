@@ -156,7 +156,9 @@ const QUIET_HELP = `schedule-drift quiet-facts — raw saved-input observations
     Pending rows in Lane state/Watermarks/Open holds start with unserved/capacity-deferred/
     INCOMPLETE/re-eligible or use '; status: STATE'. Historical Last pass prose is not pending.
     Watermarks: '- Quiet gate: JSON [repo#number,headRefOid,updatedAt] triples';
-    '- Last full pass: UTC ISO'. Missing/malformed continuity stays unknown.
+    '- Last full pass: UTC ISO'. Optional '- Non-lane roots: JSON threadId array' records
+    roots proven unrelated during full reconciliation, including omitted idle parents.
+    Missing/malformed continuity stays unknown; exclusions never override a recorded lane root.
   --now ISO Observation time with timezone; default current UTC; collection age must be 0..300s.
   --help Show flags, input contract, effects and limitations.
 No writes, subprocesses, network, T3 calls, database access or persistent state. Run from cwd /.
@@ -259,14 +261,25 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
   const priorKnown = identity && priorIds.length > 0 && prior?.threadId === priorIds[0] && prior.threadId !== self.threadId &&
     prior.projectId === projectId && typeof prior.settled === 'boolean' && knownStatus(prior);
   const laneIds = new Set([...priorIds, ...(jobRecords ?? []).filter(Boolean).map(m => m[1])]);
+  let outsideRoots = [], outsideKnown = true;
+  const outsideRecords = [...(sections.Watermarks ?? '').matchAll(/^- Non-lane roots: (.*)$/gm)];
+  if (outsideRecords.length) {
+    try { outsideRoots = JSON.parse(outsideRecords[0][1]); } catch { outsideRoots = null; }
+    outsideKnown = outsideRecords.length === 1 && Array.isArray(outsideRoots) && outsideRoots.every(nonempty) &&
+      new Set(outsideRoots).size === outsideRoots.length && outsideRoots.every(id => !laneIds.has(id) && id !== self?.threadId &&
+        !schedules.has(byId.get(id)?.scheduledTaskId));
+  }
+  const outsideIds = new Set(outsideKnown ? outsideRoots : []);
   const membership = new Map();
   function member(row, seen = new Set()) {
     if (membership.has(row.threadId)) return membership.get(row.threadId);
     if (laneIds.has(row.threadId)) return true;
+    if (outsideIds.has(row.threadId)) return false;
     if (nonempty(row.scheduledTaskId) && schedules.size) return schedules.has(row.scheduledTaskId);
     if (seen.has(row.threadId)) return null;
     seen.add(row.threadId);
     if (laneIds.has(row.parentThreadId)) return true;
+    if (outsideIds.has(row.parentThreadId)) return false;
     if (byId.has(row.parentThreadId)) return member(byId.get(row.parentThreadId), seen);
     if (row.parentThreadId !== null) return null;
     if (row.projectId !== projectId || row.scheduledTaskId === null ||
@@ -277,11 +290,11 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
   const candidates = [...byId.values()].filter(row => row.threadId !== self?.threadId);
   const laneRows = candidates.filter(row => membership.get(row.threadId) === true);
   const ambiguous = candidates.filter(row => membership.get(row.threadId) === null && !terminalRuns.includes(row.status) && row.status !== 'idle');
-  const laneKnown = identity && priorIds.length > 0 && jobsKnown && ambiguous.length === 0 && laneRows.every(knownStatus);
+  const laneKnown = identity && priorIds.length > 0 && jobsKnown && outsideKnown && ambiguous.length === 0 && laneRows.every(knownStatus);
   const threadsKnown = laneKnown && priorKnown;
   const descendants = laneRows.filter(row => row.parentThreadId !== null).map(row => row.threadId);
   term('thread-readbacks', threadsKnown ? 'pass' : 'unknown', { listed: laneRows.length, descendantThreadIds: descendants, priorThreadId: prior?.threadId ?? null, priorReads: prior ? 1 : 0 });
-  term('ownership', threadsKnown && continuityKnown ? 'pass' : 'unknown', { completeInventory: !!scoped, projectId: projectId ?? null, total: value?.total ?? null, ambiguousThreadIds: ambiguous.map(row => row.threadId) });
+  term('ownership', threadsKnown && continuityKnown ? 'pass' : 'unknown', { completeInventory: !!scoped, projectId: projectId ?? null, total: value?.total ?? null, recordedNonLaneRoots: outsideKnown ? outsideRoots : null, ambiguousThreadIds: ambiguous.map(row => row.threadId) });
   const holds = sections['Open holds']?.trim().split('\n').filter(nonempty) ?? [];
   const userOnly = line => /; resume: user decision only\.?$/i.test(line);
   const holdKnown = holds.length > 0 && (holds.length === 1 && holds[0] === '- none' || holds.every(line => /^- .+: .+; resume: [^;]+$/.test(line)));
