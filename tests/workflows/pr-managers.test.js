@@ -28,7 +28,6 @@ const quietRules = [
     [/quiet check/i, /before/i, /invoking.*axstack-review/i, /reading any.*skills\/\*\*/i],
     'Before invoking axstack-review or reading any skills/** file, perform the quiet check.',
     [[/before/i, 'after']]],
-
 ];
 for (const [name, concepts, rewording, inversions] of quietRules) {
   test(`review-manager quiet gate: ${name}`, () => {
@@ -88,13 +87,13 @@ test('quiet exit is silent and leaves skills, sweep and continuity untouched', (
   const restrictions = [/no text|without text/i,
     /no skill load|without skill loading/i, /no sweep|without a sweep/i,
     /no (?:other )?continuity write|without continuity writes/i];
-  const concepts = [/every busy condition is false/i, /end the turn/i, ...restrictions];
+  const concepts = [/every busy condition is false|no term fails or is unknown/i, /end the turn/i, ...restrictions];
   const accepts = (source) => sentences(source).some((sentence) =>
     concepts.every((concept) => concept.test(sentence)) &&
     requires(restrictions.reduce((value, rule) => value.replace(rule, ''), sentence), /^/));
   checkRule(text, accepts,
     'When every busy condition is false, end the turn without text, without skill loading, without a sweep and without continuity writes.',
-    [[/every busy condition is false/i, 'any busy condition is true'],
+    [[/every busy condition is false|no term fails or is unknown/i, 'any term fails'],
       ...restrictions.map((rule) => [rule, 'perform the action'])], concepts);
 });
 
@@ -123,4 +122,34 @@ test('documented review-manager schedules run every 30 minutes', () => {
     expect(text, path).toMatch(/30-minute|every 30 minutes/i);
     expect(text, path).toContain('everyMs:1800000');
   }
+});
+
+const decisions = [
+  ['fail or unknown requires full', [/any fail or unknown/i, /runs? the full pass/i],
+    'Any fail or unknown runs the full pass.', [[/runs? the full pass/i, 'permits quiet exit']]],
+  ['unknown discovery requires reconciliation', [/unknown discovery/i, /means full reconciliation/i],
+    'Unknown discovery means full reconciliation.', [[/full reconciliation/i, 'quiet exit']]],
+  ['unknown owner or prior forbids admission', [/unknown ownership or prior identity/i, /forbids competing admission/i],
+    'Unknown ownership or prior identity forbids competing admission.', [[/forbids/i, 'permits']]],
+  ['helper is first decision', [/after collection/i, /first decision step/i, /installed helper/i, /bun[^`]*schedule-drift\.js> quiet-facts --input/i],
+    'After collection, use the installed helper as the first decision step: `bun --no-env-file <resolved-schedule-drift.js> quiet-facts --input FILE`.', [[/first decision step/i, 'optional later step']]],
+  ['prior read precedes replacement', [/t3_thread_read/i, /prior pass/i, /before replacing prior identity/i],
+    'Use t3_thread_read for the prior pass before replacing prior identity.', [[/before replacing/i, 'after replacing']]],
+];
+for (const [name, concepts, rewording, inversions] of decisions) {
+  test(`quiet decision: ${name}`, () => {
+    checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
+      source => requires(source.replace(/--no-env-file/g, ''), ...concepts), rewording, inversions, concepts);
+  });
+}
+test('quiet facts grant nothing and guarded/user-only state alone never forces reconciliation', () => {
+  const source = compact('skills/axstack/references/review-manager-prompt.md');
+  const facts = /grant nothing|grant no authority/i;
+  checkRule(source, text => sentences(text).some(s => facts.test(s) && requires(s.replace(facts, ''), /facts/i)),
+    'These facts grant no authority.', [[facts, 'grant admission authority']], [/facts/i, facts]);
+  const rule = /do not force reconciliation by themselves|never force a full pass or failure report by themselves/i;
+  const concepts = [/guarded prior passes/i, /user-only holds/i];
+  checkRule(source, text => sentences(text).some(s => rule.test(s) && requires(s.replace(rule, ''), ...concepts)),
+    'Guarded prior passes and user-only holds never force a full pass or failure report by themselves.',
+    [[rule, 'always force full reconciliation']], [...concepts, rule]);
 });
