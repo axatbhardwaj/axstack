@@ -90,7 +90,7 @@ test('quiet exit is silent and leaves skills, sweep and continuity untouched', (
   const concepts = [/every busy condition is false|no term fails or is unknown/i, /end the turn/i, ...restrictions];
   const accepts = (source) => sentences(source).some((sentence) =>
     concepts.every((concept) => concept.test(sentence)) &&
-    requires(restrictions.reduce((value, rule) => value.replace(rule, ''), sentence), /^/));
+    requires([...restrictions, /no term fails or is unknown/i].reduce((value, rule) => value.replace(rule, ''), sentence), /^/));
   checkRule(text, accepts,
     'When every busy condition is false, end the turn without text, without skill loading, without a sweep and without continuity writes.',
     [[/every busy condition is false|no term fails or is unknown/i, 'any term fails'],
