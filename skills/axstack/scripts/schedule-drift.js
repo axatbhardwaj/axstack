@@ -266,9 +266,9 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
   const terminal = row => terminalRuns.includes(row.status);
   term('prior-pass', !priorKnown || !continuityKnown || !holdKnown ? 'unknown' : prior.settled || terminal(prior) && guarded ? 'pass' : 'fail',
     { threadId: prior?.threadId ?? null, status: prior?.status ?? null, settled: prior?.settled ?? null, recordedGuard: guarded });
-  const nonterminal = row => !terminal(row) && row.status !== 'idle';
+  const nonterminal = row => activeRuns.includes(row.status);
   const busy = [...laneRows, ...(priorKnown ? [prior] : [])].filter(row => row.threadId !== self?.threadId && nonterminal(row)).map(row => row.threadId);
-  term('lane-idle', !laneKnown ? 'unknown' : busy.length ? 'fail' : 'pass', { nonterminalThreadIds: [...new Set(busy)] });
+  term('lane-idle', identity && busy.length ? 'fail' : !laneKnown ? 'unknown' : 'pass', { nonterminalThreadIds: [...new Set(busy)] });
   const recorded = [sections['Lane state'], sections.Watermarks, sections['Open holds']].filter(Boolean).join('\n');
   const event = /^- (?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b|;\s*status:\s*(?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b/gm;
   const jobs = sections['Lane state']?.match(/^- Active PR jobs and descendants: (.+)$/m)?.[1];
