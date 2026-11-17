@@ -267,7 +267,8 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
     try { outsideRoots = JSON.parse(outsideRecords[0][1]); } catch { outsideRoots = null; }
     outsideKnown = outsideRecords.length === 1 && Array.isArray(outsideRoots) && outsideRoots.every(nonempty) &&
       new Set(outsideRoots).size === outsideRoots.length && outsideRoots.every(id => !laneIds.has(id) && id !== self?.threadId &&
-        !schedules.has(byId.get(id)?.scheduledTaskId));
+        !schedules.has(byId.get(id)?.scheduledTaskId) &&
+        (!byId.has(id) || byId.get(id).parentThreadId === null));
   }
   const outsideIds = new Set(outsideKnown ? outsideRoots : []);
   const membership = new Map();
