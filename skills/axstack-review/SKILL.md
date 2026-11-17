@@ -271,8 +271,7 @@ external write.
 Submit a consolidated peer review only within explicit user authority and only
 for a complete `APPROVE` or `REQUEST_CHANGES` verdict:
 
-1. Read back the remote head and base; stop if either differs from the reviewed
-   candidate.
+1. Apply [Peer mode](references/peer-mode.md).
 2. Bind the submission to the actual GitHub commit parameter for that revision;
    SHA text in prose is not binding.
 3. Publish the owner-synthesized review with the mode-required peer receipts as evidence,
@@ -306,7 +305,7 @@ the disposition. A newly accepted explanation can turn same-head
 `REQUEST_CHANGES` into `APPROVE`. Count every same-head `REQUEST_CHANGES`
 submission toward the five-request cap.
 
-Before every submission, re-check head, base, draft status, authorship, and
+Before every submission, re-check authorship and
 allowlist, bind the verdict to the exact commit parameter, and end the body
 with this marker line:
 
