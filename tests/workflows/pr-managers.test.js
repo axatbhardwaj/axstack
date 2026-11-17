@@ -125,6 +125,8 @@ test('documented review-manager schedules run every 30 minutes', () => {
 });
 
 const decisions = [
+  ['full pass records verified outsiders', [/full passes/i, /record proven/i, /Non-lane roots/i, /omitted idle parents/i],
+    'For omitted idle parents, full passes record proven Non-lane roots.', [[/record proven/i, 'invent']]],
   ['full pass resolves heads', [/resolve heads|obtain head OIDs/i, /gh pr view/i, /--json headRefOid/i, /in the full pass|during full reconciliation/i],
     'During full reconciliation, obtain head OIDs using gh pr view --repo REPO NUMBER --json headRefOid.',
     [[/resolve heads|obtain head OIDs/i, 'skip resolving heads']]],
