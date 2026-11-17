@@ -119,12 +119,11 @@ Outside the wedged-pass recovery above, unknown liveness blocks admission,
 shared-record writes, takeover and cleanup, including when activity is recent.
 Preserve user-taken-over threads.
 This is prompt policy, not an atomic lock.
-Count all unsettled PR jobs and descendants.
 
-A failed scheduled run alone proves neither predecessor exit nor release.
-Predecessor exit requires exact thread/run identity and terminal run evidence;
-a completed run row alone does not prove the work settled.
-Require reconciled continuity and settlement of every descendant before releasing ownership.
+Before admission/teardown, run [lane-owner](../scripts/lane-owner.js) from `/`
+with `bun --no-env-file`; `--help` defines snapshot/identity inputs. Save facts
+in continuity; fail/unknown retains ownership holds. Reconcile continuity before
+releasing ownership.
 Unknown facts hold at the durable decision location; never replace a
 potentially live owner.
 
