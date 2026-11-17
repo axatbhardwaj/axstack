@@ -1,6 +1,7 @@
 import { afterEach, expect, test } from 'bun:test';
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { checkRule, requires } from './prose-contract.js';
+import { checkRule, requires, sentences } from './prose-contract.js';
+import { docLinkIssues, relativeLinks } from './public-docs.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/pr-fresh.js`;
 const fixture = await Bun.file(`${import.meta.dir}/fixtures/pr-fresh.json`).json();
@@ -71,6 +72,7 @@ for (const [name, check, pending, successful] of [
   ['successful run', { __typename: 'CheckRun', name: 'ci', status: 'COMPLETED', conclusion: 'SUCCESS' }, 'pass', 'pass'],
   ['failed run', { __typename: 'CheckRun', name: 'ci', status: 'COMPLETED', conclusion: 'FAILURE' }, 'pass', 'fail'],
   ['pending status', { __typename: 'StatusContext', context: 'ci', state: 'PENDING' }, 'fail', 'n/a'],
+  ['expected status', { __typename: 'StatusContext', context: 'ci', state: 'EXPECTED' }, 'fail', 'n/a'],
   ['successful status', { __typename: 'StatusContext', context: 'ci', state: 'SUCCESS' }, 'pass', 'pass'],
   ['failed status', { __typename: 'StatusContext', context: 'ci', state: 'ERROR' }, 'pass', 'fail'],
 ]) test(name, () => {
@@ -164,8 +166,36 @@ test('peer rule requires explicit recorded policy before failed checks gate revi
   checkRule(peer(), (s) => requires(s, ...concepts),
     'Failed checks gate review only under an explicit recorded policy.', [[/only/i, 'also without']], concepts);
 });
+test('F1: freshness runs before each dispatch/reconcile and before submission', () => {
+  const concepts = [/before (?:each|every)/i, /dispatch/i, /reconcile/i, /admission/i,
+    /submission/i, /pr-fresh/i, /run|invoke/i];
+  checkRule(peer(), (s) => sentences(s).some((clause) =>
+    requires(clause.replaceAll('--no-env-file', ''), ...concepts) && !/\bafter\b/i.test(clause)),
+    'Invoke pr-fresh before every dispatch and reconcile (admission) and before submission (submission).',
+    [[/before/gi, 'after'], [/dispatch/gi, 'after dispatch'], [/submission/gi, 'after submission']], concepts);
+});
+test('F1: automation PR jobs consume the peer freshness obligation', () => {
+  const concepts = [/PR jobs?/i, /consumes?|follows?/i, /pr-fresh|freshness/i];
+  const automation = readFileSync(`${import.meta.dir}/../../skills/axstack/references/automations.md`, 'utf8');
+  checkRule(automation, (s) => requires(s, ...concepts), 'PR jobs follow freshness.',
+    [[/consumes?|follows?/gi, 'ignore']], concepts);
+});
+test('F2: unknown gating terms hold under recorded policy', () => {
+  const concepts = [/recorded policy/i, /unknown/i, /gating (?:terms|facts)/i, /hold(?:s|ing)?/i];
+  checkRule(peer(), (s) => requires(s, ...concepts),
+    'Under recorded policy, unknown gating facts hold.', [[/hold(?:s|ing)?/gi, 'proceed']], concepts);
+});
+test('F3: freshness and settlement pointers retain resolving section anchors', () => {
+  const root = `${import.meta.dir}/../..`;
+  const peerPath = 'skills/axstack-review/references/peer-mode.md';
+  const automationPath = 'skills/axstack/references/automations.md';
+  const automation = readFileSync(`${root}/${automationPath}`, 'utf8');
+  expect(relativeLinks(peer())).toContain('../../axstack/references/automations.md#held-job-settlement');
+  expect(relativeLinks(automation)).toContain('../../axstack-review/references/peer-mode.md#sync-admission-and-round-freshness');
+  expect(docLinkIssues(root, [peerPath, automationPath])).toEqual([]);
+});
 for (const phase of ['admission', 'submission']) {
-  for (const state of ['SUCCESS', 'FAILURE', 'PENDING']) {
+  for (const state of ['SUCCESS', 'FAILURE', 'PENDING', 'EXPECTED']) {
     test(`shipped ${phase} is unrecorded: pinned event stays eligible with ${state} CI by peer rule`, () => {
       const { code, report } = run((d) => {
         d.policy = shippedPolicy(); d.phase = phase;
@@ -180,8 +210,9 @@ for (const phase of ['admission', 'submission']) {
       }
       // The semantic rule above ignores exactly these non-event terms for this policy phase.
       expect(fact(report, 'headAge').status).toBe('unknown');
-      expect(fact(report, 'pendingChecks').status).toBe(state === 'PENDING' ? 'fail' : 'pass');
-      expect(fact(report, 'checksSuccessful').status).toBe(state === 'PENDING' ? 'n/a' : state === 'FAILURE' ? 'fail' : 'pass');
+      const pending = ['PENDING', 'EXPECTED'].includes(state);
+      expect(fact(report, 'pendingChecks').status).toBe(pending ? 'fail' : 'pass');
+      expect(fact(report, 'checksSuccessful').status).toBe(pending ? 'n/a' : state === 'FAILURE' ? 'fail' : 'pass');
     });
   }
 }
