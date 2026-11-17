@@ -50,6 +50,8 @@ test('malformed continuity identities and holds remain unknown', () => {
     s => s.replace('prior/prior-run', 'missing-run'),
     s => s.replace('schedule-review, prior', ', prior'),
     s => s.replace('## Open holds\n- none', '## Open holds\n- malformed'),
+    s => s.replace('- Non-lane roots: []', '- Non-lane roots: broken'),
+    s => s.replace('- Non-lane roots: []', '- Non-lane roots: ["prior"]'),
   ]) expect(run(() => {}, edit).terms.some(t => t.status === 'unknown')).toBe(true);
 });
 test('the writer template declares the reader watermark and hold grammar', () => {
