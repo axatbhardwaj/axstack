@@ -149,7 +149,7 @@ const QUIET_HELP = `schedule-drift quiet-facts — raw saved-input observations
     Active PR jobs and descendants: none, or PR, TASK/CHILD/RUN, OWNER, REVISION, STATE.
     Recorded pass/job IDs and native parent edges define the lane, never project membership.
     Native scheduledTaskId, when present, identifies other passes; unknown lineage stays unknown.
-    Explicit non-scheduled user/MCP roots and their descendants are outside this lane.
+    Native user-created roots and their descendants are outside this lane.
     The legacy '- threadId: ID' record is accepted during migration. Guards use recorded '- ID: held|flagged', '; state:' / '; guard:'
     or '; resume: user decision only' on that exact thread's line, never agent judgment.
     Open holds: '- none' or one line per hold; '; resume: user decision only' (optional final period) is user-only.
@@ -270,7 +270,7 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
     if (byId.has(row.parentThreadId)) return member(byId.get(row.parentThreadId), seen);
     if (row.parentThreadId !== null) return null;
     if (row.projectId !== projectId || row.scheduledTaskId === null ||
-      row.createdBy === 'user' || ['web', 'mobile', 'mcp'].includes(row.creationSource)) return false;
+      row.createdBy === 'user' || ['web', 'mobile'].includes(row.creationSource)) return false;
     return null;
   }
   for (const row of byId.values()) membership.set(row.threadId, member(row));
