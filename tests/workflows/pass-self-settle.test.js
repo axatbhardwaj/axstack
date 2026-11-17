@@ -53,8 +53,8 @@ for (const [path, name, concepts, rewording, inversions, masks = []] of rules) {
 const repairRules = [
   ['automations', 'quiet teardown carve-out', [/quiet exit/i, /bypasses/i, /except the guarded pass.end self.settle/i],
     'A quiet exit bypasses teardown except the guarded pass-end self-settle.', [[/except the guarded/i, 'including the guarded']]],
-  ['review-manager-prompt', 'quiet gate routes to self-settle', [/every busy condition is false|no term fails or is unknown/i, /apply the guarded pass.end self.settle below/i],
-    'When every busy condition is false, apply the guarded pass-end self-settle below before ending.', [[/apply the guarded/i, 'skip the guarded']], [/no term fails or is unknown/i, /no text/i, /no skill load/i, /no sweep/i, /no other continuity write/i]],
+  ['review-manager-prompt', 'quiet gate routes to self-settle', [/no term fails or is unknown/i, /apply the guarded pass.end self.settle below/i],
+    'When no term fails or is unknown, apply the guarded pass-end self-settle below before ending.', [[/apply the guarded/i, 'skip the guarded']], [/no term fails or is unknown/i, /no text/i, /no skill load/i, /no sweep/i, /no other continuity write/i]],
   ...passes.slice(1).flatMap((path) => [
     [path, 'all exit kinds self-settle', [/applies to quiet, skipped and empty passes too/i],
       'The guarded action applies to quiet, skipped and empty passes too.', [[/applies to/i, 'excludes']]],
