@@ -1,5 +1,6 @@
 import { afterEach, expect, test } from 'bun:test';
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { checkRule, requires } from './prose-contract.js';
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/pr-fresh.js`;
 const fixture = await Bun.file(`${import.meta.dir}/fixtures/pr-fresh.json`).json();
@@ -9,6 +10,8 @@ const pr = (d) => d.response.data.repository.pullRequest;
 const commit = (d) => pr(d).commits.nodes[0].commit;
 const contexts = (d) => commit(d).statusCheckRollup.contexts;
 const fact = (r, id) => r.terms.find((t) => t.id === id);
+const shippedPolicy = () => JSON.parse(readFileSync(`${import.meta.dir}/../../skills/axstack/references/schedule-policy.json`, 'utf8'));
+const peer = () => readFileSync(`${import.meta.dir}/../../skills/axstack-review/references/peer-mode.md`, 'utf8');
 function run(change = () => {}, live = false) {
   const data = structuredClone(fixture);
   change(data);
@@ -16,7 +19,8 @@ function run(change = () => {}, live = false) {
   roots.push(dir);
   const input = `${dir}/input.json`, policy = `${dir}/policy.json`;
   writeFileSync(input, JSON.stringify(data.response));
-  if (data.policy !== undefined) writeFileSync(policy, typeof data.policy === 'string' ? data.policy : JSON.stringify(data.policy));
+  if (data.policy === 'DIRECTORY') mkdirSync(policy);
+  else if (data.policy !== undefined) writeFileSync(policy, typeof data.policy === 'string' ? data.policy : JSON.stringify(data.policy));
   if (live) {
     // Executable fixture enforces the read-only query shape; it never contacts GitHub.
     writeFileSync(`${dir}/gh`, `#!${process.execPath}\nconst a = process.argv.slice(2);\n` +
@@ -142,4 +146,57 @@ test('mixed failed and pending checks preserve both observations', () => {
   expect(code).toBe(0);
   expect(fact(report, 'pendingChecks').evidence.pending).toEqual(['deploy']);
   expect(fact(report, 'checksSuccessful').evidence.failed).toEqual(['build']);
+});
+
+test('peer rule admits an unrecorded phase without age or check gates: removal/inversion red, rewording green', () => {
+  const concepts = [/unrecorded/i, /ignore|disregard/i, /policy/i, /headAge/i, /pendingChecks/i, /checksSuccessful/i];
+  checkRule(peer(), (s) => requires(s, ...concepts),
+    'For an unrecorded phase, disregard policy, headAge, pendingChecks and checksSuccessful.',
+    [[/ignore|disregard/i, 'enforce']], concepts);
+});
+test('peer rule holds unavailable/invalid policy, rather than treating it as unrecorded', () => {
+  const concepts = [/missing|absent/i, /unreadable/i, /malformed/i, /unsupported/i, /policy/i, /holds?/i];
+  checkRule(peer(), (s) => requires(s, ...concepts),
+    'Absent, unreadable, malformed or unsupported policy holds.', [[/holds?/i, 'proceeds']], concepts);
+});
+test('peer rule requires explicit recorded policy before failed checks gate review', () => {
+  const concepts = [/failed checks/i, /gate/i, /only/i, /explicit/i, /recorded policy/i];
+  checkRule(peer(), (s) => requires(s, ...concepts),
+    'Failed checks gate review only under an explicit recorded policy.', [[/only/i, 'also without']], concepts);
+});
+for (const phase of ['admission', 'submission']) {
+  for (const state of ['SUCCESS', 'FAILURE', 'PENDING']) {
+    test(`shipped ${phase} is unrecorded: pinned event stays eligible with ${state} CI by peer rule`, () => {
+      const { code, report } = run((d) => {
+        d.policy = shippedPolicy(); d.phase = phase;
+        contexts(d).nodes = [{ __typename: 'StatusContext', context: 'ci', state }];
+      });
+      expect(code).toBe(2); // Reporting unknown is unchanged; exit 2 alone is not admission authority.
+      expect(fact(report, 'policy').status).toBe('unknown');
+      expect(fact(report, 'policy').evidence.unrecorded).toBe(true);
+      expect(fact(report, 'policy').evidence.malformed).toBe(false);
+      for (const id of ['open', 'nonDraft', 'unmerged', 'pinnedHead', 'baseUnchanged']) {
+        expect(fact(report, id).status).toBe('pass');
+      }
+      // The semantic rule above ignores exactly these non-event terms for this policy phase.
+      expect(fact(report, 'headAge').status).toBe('unknown');
+      expect(fact(report, 'pendingChecks').status).toBe(state === 'PENDING' ? 'fail' : 'pass');
+      expect(fact(report, 'checksSuccessful').status).toBe(state === 'PENDING' ? 'n/a' : state === 'FAILURE' ? 'fail' : 'pass');
+    });
+  }
+}
+for (const [name, policy] of [
+  ['absent', undefined], ['unreadable directory', 'DIRECTORY'], ['invalid JSON', '{'], ['missing shape', {}],
+  ['unsupported version', { ...fixture.policy, version: 2 }],
+  ['unknown with conflicting gate', { version: 1, review: { admission: {
+    status: 'unknown', headAgeThresholdSeconds: 600, clockSemantics: null, pendingCheckTreatment: null,
+  } } }],
+  ['unknown with missing fields', { version: 1, review: { admission: { status: 'unknown' } } }],
+]) test(`${name} policy cannot bypass the policy hold`, () => {
+  const { report } = run((d) => { d.policy = policy; });
+  expect(fact(report, 'policy').status).toBe('unknown');
+  expect(fact(report, 'policy').evidence.unrecorded).toBe(false);
+  expect(fact(report, 'policy').evidence.malformed).toBe(true);
+  expect(fact(report, 'headAge').status).toBe('unknown');
+  expect(fact(report, 'open').status).toBe('pass');
 });
