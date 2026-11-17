@@ -156,8 +156,7 @@ durable record under [PR shape](pr-shape.md#peer-sync-proof).
 On sync pass, use no reviewer dispatch and submit nothing, record `sync skip`
 with event identity for dedupe, and leave the PR for the user.
 Sync fail or unknown follows ordinary review.
-Each bounded PR job follows [Peer mode](../../axstack-review/references/peer-mode.md#sync-admission-and-round-freshness)
-stale-round discard before each dispatch, before reconcile and before submission.
+PR jobs follow [freshness](../../axstack-review/references/peer-mode.md#sync-admission-and-round-freshness).
 
 The review manager admits all eligible actionable PR events
 that measured host capacity can support across ticks. Before each admission,

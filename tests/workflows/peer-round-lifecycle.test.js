@@ -35,10 +35,6 @@ const rules = [
     'Sync skips are exempt from binding-verdict requirements.', /exempt/i, 'subject to'],
   [skill, [/\bnever\b/i, /sync skip/i, /internal verdict/i],
     'For a sync skip, never fabricate an internal verdict.', /never/i, 'Always', /never|sync skip/gi],
-  [peer, [/before each dispatch/i, /before reconcile/i, /before submission/i, /re-read/i, /PR state/i, /head/i, /base branch/i, /base SHA/i, /draft/i],
-    'Before each dispatch, before reconcile and before submission, re-read PR state, head, base branch, base SHA and draft.', /before each dispatch/i, 'only after dispatch'],
-  [peer, [/merged or closed/i, /head or base SHA moved/i, /base retargeted/i, /draft/i, /discard/i],
-    'Discard if merged or closed, head or base SHA moved, base retargeted, or draft.', /discard/i, 'continue'],
   [peer, [/discard/i, /cancel owned tasks/i, /verify settlement/i, /preserve evidence/i, /discarded: <reason>/i],
     'On discard, cancel owned tasks, verify settlement, preserve evidence and record discarded: <reason>.', /verify settlement/i, 'assume settlement'],
   [peer, [/discard/i, /submit nothing/i],
@@ -47,12 +43,10 @@ const rules = [
     'For merged or closed PRs, run existing cleanup.', /existing cleanup/i, 'retain all active tasks'],
   [peer, [/new head/i, /new event/i, /restart inside the job/i],
     'A new head is a new event, never a restart inside the job.', /never/i, 'always', /never/i],
-  [peer, [/unknown GitHub state/i, /holds/i, /never discards/i],
-    'Unknown GitHub state holds, never discards.', /never discards/i, 'always discards', /never discards/i],
+  [peer, [/event facts/i, /open/i, /nonDraft/i, /unmerged/i, /pinnedHead/i, /baseUnchanged/i, /discard failures/i, /hold unknowns/i],
+    'For event facts open, nonDraft, unmerged, pinnedHead and baseUnchanged, discard failures and hold unknowns.', /hold unknowns/i, 'discard unknowns'],
   [peer, [/polling loop/i, /watcher/i],
     'Add no polling loop or watcher.', /no/i, 'a', /no/i],
-  [automation, [/bounded PR job/i, /stale-round discard/i, /before each dispatch/i, /before reconcile/i, /before submission/i, /Peer mode/i],
-    'Each bounded PR job follows Peer mode stale-round discard before each dispatch, before reconcile and before submission.', /before each dispatch/i, 'after all dispatches'],
 ];
 
 for (const [path, concepts, rewording, direction, inversion, prohibition] of rules) {
