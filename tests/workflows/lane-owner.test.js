@@ -133,3 +133,20 @@ test('a foreign-project child in a project-filtered snapshot makes coverage unkn
   expect(result.exit).toBe(2);
   expect(result.report.terms.every(t => t.status === 'unknown')).toBe(true);
 });
+
+for (const state of ['completed', 'failed']) {
+  test(`a ${state} predecessor settled by this pass is not release evidence`, () => {
+    const input = saved([owner({ status: state })]);
+    input.preSettle = false; // The current pass wrote settled:true before this snapshot.
+    const result = drive(input);
+    expect(result.exit).toBe(2);
+    expect(result.report.terms.every(t => t.status === 'unknown')).toBe(true);
+  });
+}
+
+test('an unasserted snapshot cannot prove pre-settle ownership facts', () => {
+  const input = saved([owner()]); delete input.preSettle;
+  const result = drive(input);
+  expect(result.exit).toBe(2);
+  expect(result.report.terms.every(t => t.status === 'unknown')).toBe(true);
+});
