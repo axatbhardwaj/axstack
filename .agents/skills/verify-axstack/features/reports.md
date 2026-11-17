@@ -373,3 +373,43 @@ Keep both gh arrays, the T29 `{args,value}` list and ONE prior read verbatim.
 Fixtures cover the 1000 cap, native liveness versus settlement, recorded guards,
 unknown ownership, watermarks, pending rows and reap ordering. Omitted heads
 remain unobserved; changed raw fingerprints fail. Live collection remains unverified.
+
+## Review admission facts
+
+Entry point: `skills/axstack/scripts/pr-fresh.js`; fixtures:
+`tests/workflows/pr-fresh.test.js` and `fixtures/pr-fresh.json` (synthetic policy).
+After Launch/Doctor and install, run from trusted `/`:
+
+```bash
+doctor > "$EVIDENCE/pr-fresh-doctor.log" 2>&1
+bun run test tests/workflows/pr-fresh.test.js tests/workflows/peer-round-lifecycle.test.js \
+  tests/workflows/review-modes.test.js tests/workflows/public-docs.test.js \
+  tests/workflows/pr-managers-lifecycle.test.js \
+  tests/workflows/prose-size.test.js > "$EVIDENCE/pr-fresh-tests.log" 2>&1
+bun -e 'const f = await Bun.file(process.env.REPO + "/tests/workflows/fixtures/pr-fresh.json").json();
+  await Bun.write(process.env.EVIDENCE + "/pr-fresh-input.json", JSON.stringify(f.response));
+  await Bun.write(process.env.EVIDENCE + "/pr-fresh-policy.json", JSON.stringify(f.policy));'
+FRESH="$HOME/.agents/skills/axstack/scripts/pr-fresh.js"
+HEAD_SHA=$(bun -e 'console.log("a".repeat(40))')
+BASE_SHA=$(bun -e 'console.log("b".repeat(40))')
+cp "$EVIDENCE/pr-fresh-input.json" "$TMPDIR/pr-fresh-before.json"
+(cd /; bun --no-env-file "$FRESH" --repo example/project --pr 42 --head "$HEAD_SHA" \
+  --base "$BASE_SHA" --base-ref main --phase admission --now 2026-11-17T01:00:00Z \
+  --input "$EVIDENCE/pr-fresh-input.json" --policy "$EVIDENCE/pr-fresh-policy.json") > "$EVIDENCE/pr-fresh-installed.json"
+cmp "$TMPDIR/pr-fresh-before.json" "$EVIDENCE/pr-fresh-input.json"
+bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/pr-fresh-installed.json").json();
+  if (r.terms.length !== 9 || r.terms.some(t => t.status !== "pass") || "verdict" in r) throw Error("facts differ");'
+```
+
+Proof: inclusive below/at/above age boundaries, pending/success/failed checks,
+head/base movement, retargeting, merged/draft state, phase selection and unchanged
+saved bytes. API errors, pagination gaps and missing/malformed policy stay unknown.
+The installed W2-1 phases are unrecorded: exit 2, policy evidence `unrecorded:true`,
+`malformed:false`. Peer semantics ignore age/check terms for these phases; pending
+or failed CI adds no gate. Missing/unreadable/malformed/unsupported policy instead
+sets `malformed:true` and holds. Event facts still discard failures and hold unknowns.
+Semantic tests reject removal/inversion and accept equivalent wording. Fixture
+policy proves no live authority or push/settle age; the driver owns all decisions.
+Timing, automation-consumer and recorded-unknown-gate contracts have semantic keepers;
+freshness/settlement anchors resolve. `EXPECTED` statuses are pending, including
+under unrecorded phases. Recorded age/defer/allow meanings are in helper `--help`.

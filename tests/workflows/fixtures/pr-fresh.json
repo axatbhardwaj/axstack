@@ -1,0 +1,46 @@
+{
+  "now": "2026-11-17T01:00:00Z",
+  "policy": {
+    "version": 1,
+    "review": {
+      "admission": {
+        "status": "known",
+        "headAgeThresholdSeconds": 600,
+        "clockSemantics": "head-commit-committed-date",
+        "pendingCheckTreatment": "defer"
+      },
+      "submission": {
+        "status": "known",
+        "headAgeThresholdSeconds": 900,
+        "clockSemantics": "head-commit-committed-date",
+        "pendingCheckTreatment": "allow"
+      }
+    }
+  },
+  "response": {
+    "data": {
+      "repository": {
+        "nameWithOwner": "example/project",
+        "pullRequest": {
+          "number": 42,
+          "state": "OPEN",
+          "isDraft": false,
+          "merged": false,
+          "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "baseRefOid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "baseRefName": "main",
+          "commits": {
+            "nodes": [{ "commit": {
+              "oid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "committedDate": "2026-11-17T00:50:00Z",
+              "statusCheckRollup": { "contexts": {
+                "pageInfo": { "hasNextPage": false },
+                "nodes": [{ "__typename": "CheckRun", "name": "ci", "status": "COMPLETED", "conclusion": "SUCCESS" }]
+              } }
+            } }]
+          }
+        }
+      }
+    }
+  }
+}

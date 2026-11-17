@@ -1,0 +1,233 @@
+import { afterEach, expect, test } from 'bun:test';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { checkRule, requires, sentences } from './prose-contract.js';
+import { docLinkIssues, relativeLinks } from './public-docs.js';
+
+const script = `${import.meta.dir}/../../skills/axstack/scripts/pr-fresh.js`;
+const fixture = await Bun.file(`${import.meta.dir}/fixtures/pr-fresh.json`).json();
+const roots = [];
+afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true }); });
+const pr = (d) => d.response.data.repository.pullRequest;
+const commit = (d) => pr(d).commits.nodes[0].commit;
+const contexts = (d) => commit(d).statusCheckRollup.contexts;
+const fact = (r, id) => r.terms.find((t) => t.id === id);
+const shippedPolicy = () => JSON.parse(readFileSync(`${import.meta.dir}/../../skills/axstack/references/schedule-policy.json`, 'utf8'));
+const peer = () => readFileSync(`${import.meta.dir}/../../skills/axstack-review/references/peer-mode.md`, 'utf8');
+function run(change = () => {}, live = false) {
+  const data = structuredClone(fixture);
+  change(data);
+  const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/pr-fresh-`);
+  roots.push(dir);
+  const input = `${dir}/input.json`, policy = `${dir}/policy.json`;
+  writeFileSync(input, JSON.stringify(data.response));
+  if (data.policy === 'DIRECTORY') mkdirSync(policy);
+  else if (data.policy !== undefined) writeFileSync(policy, typeof data.policy === 'string' ? data.policy : JSON.stringify(data.policy));
+  if (live) {
+    // Executable fixture enforces the read-only query shape; it never contacts GitHub.
+    writeFileSync(`${dir}/gh`, `#!${process.execPath}\nconst a = process.argv.slice(2);\n` +
+      `if (a[0] !== 'api' || a[1] !== 'graphql' || a[2] !== '-f' || !a[3]?.startsWith('query=query ') || a[3].includes('mutation')) process.exit(9);\n` +
+      `console.log(await Bun.file(${JSON.stringify(input)}).text());\n`);
+    chmodSync(`${dir}/gh`, 0o700);
+  }
+  const before = readFileSync(input, 'utf8');
+  const result = Bun.spawnSync([process.execPath, '--no-env-file', script, '--repo', 'example/project',
+    '--pr', '42', '--head', 'a'.repeat(40), '--base', 'b'.repeat(40), '--base-ref', 'main',
+    '--phase', data.phase ?? 'admission', ...(live ? [] : ['--input', input]), '--policy', policy, '--now', data.now],
+  { cwd: '/', stdout: 'pipe', stderr: 'pipe', env: { ...process.env,
+    PATH: live ? dir : process.env.PATH, BUN_RUNTIME_TRANSPILER_CACHE_PATH: '0' } });
+  expect(readFileSync(input, 'utf8')).toBe(before);
+  return { code: result.exitCode, report: JSON.parse(result.stdout.toString()) };
+}
+
+for (const [seconds, expected] of [[599, 'fail'], [600, 'pass'], [601, 'pass']]) {
+  test(`synthetic policy inclusive age threshold: ${seconds}s`, () => {
+    const { code, report } = run((d) => { commit(d).committedDate = new Date(Date.parse(d.now) - seconds * 1000).toISOString(); });
+    expect(fact(report, 'headAge').status).toBe(expected);
+    expect(fact(report, 'headAge').evidence.ageSeconds).toBe(seconds);
+    expect(code).toBe(0);
+  });
+}
+test('unchanged open non-draft event reports facts without an aggregate verdict', () => {
+  const { code, report } = run();
+  expect(code).toBe(0);
+  expect(report.terms.every((t) => t.status === 'pass')).toBe(true);
+  expect(report).not.toHaveProperty('verdict');
+  expect(report).not.toHaveProperty('admitted');
+});
+for (const [name, change, id] of [
+  ['head move', (d) => { pr(d).headRefOid = commit(d).oid = 'c'.repeat(40); }, 'pinnedHead'],
+  ['base move', (d) => { pr(d).baseRefOid = 'c'.repeat(40); }, 'baseUnchanged'],
+  ['base retarget', (d) => { pr(d).baseRefName = 'other'; }, 'baseUnchanged'],
+  ['merged', (d) => { pr(d).merged = true; pr(d).state = 'MERGED'; }, 'unmerged'],
+  ['closed', (d) => { pr(d).state = 'CLOSED'; }, 'open'],
+  ['draft', (d) => { pr(d).isDraft = true; }, 'nonDraft'],
+]) test(`${name} remains a measured failed fact`, () => {
+  const { code, report } = run(change);
+  expect(code).toBe(0);
+  expect(fact(report, id).status).toBe('fail');
+});
+for (const [name, check, pending, successful] of [
+  ['pending run', { __typename: 'CheckRun', name: 'ci', status: 'IN_PROGRESS', conclusion: null }, 'fail', 'n/a'],
+  ['queued run', { __typename: 'CheckRun', name: 'ci', status: 'QUEUED', conclusion: null }, 'fail', 'n/a'],
+  ['successful run', { __typename: 'CheckRun', name: 'ci', status: 'COMPLETED', conclusion: 'SUCCESS' }, 'pass', 'pass'],
+  ['failed run', { __typename: 'CheckRun', name: 'ci', status: 'COMPLETED', conclusion: 'FAILURE' }, 'pass', 'fail'],
+  ['pending status', { __typename: 'StatusContext', context: 'ci', state: 'PENDING' }, 'fail', 'n/a'],
+  ['expected status', { __typename: 'StatusContext', context: 'ci', state: 'EXPECTED' }, 'fail', 'n/a'],
+  ['successful status', { __typename: 'StatusContext', context: 'ci', state: 'SUCCESS' }, 'pass', 'pass'],
+  ['failed status', { __typename: 'StatusContext', context: 'ci', state: 'ERROR' }, 'pass', 'fail'],
+]) test(name, () => {
+  const { code, report } = run((d) => { contexts(d).nodes = [check]; });
+  expect(code).toBe(0);
+  expect(fact(report, 'pendingChecks').status).toBe(pending);
+  expect(fact(report, 'checksSuccessful').status).toBe(successful);
+});
+for (const policy of [undefined, '{', {}, { version: 1, review: { admission: { status: 'known', headAgeThresholdSeconds: -1 } } }]) {
+  test(`absent/malformed policy ${JSON.stringify(policy)} preserves raw PR facts`, () => {
+    const { code, report } = run((d) => { d.policy = policy; });
+    expect(code).toBe(2);
+    for (const id of ['policy', 'headAge']) expect(fact(report, id).status).toBe('unknown');
+    for (const id of ['open', 'nonDraft', 'pinnedHead', 'baseUnchanged', 'unmerged', 'pendingChecks']) {
+      expect(fact(report, id).status).toBe('pass');
+    }
+  });
+}
+test('shipped T09 policy preserves its unknown policy rather than inventing a threshold', () => {
+  const policy = JSON.parse(readFileSync(`${import.meta.dir}/../../skills/axstack/references/schedule-policy.json`, 'utf8'));
+  const { code, report } = run((d) => { d.policy = policy; });
+  expect(code).toBe(2);
+  expect(fact(report, 'policy').status).toBe('unknown');
+  expect(fact(report, 'headAge').evidence.ageSeconds).toBe(600);
+});
+for (const [name, change, id] of [
+  ['pagination', (d) => { contexts(d).pageInfo.hasNextPage = true; }, 'pendingChecks'],
+  ['missing checks', (d) => { delete commit(d).statusCheckRollup; }, 'pendingChecks'],
+  ['unrecognized check', (d) => { contexts(d).nodes = [{}]; }, 'pendingChecks'],
+  ['missing draft', (d) => { delete pr(d).isDraft; }, 'nonDraft'],
+  ['future clock', (d) => { commit(d).committedDate = '2026-11-18T00:00:00Z'; }, 'headAge'],
+  ['missing clock', (d) => { delete commit(d).committedDate; }, 'headAge'],
+  ['wrong head commit', (d) => { commit(d).oid = 'd'.repeat(40); }, 'headAge'],
+  ['wrong PR', (d) => { pr(d).number = 41; }, 'open'],
+  ['wrong repository', (d) => { d.response.data.repository.nameWithOwner = 'other/repo'; }, 'open'],
+  ['API errors', (d) => { d.response.errors = [{ message: 'denied' }]; }, 'open'],
+]) test(`${name} reports unknown`, () => {
+  const { code, report } = run(change);
+  expect(code).toBe(2);
+  expect(fact(report, id).status).toBe('unknown');
+});
+test('null rollup is observed absence of checks, not successful checks', () => {
+  const { code, report } = run((d) => { commit(d).statusCheckRollup = null; });
+  expect(code).toBe(0);
+  expect(fact(report, 'pendingChecks').status).toBe('pass');
+  expect(fact(report, 'checksSuccessful').status).toBe('n/a');
+});
+test('help and CLI errors', () => {
+  const help = Bun.spawnSync([process.execPath, '--no-env-file', script, '--help'], { cwd: '/' });
+  expect(help.exitCode).toBe(0);
+  for (const flag of ['--repo', '--pr', '--head', '--base', '--base-ref', '--phase', '--input', '--policy', '--now', '--help']) {
+    expect(help.stdout.toString()).toContain(flag);
+  }
+  expect(Bun.spawnSync([process.execPath, script, '--bad'], { cwd: '/' }).exitCode).toBe(1);
+});
+test('submission uses its recorded threshold and preserves pending treatment for the driver', () => {
+  const { code, report } = run((d) => { d.phase = 'submission'; });
+  expect(code).toBe(0);
+  expect(fact(report, 'headAge').status).toBe('fail');
+  expect(fact(report, 'headAge').evidence.thresholdSeconds).toBe(900);
+  expect(fact(report, 'policy').evidence.recorded.pendingCheckTreatment).toBe('allow');
+});
+test('live adapter uses one read-only gh api query with the same facts', () => {
+  const { code, report } = run(() => {}, true);
+  expect(code).toBe(0);
+  expect(report.source).toBe('gh api graphql');
+  expect(report.terms.every((t) => t.status === 'pass')).toBe(true);
+});
+test('mixed failed and pending checks preserve both observations', () => {
+  const { code, report } = run((d) => { contexts(d).nodes.push(
+    { __typename: 'CheckRun', name: 'build', status: 'COMPLETED', conclusion: 'FAILURE' },
+    { __typename: 'StatusContext', context: 'deploy', state: 'PENDING' }); });
+  expect(code).toBe(0);
+  expect(fact(report, 'pendingChecks').evidence.pending).toEqual(['deploy']);
+  expect(fact(report, 'checksSuccessful').evidence.failed).toEqual(['build']);
+});
+
+test('peer rule admits an unrecorded phase without age or check gates: removal/inversion red, rewording green', () => {
+  const concepts = [/unrecorded/i, /ignore|disregard/i, /policy/i, /headAge/i, /pendingChecks/i, /checksSuccessful/i];
+  checkRule(peer(), (s) => requires(s, ...concepts),
+    'For an unrecorded phase, disregard policy, headAge, pendingChecks and checksSuccessful.',
+    [[/ignore|disregard/i, 'enforce']], concepts);
+});
+test('peer rule holds unavailable/invalid policy, rather than treating it as unrecorded', () => {
+  const concepts = [/missing|absent/i, /unreadable/i, /malformed/i, /unsupported/i, /policy/i, /holds?/i];
+  checkRule(peer(), (s) => requires(s, ...concepts),
+    'Absent, unreadable, malformed or unsupported policy holds.', [[/holds?/i, 'proceeds']], concepts);
+});
+test('peer rule requires explicit recorded policy before failed checks gate review', () => {
+  const concepts = [/failed checks/i, /gate/i, /only/i, /explicit/i, /recorded policy/i];
+  checkRule(peer(), (s) => requires(s, ...concepts),
+    'Failed checks gate review only under an explicit recorded policy.', [[/only/i, 'also without']], concepts);
+});
+test('F1: freshness runs before each dispatch/reconcile and before submission', () => {
+  const concepts = [/before (?:each|every)/i, /dispatch/i, /reconcile/i, /admission/i,
+    /submission/i, /pr-fresh/i, /run|invoke/i];
+  checkRule(peer(), (s) => sentences(s).some((clause) =>
+    requires(clause.replaceAll('--no-env-file', ''), ...concepts) && !/\bafter\b/i.test(clause)),
+    'Invoke pr-fresh before every dispatch and reconcile (admission) and before submission (submission).',
+    [[/before/gi, 'after'], [/dispatch/gi, 'after dispatch'], [/submission/gi, 'after submission']], concepts);
+});
+test('F1: automation PR jobs consume the peer freshness obligation', () => {
+  const concepts = [/PR jobs?/i, /consumes?|follows?/i, /pr-fresh|freshness/i];
+  const automation = readFileSync(`${import.meta.dir}/../../skills/axstack/references/automations.md`, 'utf8');
+  checkRule(automation, (s) => requires(s, ...concepts), 'PR jobs follow freshness.',
+    [[/consumes?|follows?/gi, 'ignore']], concepts);
+});
+test('F2: unknown gating terms hold under recorded policy', () => {
+  const concepts = [/recorded policy/i, /unknown/i, /gating (?:terms|facts)/i, /hold(?:s|ing)?/i];
+  checkRule(peer(), (s) => requires(s, ...concepts),
+    'Under recorded policy, unknown gating facts hold.', [[/hold(?:s|ing)?/gi, 'proceed']], concepts);
+});
+test('F3: freshness and settlement pointers retain resolving section anchors', () => {
+  const root = `${import.meta.dir}/../..`;
+  const peerPath = 'skills/axstack-review/references/peer-mode.md';
+  const automationPath = 'skills/axstack/references/automations.md';
+  const automation = readFileSync(`${root}/${automationPath}`, 'utf8');
+  expect(relativeLinks(peer())).toContain('../../axstack/references/automations.md#held-job-settlement');
+  expect(relativeLinks(automation)).toContain('../../axstack-review/references/peer-mode.md#sync-admission-and-round-freshness');
+  expect(docLinkIssues(root, [peerPath, automationPath])).toEqual([]);
+});
+for (const phase of ['admission', 'submission']) {
+  for (const state of ['SUCCESS', 'FAILURE', 'PENDING', 'EXPECTED']) {
+    test(`shipped ${phase} is unrecorded: pinned event stays eligible with ${state} CI by peer rule`, () => {
+      const { code, report } = run((d) => {
+        d.policy = shippedPolicy(); d.phase = phase;
+        contexts(d).nodes = [{ __typename: 'StatusContext', context: 'ci', state }];
+      });
+      expect(code).toBe(2); // Reporting unknown is unchanged; exit 2 alone is not admission authority.
+      expect(fact(report, 'policy').status).toBe('unknown');
+      expect(fact(report, 'policy').evidence.unrecorded).toBe(true);
+      expect(fact(report, 'policy').evidence.malformed).toBe(false);
+      for (const id of ['open', 'nonDraft', 'unmerged', 'pinnedHead', 'baseUnchanged']) {
+        expect(fact(report, id).status).toBe('pass');
+      }
+      // The semantic rule above ignores exactly these non-event terms for this policy phase.
+      expect(fact(report, 'headAge').status).toBe('unknown');
+      const pending = ['PENDING', 'EXPECTED'].includes(state);
+      expect(fact(report, 'pendingChecks').status).toBe(pending ? 'fail' : 'pass');
+      expect(fact(report, 'checksSuccessful').status).toBe(pending ? 'n/a' : state === 'FAILURE' ? 'fail' : 'pass');
+    });
+  }
+}
+for (const [name, policy] of [
+  ['absent', undefined], ['unreadable directory', 'DIRECTORY'], ['invalid JSON', '{'], ['missing shape', {}],
+  ['unsupported version', { ...fixture.policy, version: 2 }],
+  ['unknown with conflicting gate', { version: 1, review: { admission: {
+    status: 'unknown', headAgeThresholdSeconds: 600, clockSemantics: null, pendingCheckTreatment: null,
+  } } }],
+  ['unknown with missing fields', { version: 1, review: { admission: { status: 'unknown' } } }],
+]) test(`${name} policy cannot bypass the policy hold`, () => {
+  const { report } = run((d) => { d.policy = policy; });
+  expect(fact(report, 'policy').status).toBe('unknown');
+  expect(fact(report, 'policy').evidence.unrecorded).toBe(false);
+  expect(fact(report, 'policy').evidence.malformed).toBe(true);
+  expect(fact(report, 'headAge').status).toBe('unknown');
+  expect(fact(report, 'open').status).toBe('pass');
+});
