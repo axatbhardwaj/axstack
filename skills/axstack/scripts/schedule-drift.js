@@ -190,7 +190,7 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
   term('continuity', continuityKnown ? 'pass' : 'unknown', { continuitySha256 });
   const snapshot = input.inventory, call = snapshot?.args, value = nativeValue(snapshot?.value), rows = value?.threads;
   const byId = new Map();
-  let complete = fresh && call && Array.isArray(rows) && !snapshot.isError && !value.isError && !value.truncated && !value.hasMore &&
+  let complete = fresh && call && Array.isArray(rows) && !snapshot.isError && !value.isError && value.complete !== false && !value.truncated && !value.hasMore &&
     value.nextCursor === null && value.total === rows.length && call.includeSubagents === true &&
     (call.cursor === undefined || call.cursor === 0) && !['statuses', 'settled', 'snoozed', 'titleContains'].some(key => Object.hasOwn(call, key));
   for (const row of Array.isArray(rows) ? rows : []) {
