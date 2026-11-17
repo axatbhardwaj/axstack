@@ -203,7 +203,7 @@ test('review modes: automation verdicts bind the reviewed commit and carry the m
   expect(raw).toMatch(/^## Automation exception$/m);
   expect(review).toMatch(/same complete-review and exact-commit requirements/i);
   expect(review).toMatch(/immediately before `gh pr review`[^.]*re-read self's reviews/i);
-  expect(review).toMatch(/re-check head, base, draft status, authorship, and allowlist/i);
+  expect(review).toMatch(/re-check authorship and allowlist/i);
   expect(review).toContain('<!-- axstack-automation verdict head=<sha> -->');
   expect(review).toMatch(/`INCOMPLETE`[^.]*unknown GitHub state submits nothing/i);
   expect(review).toMatch(/serious-risk escalation[^.]*holds submission[^.]*durable decision location/i);
