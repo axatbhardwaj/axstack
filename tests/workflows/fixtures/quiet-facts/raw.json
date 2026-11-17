@@ -1,0 +1,25 @@
+{
+  "observedAt": "2026-11-17T12:00:00Z",
+  "repository": "org/repo",
+  "login": "me",
+  "reap": {"exitCode": 0, "dockerAvailable": true},
+  "searches": [
+    [{"number": 1, "repository": {"id": "R_fixture", "name": "repo", "nameWithOwner": "org/repo"}, "updatedAt": "2026-11-17T11:00:00Z", "isDraft": false, "author": {"id": "MD_fixture", "login": "peer", "type": "User"}}],
+    [{"number": 1, "repository": {"id": "R_fixture", "name": "repo", "nameWithOwner": "org/repo"}, "updatedAt": "2026-11-17T11:00:00Z", "isDraft": false, "author": {"id": "MD_fixture", "login": "peer", "type": "User"}}]
+  ],
+  "inventory": {
+    "args": {"projectId": "review", "includeSubagents": true, "limit": 100},
+    "value": {
+      "currentThreadId": "self", "nextCursor": null, "total": 2, "projectId": "review",
+      "threads": [
+        {"threadId": "prior", "projectId": "review", "parentThreadId": null, "status": "completed", "settled": true, "latestRunId": "prior-run", "title": "Review manager pass", "updatedAt": "2026-11-17T11:30:00Z", "providerInstanceId": "codex-vps", "model": "gpt-6.1-sol"},
+        {"threadId": "self", "projectId": "review", "parentThreadId": null, "status": "running", "settled": false, "latestRunId": "self-run", "title": "Review manager pass", "updatedAt": "2026-11-17T12:00:00Z", "providerInstanceId": "codex-vps", "model": "gpt-6.1-sol"}
+      ]
+    }
+  },
+  "prior": {
+    "thread": {"threadId": "prior", "projectId": "review", "parentThreadId": null, "status": "completed", "settled": true, "activeRunId": null, "latestRunId": "prior-run", "title": "Review manager pass"},
+    "recentRuns": [{"runId": "prior-run", "ordinal": 1, "status": "completed", "requestedAt": "2026-11-17T11:00:00Z", "startedAt": "2026-11-17T11:00:01Z", "completedAt": "2026-11-17T11:30:00Z"}],
+    "items": [], "hasMore": false, "nextPosition": null
+  }
+}
