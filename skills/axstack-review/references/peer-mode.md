@@ -8,8 +8,7 @@ Never ask the author for approvals, sign-offs, a spec approver or a process
 decision, except the `Pre-existing` filing request (the only exception). Accept the author's
 statement that a scope or design point was approved or decided elsewhere.
 That decision is not a finding. Peer review needs no Axstack-created approved
-spec. Peer code stays readonly; the reviewer never edits it. Record exact head,
-current base, context and authority before dispatch.
+spec. Peer code stays readonly. Record context and authority before dispatch.
 
 ### Sync admission and round freshness
 
@@ -19,16 +18,16 @@ On sync pass, use no reviewer dispatch and submit nothing, record `sync skip`
 with event identity, and leave the PR for the user.
 Sync fail or unknown enters ordinary review.
 
-Before each dispatch, before reconcile and before submission, re-read PR state,
-head, base branch, base SHA and draft against the pinned event.
-Discard if merged or closed, head or base SHA moved, base retargeted, or draft.
-On discard, cancel owned tasks, verify settlement under
-[Held job settlement](../../axstack/references/automations.md#held-job-settlement),
-preserve evidence and record `discarded: <reason>`.
-On discard, submit nothing.
-For merged or closed PRs, run existing cleanup.
-A new head is a new event, never a restart inside the job.
-Unknown GitHub state holds, never discards.
+Before each dispatch/reconcile (`admission`) and submission (`submission`), run installed
+[pr-fresh](../../axstack/scripts/pr-fresh.js) outside candidate, from `/` via `bun --no-env-file`.
+With `evidence.unrecorded:true`, ignore policy, headAge, pendingChecks and checksSuccessful.
+Absent/unreadable/malformed/unsupported policy holds.
+Only explicit recorded policy gates age/pending/failed checks, holding unknown gating terms.
+Event facts (open, nonDraft, unmerged, pinnedHead, baseUnchanged): discard failures, hold unknowns.
+On discard, submit nothing; cancel owned tasks, verify
+[settlement](../../axstack/references/automations.md#held-job-settlement), preserve evidence, record `discarded: <reason>`.
+Merged or closed: existing cleanup.
+New head: new event, never restart inside the job.
 Add no polling loop or watcher.
 
 A missing bot verdict marker selects the first review. An existing bot verdict
