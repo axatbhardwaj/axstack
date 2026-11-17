@@ -125,6 +125,9 @@ test('documented review-manager schedules run every 30 minutes', () => {
 });
 
 const decisions = [
+  ['full pass resolves heads', [/resolve heads|obtain head OIDs/i, /gh pr view/i, /--json headRefOid/i, /in the full pass|during full reconciliation/i],
+    'During full reconciliation, obtain head OIDs using gh pr view --repo REPO NUMBER --json headRefOid.',
+    [[/resolve heads|obtain head OIDs/i, 'skip resolving heads']]],
   ['fail or unknown requires full', [/any fail or unknown|any (?:fact|term) fails? or is unknown/i, /runs? the full pass|execute the full pass/i],
     'If any fact fails or is unknown, execute the full pass.', [[/runs? the full pass|execute the full pass/i, 'permits quiet exit']]],
   ['unknown discovery requires reconciliation', [/unknown discovery|discovery (?:is|remains) unknown/i, /means full reconciliation|requires full reconciliation/i],
