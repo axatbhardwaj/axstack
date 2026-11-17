@@ -160,11 +160,120 @@ function quietOptions(argv) {
   if (!args['--input'] || !args['--continuity'] || !Number.isFinite(time(args['--now']))) throw Error('expected --input, --continuity and timezone-qualified --now');
   return args;
 }
+// Preserve tool outputs: unwrap MCP packaging, never project caller-invented row fields.
+function nativeValue(value) {
+  if (value?.isError) return null;
+  if (value?.structuredContent) return value.structuredContent;
+  if (Array.isArray(value?.content)) {
+    try { return JSON.parse(value.content.find(item => item.type === 'text')?.text); } catch { return null; }
+  }
+  return value;
+}
+function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
+  const terms = [], term = (id, status, evidence) => terms.push({ id, status, evidence });
+  const age = (time(args['--now']) - time(input.observedAt)) / 1000;
+  const fresh = Number.isFinite(age) && age >= 0 && age <= 300;
+  term('observations', fresh ? 'pass' : 'unknown', { ageSeconds: Number.isFinite(age) ? age : null, inputSha256 });
+  const sections = Object.fromEntries(['Lane state', 'Open holds', 'Watermarks', 'Last pass'].map(name => [name, section(continuity, name)]));
+  const continuityKnown = Object.values(sections).every(nonempty);
+  term('continuity', continuityKnown ? 'pass' : 'unknown', { continuitySha256 });
+  const snapshot = input.inventory, call = snapshot?.args, value = nativeValue(snapshot?.value), rows = value?.threads;
+  const byId = new Map();
+  let complete = fresh && call && Array.isArray(rows) && !snapshot.isError && !value.isError && !value.truncated && !value.hasMore &&
+    value.nextCursor === null && value.total === rows.length && call.includeSubagents === true &&
+    (call.cursor === undefined || call.cursor === 0) && !['statuses', 'settled', 'snoozed', 'titleContains'].some(key => Object.hasOwn(call, key));
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (!nonempty(row?.threadId) || !nonempty(row?.projectId) || byId.has(row.threadId) ||
+      !(row.parentThreadId === null || nonempty(row.parentThreadId)) || row.parentThreadId === row.threadId) { complete = false; continue; }
+    byId.set(row.threadId, row);
+  }
+  for (const row of byId.values()) {
+    const seen = new Set([row.threadId]); let parent = row.parentThreadId;
+    while (byId.has(parent)) {
+      if (seen.has(parent)) { complete = false; break; }
+      seen.add(parent); parent = byId.get(parent).parentThreadId;
+    }
+  }
+  const self = byId.get(value?.currentThreadId), projectId = self?.projectId;
+  const scoped = complete && self && (call.allProjects === true || nonempty(call.projectId) && call.projectId === projectId &&
+    [...byId.values()].every(row => row.projectId === projectId));
+  const identity = !!scoped && repoName(input.repository);
+  term('identity', identity ? 'pass' : 'unknown', { repository: input.repository ?? null, projectId: projectId ?? null, selfThreadId: self?.threadId ?? null });
+  const reap = input.reap;
+  term('reap', !Number.isInteger(reap?.exitCode) || typeof reap?.dockerAvailable !== 'boolean' ? 'unknown' :
+    reap.exitCode === 0 && reap.dockerAvailable ? 'pass' : 'fail', reap ?? 'no saved reap result');
+  let discovery = fresh && nonempty(input.login) && Array.isArray(input.searches) && input.searches.length === 2;
+  const prs = new Map();
+  for (const raw of Array.isArray(input.searches) ? input.searches : []) {
+    const found = nativeValue(raw), seen = new Set();
+    if (!Array.isArray(found) || found.length >= 1000) { discovery = false; continue; }
+    for (const pr of found) {
+      const repository = pr?.repository?.nameWithOwner, key = `${repository}#${pr?.number}`;
+      if (!repoName(repository) || !Number.isSafeInteger(pr?.number) || pr.number < 1 || seen.has(key) ||
+        !nonempty(pr.author?.login) || typeof pr.isDraft !== 'boolean' || !Number.isFinite(time(pr.updatedAt)) ||
+        time(pr.updatedAt) > time(args['--now']) || pr.headRefOid !== undefined && !/^[a-f0-9]{40,64}$/.test(pr.headRefOid)) {
+        discovery = false; continue;
+      }
+      seen.add(key);
+      if (pr.author.login.toLowerCase() === input.login.toLowerCase() || pr.isDraft || pr.state && pr.state.toLowerCase() !== 'open') continue;
+      const row = [key, pr.headRefOid ?? null, pr.updatedAt];
+      if (prs.has(key) && !equal(prs.get(key), row)) discovery = false;
+      prs.set(key, row);
+    }
+  }
+  term('discovery', discovery ? 'pass' : 'unknown', { eligible: prs.size, resultCounts: input.searches?.map?.(r => nativeValue(r)?.length ?? null) ?? [] });
+  let previous;
+  try { previous = JSON.parse(sections.Watermarks?.match(/^- Quiet gate: (.+)$/m)?.[1]); } catch { /* unknown watermark */ }
+  const comparison = compareQuietPRs(previous, [...prs.values()], { optionalHeads: true });
+  term('pr-list', discovery && continuityKnown ? comparison.status : 'unknown', comparison.evidence);
+  const elapsed = time(args['--now']) - time(sections.Watermarks?.match(/^- Last full pass: (.+)$/m)?.[1]);
+  term('full-pass-age', !continuityKnown || !Number.isFinite(elapsed) ? 'unknown' : elapsed >= 0 && elapsed < 14400000 ? 'pass' : 'fail',
+    { ageSeconds: Number.isFinite(elapsed) ? elapsed / 1000 : null });
+  const priorIds = [...(sections['Lane state'] ?? '').matchAll(/^- threadId: (\S+)$/gm)].map(m => m[1]);
+  const read = nativeValue(input.prior?.value ?? input.prior), prior = read?.thread;
+  const knownStatus = row => row && [...terminalRuns, ...activeRuns, 'idle', 'rolled_back', 'preparing', 'starting', 'waiting'].includes(row.status);
+  const priorKnown = identity && priorIds.length === 1 && prior?.threadId === priorIds[0] && prior.threadId !== self.threadId &&
+    prior.projectId === projectId && typeof prior.settled === 'boolean' && knownStatus(prior);
+  const laneIds = new Set([...byId.values()].filter(row => row.projectId === projectId).map(row => row.threadId));
+  // allProjects snapshots may contain cross-project descendants of this lane.
+  let added;
+  do {
+    added = false;
+    for (const row of byId.values()) if (laneIds.has(row.parentThreadId) && !laneIds.has(row.threadId)) { laneIds.add(row.threadId); added = true; }
+  } while (added);
+  const laneRows = [...laneIds].map(id => byId.get(id));
+  const threadsKnown = identity && laneRows.every(knownStatus) && priorKnown;
+  const descendants = laneRows.filter(row => laneIds.has(row.parentThreadId)).map(row => row.threadId);
+  term('thread-readbacks', threadsKnown ? 'pass' : 'unknown', { listed: laneRows.length, descendantThreadIds: descendants, priorThreadId: prior?.threadId ?? null, priorReads: prior ? 1 : 0 });
+  term('ownership', threadsKnown && continuityKnown ? 'pass' : 'unknown', { completeInventory: !!scoped, projectId: projectId ?? null, total: value?.total ?? null });
+  const holds = sections['Open holds']?.trim().split('\n').filter(nonempty) ?? [];
+  const holdKnown = holds.length > 0 && holds.every(line => /^- .+/.test(line));
+  const priorLines = [...(sections['Lane state'] ?? '').split('\n'), ...holds].filter(line =>
+    priorIds[0] && line.split(/[^\w-]+/).includes(priorIds[0]));
+  const guarded = priorLines.some(line => /\b(?:held|flagged|user-only|user decision only|owned watch|pending receipt|wedged|stalled owner|protected)\b/i.test(line));
+  const terminal = row => [...terminalRuns, 'rolled_back'].includes(row.status);
+  term('prior-pass', !priorKnown || !continuityKnown || !holdKnown ? 'unknown' : prior.settled || terminal(prior) && guarded ? 'pass' : 'fail',
+    { threadId: prior?.threadId ?? null, status: prior?.status ?? null, settled: prior?.settled ?? null, recordedGuard: guarded });
+  const nonterminal = row => !terminal(row) && row.status !== 'idle';
+  const busy = [...laneRows, ...(priorKnown ? [prior] : [])].filter(row => row.threadId !== self?.threadId && nonterminal(row)).map(row => row.threadId);
+  term('lane-idle', !threadsKnown ? 'unknown' : busy.length ? 'fail' : 'pass', { nonterminalThreadIds: [...new Set(busy)] });
+  const recorded = [sections['Lane state'], sections.Watermarks, sections['Open holds']].filter(Boolean).join('\n');
+  const event = /^- (?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b|;\s*status:\s*(?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b/gm;
+  const jobs = sections['Lane state']?.match(/^- Active PR jobs and descendants: (.+)$/m)?.[1];
+  const pending = event.test(recorded) || jobs !== 'none' || holds.some(line =>
+    !/^- none$/i.test(line) && !/; resume: user decision only$/i.test(line));
+  term('pending-work', !continuityKnown || !holdKnown || !nonempty(jobs) ? 'unknown' : pending ? 'fail' : 'pass',
+    { activeJobs: jobs ?? null, holds, pending });
+  const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map(s => [s, terms.filter(t => t.status === s).length]));
+  return { version: 2, observedAt: args['--now'], terms, counts };
+}
+
 function quietFacts(args) {
   const terms = [], term = (id, status, evidence) => terms.push({ id, status, evidence });
   let input, continuity = '', inputSha256 = null, continuitySha256 = null;
   try { const bytes = readFileSync(args['--input']); inputSha256 = sha256(bytes); input = JSON.parse(bytes.toString()); } catch { /* unknown input */ }
   try { const bytes = readFileSync(args['--continuity']); continuitySha256 = sha256(bytes); continuity = bytes.toString(); } catch { /* unknown continuity */ }
+  if (input?.inventory?.args) return rawQuietFacts(args, input, continuity, inputSha256, continuitySha256);
   const age = (time(args['--now']) - time(input?.observedAt)) / 1000;
   const fresh = input?.version === 1 && Number.isFinite(age) && age >= 0 && age <= 300;
   term('observations', fresh ? 'pass' : 'unknown', { ageSeconds: Number.isFinite(age) ? age : null, inputSha256 });
