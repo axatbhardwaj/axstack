@@ -12,6 +12,7 @@ function filledTemplate() {
     .replace('<PR, taskId/childThreadId/runId, owner, revision, state>', 'none')
     .replace(/^- <.*(?:or none>|or write - none\))$/gm, '- none')
     .replace(/^- Quiet gate:.*$/m, '- Quiet gate: [["org/repo#1","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","2026-11-17T11:00:00Z"]]')
+    .replace(/^- Non-lane roots:.*$/m, '- Non-lane roots: []')
     .replace(/^- Last full pass:.*$/m, '- Last full pass: 2026-11-17T11:00:00Z')
     .replace('<UTC time, admitted/settled counts, changed state, evidence pointer>', '2026-11-17T11:30:00Z, 0/0, unchanged, evidence/pass');
 }
@@ -73,6 +74,15 @@ test('an unidentifiable active root in the shared project stays unknown', () => 
   expect(status(run(d => add(d, { threadId: 'maybe-pass' })), 'lane-idle')).toBe('unknown');
   // Live scheduled passes also use createdBy:agent, creationSource:mcp.
   expect(status(run(d => add(d, { threadId: 'maybe-scheduled', createdBy: 'agent', creationSource: 'mcp' })), 'lane-idle')).toBe('unknown');
+});
+test('verified non-lane roots in continuity identify active workers whose idle parent is omitted', () => {
+  const change = d => add(d, { threadId: 'other-worker', parentThreadId: 'other-driver', createdBy: 'agent', creationSource: 'mcp' });
+  const record = s => s.replace(/^- Non-lane roots:.*\n/m, '').replace('## Watermarks', '## Watermarks\n- Non-lane roots: ["other-driver"]');
+  expect(run(change, record).terms.every(t => t.status === 'pass')).toBe(true);
+  expect(status(run(change), 'ownership')).toBe('unknown');
+  expect(status(run(change, s => record(s).replace('["other-driver"]', 'broken')), 'ownership')).toBe('unknown');
+  expect(status(run(change, s => record(s).replace('["other-driver"]', '["prior"]')), 'ownership')).toBe('unknown');
+  expect(status(run(change, s => record(s).replace('["other-driver"]', '["other-worker"]')), 'ownership')).toBe('unknown');
 });
 test('recorded scheduled pass and recorded PR-job descendants are lane activity', () => {
   expect(status(run(d => add(d, { threadId: 'prior' })), 'lane-idle')).toBe('fail');
