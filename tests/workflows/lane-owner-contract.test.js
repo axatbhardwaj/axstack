@@ -46,3 +46,35 @@ test('continuity retains the report, snapshot and precise lane-owner identities'
     'Lane-owner facts: <snapshot, precise identities and report location>',
     [[/identities/i, 'titles']], concepts);
 });
+
+
+test('fail or unknown facts record a durable Open hold naming owner thread and run', () => {
+  const concepts = [/fail/i, /unknown/i, /record|log/i, /Open hold/i,
+    /owner thread\/run/i, /continuity/i];
+  checkRule(read('automations'), text => requires(text, ...concepts),
+    'For unknown or fail facts, log in continuity an Open hold naming owner thread/run.',
+    [[/record|log/i, 'discard'], [/Open hold/i, 'Lane state note'],
+      [/owner thread\/run/i, 'PR title'], [/continuity/i, 'private note']], concepts);
+});
+
+test('uncertain ownership never permits replacing a potentially live owner', () => {
+  const concepts = [/never replace/i, /potentially live owner/i];
+  checkRule(read('automations'), text => prohibits(text, /never replace/i, ...concepts),
+    'When ownership is uncertain, never replace a potentially live owner.',
+    [[/never replace/i, 'always replace']], concepts);
+});
+
+test('unknown-liveness write restrictions exempt Open holds', () => {
+  const concepts = [/unknown liveness/i, /blocks/i, /shared-record writes/i,
+    /except recording Open holds|excluding recording Open holds/i];
+  checkRule(read('automations'), text => requires(text, ...concepts),
+    'Outside wedged-pass recovery, unknown liveness blocks shared-record writes excluding recording Open holds, admission, takeover and cleanup even with recent activity.',
+    [[/except recording Open holds|excluding recording Open holds/i, 'including recording Open holds']], concepts);
+});
+
+test('duplicate mutation restrictions exempt Open holds', () => {
+  const concepts = [/besides recording Open holds/i, /duplicate/i, /only shared mutation/i];
+  checkRule(read('automations'), text => requires(text, ...concepts),
+    "Besides recording Open holds and its private pass note, a duplicate's only shared mutation is eligible pass-start settlement.",
+    [[/besides recording Open holds/i, 'including recording Open holds']], concepts);
+});
