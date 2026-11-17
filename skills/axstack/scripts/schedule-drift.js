@@ -156,10 +156,8 @@ const QUIET_HELP = `schedule-drift quiet-facts — raw saved-input observations
 No writes, subprocesses, network, T3 calls, database access or persistent state. Run from cwd /.
 Facts only; counts, no aggregate verdict or authority. Driver applies quiet/full/hold rules.
 Exit: 0 measured (including fail), 1 invalid CLI, 2 incomplete/unknown, including read/JSON failure.
-Legacy v1 envelopes with descendantIds and total_count remain accepted during migration.
 `;
 
-const guardKeys = ['held', 'flagged', 'ownedWatch', 'pendingReceipt', 'wedged', 'stalledOwner', 'protected'];
 const terminalRuns = ['completed', 'failed', 'cancelled', 'interrupted', 'rolled_back'];
 const activeRuns = ['preparing', 'queued', 'starting', 'running', 'waiting'];
 const repoName = (v) => typeof v === 'string' && /^[\w.-]+\/[\w.-]+$/.test(v);
@@ -283,102 +281,10 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
 }
 
 function quietFacts(args) {
-  const terms = [], term = (id, status, evidence) => terms.push({ id, status, evidence });
   let input, continuity = '', inputSha256 = null, continuitySha256 = null;
   try { const bytes = readFileSync(args['--input']); inputSha256 = sha256(bytes); input = JSON.parse(bytes.toString()); } catch { /* unknown input */ }
   try { const bytes = readFileSync(args['--continuity']); continuitySha256 = sha256(bytes); continuity = bytes.toString(); } catch { /* unknown continuity */ }
-  if (input?.inventory?.args) return rawQuietFacts(args, input, continuity, inputSha256, continuitySha256);
-  const age = (time(args['--now']) - time(input?.observedAt)) / 1000;
-  const fresh = input?.version === 1 && Number.isFinite(age) && age >= 0 && age <= 300;
-  term('observations', fresh ? 'pass' : 'unknown', { ageSeconds: Number.isFinite(age) ? age : null, inputSha256 });
-  const sections = Object.fromEntries(['Lane state', 'Open holds', 'Watermarks', 'Last pass'].map(name => [name, section(continuity, name)]));
-  const continuityKnown = Object.values(sections).every(nonempty);
-  term('continuity', continuityKnown ? 'pass' : 'unknown', { continuitySha256, sections: Object.keys(sections).filter(key => nonempty(sections[key])) });
-  const lane = input?.lane, laneKeys = ['environmentId', 'projectId', 'laneId'];
-  const declaredIdentity = fresh && repoName(input?.repository) && laneKeys.every(key => nonempty(lane?.[key])) && nonempty(input?.selfThreadId);
-  const projectKnown = repoName(input?.project?.repository) && nonempty(input?.project?.projectId);
-  const identity = declaredIdentity && projectKnown && input.project.repository === input.repository && input.project.projectId === lane.projectId;
-  term('identity', !declaredIdentity || !projectKnown ? 'unknown' : identity ? 'pass' : 'fail',
-    { repository: input?.repository ?? null, project: input?.project ?? null, lane: lane ?? null });
-  const reap = input?.reap;
-  term('reap', !reap || !Number.isInteger(reap.exitCode) || typeof reap.dockerAvailable !== 'boolean' ? 'unknown' :
-    reap.exitCode === 0 && reap.dockerAvailable ? 'pass' : 'fail', reap ?? 'no saved reap observation');
-
-  let discovery = fresh && nonempty(input?.login) && Array.isArray(input?.searches) && input.searches.length === 2;
-  const prs = new Map();
-  for (const query of ['review-requested:@me', 'involves:@me']) {
-    const searches = input?.searches?.filter?.(s => s?.query === query) ?? [];
-    const search = searches.length === 1 ? searches[0] : null;
-    const pages = search?.pages;
-    if (!Array.isArray(pages) || !pages.length || search.error) { discovery = false; continue; }
-    const count = pages[0]?.total_count;
-    const items = pages.flatMap(page => Array.isArray(page?.items) ? page.items : []);
-    const numbers = new Set();
-    if (!Number.isSafeInteger(count) || count < 0 || count >= 1000 || items.length !== count ||
-      pages.some((page, i) => page?.page !== i + 1 || page.total_count !== count || page.incomplete_results !== false ||
-        page.error || !Array.isArray(page.items) || page.items.length > 100 || (i < pages.length - 1 && page.items.length !== 100))) discovery = false;
-    for (const pr of items) {
-      const repository = pr?.repository?.nameWithOwner, key = `${repository}#${pr?.number}`;
-      if (!repoName(repository) || !Number.isSafeInteger(pr?.number) || pr.number < 1 || !nonempty(pr.author?.login) ||
-          !['open', 'closed', 'merged'].includes(pr.state?.toLowerCase()) || typeof pr.isDraft !== 'boolean' || numbers.has(key)) {
-        discovery = false; continue;
-      }
-      numbers.add(key);
-      if (pr.author.login.toLowerCase() === input?.login?.toLowerCase() || pr.isDraft || pr.state.toLowerCase() !== 'open') continue;
-      const heads = input?.heads?.filter?.(h => h?.repository === repository && h?.number === pr.number) ?? [];
-      const head = heads.length === 1 ? heads[0]?.headRefOid : null;
-      if (!/^[a-f0-9]{40,64}$/.test(head ?? '') || !Number.isFinite(time(pr.updatedAt)) || time(pr.updatedAt) > time(args['--now'])) discovery = false;
-      const row = [key, head, pr.updatedAt];
-      if (prs.has(key) && !equal(prs.get(key), row)) discovery = false;
-      prs.set(key, row);
-    }
-  }
-  term('discovery', discovery ? 'pass' : 'unknown', { eligible: prs.size, queries: input?.searches?.length ?? 0, complete: !!discovery });
-  let previous;
-  try { previous = JSON.parse(sections.Watermarks?.match(/^- Quiet gate: (.+)$/m)?.[1]); } catch { /* unknown watermark */ }
-  const comparison = compareQuietPRs(previous, [...prs.values()]);
-  term('pr-list', discovery && continuityKnown ? comparison.status : 'unknown', comparison.evidence);
-  const fullTime = time(sections.Watermarks?.match(/^- Last full pass: (.+)$/m)?.[1]);
-  const elapsed = time(args['--now']) - fullTime;
-  term('full-pass-age', !continuityKnown || !Number.isFinite(elapsed) ? 'unknown' : elapsed >= 0 && elapsed < 14400000 ? 'pass' : 'fail',
-    { ageSeconds: Number.isFinite(elapsed) ? elapsed / 1000 : null });
-
-  const pages = input?.inventory?.pages;
-  const rows = Array.isArray(pages) ? pages.flatMap(p => Array.isArray(p?.threads) ? p.threads : []) : [];
-  const ids = rows.map(t => t?.threadId);
-  const readbacks = Array.isArray(input?.readbacks) ? input.readbacks : [];
-  const inventoryKnown = identity && input?.inventory?.complete === true && Array.isArray(pages) && pages.length > 0 &&
-    pages.every((p, i) => Array.isArray(p?.threads) && !p.error &&
-      (i === 0 ? p.cursor == null : nonempty(p.cursor) && p.cursor === pages[i - 1].nextCursor) &&
-      (i === pages.length - 1 ? p.nextCursor === null : nonempty(p.nextCursor))) &&
-    ids.every(nonempty) && new Set(ids).size === ids.length && ids.includes(input?.selfThreadId);
-  const bound = t => t && laneKeys.every(key => t[key] === lane?.[key]);
-  const coverage = inventoryKnown && rows.every(bound) && readbacks.length === rows.length && rows.every(t =>
-    readbacks.filter(r => r?.threadId === t.threadId && bound(r)).length === 1);
-  const priorIds = [...(sections['Lane state'] ?? '').matchAll(/^- threadId: (\S+)$/gm)].map(m => m[1]);
-  const prior = priorIds.length === 1 && priorIds[0] !== input?.selfThreadId ? readbacks.find(t => t?.threadId === priorIds[0]) : null;
-
-  const knownThread = t => typeof t?.settled === 'boolean' && [...terminalRuns, ...activeRuns].includes(t.latestRun?.status) &&
-    Array.isArray(t.descendantIds) && t.descendantIds.every(id => ids.includes(id) && id !== t.threadId) &&
-    guardKeys.every(key => typeof t.guards?.[key] === 'boolean');
-  const threadsKnown = coverage && readbacks.every(knownThread);
-  term('ownership', threadsKnown && continuityKnown && bound(prior) ? 'pass' : 'unknown', { completeInventory: !!inventoryKnown, listed: rows.length, readbacks: readbacks.length });
-  term('thread-readbacks', threadsKnown ? 'pass' : 'unknown', { threadIds: ids, descendants: readbacks.flatMap(t => t?.descendantIds ?? []) });
-  const priorKnown = threadsKnown && prior && knownThread(prior);
-  const guarded = priorKnown && guardKeys.some(key => prior.guards[key]);
-  const terminal = t => t.settled && terminalRuns.includes(t.latestRun.status);
-  term('prior-pass', !priorKnown ? 'unknown' : terminal(prior) || guarded ? 'pass' : 'fail',
-    { threadId: priorIds[0] ?? null, settled: prior?.settled ?? null, guards: prior?.guards ?? null });
-  const busy = threadsKnown ? readbacks.filter(t => t.threadId !== input.selfThreadId && t.threadId !== prior?.threadId && !terminal(t)).map(t => t.threadId) : [];
-  term('lane-idle', !threadsKnown ? 'unknown' : busy.length ? 'fail' : 'pass', { nonterminalThreadIds: busy });
-  const holds = sections['Open holds']?.trim().split('\n').filter(nonempty);
-  const holdKnown = holds?.length && holds.every(line => /^- (?:none|.+; resume: .+)$/i.test(line));
-  const pending = /\b(unserved|capacity-deferred|INCOMPLETE|re-eligible)\b/i.test(continuity) ||
-    !/^- Active PR jobs and descendants: none$/m.test(sections['Lane state'] ?? '') ||
-    holds?.some(line => !/^- none$/i.test(line) && !/; resume: user decision only$/i.test(line));
-  term('pending-work', !continuityKnown || !holdKnown ? 'unknown' : pending ? 'fail' : 'pass', { holds: holds ?? null, pending: !!pending });
-  const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map(s => [s, terms.filter(t => t.status === s).length]));
-  return { version: 1, observedAt: args['--now'], terms, counts };
+  return rawQuietFacts(args, input ?? {}, continuity, inputSha256, continuitySha256);
 }
 
 try {
