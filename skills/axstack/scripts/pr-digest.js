@@ -92,7 +92,21 @@ function snapshot(response) {
   return prs;
 }
 
-try {
+// Quiet discovery owns completeness and identity; this function only compares PR tuples.
+export function compareQuietPRs(previous, current) {
+  const valid = (rows) => Array.isArray(rows) && rows.every((row) => Array.isArray(row) && row.length === 3 &&
+    row.every((value) => typeof value === 'string' && value.length > 0) &&
+    /^[\w.-]+\/[\w.-]+#[1-9]\d*$/.test(row[0]) && /^[a-f0-9]{40,64}$/.test(row[1]) &&
+    /T.*(?:Z|[+-]\d\d:\d\d)$/.test(row[2]) && Number.isFinite(Date.parse(row[2]))) &&
+    new Set(rows.map(row => row[0])).size === rows.length;
+  if (!valid(previous) || !valid(current)) return { status: 'unknown', evidence: 'missing or malformed PR-list watermark' };
+  const before = ordered(previous.map((row) => [...row]));
+  const after = ordered(current.map((row) => [...row]));
+  return { status: JSON.stringify(before) === JSON.stringify(after) ? 'pass' : 'fail',
+    evidence: { previous: before, current: after } };
+}
+
+if (import.meta.main) try {
   const args = options(process.argv.slice(2));
   const current = snapshot(fetchCurrent(args));
   let previous = {};
