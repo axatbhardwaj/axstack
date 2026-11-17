@@ -69,6 +69,7 @@ for (const [name, change, edit, id, expected = 'unknown'] of [
   ['conflicting query observations', d => { d.searches[1][0].updatedAt = '2026-11-17T11:01:00Z'; }, t => t, 'discovery'],
   ['malformed optional head', d => { d.searches[0][0].headRefOid = 'bad'; }, t => t, 'discovery'],
   ['pagination cursor', d => { d.inventory.value.nextCursor = 100; }, t => t, 'ownership'],
+  ['native explicit partial result', d => { d.inventory.value.complete = false; }, t => t, 'ownership'],
   ['truncated total', d => { d.inventory.value.total++; }, t => t, 'ownership'],
   ['caller complete cannot replace raw count', d => { d.inventory.complete = true; delete d.inventory.value.total; }, t => t, 'ownership'],
   ['status filter', d => { d.inventory.args.statuses = ['running']; }, t => t, 'ownership'],
