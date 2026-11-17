@@ -4,39 +4,31 @@ First command of every pass, quiet check included: use an owned 0700 TMPDIR unde
 
 At start of every pass before quiet exit, follow [Sandbox reap](../sandbox/reap.md).
 
-Run the quiet check before invoking `axstack-review` or reading any `skills/**` file except reap.
+Run the quiet check before invoking `axstack-review` or reading any `skills/**` file except reap and this helper.
 
-Resolve self: `gh api user --jq .login`, union two paginated `gh search prs`
-queries (`review-requested:@me` and `involves:@me`), each with `--limit 1000`,
-for open, non-draft PRs authored by someone else,
-producing a sorted (repo#number, headRefOid, updatedAt) list.
-Obtain missing head OIDs with read-only `gh pr view --json headRefOid`.
-A result count at or above 1000 in either query makes coverage incomplete.
-Inventory every page of T3 lane threads and run liveness, including PR-job
-descendants, by exact lane identity.
-Read `~/.local/share/axstack/runs/review-manager/progress.md` and
-compare Watermarks with inventory:
-
-- Run the full pass when reap fails or Docker is missing.
-- Run the full pass when the sorted list differs from `Quiet gate:`.
-- Run the full pass when any other lane thread is non-terminal.
-- Run the full pass only when the recorded prior pass thread is unsettled and no guard keeps it unsettled.
-- Run the full pass when continuity or either watermark is missing, malformed or unreadable.
-- Run the full pass when `Last full pass:` is at least 4 hours old or in the future.
-- Run the full pass when any call fails or pagination, PR head OIDs or thread/run liveness is incomplete or unknown.
-- Run the full pass when continuity records any unserved, capacity-deferred, `INCOMPLETE` or re-eligible event, or any open hold with a resume condition beyond a user decision (such as capacity or remeasure).
-
-Held or flagged prior passes never force a full pass or failure report by their unsettled state alone.
-
-Holds awaiting only the user remain quiet-eligible: a user decision on the PR
-changes `updatedAt`, and the 4 h full pass reconciles replies in flagged threads.
-
-Before evaluating the quiet gate, read the recorded prior pass thread with
-`t3_thread_read`; unknown identity or readback forces a full pass.
+Save raw outputs per installed `schedule-drift.js quiet-facts --help`, with collection time,
+repository and login (`gh api user --jq .login`):
+`gh search prs --review-requested @me --state open --draft=false --json number,repository,updatedAt,isDraft,author --limit 1000`
+`gh search prs --involves @me --state open --draft=false --json number,repository,updatedAt,isDraft,author --limit 1000`
+Save `t3_thread_list` as `{args,value}` (includeSubagents:true, statuses:
+preparing/queued/starting/running/waiting; merged pages, nextCursor:null, matching total), and continuity from
+`~/.local/share/axstack/runs/review-manager/progress.md`.
+Read the recorded prior pass once with `t3_thread_read` before replacing prior identity.
 Record own pass threadId in review-manager continuity after reading the prior identity,
 before duplicate classification, then read back the identity save.
+After collection, the first decision step is the installed helper, from trusted cwd `/`:
+`bun --no-env-file <resolved-schedule-drift.js> quiet-facts --input <saved-input.json> --continuity <saved-progress.md>`.
+Lane scope is recorded pass/job identities and descendants, not the shared project.
+PR comparison reuses `pr-digest.js`.
 
-If every busy condition is false, apply the guarded pass-end self-settle below,
+The pass agent applies quiet/full/hold rules to these facts, which grant nothing:
+any fail or unknown runs the full pass; unknown discovery means full reconciliation,
+and unknown ownership or prior identity forbids competing admission.
+Guarded prior passes and user-only holds never force a full pass or failure report by themselves.
+A user decision on the PR changes updatedAt; the 4 h full pass reconciles replies in flagged threads.
+Run the full pass when reap fails or Docker is missing.
+
+If no term fails or is unknown, apply the guarded pass-end self-settle below,
 then end the turn with no text, no skill load, no sweep and no other continuity write.
 Otherwise run the full pass; incomplete evidence retains admission/cleanup holds.
 
@@ -44,7 +36,7 @@ Otherwise run the full pass; incomplete evidence retains admission/cleanup holds
 
 Follow [Provider bindings](t3-runtime.md#preflight-and-binding).
 
-You are a fresh finite T3 review-manager pass in project `axstack-review-lane` on VPS's existing
+You are a fresh finite T3 review-manager pass in the recorded lane on VPS's
 `axatbhardwaj/axstack` clone. Fetch first; this unbound
 pass worktree starts from `origin/main`. Enter through installed `axstack-review`,
 which loads `../axstack/references/automations.md` relatively. Read [T3 runtime](t3-runtime.md). Reconcile lane ownership and duplicate status,
@@ -58,8 +50,10 @@ Report retained worktree count and disable the schedule and hold past its
 authorized limit. Only the owner retires settled predecessors and saves/reads back
 `~/.local/share/axstack/runs/review-manager/progress.md` using
 `run-record.md#review-manager-continuity-template`.
-Full pass records Watermarks: `Quiet gate:` as the sorted list and
+Resolve heads with `gh pr view --repo REPO NUMBER --json headRefOid` in the full pass.
+Full pass records Watermarks: `Quiet gate:` as the sorted list of JSON triples and
 `Last full pass:` as UTC only as owner-of-record, then reads back the save.
+Full passes record proven Non-lane roots for omitted idle parents.
 Settle descendants and end the finite turn. Stay quiet when unchanged.
 Never check out a PR branch here.
 Follow [Peer execution](../sandbox/host-execution.md) in every peer-review brief

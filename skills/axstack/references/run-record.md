@@ -230,11 +230,12 @@ in the adjacent history file, not below this template.
 - Lane-owner facts: <report path, snapshot and exact identities>
 
 ## Open holds
-- <PR or lane, reason, evidence, owner, resume condition; or none>
+- <ID: reason; evidence: path; owner: ID; resume: CONDITION (user-only: resume: user decision only); or none>
 
 ## Watermarks
-- Quiet gate: <sorted (repo#number, headRefOid, updatedAt) list; [] when empty>
-- Last full pass: <UTC timestamp of the last full pass>
+- Quiet gate: <sorted JSON [repo#number, headRefOid, updatedAt] triples; [] when empty>
+- Last full pass: <UTC ISO timestamp of the last full pass>
+- Non-lane roots: <JSON threadId array proven outside this lane; [] if none>
 - <PR/event identity, exact head/base, last observed receipt; or none>
 
 ## Last pass

@@ -28,39 +28,6 @@ const quietRules = [
     [/quiet check/i, /before/i, /invoking.*axstack-review/i, /reading any.*skills\/\*\*/i],
     'Before invoking axstack-review or reading any skills/** file, perform the quiet check.',
     [[/before/i, 'after']]],
-  ['changed PR list is busy',
-    [/run.*full pass/i, /when/i, /\bsorted list/i, /differs|different/i, /Quiet gate:/i],
-    'When the sorted list is different from Quiet gate:, run the full pass.',
-    [[/differs|different/i, 'equal']]],
-  ['non-terminal lane thread is busy',
-    [/run.*full pass/i, /when/i, /other lane thread/i, /non-terminal/i],
-    'When any other lane thread is non-terminal, run the full pass.',
-    [[/non-terminal/i, 'terminal']]],
-  ['unreadable continuity is busy',
-    [/run.*full pass/i, /when/i, /continuity/i, /watermark/i, /missing/i, /malformed/i, /unreadable/i],
-    'When continuity or a watermark is missing, malformed or unreadable, run the full pass.',
-    [[/unreadable/i, 'readable'], [/missing/i, 'present'], [/malformed/i, 'valid']]],
-  ['stale full pass is busy',
-    [/run.*full pass/i, /when/i, /Last full pass:/i, /at least 4 hours old/i, /future/i],
-    'When Last full pass: is at least 4 hours old or in the future, run the full pass.',
-    [[/at least 4 hours old/i, 'less than 4 hours old']]],
-  ['incomplete calls are busy',
-    [/run.*full pass/i, /when/i, /call fails/i, /pagination/i, /head OIDs/i, /liveness/i, /incomplete/i, /unknown/i],
-    'When a call fails or pagination, head OIDs or thread/run liveness is incomplete or unknown, run the full pass.',
-    [[/call fails/i, 'call succeeds'], [/incomplete/i, 'complete'], [/unknown/i, 'known']]],
-  ['recorded work and non-user holds are busy',
-    [/run.*full pass/i, /when/i, /continuity records/i, /\bany\b/i,
-      /unserved/i, /capacity-deferred/i, /INCOMPLETE/, /re-eligible/i,
-      /or any open hold/i, /resume condition/i, /beyond a user decision|other than only the user/i],
-    'When continuity records any unserved, capacity-deferred, INCOMPLETE or re-eligible event, or any open hold with a resume condition other than only the user, run the full pass.',
-    [[/run.*full pass/i, 'end quietly'], [/\bany\b/gi, 'every'],
-      [/or any open hold/i, 'and any open hold'],
-      [/beyond a user decision|other than only the user/i, 'awaiting only the user']]],
-  ['user-only holds remain quiet-eligible',
-    [/holds awaiting only the user/i, /remain quiet-eligible/i,
-      /updatedAt/i, /4 h full pass/i, /reconcil.*replies in flagged threads/i],
-    'Holds awaiting only the user remain quiet-eligible because updatedAt changes with a PR decision and the 4 h full pass reconciles replies in flagged threads.',
-    [[/only the user/i, 'also the user'], [/quiet-eligible/i, 'busy']]],
 ];
 for (const [name, concepts, rewording, inversions] of quietRules) {
   test(`review-manager quiet gate: ${name}`, () => {
@@ -115,45 +82,18 @@ test('automations routes the quiet check to its packaged owner', () => {
   expect(loadedReferences(text)).toContain('review-manager-prompt.md');
 });
 
-test('quiet discovery uses authenticated paginated PR and lane inventories', () => {
-  const text = compact('skills/axstack/references/review-manager-prompt.md');
-  const concepts = [/gh api user/i, /union/i, /two paginated.*gh search prs/i,
-    /review-requested:@me/, /involves:@me/, /each with/i, /--limit 1000/,
-    /open/i, /non-draft/i, /authored by someone else/i,
-    /\bsorted\b/i, /repo#number/i, /headRefOid/i, /updatedAt/i];
-  checkRule(text, (source) => requires(source, ...concepts),
-    'Use gh api user to resolve self, then union two paginated gh search prs queries (review-requested:@me and involves:@me), each with --limit 1000, for open, non-draft PRs authored by someone else, producing sorted (repo#number, headRefOid, updatedAt) tuples.',
-    [[/union/i, 'intersect'], [/each with/i, 'one with'], [/--limit 1000/, '--limit 30'],
-      [/paginated/i, 'first-page'], [/authored by someone else/i, 'authored by self'],
-      [/\bsorted\b/i, 'unsorted']], concepts);
-  const lane = [/inventory/i, /every page/i, /T3/i, /lane/i, /thread/i, /run/i, /liveness/i];
-  checkRule(text, (source) => requires(source, ...lane),
-    'Inventory every page of T3 lane threads and their run liveness.',
-    [[/every page/i, 'one page']], lane);
-});
-
-test('quiet search results at either limit are incomplete', () => {
-  const cap = [/either query/i, /result count/i, /at or above 1000|1000 or more/i,
-    /coverage/i, /\bincomplete\b/i];
-  checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
-    (source) => requires(source, ...cap),
-    'In either query, a result count of 1000 or more makes coverage incomplete.',
-    [[/either query/i, 'both queries'], [/at or above 1000|1000 or more/i, 'below 1000'],
-      [/\bincomplete\b/i, 'complete']], cap);
-});
-
 test('quiet exit is silent and leaves skills, sweep and continuity untouched', () => {
   const text = compact('skills/axstack/references/review-manager-prompt.md');
   const restrictions = [/no text|without text/i,
     /no skill load|without skill loading/i, /no sweep|without a sweep/i,
     /no (?:other )?continuity write|without continuity writes/i];
-  const concepts = [/every busy condition is false/i, /end the turn/i, ...restrictions];
+  const concepts = [/no term fails or is unknown/i, /end the turn/i, ...restrictions];
   const accepts = (source) => sentences(source).some((sentence) =>
     concepts.every((concept) => concept.test(sentence)) &&
-    requires(restrictions.reduce((value, rule) => value.replace(rule, ''), sentence), /^/));
+    requires([...restrictions, /no term fails or is unknown/i].reduce((value, rule) => value.replace(rule, ''), sentence), /^/));
   checkRule(text, accepts,
-    'When every busy condition is false, end the turn without text, without skill loading, without a sweep and without continuity writes.',
-    [[/every busy condition is false/i, 'any busy condition is true'],
+    'When no term fails or is unknown, end the turn without text, without skill loading, without a sweep and without continuity writes.',
+    [[/no term fails or is unknown/i, 'any term fails'],
       ...restrictions.map((rule) => [rule, 'perform the action'])], concepts);
 });
 
@@ -182,4 +122,85 @@ test('documented review-manager schedules run every 30 minutes', () => {
     expect(text, path).toMatch(/30-minute|every 30 minutes/i);
     expect(text, path).toContain('everyMs:1800000');
   }
+});
+
+const decisions = [
+  ['collect complete native active set', [/save/i, /t3_thread_list/i, /includeSubagents:true/i, /statuses:/i, /preparing\/queued\/starting\/running\/waiting/i],
+    'Save t3_thread_list with includeSubagents:true and statuses: preparing/queued/starting/running/waiting.',
+    [[/preparing\/queued\/starting\/running\/waiting/i, 'running']]],
+  ['full pass records verified outsiders', [/full passes/i, /record proven/i, /Non-lane roots/i, /omitted idle parents/i],
+    'For omitted idle parents, full passes record proven Non-lane roots.', [[/record proven/i, 'invent']]],
+  ['full pass resolves heads', [/resolve heads|obtain head OIDs/i, /gh pr view/i, /--json headRefOid/i, /in the full pass|during full reconciliation/i],
+    'During full reconciliation, obtain head OIDs using gh pr view --repo REPO NUMBER --json headRefOid.',
+    [[/resolve heads|obtain head OIDs/i, 'skip resolving heads']]],
+  ['fail or unknown requires full', [/any fail or unknown|any (?:fact|term) fails? or is unknown/i, /runs? the full pass|execute the full pass/i],
+    'If any fact fails or is unknown, execute the full pass.', [[/runs? the full pass|execute the full pass/i, 'permits quiet exit']]],
+  ['unknown discovery requires reconciliation', [/unknown discovery|discovery (?:is|remains) unknown/i, /means full reconciliation|requires full reconciliation/i],
+    'When discovery is unknown, it requires full reconciliation.', [[/full reconciliation/i, 'quiet exit']]],
+  ['unknown owner or prior forbids admission', [/unknown ownership or prior identity|ownership or prior identity (?:is|remains) unknown/i, /forbids competing admission|competing admission is forbidden/i],
+    'If ownership or prior identity is unknown, competing admission is forbidden.', [[/forbids competing admission|competing admission is forbidden/i, 'permits competing admission']]],
+  ['helper is first decision', [/after collection/i, /first decision step/i, /installed helper/i, /bun[^`]*schedule-drift\.js> quiet-facts --input/i],
+    'After collection, use the installed helper as the first decision step: `bun --no-env-file <resolved-schedule-drift.js> quiet-facts --input FILE`.', [[/first decision step/i, 'optional later step']]],
+  ['prior read precedes replacement', [/t3_thread_read/i, /prior pass/i, /once/i, /before replacing prior identity/i],
+    'Before replacing prior identity, read the prior pass once using t3_thread_read.', [[/before replacing/i, 'after replacing']]],
+];
+test('quiet lane identity excludes shared-project membership', () => {
+  const concepts = [/lane scope/i, /recorded pass\/job identities/i, /descendants/i];
+  const exclusion = /not the shared project/i;
+  checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
+    source => sentences(source).some(s => exclusion.test(s) && requires(s.replace(exclusion, ''), ...concepts)),
+    'Lane scope follows recorded pass/job identities and descendants, not the shared project.',
+    [[exclusion, 'the entire shared project']], [...concepts, exclusion]);
+});
+for (const [name, concepts, rewording, inversions] of decisions) {
+  test(`quiet decision: ${name}`, () => {
+    checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
+      source => requires(source.replace(/--no-env-file/g, ''), ...concepts), rewording, inversions, concepts);
+  });
+}
+test('quiet facts grant nothing and guarded/user-only state alone never forces reconciliation', () => {
+  const source = compact('skills/axstack/references/review-manager-prompt.md');
+  const facts = /grant nothing|grant no authority/i;
+  checkRule(source, text => sentences(text).some(s => facts.test(s) && requires(s.replace(facts, ''), /facts/i)),
+    'These facts grant no authority.', [[facts, 'grant admission authority']], [/facts/i, facts]);
+  const rule = /never (?:force|require) a full pass or failure report/i;
+  const concepts = [/guarded prior passes/i, /user-only holds/i, /by themselves|alone/i];
+  checkRule(source, text => sentences(text).some(s => rule.test(s) && requires(s.replace(rule, ''), ...concepts)),
+    'Alone, user-only holds and guarded prior passes never require a full pass or failure report.',
+    [[rule, 'always force full reconciliation']], [...concepts, rule]);
+});
+
+for (const [name, concepts, rewording, inversions] of [
+  ['user decision updates PR timestamp', [/user decision/i, /changes updatedAt/i],
+    'On the PR, a user decision changes updatedAt.', [[/changes updatedAt/i, 'preserves updatedAt']]],
+  ['four-hour reconciliation covers flagged replies', [/4 h full pass/i, /reconciles replies/i, /flagged threads/i],
+    'Replies in flagged threads are covered when the 4 h full pass reconciles replies.', [[/reconciles replies/i, 'ignores replies']]],
+]) test(`quiet rationale: ${name}`, () => {
+  checkRule(compact('skills/axstack/references/review-manager-prompt.md'), text => requires(text, ...concepts), rewording, inversions, concepts);
+});
+test('quiet collection retains both executable gh search commands and their exact safety flags', () => {
+  const valid = source => {
+    const commands = source.match(/gh search prs[^`\n]+/g) ?? [];
+    return commands.length === 2 && commands.some(c => /--review-requested[= ]@me/.test(c)) && commands.some(c => /--involves[= ]@me/.test(c)) &&
+      commands.every(c => /--limit 1000/.test(c) && /--state open/.test(c) && /--draft=false/.test(c) &&
+        ['number', 'repository', 'updatedAt', 'isDraft', 'author'].every(field => c.match(/--json ([\w,]+)/)?.[1].split(',').includes(field)));
+  };
+  const source = read('skills/axstack/references/review-manager-prompt.md');
+  expect(valid(source)).toBe(true);
+  expect(valid(source.replace(/--limit 1000/g, ''))).toBe(false);
+  expect(valid(source.replace(/--limit 1000/g, '--limit 30'))).toBe(false);
+  expect(valid(source.replace(/gh search prs/g, 'gh search prs --sort updated'))).toBe(true);
+});
+
+test('the one prior read precedes the actual helper invocation and full workflow', () => {
+  const source = read('skills/axstack/references/review-manager-prompt.md');
+  const accepts = text => {
+    const prior = text.indexOf('t3_thread_read'), helper = text.indexOf('bun --no-env-file <resolved-schedule-drift.js> quiet-facts');
+    return prior >= 0 && helper > prior && helper < text.indexOf('## Full pass');
+  };
+  expect(accepts(source)).toBe(true);
+  expect(accepts(source.replace(/t3_thread_read/g, ''))).toBe(false);
+  const directive = source.split('\n').find(line => line.includes('t3_thread_read'));
+  expect(accepts(source.replace(directive, '') + '\n' + directive)).toBe(false);
+  expect(accepts(source.replace('Read the recorded prior pass once with', 'Consult the prior pass once through'))).toBe(true);
 });

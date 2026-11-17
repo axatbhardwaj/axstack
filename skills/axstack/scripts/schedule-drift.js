@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 import { readFileSync } from 'node:fs';
+import { compareQuietPRs } from './pr-digest.js';
 
 const HELP = `schedule-drift — canonical schedule comparison (R2 fact mode)
+  quiet-facts --help  Saved-input review-manager observations (separate fact mode).
   bun schedule-drift.js --export FILE --bindings FILE [--prompts DIR] [--now ISO] [--max-age-seconds N]
   --export FILE   Saved JSON: {version:1,host,exportedAt,complete:true,tasks:[{scheduledTaskId,
                   projectId,prompt,schedule,enabled}]}. Export every relevant project; never use a live database.
@@ -119,8 +121,221 @@ function validSchedule(s) {
     s.weekdays.every((d) => Number.isSafeInteger(d) && d >= 0 && d <= 6);
 }
 
+const QUIET_HELP = `schedule-drift quiet-facts — raw saved-input observations
+  bun --no-env-file <installed>/schedule-drift.js quiet-facts --input FILE --continuity FILE [--now ISO]
+  --input FILE JSON enclosing raw outputs without projecting or inventing row fields:
+    {observedAt,repository:"owner/name",login,reap:{exitCode,dockerAvailable},
+     searches:[REVIEW_REQUESTED_ARRAY,INVOLVES_ARRAY],inventory:{args,value},prior:READ_RESPONSE}.
+    observedAt is the UTC collection time; repository/login/reap are the existing pass context/results.
+    searches are the two gh search prs --limit 1000 JSON arrays exactly as printed:
+      number, repository.nameWithOwner, updatedAt, isDraft, author.login; headRefOid when returned.
+    Completeness is array length <1000 for BOTH searches; errors/missing arrays are unknown.
+    Omitted head OIDs stay unobserved, never synthesized. Compare repository/number/updatedAt
+    and only returned OIDs via pr-digest; new/changed fingerprints fail even without an OID.
+    inventory is the T29 t3_thread_list {args,value} contract: merged pages, nextCursor:null,
+    total matching threads.length; first args include includeSubagents:true and projectId
+    (or allProjects:true), cursor absent/0. statuses may be exactly the five busy statuses below;
+    no settled/snoozed/titleContains filters. Completeness covers that query, not all history.
+    Keep native threadId/projectId/parentThreadId/status/settled/latestRunId and currentThreadId.
+    prior is ONE raw t3_thread_read of the recorded prior thread, including its thread metadata;
+    no other thread reads or caller-derived guard/liveness/completeness fields are required.
+    Raw MCP structuredContent or text-content wrappers are also accepted.
+    Native preparing/queued/starting/running/waiting are busy regardless of settlement/guards;
+    completed/failed/cancelled/interrupted/rolled_back are terminal. Idle has no active run.
+    Unknown status is unknown. Descendants come from native parentThreadId relationships.
+  --continuity FILE Saved progress.md with Lane state, Open holds, Watermarks, Last pass.
+    Lane state uses run-record.md's scheduledTaskId, threadId/runId, workspace and exact
+    terminal receipt: SCHEDULE, THREAD/RUN, WORKSPACE, RECEIPT; read before replacement.
+    Active PR jobs and descendants: none, or PR, TASK/CHILD/RUN, OWNER, REVISION, STATE.
+    Recorded pass/job IDs and native parent edges define the lane, never project membership.
+    Native scheduledTaskId, when present, identifies other passes; unknown lineage stays unknown.
+    Native user-created roots and their descendants are outside this lane.
+    The legacy '- threadId: ID' record is accepted during migration. Guards use recorded '- ID: held|flagged', '; state:' / '; guard:'
+    or '; resume: user decision only' on that exact thread's line, never agent judgment.
+    Open holds: '- none' or one line per hold; '; resume: user decision only' (optional final period) is user-only.
+    Pending rows in Lane state/Watermarks/Open holds start with unserved/capacity-deferred/
+    INCOMPLETE/re-eligible or use '; status: STATE'. Historical Last pass prose is not pending.
+    Watermarks: '- Quiet gate: JSON [repo#number,headRefOid,updatedAt] triples';
+    '- Last full pass: UTC ISO'. Optional '- Non-lane roots: JSON threadId array' records
+    roots proven unrelated during full reconciliation, including omitted idle parents.
+    Missing/malformed continuity stays unknown; exclusions never override a recorded lane root.
+  --now ISO Observation time with timezone; default current UTC; collection age must be 0..300s.
+  --help Show flags, input contract, effects and limitations.
+No writes, subprocesses, network, T3 calls, database access or persistent state. Run from cwd /.
+Facts only; counts, no aggregate verdict or authority. Driver applies quiet/full/hold rules.
+Exit: 0 measured (including fail), 1 invalid CLI, 2 incomplete/unknown, including read/JSON failure.
+`;
+
+const terminalRuns = ['completed', 'failed', 'cancelled', 'interrupted', 'rolled_back'];
+const activeRuns = ['preparing', 'queued', 'starting', 'running', 'waiting'];
+const repoName = (v) => typeof v === 'string' && /^[\w.-]+\/[\w.-]+$/.test(v);
+const section = (text, name) => text.match(new RegExp(`^## ${name}\\s*\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, 'm'))?.[1];
+function quietOptions(argv) {
+  const args = { '--now': new Date().toISOString() }, seen = new Set();
+  for (let i = 0; i < argv.length; i += 2) {
+    if (!['--input', '--continuity', '--now'].includes(argv[i]) || !argv[i + 1] || seen.has(argv[i])) throw Error('invalid quiet-facts argument');
+    seen.add(argv[i]); args[argv[i]] = argv[i + 1];
+  }
+  if (!args['--input'] || !args['--continuity'] || !Number.isFinite(time(args['--now']))) throw Error('expected --input, --continuity and timezone-qualified --now');
+  return args;
+}
+// Preserve tool outputs: unwrap MCP packaging, never project caller-invented row fields.
+function nativeValue(value) {
+  if (value?.isError) return null;
+  if (value?.structuredContent) return value.structuredContent;
+  if (Array.isArray(value?.content)) {
+    try { return JSON.parse(value.content.find(item => item.type === 'text')?.text); } catch { return null; }
+  }
+  return value;
+}
+function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
+  const terms = [], term = (id, status, evidence) => terms.push({ id, status, evidence });
+  const age = (time(args['--now']) - time(input.observedAt)) / 1000;
+  const fresh = Number.isFinite(age) && age >= 0 && age <= 300;
+  term('observations', fresh ? 'pass' : 'unknown', { ageSeconds: Number.isFinite(age) ? age : null, inputSha256 });
+  const sections = Object.fromEntries(['Lane state', 'Open holds', 'Watermarks', 'Last pass'].map(name => [name, section(continuity, name)]));
+  const continuityKnown = Object.values(sections).every(nonempty);
+  term('continuity', continuityKnown ? 'pass' : 'unknown', { continuitySha256 });
+  const snapshot = input.inventory, call = snapshot?.args, value = nativeValue(snapshot?.value), rows = value?.threads;
+  const byId = new Map();
+  let complete = fresh && call && Array.isArray(rows) && !snapshot.isError && !value.isError && value.complete !== false && !value.truncated && !value.hasMore &&
+    value.nextCursor === null && value.total === rows.length && call.includeSubagents === true &&
+    (call.cursor === undefined || call.cursor === 0) && !['settled', 'snoozed', 'titleContains'].some(key => Object.hasOwn(call, key)) &&
+    (call.statuses === undefined || Array.isArray(call.statuses) && equal([...call.statuses].sort(), [...activeRuns].sort()));
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (!nonempty(row?.threadId) || !nonempty(row?.projectId) || byId.has(row.threadId) ||
+      !(row.parentThreadId === null || nonempty(row.parentThreadId)) || row.parentThreadId === row.threadId) { complete = false; continue; }
+    byId.set(row.threadId, row);
+  }
+  for (const row of byId.values()) {
+    const seen = new Set([row.threadId]); let parent = row.parentThreadId;
+    while (byId.has(parent)) {
+      if (seen.has(parent)) { complete = false; break; }
+      seen.add(parent); parent = byId.get(parent).parentThreadId;
+    }
+  }
+  const self = byId.get(value?.currentThreadId), projectId = self?.projectId;
+  const scoped = complete && self && (call.allProjects === true || nonempty(call.projectId) && call.projectId === projectId &&
+    [...byId.values()].every(row => row.projectId === projectId));
+  const identity = !!scoped && repoName(input.repository);
+  term('identity', identity ? 'pass' : 'unknown', { repository: input.repository ?? null, projectId: projectId ?? null, selfThreadId: self?.threadId ?? null });
+  const reap = input.reap;
+  term('reap', !Number.isInteger(reap?.exitCode) || typeof reap?.dockerAvailable !== 'boolean' ? 'unknown' :
+    reap.exitCode === 0 && reap.dockerAvailable ? 'pass' : 'fail', reap ?? 'no saved reap result');
+  let discovery = fresh && nonempty(input.login) && Array.isArray(input.searches) && input.searches.length === 2;
+  const prs = new Map();
+  for (const raw of Array.isArray(input.searches) ? input.searches : []) {
+    const found = nativeValue(raw), seen = new Set();
+    if (!Array.isArray(found) || found.length >= 1000) { discovery = false; continue; }
+    for (const pr of found) {
+      const repository = pr?.repository?.nameWithOwner, key = `${repository}#${pr?.number}`;
+      if (!repoName(repository) || !Number.isSafeInteger(pr?.number) || pr.number < 1 || seen.has(key) ||
+        !nonempty(pr.author?.login) || typeof pr.isDraft !== 'boolean' || !Number.isFinite(time(pr.updatedAt)) ||
+        time(pr.updatedAt) > time(args['--now']) || pr.headRefOid !== undefined && !/^[a-f0-9]{40,64}$/.test(pr.headRefOid)) {
+        discovery = false; continue;
+      }
+      seen.add(key);
+      if (pr.author.login.toLowerCase() === input.login?.toLowerCase?.() || pr.isDraft || pr.state && pr.state.toLowerCase() !== 'open') continue;
+      const row = [key, pr.headRefOid ?? null, pr.updatedAt];
+      if (prs.has(key) && !equal(prs.get(key), row)) discovery = false;
+      prs.set(key, row);
+    }
+  }
+  term('discovery', discovery ? 'pass' : 'unknown', { eligible: prs.size, resultCounts: input.searches?.map?.(r => nativeValue(r)?.length ?? null) ?? [] });
+  let previous;
+  try { previous = JSON.parse(sections.Watermarks?.match(/^- Quiet gate: (.+)$/m)?.[1]); } catch { /* unknown watermark */ }
+  const comparison = compareQuietPRs(previous, [...prs.values()], { optionalHeads: true });
+  term('pr-list', discovery && continuityKnown ? comparison.status : 'unknown', comparison.evidence);
+  const elapsed = time(args['--now']) - time(sections.Watermarks?.match(/^- Last full pass: (.+)$/m)?.[1]);
+  term('full-pass-age', !continuityKnown || !Number.isFinite(elapsed) ? 'unknown' : elapsed >= 0 && elapsed < 14400000 ? 'pass' : 'fail',
+    { ageSeconds: Number.isFinite(elapsed) ? elapsed / 1000 : null });
+  const laneText = sections['Lane state'] ?? '';
+  const passRecords = [...laneText.matchAll(/^- scheduledTaskId, threadId\/runId, workspace and exact terminal receipt: ([^,]+), ([^/\s,]+)\/([^,]+), ([^,]+), (.+)$/gm)];
+  const priorIds = passRecords.length ? passRecords.map(m => m[2]) : [...laneText.matchAll(/^- threadId: (\S+)$/gm)].map(m => m[1]);
+  const schedules = new Set(passRecords.map(m => m[1]));
+  const jobs = laneText.match(/^- Active PR jobs and descendants: (.+)$/m)?.[1];
+  const jobRecords = jobs === 'none' ? [] : jobs?.split(/;\s*(?=[\w.-]+\/[\w.-]+#\d+,)/).map(row => row.match(/^[\w.-]+\/[\w.-]+#\d+, [^/\s,]+\/([^/\s,]+)\/[^,]+, [^,]+, [^,]+, .+$/));
+  const jobsKnown = jobs === 'none' || Array.isArray(jobRecords) && jobRecords.length > 0 && jobRecords.every(Boolean);
+  const read = nativeValue(input.prior?.value ?? input.prior), prior = read?.thread;
+  const knownStatus = row => row && [...terminalRuns, ...activeRuns, 'idle'].includes(row.status);
+  const priorKnown = identity && priorIds.length > 0 && prior?.threadId === priorIds[0] && prior.threadId !== self.threadId &&
+    prior.projectId === projectId && typeof prior.settled === 'boolean' && knownStatus(prior);
+  const laneIds = new Set([...priorIds, ...(jobRecords ?? []).filter(Boolean).map(m => m[1])]);
+  let outsideRoots = [], outsideKnown = true;
+  const outsideRecords = [...(sections.Watermarks ?? '').matchAll(/^- Non-lane roots: (.*)$/gm)];
+  if (outsideRecords.length) {
+    try { outsideRoots = JSON.parse(outsideRecords[0][1]); } catch { outsideRoots = null; }
+    outsideKnown = outsideRecords.length === 1 && Array.isArray(outsideRoots) && outsideRoots.every(nonempty) &&
+      new Set(outsideRoots).size === outsideRoots.length && outsideRoots.every(id => !laneIds.has(id) && id !== self?.threadId &&
+        !schedules.has(byId.get(id)?.scheduledTaskId) &&
+        (!byId.has(id) || byId.get(id).parentThreadId === null));
+  }
+  const outsideIds = new Set(outsideKnown ? outsideRoots : []);
+  const membership = new Map();
+  function member(row, seen = new Set()) {
+    if (membership.has(row.threadId)) return membership.get(row.threadId);
+    if (laneIds.has(row.threadId)) return true;
+    if (outsideIds.has(row.threadId)) return false;
+    if (nonempty(row.scheduledTaskId) && schedules.size) return schedules.has(row.scheduledTaskId);
+    if (seen.has(row.threadId)) return null;
+    seen.add(row.threadId);
+    if (laneIds.has(row.parentThreadId)) return true;
+    if (outsideIds.has(row.parentThreadId)) return false;
+    if (byId.has(row.parentThreadId)) return member(byId.get(row.parentThreadId), seen);
+    if (row.parentThreadId !== null) return null;
+    if (row.projectId !== projectId || row.scheduledTaskId === null ||
+      row.createdBy === 'user' || ['web', 'mobile'].includes(row.creationSource)) return false;
+    return null;
+  }
+  for (const row of byId.values()) membership.set(row.threadId, member(row));
+  const candidates = [...byId.values()].filter(row => row.threadId !== self?.threadId);
+  const laneRows = candidates.filter(row => membership.get(row.threadId) === true);
+  const ambiguous = candidates.filter(row => membership.get(row.threadId) === null && !terminalRuns.includes(row.status) && row.status !== 'idle');
+  const laneKnown = identity && priorIds.length > 0 && jobsKnown && outsideKnown && ambiguous.length === 0 && laneRows.every(knownStatus);
+  const threadsKnown = laneKnown && priorKnown;
+  const descendants = laneRows.filter(row => row.parentThreadId !== null).map(row => row.threadId);
+  term('thread-readbacks', threadsKnown ? 'pass' : 'unknown', { listed: laneRows.length, descendantThreadIds: descendants, priorThreadId: prior?.threadId ?? null, priorReads: prior ? 1 : 0 });
+  term('ownership', threadsKnown && continuityKnown ? 'pass' : 'unknown', { completeInventory: !!scoped, projectId: projectId ?? null, total: value?.total ?? null, recordedNonLaneRoots: outsideKnown ? outsideRoots : null, ambiguousThreadIds: ambiguous.map(row => row.threadId) });
+  const holds = sections['Open holds']?.trim().split('\n').filter(nonempty) ?? [];
+  const userOnly = line => /; resume: user decision only\.?$/i.test(line);
+  const holdKnown = holds.length > 0 && (holds.length === 1 && holds[0] === '- none' || holds.every(line => /^- .+: .+; resume: [^;]+$/.test(line)));
+  const priorLines = [...laneText.split('\n'), ...holds].filter(line => priorIds[0] &&
+    (line.startsWith(`- ${priorIds[0]}:`) || line === `- threadId: ${priorIds[0]}` || passRecords.some(m => m[2] === priorIds[0] && m[0] === line)));
+  const guarded = priorLines.some(line => /(?:^- \S+:\s*|;\s*(?:state|guard):\s*)(?:held|flagged|owned watch|pending receipt|wedged|stalled owner|protected)\b/i.test(line) || userOnly(line));
+  const terminal = row => terminalRuns.includes(row.status);
+  term('prior-pass', !priorKnown || !continuityKnown || !holdKnown ? 'unknown' : prior.settled || terminal(prior) && guarded ? 'pass' : 'fail',
+    { threadId: prior?.threadId ?? null, status: prior?.status ?? null, settled: prior?.settled ?? null, recordedGuard: guarded });
+  const nonterminal = row => activeRuns.includes(row.status);
+  const busy = [...laneRows, ...(priorKnown ? [prior] : [])].filter(row => row.threadId !== self?.threadId && nonterminal(row)).map(row => row.threadId);
+  term('lane-idle', identity && busy.length ? 'fail' : !laneKnown ? 'unknown' : 'pass', { nonterminalThreadIds: [...new Set(busy)], ambiguousThreadIds: ambiguous.map(row => row.threadId) });
+  const recorded = [sections['Lane state'], sections.Watermarks, sections['Open holds']].filter(Boolean).join('\n');
+  const event = /^- (?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b|;\s*status:\s*(?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b/gm;
+  const pendingEvent = event.test(recorded);
+  const pending = pendingEvent || jobs !== 'none' || holds.some(line =>
+    !/^- none$/i.test(line) && !userOnly(line));
+  term('pending-work', continuityKnown && pendingEvent ? 'fail' : !continuityKnown || !holdKnown || !nonempty(jobs) ? 'unknown' : pending ? 'fail' : 'pass',
+    { activeJobs: jobs ?? null, holds, pending });
+  const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map(s => [s, terms.filter(t => t.status === s).length]));
+  return { version: 2, observedAt: args['--now'], terms, counts };
+}
+
+function quietFacts(args) {
+  let input, continuity = '', inputSha256 = null, continuitySha256 = null;
+  try { const bytes = readFileSync(args['--input']); inputSha256 = sha256(bytes); input = JSON.parse(bytes.toString()); } catch { /* unknown input */ }
+  try { const bytes = readFileSync(args['--continuity']); continuitySha256 = sha256(bytes); continuity = bytes.toString(); } catch { /* unknown continuity */ }
+  return rawQuietFacts(args, input ?? {}, continuity, inputSha256, continuitySha256);
+}
+
 try {
-  if (process.argv.slice(2).length === 1 && process.argv[2] === '--help') console.log(HELP);
+  if (process.argv[2] === 'quiet-facts') {
+    if (process.argv.length === 4 && process.argv[3] === '--help') console.log(QUIET_HELP);
+    else {
+      const report = quietFacts(quietOptions(process.argv.slice(3)));
+      console.log(JSON.stringify(report, null, 2));
+      process.exitCode = report.counts.unknown ? 2 : 0;
+    }
+  }
+  else if (process.argv.slice(2).length === 1 && process.argv[2] === '--help') console.log(HELP);
   else {
     const report = compare(options(process.argv.slice(2)));
     console.log(JSON.stringify(report, null, 2));

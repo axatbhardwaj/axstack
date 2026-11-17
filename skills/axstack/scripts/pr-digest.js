@@ -92,7 +92,23 @@ function snapshot(response) {
   return prs;
 }
 
-try {
+// Quiet discovery owns completeness and identity; this function only compares PR tuples.
+export function compareQuietPRs(previous, current, { optionalHeads = false } = {}) {
+  const valid = (rows, optional = false) => Array.isArray(rows) && rows.every((row) => Array.isArray(row) && row.length === 3 &&
+    row.every((value, index) => optional && index === 1 && value === null || typeof value === 'string' && value.length > 0) &&
+    /^[\w.-]+\/[\w.-]+#[1-9]\d*$/.test(row[0]) && (optional && row[1] === null || /^[a-f0-9]{40,64}$/.test(row[1])) &&
+    /T.*(?:Z|[+-]\d\d:\d\d)$/.test(row[2]) && Number.isFinite(Date.parse(row[2]))) &&
+    new Set(rows.map(row => row[0])).size === rows.length;
+  if (!valid(previous) || !valid(current, optionalHeads)) return { status: 'unknown', evidence: 'missing or malformed PR-list watermark' };
+  const before = ordered(previous.map((row) => [...row]));
+  const after = ordered(current.map((row) => [...row]));
+  const same = before.length === after.length && before.every((row, i) => row[0] === after[i][0] && row[2] === after[i][2] &&
+    (optionalHeads && after[i][1] === null || row[1] === after[i][1]));
+  return { status: same ? 'pass' : 'fail', evidence: { previous: before, current: after,
+    headScope: optionalHeads ? 'compare returned OIDs only; omitted OIDs remain unobserved' : 'all OIDs compared' } };
+}
+
+if (import.meta.main) try {
   const args = options(process.argv.slice(2));
   const current = snapshot(fetchCurrent(args));
   let previous = {};
