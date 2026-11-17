@@ -147,8 +147,8 @@ Driver applies quiet/full/hold rules; facts grant no admission or settlement aut
 Exit: 0 measured (including fail), 1 invalid CLI, 2 incomplete/unknown. Read/JSON failures are unknown.
 `;
 const guardKeys = ['held', 'flagged', 'ownedWatch', 'pendingReceipt', 'wedged', 'stalledOwner', 'protected'];
-const terminalRuns = ['completed', 'failed', 'cancelled', 'interrupted'];
-const activeRuns = ['running', 'queued', 'pending', 'usage-limited'];
+const terminalRuns = ['completed', 'failed', 'cancelled', 'interrupted', 'rolled_back'];
+const activeRuns = ['preparing', 'queued', 'starting', 'running', 'waiting'];
 const repoName = (v) => typeof v === 'string' && /^[\w.-]+\/[\w.-]+$/.test(v);
 const section = (text, name) => text.match(new RegExp(`^## ${name}\\s*\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, 'm'))?.[1];
 function quietOptions(argv) {
@@ -215,7 +215,7 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
         discovery = false; continue;
       }
       seen.add(key);
-      if (pr.author.login.toLowerCase() === input.login.toLowerCase() || pr.isDraft || pr.state && pr.state.toLowerCase() !== 'open') continue;
+      if (pr.author.login.toLowerCase() === input.login?.toLowerCase?.() || pr.isDraft || pr.state && pr.state.toLowerCase() !== 'open') continue;
       const row = [key, pr.headRefOid ?? null, pr.updatedAt];
       if (prs.has(key) && !equal(prs.get(key), row)) discovery = false;
       prs.set(key, row);
@@ -231,7 +231,7 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
     { ageSeconds: Number.isFinite(elapsed) ? elapsed / 1000 : null });
   const priorIds = [...(sections['Lane state'] ?? '').matchAll(/^- threadId: (\S+)$/gm)].map(m => m[1]);
   const read = nativeValue(input.prior?.value ?? input.prior), prior = read?.thread;
-  const knownStatus = row => row && [...terminalRuns, ...activeRuns, 'idle', 'rolled_back', 'preparing', 'starting', 'waiting'].includes(row.status);
+  const knownStatus = row => row && [...terminalRuns, ...activeRuns, 'idle'].includes(row.status);
   const priorKnown = identity && priorIds.length === 1 && prior?.threadId === priorIds[0] && prior.threadId !== self.threadId &&
     prior.projectId === projectId && typeof prior.settled === 'boolean' && knownStatus(prior);
   const laneIds = new Set([...byId.values()].filter(row => row.projectId === projectId).map(row => row.threadId));
@@ -250,8 +250,8 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
   const holdKnown = holds.length > 0 && holds.every(line => /^- .+/.test(line));
   const priorLines = [...(sections['Lane state'] ?? '').split('\n'), ...holds].filter(line =>
     priorIds[0] && line.split(/[^\w-]+/).includes(priorIds[0]));
-  const guarded = priorLines.some(line => /\b(?:held|flagged|user-only|user decision only|owned watch|pending receipt|wedged|stalled owner|protected)\b/i.test(line));
-  const terminal = row => [...terminalRuns, 'rolled_back'].includes(row.status);
+  const guarded = priorLines.some(line => /(?:^- \S+:\s*|;\s*(?:state|guard):\s*)(?:held|flagged|owned watch|pending receipt|wedged|stalled owner|protected)\b|;\s*resume: user decision only$/i.test(line));
+  const terminal = row => terminalRuns.includes(row.status);
   term('prior-pass', !priorKnown || !continuityKnown || !holdKnown ? 'unknown' : prior.settled || terminal(prior) && guarded ? 'pass' : 'fail',
     { threadId: prior?.threadId ?? null, status: prior?.status ?? null, settled: prior?.settled ?? null, recordedGuard: guarded });
   const nonterminal = row => !terminal(row) && row.status !== 'idle';
