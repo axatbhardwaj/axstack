@@ -3,7 +3,9 @@ import { readFileSync } from 'node:fs';
 
 const HELP = `lane-owner — saved T3 lane liveness facts (R2 fact)
   bun --no-env-file /absolute/lane-owner.js --input FILE --owner-thread ID --owner-run ID [--job-thread ID ...]
-  --input FILE       Saved {args, value} from t3_thread_list; value contains threads,
+  --input FILE       Saved {preSettle:true,args,value} from t3_thread_list before this pass
+                     settles anything; preSettle is a caller assertion, not authenticated.
+                     Missing/false preSettle keeps all facts unknown. value contains threads,
                      nextCursor:null and total matching the full merged inventory.
                      args must include includeSubagents:true and allProjects:true or
                      projectId matching the owner; no status/settled/snoozed/title filters.
@@ -40,6 +42,7 @@ function inactive(row) {
 
 function facts(snapshot, ownerId, runId, jobs) {
   const unknown = reason => ids.map(id => term(id, 'unknown', { reason }));
+  if (snapshot?.preSettle !== true) return unknown('pre-settle snapshot assertion missing or false');
   const input = snapshot?.args, value = snapshot?.value, rows = value?.threads;
   if (!input || !Array.isArray(rows) || snapshot.isError || value.isError
     || value.truncated || value.hasMore || value.complete === false
