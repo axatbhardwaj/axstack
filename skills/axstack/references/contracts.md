@@ -91,7 +91,7 @@ its effort and do not add a redundant reviewer. No single-provider high-stakes
 mapping is defined: pause for an explicit user decision rather than borrowing
 another preset or inventing a route. There is no silent fallback.
 
-Use `axstack-escalation-fable` only for arena round 2, high-stakes decisions,
+Use `axstack-escalation-fable` only for arena round 1, high-stakes decisions,
 or when two attempts at the same named goal fail a stated acceptance check
 (including debug L2 or a spec decision rejected twice). It also applies when
 the Codex and Claude advisers still contradict after one reconciliation with no safe
