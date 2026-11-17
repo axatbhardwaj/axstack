@@ -87,13 +87,13 @@ test('quiet exit is silent and leaves skills, sweep and continuity untouched', (
   const restrictions = [/no text|without text/i,
     /no skill load|without skill loading/i, /no sweep|without a sweep/i,
     /no (?:other )?continuity write|without continuity writes/i];
-  const concepts = [/every busy condition is false|no term fails or is unknown/i, /end the turn/i, ...restrictions];
+  const concepts = [/no term fails or is unknown/i, /end the turn/i, ...restrictions];
   const accepts = (source) => sentences(source).some((sentence) =>
     concepts.every((concept) => concept.test(sentence)) &&
     requires([...restrictions, /no term fails or is unknown/i].reduce((value, rule) => value.replace(rule, ''), sentence), /^/));
   checkRule(text, accepts,
-    'When every busy condition is false, end the turn without text, without skill loading, without a sweep and without continuity writes.',
-    [[/every busy condition is false|no term fails or is unknown/i, 'any term fails'],
+    'When no term fails or is unknown, end the turn without text, without skill loading, without a sweep and without continuity writes.',
+    [[/no term fails or is unknown/i, 'any term fails'],
       ...restrictions.map((rule) => [rule, 'perform the action'])], concepts);
 });
 
@@ -133,8 +133,8 @@ const decisions = [
     'Unknown ownership or prior identity forbids competing admission.', [[/forbids/i, 'permits']]],
   ['helper is first decision', [/after collection/i, /first decision step/i, /installed helper/i, /bun[^`]*schedule-drift\.js> quiet-facts --input/i],
     'After collection, use the installed helper as the first decision step: `bun --no-env-file <resolved-schedule-drift.js> quiet-facts --input FILE`.', [[/first decision step/i, 'optional later step']]],
-  ['prior read precedes replacement', [/t3_thread_read/i, /prior pass/i, /before replacing prior identity/i],
-    'Use t3_thread_read for the prior pass before replacing prior identity.', [[/before replacing/i, 'after replacing']]],
+  ['prior read precedes replacement', [/t3_thread_read/i, /prior pass/i, /once/i, /before replacing prior identity/i],
+    'Before replacing prior identity, read the prior pass once using t3_thread_read.', [[/before replacing/i, 'after replacing']]],
 ];
 for (const [name, concepts, rewording, inversions] of decisions) {
   test(`quiet decision: ${name}`, () => {
@@ -152,4 +152,39 @@ test('quiet facts grant nothing and guarded/user-only state alone never forces r
   checkRule(source, text => sentences(text).some(s => rule.test(s) && requires(s.replace(rule, ''), ...concepts)),
     'Guarded prior passes and user-only holds never force a full pass or failure report by themselves.',
     [[rule, 'always force full reconciliation']], [...concepts, rule]);
+});
+
+for (const [name, concepts, rewording, inversions] of [
+  ['user decision updates PR timestamp', [/user decision/i, /changes updatedAt/i],
+    'On the PR, a user decision changes updatedAt.', [[/changes updatedAt/i, 'preserves updatedAt']]],
+  ['four-hour reconciliation covers flagged replies', [/4 h full pass/i, /reconciles replies/i, /flagged threads/i],
+    'Replies in flagged threads are covered when the 4 h full pass reconciles replies.', [[/reconciles replies/i, 'ignores replies']]],
+]) test(`quiet rationale: ${name}`, () => {
+  checkRule(compact('skills/axstack/references/review-manager-prompt.md'), text => requires(text, ...concepts), rewording, inversions, concepts);
+});
+test('quiet collection retains both executable gh search commands and their exact safety flags', () => {
+  const valid = source => {
+    const commands = source.match(/gh search prs[^`\n]+/g) ?? [];
+    return commands.length === 2 && commands.some(c => /--review-requested[= ]@me/.test(c)) && commands.some(c => /--involves[= ]@me/.test(c)) &&
+      commands.every(c => /--limit 1000/.test(c) && /--state open/.test(c) && /--draft=false/.test(c) &&
+        ['number', 'repository', 'updatedAt', 'isDraft', 'author'].every(field => c.match(/--json ([\w,]+)/)?.[1].split(',').includes(field)));
+  };
+  const source = read('skills/axstack/references/review-manager-prompt.md');
+  expect(valid(source)).toBe(true);
+  expect(valid(source.replace(/--limit 1000/g, ''))).toBe(false);
+  expect(valid(source.replace(/--limit 1000/g, '--limit 30'))).toBe(false);
+  expect(valid(source.replace(/gh search prs/g, 'gh search prs --sort updated'))).toBe(true);
+});
+
+test('the one prior read precedes the actual helper invocation and full workflow', () => {
+  const source = read('skills/axstack/references/review-manager-prompt.md');
+  const accepts = text => {
+    const prior = text.indexOf('t3_thread_read'), helper = text.indexOf('bun --no-env-file <resolved-schedule-drift.js> quiet-facts');
+    return prior >= 0 && helper > prior && helper < text.indexOf('## Full pass');
+  };
+  expect(accepts(source)).toBe(true);
+  expect(accepts(source.replace(/t3_thread_read/g, ''))).toBe(false);
+  const directive = source.split('\n').find(line => line.includes('t3_thread_read'));
+  expect(accepts(source.replace(directive, '') + '\n' + directive)).toBe(false);
+  expect(accepts(source.replace('Read the recorded prior pass once with', 'Consult the prior pass once through'))).toBe(true);
 });
