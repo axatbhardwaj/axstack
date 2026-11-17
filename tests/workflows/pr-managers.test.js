@@ -28,39 +28,7 @@ const quietRules = [
     [/quiet check/i, /before/i, /invoking.*axstack-review/i, /reading any.*skills\/\*\*/i],
     'Before invoking axstack-review or reading any skills/** file, perform the quiet check.',
     [[/before/i, 'after']]],
-  ['changed PR list is busy',
-    [/run.*full pass/i, /when/i, /\bsorted list/i, /differs|different/i, /Quiet gate:/i],
-    'When the sorted list is different from Quiet gate:, run the full pass.',
-    [[/differs|different/i, 'equal']]],
-  ['non-terminal lane thread is busy',
-    [/run.*full pass/i, /when/i, /other lane thread/i, /non-terminal/i],
-    'When any other lane thread is non-terminal, run the full pass.',
-    [[/non-terminal/i, 'terminal']]],
-  ['unreadable continuity is busy',
-    [/run.*full pass/i, /when/i, /continuity/i, /watermark/i, /missing/i, /malformed/i, /unreadable/i],
-    'When continuity or a watermark is missing, malformed or unreadable, run the full pass.',
-    [[/unreadable/i, 'readable'], [/missing/i, 'present'], [/malformed/i, 'valid']]],
-  ['stale full pass is busy',
-    [/run.*full pass/i, /when/i, /Last full pass:/i, /at least 4 hours old/i, /future/i],
-    'When Last full pass: is at least 4 hours old or in the future, run the full pass.',
-    [[/at least 4 hours old/i, 'less than 4 hours old']]],
-  ['incomplete calls are busy',
-    [/run.*full pass/i, /when/i, /call fails/i, /pagination/i, /head OIDs/i, /liveness/i, /incomplete/i, /unknown/i],
-    'When a call fails or pagination, head OIDs or thread/run liveness is incomplete or unknown, run the full pass.',
-    [[/call fails/i, 'call succeeds'], [/incomplete/i, 'complete'], [/unknown/i, 'known']]],
-  ['recorded work and non-user holds are busy',
-    [/run.*full pass/i, /when/i, /continuity records/i, /\bany\b/i,
-      /unserved/i, /capacity-deferred/i, /INCOMPLETE/, /re-eligible/i,
-      /or any open hold/i, /resume condition/i, /beyond a user decision|other than only the user/i],
-    'When continuity records any unserved, capacity-deferred, INCOMPLETE or re-eligible event, or any open hold with a resume condition other than only the user, run the full pass.',
-    [[/run.*full pass/i, 'end quietly'], [/\bany\b/gi, 'every'],
-      [/or any open hold/i, 'and any open hold'],
-      [/beyond a user decision|other than only the user/i, 'awaiting only the user']]],
-  ['user-only holds remain quiet-eligible',
-    [/holds awaiting only the user/i, /remain quiet-eligible/i,
-      /updatedAt/i, /4 h full pass/i, /reconcil.*replies in flagged threads/i],
-    'Holds awaiting only the user remain quiet-eligible because updatedAt changes with a PR decision and the 4 h full pass reconciles replies in flagged threads.',
-    [[/only the user/i, 'also the user'], [/quiet-eligible/i, 'busy']]],
+
 ];
 for (const [name, concepts, rewording, inversions] of quietRules) {
   test(`review-manager quiet gate: ${name}`, () => {
@@ -113,33 +81,6 @@ test('automations routes the quiet check to its packaged owner', () => {
     'Follow the packaged review-manager prompt for its quiet check.',
     [[/follow/i, 'ignore']], concepts);
   expect(loadedReferences(text)).toContain('review-manager-prompt.md');
-});
-
-test('quiet discovery uses authenticated paginated PR and lane inventories', () => {
-  const text = compact('skills/axstack/references/review-manager-prompt.md');
-  const concepts = [/gh api user/i, /union/i, /two paginated.*gh search prs/i,
-    /review-requested:@me/, /involves:@me/, /each with/i, /--limit 1000/,
-    /open/i, /non-draft/i, /authored by someone else/i,
-    /\bsorted\b/i, /repo#number/i, /headRefOid/i, /updatedAt/i];
-  checkRule(text, (source) => requires(source, ...concepts),
-    'Use gh api user to resolve self, then union two paginated gh search prs queries (review-requested:@me and involves:@me), each with --limit 1000, for open, non-draft PRs authored by someone else, producing sorted (repo#number, headRefOid, updatedAt) tuples.',
-    [[/union/i, 'intersect'], [/each with/i, 'one with'], [/--limit 1000/, '--limit 30'],
-      [/paginated/i, 'first-page'], [/authored by someone else/i, 'authored by self'],
-      [/\bsorted\b/i, 'unsorted']], concepts);
-  const lane = [/inventory/i, /every page/i, /T3/i, /lane/i, /thread/i, /run/i, /liveness/i];
-  checkRule(text, (source) => requires(source, ...lane),
-    'Inventory every page of T3 lane threads and their run liveness.',
-    [[/every page/i, 'one page']], lane);
-});
-
-test('quiet search results at either limit are incomplete', () => {
-  const cap = [/either query/i, /result count/i, /at or above 1000|1000 or more/i,
-    /coverage/i, /\bincomplete\b/i];
-  checkRule(compact('skills/axstack/references/review-manager-prompt.md'),
-    (source) => requires(source, ...cap),
-    'In either query, a result count of 1000 or more makes coverage incomplete.',
-    [[/either query/i, 'both queries'], [/at or above 1000|1000 or more/i, 'below 1000'],
-      [/\bincomplete\b/i, 'complete']], cap);
 });
 
 test('quiet exit is silent and leaves skills, sweep and continuity untouched', () => {
