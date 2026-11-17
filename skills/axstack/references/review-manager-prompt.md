@@ -4,12 +4,16 @@ First command of every pass, quiet check included: use an owned 0700 TMPDIR unde
 
 At start of every pass before quiet exit, follow [Sandbox reap](../sandbox/reap.md).
 
-Run the quiet check before invoking `axstack-review` or reading any `skills/**` file except reap.
+Run the quiet check before invoking `axstack-review` or reading any `skills/**` file except reap and this helper.
 
-Collect saved inputs described by the installed `schedule-drift.js quiet-facts --help`:
-authenticated GitHub search pages plus head OIDs, exact native T3 lane inventory and
-`t3_thread_read` readbacks (prior pass and every descendant), and continuity from
-`~/.local/share/axstack/runs/review-manager/progress.md` before replacing prior identity.
+Save raw outputs per installed `schedule-drift.js quiet-facts --help`, with collection time,
+repository and login (`gh api user --jq .login`):
+`gh search prs --review-requested @me --state open --draft=false --json number,repository,updatedAt,isDraft,author --limit 1000`
+`gh search prs --involves @me --state open --draft=false --json number,repository,updatedAt,isDraft,author --limit 1000`
+Save the complete `t3_thread_list` as `{args,value}` (includeSubagents:true,
+merged pages, nextCursor:null, matching total; no filters), and continuity from
+`~/.local/share/axstack/runs/review-manager/progress.md`.
+Read the recorded prior pass once with `t3_thread_read` before replacing prior identity.
 Record own pass threadId in review-manager continuity after reading the prior identity,
 before duplicate classification, then read back the identity save.
 After collection, the first decision step is the installed helper, from trusted cwd `/`:
@@ -19,11 +23,11 @@ The helper reads saved evidence only; PR comparison reuses `pr-digest.js`.
 The pass agent applies quiet/full/hold rules to these facts, which grant nothing:
 any fail or unknown runs the full pass; unknown discovery means full reconciliation,
 and unknown ownership or prior identity forbids competing admission.
-Guarded prior passes and user-only holds do not force reconciliation by themselves.
+Guarded prior passes and user-only holds never force a full pass or failure report by themselves.
+A user decision on the PR changes updatedAt; the 4 h full pass reconciles replies in flagged threads.
 Run the full pass when reap fails or Docker is missing.
 
-
-If every busy condition is false, apply the guarded pass-end self-settle below,
+If no term fails or is unknown, apply the guarded pass-end self-settle below,
 then end the turn with no text, no skill load, no sweep and no other continuity write.
 Otherwise run the full pass; incomplete evidence retains admission/cleanup holds.
 
@@ -45,7 +49,8 @@ Report retained worktree count and disable the schedule and hold past its
 authorized limit. Only the owner retires settled predecessors and saves/reads back
 `~/.local/share/axstack/runs/review-manager/progress.md` using
 `run-record.md#review-manager-continuity-template`.
-Full pass records Watermarks: `Quiet gate:` as the sorted list and
+Resolve heads with `gh pr view --repo REPO NUMBER --json headRefOid` in the full pass.
+Full pass records Watermarks: `Quiet gate:` as the sorted list of JSON triples and
 `Last full pass:` as UTC only as owner-of-record, then reads back the save.
 Settle descendants and end the finite turn. Stay quiet when unchanged.
 Never check out a PR branch here.
