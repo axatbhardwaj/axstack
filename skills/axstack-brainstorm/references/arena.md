@@ -15,13 +15,13 @@ hard-to-reverse choices; they replace the critique round for that question.
    and `axstack-arena-candidate-grok`.
    Each gives a design, rationale, and rejected alternatives. The driver authors no candidate.
    The driver drafts no recommendation until every candidate returns.
-3. **Cross-judge (Rung 2 only).** After every candidate completes, give round 1 judge
-   `axstack-arena-judge-opus` the anonymized, relabeled candidates and rubric to
+3. **Cross-judge (Rung 2 only).** After candidates complete, give fresh round 1 judge
+   `axstack-escalation-fable` the anonymized, relabeled candidates and rubric to
    score every candidate per criterion and recommend a base with a reason.
-   The driver compares its own pick with the Opus verdict. Only if the driver
-   and the Opus judge disagree on the base, or the caller re-invokes with the user's rejection of the round-1
+   The driver compares its pick with the Fable verdict. Only if the driver
+   and the Fable judge disagree on the base, or the caller re-invokes with the user's rejection of the round-1
    synthesis,
-   run round 2 with fresh sessions: `axstack-escalation-fable` and `axstack-arena-judge-astra`
+   run round 2 with fresh sessions: `axstack-arena-judge-opus` and `axstack-arena-judge-astra`
    independently score the same anonymized candidates and rubric. Judges never
    author, never cross-read each other, and never average verdicts. After round-2
    verdicts return, the driver re-picks in step 4 and re-presents in step 6.
