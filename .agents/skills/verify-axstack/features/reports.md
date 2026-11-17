@@ -391,6 +391,9 @@ bun -e 'const r = await Bun.file(process.env.EVIDENCE + "/pr-fresh-installed.jso
 Proof: inclusive below/at/above age boundaries, pending/success/failed checks,
 head/base movement, retargeting, merged/draft state, phase selection and unchanged
 saved bytes. API errors, pagination gaps and missing/malformed policy stay unknown.
-The installed W2-1 policy currently records unknown clock/threshold/check treatment;
-it exits 2 while preserving observed state/check facts. Fixture policy proves no
-live policy authority or push/settle age. The driver owns admission/submission.
+The installed W2-1 phases are unrecorded: exit 2, policy evidence `unrecorded:true`,
+`malformed:false`. Peer semantics ignore age/check terms for these phases; pending
+or failed CI adds no gate. Missing/unreadable/malformed/unsupported policy instead
+sets `malformed:true` and holds. Event facts still discard failures and hold unknowns.
+Semantic tests reject removal/inversion and accept equivalent wording. Fixture
+policy proves no live authority or push/settle age; the driver owns all decisions.
