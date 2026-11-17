@@ -255,7 +255,8 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
     for (const row of byId.values()) if (laneIds.has(row.parentThreadId) && !laneIds.has(row.threadId)) { laneIds.add(row.threadId); added = true; }
   } while (added);
   const laneRows = [...laneIds].map(id => byId.get(id));
-  const threadsKnown = identity && laneRows.every(knownStatus) && priorKnown;
+  const laneKnown = identity && laneRows.every(knownStatus);
+  const threadsKnown = laneKnown && priorKnown;
   const descendants = laneRows.filter(row => laneIds.has(row.parentThreadId)).map(row => row.threadId);
   term('thread-readbacks', threadsKnown ? 'pass' : 'unknown', { listed: laneRows.length, descendantThreadIds: descendants, priorThreadId: prior?.threadId ?? null, priorReads: prior ? 1 : 0 });
   term('ownership', threadsKnown && continuityKnown ? 'pass' : 'unknown', { completeInventory: !!scoped, projectId: projectId ?? null, total: value?.total ?? null });
@@ -269,7 +270,7 @@ function rawQuietFacts(args, input, continuity, inputSha256, continuitySha256) {
     { threadId: prior?.threadId ?? null, status: prior?.status ?? null, settled: prior?.settled ?? null, recordedGuard: guarded });
   const nonterminal = row => !terminal(row) && row.status !== 'idle';
   const busy = [...laneRows, ...(priorKnown ? [prior] : [])].filter(row => row.threadId !== self?.threadId && nonterminal(row)).map(row => row.threadId);
-  term('lane-idle', !threadsKnown ? 'unknown' : busy.length ? 'fail' : 'pass', { nonterminalThreadIds: [...new Set(busy)] });
+  term('lane-idle', !laneKnown ? 'unknown' : busy.length ? 'fail' : 'pass', { nonterminalThreadIds: [...new Set(busy)] });
   const recorded = [sections['Lane state'], sections.Watermarks, sections['Open holds']].filter(Boolean).join('\n');
   const event = /^- (?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b|;\s*status:\s*(?:unserved|capacity-deferred|INCOMPLETE|re-eligible)\b/gm;
   const jobs = sections['Lane state']?.match(/^- Active PR jobs and descendants: (.+)$/m)?.[1];
