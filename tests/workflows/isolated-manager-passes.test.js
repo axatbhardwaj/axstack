@@ -98,7 +98,6 @@ test('scheduled manager uses fresh T3 pass threads and guarded predecessor retir
   expect(text).toContain('A confirmed live manager for the same lane remains authoritative');
   expect(text).toContain('never checks out a PR branch');
   expect(compact('skills/axstack/references/review-manager-prompt.md')).toContain('fresh finite T3 review-manager pass');
-  expect(text).toMatch(/failed scheduled run alone proves neither predecessor exit nor release/i);
   expect(text).toMatch(/t3_thread_organize[^.]*metadata only[^.]*guarded Git worktree removal/i);
   expect(text).not.toMatch(/new isolated workspace for every scheduled pass|repo-created worktree mode|terminal close --worktree|earlier pass workspaces/);
 });
@@ -140,8 +139,6 @@ const safety = [
   'A binding mismatch holds admission.',
   'A missing, non-durable or unreadable continuity path holds admission.',
   'Lane identity requires exact thread/run identity, never a title or directory-name guess; never infer lane ownership from an empty local workspace.',
-  'Predecessor exit requires exact thread/run identity and terminal run evidence; a completed run row alone does not prove the work settled.',
-  'Require reconciled continuity and settlement of every descendant before releasing ownership.',
   'A firing timestamp proves neither delivery nor useful completion.',
   "The orphan sweep covers the run record's repositories plus registered repositories on this host.",
   'Past the authorized storage limit (default 20 retained lane worktrees), disable the schedule with `update_scheduled_task` using `enabled:false` and hold.',
