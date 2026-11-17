@@ -11,7 +11,9 @@ Run from trusted cwd / with bun --no-env-file <installed-script> and explicit:
                  Supported version:1 review phase: {status:"known",headAgeThresholdSeconds:N,
                  clockSemantics:"head-commit-committed-date",pendingCheckTreatment:"defer"|"allow"}.
                  N is a nonnegative integer, inclusive. This clock is commit age, NOT push/settle age.
-                 Unknown/unrecorded/unsupported policy stays unknown; no inferred defaults.
+                 status:"unknown" with all three gate fields null is unrecorded, with no gate.
+                 policy.evidence.unrecorded distinguishes it from malformed/unavailable policy.
+                 Both report unknown; the driver ignores non-event terms only for unrecorded phases.
   --input FILE   Saved gh api graphql response; no network. Saved bytes prove no live freshness.
   --now ISO      Timezone-qualified comparison time; default current UTC.
   --help         Show flags, effects and limitations.
@@ -72,8 +74,11 @@ function report(args) {
   const knownPolicy = policy?.version === 1 && phase?.status === 'known' &&
     Number.isSafeInteger(phase.headAgeThresholdSeconds) && phase.headAgeThresholdSeconds >= 0 &&
     phase.clockSemantics === 'head-commit-committed-date' && ['defer', 'allow'].includes(phase.pendingCheckTreatment);
+  const unrecorded = policy?.version === 1 && phase?.status === 'unknown' &&
+    phase.headAgeThresholdSeconds === null && phase.clockSemantics === null && phase.pendingCheckTreatment === null;
   add('policy', knownPolicy ? 'pass' : 'unknown', { phase: args['--phase'], sha256: policySha256,
-    recorded: phase ?? null, reason: knownPolicy ? 'supported recorded policy' : 'absent, malformed, unknown or unsupported policy' });
+    recorded: phase ?? null, unrecorded, malformed: !knownPolicy && !unrecorded,
+    reason: knownPolicy ? 'supported recorded policy' : unrecorded ? 'unrecorded phase; no gate' : 'absent, unreadable, malformed or unsupported policy' });
   try { response = observe(args); } catch { observationError = 'saved input or gh api unavailable/malformed'; }
   const repository = response?.data?.repository;
   const pr = !response?.errors?.length && repository?.nameWithOwner?.toLowerCase() === args['--repo'].toLowerCase() &&
