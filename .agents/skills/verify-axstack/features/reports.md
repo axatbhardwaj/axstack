@@ -372,7 +372,9 @@ After Launch/Doctor and install, run from trusted `/`:
 ```bash
 doctor > "$EVIDENCE/pr-fresh-doctor.log" 2>&1
 bun run test tests/workflows/pr-fresh.test.js tests/workflows/peer-round-lifecycle.test.js \
-  tests/workflows/review-modes.test.js tests/workflows/prose-size.test.js > "$EVIDENCE/pr-fresh-tests.log" 2>&1
+  tests/workflows/review-modes.test.js tests/workflows/public-docs.test.js \
+  tests/workflows/pr-managers-lifecycle.test.js \
+  tests/workflows/prose-size.test.js > "$EVIDENCE/pr-fresh-tests.log" 2>&1
 bun -e 'const f = await Bun.file(process.env.REPO + "/tests/workflows/fixtures/pr-fresh.json").json();
   await Bun.write(process.env.EVIDENCE + "/pr-fresh-input.json", JSON.stringify(f.response));
   await Bun.write(process.env.EVIDENCE + "/pr-fresh-policy.json", JSON.stringify(f.policy));'
@@ -397,3 +399,6 @@ or failed CI adds no gate. Missing/unreadable/malformed/unsupported policy inste
 sets `malformed:true` and holds. Event facts still discard failures and hold unknowns.
 Semantic tests reject removal/inversion and accept equivalent wording. Fixture
 policy proves no live authority or push/settle age; the driver owns all decisions.
+Timing, automation-consumer and recorded-unknown-gate contracts have semantic keepers;
+freshness/settlement anchors resolve. `EXPECTED` statuses are pending, including
+under unrecorded phases. Recorded age/defer/allow meanings are in helper `--help`.
