@@ -34,9 +34,9 @@ test('align arena: advisers author, judges judge, driver picks and grafts', () =
   for (const id of ['axstack-advisor-codex', 'axstack-advisor-claude', 'axstack-arena-candidate-grok']) expect(text).toContain(id);
   expect(text).toMatch(/one candidate per configured family[^.]*same brief[^.]*without cross-reading/i);
   expect(text).toMatch(/the driver authors no candidate/i);
-  expect(text).toMatch(/round 1[^.]*axstack-arena-judge-opus[^.]*score/i);
-  expect(text).toMatch(/round 2[^.]*axstack-escalation-fable[^.]*axstack-arena-judge-astra[^.]*independently score/i);
-  expect(text).toMatch(/driver and the Opus judge disagree on the base[^.]*caller re-invokes with the user.s rejection of the round-1 synthesis/i);
+  expect(text).toMatch(/round 1[^.]*axstack-escalation-fable[^.]*score/i);
+  expect(text).toMatch(/round 2[^.]*axstack-arena-judge-opus[^.]*axstack-arena-judge-astra[^.]*independently score/i);
+  expect(text).toMatch(/driver and the Fable judge disagree on the base[^.]*caller re-invokes with the user.s rejection of the round-1 synthesis/i);
   expect(text).toMatch(/same anonymized candidates and rubric/i);
   expect(text).toMatch(/after round-2 verdicts return[^.]*re-picks in step 4[^.]*re-presents in step 6/i);
   expect(text).toMatch(/anonymized[^.]*relabeled candidates[^.]*rubric/i);
@@ -65,7 +65,7 @@ test('align arena: judge seats use configured efforts and mirror adviser availab
     expect(opus.modelClass ?? opus.model).toBe(preset === 'codex-only' ? null : 'opus');
     expect(opus.modeId).toBe(preset === 'codex-only' ? 'full-access' : 'bypassPermissions');
     expect(opus.thinkingOptionId).toBe('xhigh');
-    expect(opus.notes).toMatch(/read-only.*round 1/i);
+    expect(opus.notes).toMatch(/read-only.*round 2/i);
     for (const seat of ['astra', 'fable']) {
       const judge = roles.find(({ id }) => id === (seat === 'astra' ? 'axstack-arena-judge-astra' : 'axstack-escalation-fable'));
       const adviser = roles.find(({ id }) => id === (seat === 'astra' ? 'axstack-advisor-codex' : 'axstack-advisor-claude'));
@@ -74,11 +74,12 @@ test('align arena: judge seats use configured efforts and mirror adviser availab
       expect(judge.provider).toBe(adviser.provider);
       expect(judge.modelClass ?? judge.model).toBe(seat === 'astra' ? (adviser.modelClass ?? adviser.model) : preset === 'codex-only' ? null : 'fable');
       expect(judge.notes).toMatch(/read-only/i);
+      if (seat === 'fable') expect(judge.notes).toMatch(/read-only.*round 1/i);
       expect(judge.notes).toMatch(/never authors a candidate/i);
     }
   }
   const routing = compact('skills/axstack/references/role-roster.md');
-  expect(routing).toMatch(/axstack-arena-judge-opus[^.]*round 1[^.]*axstack-escalation-fable[^.]*axstack-arena-judge-astra[^.]*round 2/i);
+  expect(routing).toMatch(/axstack-escalation-fable[^.]*round 1[^.]*axstack-arena-judge-opus[^.]*axstack-arena-judge-astra[^.]*round 2/i);
   expect(routing).toMatch(/axstack-arena-candidate-grok[^.]*family/i);
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
@@ -101,6 +102,9 @@ test('align arena: scenario corpus covers three families and availability holds'
 
 test('installation guide holds only the judge seats needed by each arena round', () => {
   const installation = compact('docs/installation.md');
-  expect(installation).toMatch(/judges only for Rung 2 hard-to-reverse choices[^.]*round 1[^.]*Opus[^.]*round 2[^.]*Fable[^.]*Astra[^.]*required seat[^.]*unavailable[^.]*holds/i);
+  expect(installation).toMatch(/judges only for Rung 2 hard-to-reverse choices[^.]*round 1[^.]*Fable[^.]*round 2[^.]*Opus[^.]*Astra[^.]*required seat[^.]*unavailable[^.]*holds/i);
+  expect(compact('docs/workflows.md')).toMatch(/axstack-escalation-fable[^.]*round 1[^.]*fresh Opus\/Astra round 2/i);
+  expect(compact('skills/axstack/references/contracts.md')).toMatch(/axstack-escalation-fable[^.]*only for arena round 1/i);
+  expect(compact('skills/axstack/references/local-artifacts.md')).toMatch(/Fable[^.]*required round-1 judge/i);
   expect(installation).not.toMatch(/arena-grade Align question holds until both judge seats can/i);
 });
