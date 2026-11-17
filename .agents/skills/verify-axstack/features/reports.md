@@ -366,8 +366,10 @@ scenario to turn its outcome green.
 ## In-turn quiet facts
 
 Run `tests/workflows/quiet-facts.test.js` and `pr-digest.test.js` with TMPDIR set
-and unset. After offline pack/install, invoke installed `schedule-drift.js quiet-facts
---help` and drive saved JSON plus progress.md from `/` with `bun --no-env-file`.
-Compare installed facts with source facts. Fixtures cover discovery, ownership,
-prior/descendant readbacks, watermarks, age, pending work and reap ordering.
-These are saved observations; live T3 collection and driver decisions remain unverified.
+and unset. After offline pack/install, drive `fixtures/quiet-facts/raw.json` plus
+saved progress.md through installed `schedule-drift.js quiet-facts` from `/`
+with `bun --no-env-file`; compare source and installed facts and inspect `--help`.
+Keep both gh arrays, the T29 `{args,value}` list and ONE prior read verbatim.
+Fixtures cover the 1000 cap, native liveness versus settlement, recorded guards,
+unknown ownership, watermarks, pending rows and reap ordering. Omitted heads
+remain unobserved; changed raw fingerprints fail. Live collection remains unverified.
