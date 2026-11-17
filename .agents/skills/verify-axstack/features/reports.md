@@ -378,6 +378,8 @@ inventory; the settled prior is absent from that list and supplied by its one re
 Use `fixtures/quiet-facts/progress.md` for native IDs and a user-only hold.
 Compare unrelated shared-project work, recorded pass/job descendants and unknown
 lineage; expect pass, fail and unknown lane-idle facts respectively.
+For omitted idle parents, drive verified `Non-lane roots` watermarks; unknown,
+malformed or conflicting roots retain unknown ownership. No extra quiet read is needed.
 
 ## Review admission facts
 
