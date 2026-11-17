@@ -229,7 +229,7 @@ in the adjacent history file, not below this template.
 - Active PR jobs and descendants: <PR, taskId/childThreadId/runId, owner, revision, state>
 
 ## Open holds
-- <ID>: <reason>; evidence: <path>; owner: <ID>; resume: <condition or user decision only> (or write - none)
+- <ID: reason; evidence: path; owner: ID; resume: CONDITION (user-only: resume: user decision only); or none>
 
 ## Watermarks
 - Quiet gate: <sorted JSON [repo#number, headRefOid, updatedAt] triples; [] when empty>
