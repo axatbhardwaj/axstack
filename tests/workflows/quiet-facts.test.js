@@ -61,7 +61,7 @@ for (const [name, change, edit, id, expected = 'unknown'] of [
   ['missing continuity section', () => {}, t => t.replace('## Last pass', '## Missing'), 'continuity'],
   ['stale observation', d => { d.observedAt = '2026-11-17T11:54:59Z'; }, t => t, 'observations'],
   ['future observation', d => { d.observedAt = '2026-11-17T13:00:00Z'; }, t => t, 'observations'],
-  ['future PR timestamp', d => { d.searches[0][0].updatedAt = '2026-11-17T13:00:00Z'; }, t => t, 'discovery'],
+  ['future PR timestamp', d => { for (const rows of d.searches) rows[0].updatedAt = '2026-11-17T13:00:00Z'; }, t => t, 'discovery'],
   ['missing login', d => { delete d.login; }, t => t, 'discovery'],
   ['failed search', d => { d.searches[1] = { isError: true }; }, t => t, 'discovery'],
   ['missing query', d => { d.searches.pop(); }, t => t, 'discovery'],
