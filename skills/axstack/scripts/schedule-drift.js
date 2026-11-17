@@ -121,31 +121,44 @@ function validSchedule(s) {
     s.weekdays.every((d) => Number.isSafeInteger(d) && d >= 0 && d <= 6);
 }
 
-const QUIET_HELP = `schedule-drift quiet-facts — in-turn saved-input observations
+const QUIET_HELP = `schedule-drift quiet-facts — raw saved-input observations
   bun --no-env-file <installed>/schedule-drift.js quiet-facts --input FILE --continuity FILE [--now ISO]
-  --input FILE Saved JSON v1 envelope (agent collects all pages and readbacks):
-    {version:1,observedAt,repository:"owner/name",project:{projectId,repository},lane:{environmentId,projectId,laneId},selfThreadId,login,
-     reap:{exitCode,dockerAvailable},searches:[{query,pages:[{page,total_count,incomplete_results,items}]}],
-     heads:[{repository,number,headRefOid}],inventory:{complete:true,pages:[{threads,nextCursor:null}]},readbacks:[thread]}
-    Obtain login with gh api user. Include both queries review-requested:@me and involves:@me; pages numbered from 1, max 100 items each.
-    Each item has repository.nameWithOwner, number, author.login, state, isDraft, updatedAt.
-    Inventory pages carry cursor and nextCursor; first cursor omitted/null, final nextCursor:null.
-    Thread-list/readback projection: {threadId,environmentId,projectId,laneId,settled,
-      latestRun:{status},descendantIds:[],guards:{held,flagged,ownedWatch,pendingReceipt,wedged,stalledOwner,protected}}.
-    Run status: completed/failed/cancelled/interrupted or running/queued/pending/usage-limited.
-    Preserve exact native IDs; retain every descendant recursively. Missing fields/calls are unknown, never guessed.
-  --continuity FILE Saved progress.md with Lane state, Open holds, Watermarks, Last pass sections.
-    Lane state: '- threadId: ID' (prior identity before replacing it), '- Active PR jobs and descendants: none'.
-    Watermarks: '- Quiet gate: JSON array of [repo#number,headRefOid,updatedAt] triples',
-    '- Last full pass: UTC ISO'. Open holds: '- none' or one line per hold with 'resume: user decision only'
-    for a user-only hold; any other hold remains pending. Unstructured/ambiguous evidence stays unknown.
-  --now ISO Observation time, timezone required; default current UTC. Collection age must be 0..300 seconds.
-  --help Show this schema, flags, effects and limitations.
-No writes, subprocesses, network, T3 calls, database access or persistent state. Run from trusted cwd /.
-Facts only: pass means observed condition, fail means measured contrary condition, unknown means incomplete.
-Driver applies quiet/full/hold rules; facts grant no admission or settlement authority. Counts only, no verdict.
-Exit: 0 measured (including fail), 1 invalid CLI, 2 incomplete/unknown. Read/JSON failures are unknown.
+  --input FILE JSON enclosing raw outputs without projecting or inventing row fields:
+    {observedAt,repository:"owner/name",login,reap:{exitCode,dockerAvailable},
+     searches:[REVIEW_REQUESTED_ARRAY,INVOLVES_ARRAY],inventory:{args,value},prior:READ_RESPONSE}.
+    observedAt is the UTC collection time; repository/login/reap are the existing pass context/results.
+    searches are the two gh search prs --limit 1000 JSON arrays exactly as printed:
+      number, repository.nameWithOwner, updatedAt, isDraft, author.login; headRefOid when returned.
+    Completeness is array length <1000 for BOTH searches; errors/missing arrays are unknown.
+    Omitted head OIDs stay unobserved, never synthesized. Compare repository/number/updatedAt
+    and only returned OIDs via pr-digest; new/changed fingerprints fail even without an OID.
+    inventory is the T29 t3_thread_list {args,value} contract: merged pages, nextCursor:null,
+    total matching threads.length; first args include includeSubagents:true and projectId
+    (or allProjects:true), cursor absent/0, no statuses/settled/snoozed/titleContains filters.
+    Keep native threadId/projectId/parentThreadId/status/settled/latestRunId and currentThreadId.
+    prior is ONE raw t3_thread_read of the recorded prior thread, including its thread metadata;
+    no other thread reads or caller-derived guard/liveness/completeness fields are required.
+    Raw MCP structuredContent or text-content wrappers are also accepted.
+    Native preparing/queued/starting/running/waiting are busy regardless of settlement/guards;
+    completed/failed/cancelled/interrupted/rolled_back are terminal. Idle has no active run.
+    Unknown status is unknown. Descendants come from native parentThreadId relationships.
+  --continuity FILE Saved progress.md with Lane state, Open holds, Watermarks, Last pass.
+    Lane state: '- threadId: ID' before replacement; '- Active PR jobs and descendants: none'
+    or recorded active jobs. Guards use recorded '- ID: held|flagged', '; state:' / '; guard:'
+    or '; resume: user decision only' on that exact thread's line, never agent judgment.
+    Open holds: '- none' or one line per hold; only '; resume: user decision only' is user-only.
+    Pending rows in Lane state/Watermarks/Open holds start with unserved/capacity-deferred/
+    INCOMPLETE/re-eligible or use '; status: STATE'. Historical Last pass prose is not pending.
+    Watermarks: '- Quiet gate: JSON [repo#number,headRefOid,updatedAt] triples';
+    '- Last full pass: UTC ISO'. Missing/malformed continuity stays unknown.
+  --now ISO Observation time with timezone; default current UTC; collection age must be 0..300s.
+  --help Show flags, input contract, effects and limitations.
+No writes, subprocesses, network, T3 calls, database access or persistent state. Run from cwd /.
+Facts only; counts, no aggregate verdict or authority. Driver applies quiet/full/hold rules.
+Exit: 0 measured (including fail), 1 invalid CLI, 2 incomplete/unknown, including read/JSON failure.
+Legacy v1 envelopes with descendantIds and total_count remain accepted during migration.
 `;
+
 const guardKeys = ['held', 'flagged', 'ownedWatch', 'pendingReceipt', 'wedged', 'stalledOwner', 'protected'];
 const terminalRuns = ['completed', 'failed', 'cancelled', 'interrupted', 'rolled_back'];
 const activeRuns = ['preparing', 'queued', 'starting', 'running', 'waiting'];
