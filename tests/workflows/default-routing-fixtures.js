@@ -15,7 +15,7 @@ export function fixture() {
     accounts: [account('a', 'claudeAgent', 70), account('b', 'codex', 10)] }];
   const catalogs = Object.entries(settings.providerInstances).map(([instanceId, p]) => ({
     instanceId, driver: p.driver, checkedAt: new Date(now).toISOString(), enabled: true, installed: true, status: 'ready',
-    models: (p.driver === 'codex' ? ['gpt-6-astra', 'gpt-6.1-sol'] : ['claude-opus-5-5']).map((slug) => ({ slug,
+    models: (p.driver === 'codex' ? ['gpt-6.2-astra', 'gpt-6.2-sol'] : ['claude-opus-5-5']).map((slug) => ({ slug,
       capabilities: { optionDescriptors: [{ id: p.driver === 'codex' ? 'reasoningEffort' : 'effort',
         options: [{ id: 'medium' }, { id: 'xhigh' }] }] } })) }));
   return { settings, usage, catalogs, now };
