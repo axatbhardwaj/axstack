@@ -155,5 +155,5 @@ for (const remaining of [29.99, 30]) test(`weekly-only Claude reserve uses its r
   const f = await integrated([weeklyOnly(100 - remaining)]);
   f.usage[0].accounts[1].usageLimits.windows.forEach((w) => { w.usedPercent = 80; });
   expect(decision(f).action).not.toBe('held');
-  expect(decision(f).selection.model).toBe(remaining === 30 ? 'claude-opus-5-5' : 'gpt-6.1-sol');
+  expect(decision(f).selection.model).toBe(remaining === 30 ? 'claude-opus-5-5' : 'gpt-6.2-sol');
 });

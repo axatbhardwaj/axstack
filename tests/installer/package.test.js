@@ -334,7 +334,8 @@ test('CLI reports the release version', () => {
   expect(result.out.trim()).toBe('axstack 0.69.0');
 });
 
-test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
+test.each(['mixed', 'codex-only', 'claude-only'])(
+  'packed CLI installs, updates, and uninstalls from a neutral cwd (%s)', (preset) => {
   const outDir = join(makeTempRoot('axstack-pack-'), 'out');
   mkdirSync(outDir, { recursive: true });
   const tgz = packDir(ROOT, outDir);
@@ -346,9 +347,7 @@ test('packed CLI installs, updates, and uninstalls from a neutral cwd', () => {
 
   expect(statSync(join(pkgDir, 'bin', 'axstack.js')).mode & 0o111).not.toBe(0);
   ensureBundleAssets(pkgDir, 'root-package');
-  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
-    fullCycle(pkgDir, neutral, `root-${preset}`, preset);
-  }
+  fullCycle(pkgDir, neutral, `root-${preset}`, preset);
 }, 15000);
 
 test('partial asset tree fails loudly instead of augmenting', () => {

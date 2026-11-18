@@ -12,7 +12,7 @@ function withFile(run) {
     return run(path, before);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 }
-const next = selection('code', 'gpt-6-astra', 'medium');
+const next = selection('code', 'gpt-6.2-astra', 'medium');
 test('atomic commit changes only default and preserves file mode', () => withFile((path, before) => {
   expect(commit(path, before, next)).toBe('updated');
   const after = JSON.parse(fs.readFileSync(path, 'utf8'));

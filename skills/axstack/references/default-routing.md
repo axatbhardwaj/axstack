@@ -37,8 +37,8 @@ required because usage sources do not establish which of several instances
 shares which accounts. Refresh catalogs in T3 if held. These checks establish
 catalog evidence, not successful provider execution.
 
-Routes: Claude `claude-opus-5-5` medium; Codex `gpt-6-astra` medium;
-Codex `gpt-6.1-sol` xhigh. The configured instance IDs are discovered, not renamed.
+Routes: Claude `claude-opus-5-5` medium; Codex `gpt-6.2-astra` medium;
+Codex `gpt-6.2-sol` xhigh. The configured instance IDs are discovered, not renamed.
 Both source and account telemetry must be no older than five minutes, with
 valid applicable session/weekly percentages and durations. A supplied reset must
 be a valid future date within its window duration. Missing,

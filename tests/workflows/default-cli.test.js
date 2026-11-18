@@ -22,7 +22,7 @@ test('real CLI resolves relative settings, dry-run writes nothing, apply preserv
     const apply = invoke('--apply');
     expect(apply.exitCode).toBe(0);
     const after = JSON.parse(fs.readFileSync(`${dir}/userdata/settings.json`, 'utf8'));
-    expect(after.defaultModelSelection.model).toBe('gpt-6-astra');
+    expect(after.defaultModelSelection.model).toBe('gpt-6.2-astra');
     expect(after.projectSettingsOverrides).toEqual(f.settings.projectSettingsOverrides);
     expect(after.textGenerationModelSelection).toEqual(f.settings.textGenerationModelSelection);
     expect(apply.stdout.toString()).not.toContain('fixture-secret');

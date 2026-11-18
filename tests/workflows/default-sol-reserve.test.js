@@ -14,7 +14,7 @@ for (const account of [0, 1]) for (const window of [0, 1]) {
     f.usage[0].accounts[account].usageLimits.windows[1 - window].usedPercent = 10;
     const r = decide(f.settings, f.usage, f.catalogs, f.now);
     expect(r.action).toBe('update');
-    expect(r.selection).toEqual(selection('code', 'gpt-6.1-sol', 'xhigh'));
+    expect(r.selection).toEqual(selection('code', 'gpt-6.2-sol', 'xhigh'));
   });
 }
 
@@ -26,12 +26,12 @@ for (const weekly of [29.99, 30]) test(`weekly-only Codex ${weekly}% keeps sessi
   expect(r.action).toBe('update');
   expect(r.pools.codex.sessionRemaining).toBeNull();
   expect(r.pools.codex.sessionStatus).toBe('n/a');
-  expect(r.selection.model).toBe(weekly === 30 ? 'gpt-6-astra' : 'gpt-6.1-sol');
+  expect(r.selection.model).toBe(weekly === 30 ? 'gpt-6.2-astra' : 'gpt-6.2-sol');
 });
 
 test('non-low primary wins even when the low primary has much better pacing and fewer starts', () => {
   const f = fixture(); remaining(f, 30, 29.99);
-  f.settings.defaultModelSelection = selection('code', 'gpt-6-astra', 'medium');
+  f.settings.defaultModelSelection = selection('code', 'gpt-6.2-astra', 'medium');
   f.usage[0].accounts[1].usageLimits.windows.forEach((w) => {
     w.resetsAt = new Date(f.now + 60000).toISOString();
   });
@@ -49,7 +49,7 @@ for (const opus of [20, 80]) test(`scoped-exhausted Opus at ${opus}% is unavaila
   const r = decide(f.settings, f.usage, f.catalogs, f.now);
   expect(r.action).toBe('update');
   expect(r.pools.claudeAgent.eligibleAccounts).toBe(0);
-  expect(r.selection.model).toBe(opus === 20 ? 'gpt-6.1-sol' : 'gpt-6-astra');
+  expect(r.selection.model).toBe(opus === 20 ? 'gpt-6.2-sol' : 'gpt-6.2-astra');
 });
 
 for (const corrupt of [

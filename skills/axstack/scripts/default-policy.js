@@ -1,8 +1,8 @@
 import { historyCounts } from './driver-history.js';
 const routes = [
   ['claudeAgent', 'claude-opus-5-5', 'effort', 'medium'],
-  ['codex', 'gpt-6-astra', 'reasoningEffort', 'medium'],
-  ['codex', 'gpt-6.1-sol', 'reasoningEffort', 'xhigh'],
+  ['codex', 'gpt-6.2-astra', 'reasoningEffort', 'medium'],
+  ['codex', 'gpt-6.2-sol', 'reasoningEffort', 'xhigh'],
 ];
 const mean = (values) => values.reduce((a, b) => a + b, 0) / values.length;
 const fresh = (date, now, age) => Number.isFinite(Date.parse(date)) && now >= Date.parse(date) && now - Date.parse(date) <= age;
@@ -101,8 +101,8 @@ export function decide(settings, snapshots, catalogs, now, history = null) {
     const low = (driver) => Math.min(...[result.pools[driver].sessionRemaining,
       result.pools[driver].weeklyRemaining].filter((v) => v !== null)) < 30;
     const available = choices.filter((c) => result.pools[c.driver].eligibleAccounts > 0);
-    const sol = available.filter((c) => c.selection.model === 'gpt-6.1-sol');
-    const primaries = available.filter((c) => c.selection.model !== 'gpt-6.1-sol');
+    const sol = available.filter((c) => c.selection.model === 'gpt-6.2-sol');
+    const primaries = available.filter((c) => c.selection.model !== 'gpt-6.2-sol');
     const nonLow = primaries.filter((c) => !low(c.driver));
     // Apply the reserve before pacing, fairness and hysteresis can retain a forbidden default.
     const eligible = low('claudeAgent') && low('codex') && sol.length ? sol
