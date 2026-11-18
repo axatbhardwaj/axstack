@@ -259,9 +259,11 @@ implementation-authorized bounded synthetic canary with exact receipts; this rec
 
 Readable shared specifications: `skills/axstack-spec/SKILL.md` loads its relative
 `references/format.md`; draft-spec diligence checks comprehension alongside
-completeness. `spec-format.test.js` covers brief-first decisions/scope/risks,
-binding capability contracts, current criteria versus immutable approved history,
-and a usable example with semantic removal/inversion/rewording probes.
+completeness. `spec-format.test.js` covers the outcome-first default, solution
+trade-offs, estimate confidence and missing inputs, owned open questions, and
+diagrams where they clarify. Removal, inversion and rewording probes also guard
+scope, risks, binding acceptance, and immutable history. The example connects
+the decision brief to capability acceptance.
 
 Independent delivery: Spec, its format, Tickets and Implement explicitly load
 `skills/axstack/references/independent-delivery.md`. The
