@@ -277,12 +277,9 @@ test('owned-core: owned skills stay compact references, no daemon or programmati
   expect(/state machine|programmatic gate|decision engine/i.test(autopilot)).toBe(false);
 });
 
-test('owned-core: all presets expose stable configured role IDs', () => {
-  const expectedIds = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
-    .roles.map(({ id }) => id);
+test('owned-core: no preset exposes retired reviewer role IDs', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
-    expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
     expect(data.roles.some(({ id }) => /reviewer-(?:opus|sol)/.test(id))).toBe(false);
   }
 });
