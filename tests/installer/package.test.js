@@ -331,7 +331,7 @@ test('published manifest identity matches the repository it is published from', 
 
 test('CLI reports the release version', () => {
   const result = runBunCli(join(ROOT, 'bin', 'axstack.js'), ['--version']);
-  expect(result.out.trim()).toBe('axstack 0.69.2');
+  expect(result.out.trim()).toBe('axstack 0.70.0');
 });
 
 test.each(['mixed', 'codex-only', 'claude-only'])(
