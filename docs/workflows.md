@@ -143,7 +143,8 @@ This delivery creates no live schedule; source tests do not prove activation.
 
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
-`{ "version": 1, "roles": [...] }` and list all role IDs in the same order.
+`{ "version": 1, "roles": [...] }` and list all role IDs for the selected preset.
+The role IDs are shared except for the mixed Scout Terra seat replacing Luna.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
@@ -157,11 +158,11 @@ role.
 In `mixed` and `claude-only`, `axstack-research-requirements`,
 `axstack-research-code`, `axstack-research-web`, and `axstack-explore-execution`
 use the Claude Sonnet class: high effort in mixed, medium in claude-only.
-`axstack-explore-codebase` adopts Haiku 5.5 medium, with class `haiku` and exact pin
-`claude-haiku-5-5`. Missing that ID or medium effort in saved T3 capabilities
-holds that role without substitution. `codex-only` keeps its Codex
-assignments for those roles. Scout adds a Luna xhigh codebase seat in `mixed`
-and `codex-only`. In `claude-only`, Luna is intentionally absent.
+Codex-only keeps its Codex assignments for those roles.
+Each mixed Scout facet requires independent Sonnet high (`axstack-explore-codebase`)
+and Terra high (`axstack-explore-codebase-terra`) seats. Codex-only keeps Sol high
+and Luna xhigh; Claude-only keeps Haiku medium pinned to `claude-haiku-5-5`.
+An unavailable or rejected required seat holds Scout without substitution.
 For a needed web claim in mixed, pair `axstack-research-web` (Sonnet high)
 with optional `axstack-research-web-sol` (Terra high), independently on the same
 bounded brief without cross-reading. Both single-provider presets explicitly
