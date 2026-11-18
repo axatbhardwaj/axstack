@@ -65,13 +65,13 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
 - `axstack-auditor`: `claude/sonnet` high in mixed, resolved from saved
   capabilities without an exact model pin. `claude/sonnet` medium in claude-only;
   `codex/luna` xhigh in codex-only. Missing model or effort holds without substitution.
-- `axstack-explore-codebase`: `claude/haiku` medium in
-  mixed/claude-only, pinned to `claude-haiku-5-5`. Missing that exact model
-  or medium effort holds this role without substitution.
-- Scout requires `axstack-explore-codebase` and
-  `axstack-explore-codebase-luna` per facet in mixed (Haiku medium + Luna
-  xhigh) and codex-only (Sol high + Luna xhigh). Claude-only requires
-  the Haiku medium base seat per facet.
+- `axstack-explore-codebase` (Sonnet high) and `axstack-explore-codebase-terra`
+  (Terra high): mixed Scout requires both per facet.
+- Codex-only Scout requires `axstack-explore-codebase` (Sol high) and
+  `axstack-explore-codebase-luna` (Luna xhigh) per facet.
+- Claude-only Scout requires `axstack-explore-codebase` (Haiku medium) per
+  facet, pinned to `claude-haiku-5-5`. Missing a required model or effort
+  holds Scout without substitution.
 - Sol pairs (stable `-sol` IDs) `axstack-auditor-sol`/`axstack-research-code-sol`/
   `axstack-explore-execution-sol`: `codex/sol` high in
   mixed/codex-only; intentionally absent in claude-only. In mixed,
