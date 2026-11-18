@@ -212,10 +212,16 @@ test('a held peer sandbox is unknown with its recorded limitation and hold', () 
   expect(peerTerm(p).status).toBe('fail');
 });
 
-function sandboxReview() {
+function sandboxReview({ role = 'test', exitCode = 0, log = null } = {}) {
   const f = fixture(), capture = receipt();
-  Object.assign(capture, { tool: { name: 'axstack-sandbox', version: '1.0.0' }, kind: 'sandbox-test',
-    sandboxImageDigest: `sha256:${'a'.repeat(64)}`, spawnArgv: ['docker', 'exec', '--user', '1000:1000', '--workdir', '/work', 'r1-test', '/bin/sh', '-c', 'exec "$@"', 'axstack', ...capture.argv] });
+  capture.argv = ['fixture-command', 'synthetic-private-argument'];
+  if (log !== null) {
+    writeFileSync(capture.logPath, log);
+    Object.assign(capture, { logSha256: hash(log), logBytes: Buffer.byteLength(log) });
+  }
+  Object.assign(capture, { tool: { name: 'axstack-sandbox', version: '1.0.0' }, kind: `sandbox-${role}`, exitCode,
+    sandboxImageDigest: `sha256:${'a'.repeat(64)}`, spawnArgv: ['docker', 'exec', '--user', f.assets.policy.user,
+      '--workdir', '/work', `${f.runId}-${role}`, '/bin/sh', '-c', 'cp -R /source/. /work/ && chmod -R u+w /work && cd /work && exec "$@"', 'axstack', ...capture.argv] });
   const receiptPath = `${temporary}/${crypto.randomUUID()}.json`;
   const bytes = JSON.stringify(capture); writeFileSync(receiptPath, bytes);
   const envelope = { schemaVersion: 1, runId: f.runId, owner: f.owner, hostBinding: f.assets.hostBinding,
@@ -224,11 +230,82 @@ function sandboxReview() {
     capture: { schemaVersion: 1, receiptPath, receiptSha256: hash(bytes) } };
   return { mode: 'peer', localTests: true, sandboxReceipt: envelope };
 }
+
+function updateSandboxCapture(review, update) {
+  const reference = review.sandboxReceipt.capture;
+  const capture = JSON.parse(readFileSync(reference.receiptPath, 'utf8'));
+  update(capture);
+  const bytes = JSON.stringify(capture);
+  writeFileSync(reference.receiptPath, bytes);
+  reference.receiptSha256 = hash(bytes);
+}
+
+const executionPacket = review => ({ schemaVersion: 1, repository, head, base, items: [], dispositions: [], review });
+
+for (const [exitCode, status, reasonCode] of [[0, 'pass', 'test-exit-zero'], [1, 'fail', 'test-exit-nonzero']]) {
+  test(`a consistent test receipt reports exit ${exitCode} without attesting assertions or publishing argv`, () => {
+    const review = sandboxReview({ exitCode, log: 'fixture prose: setup failed; assertions ran and failed\n' });
+    const report = inspectEvidence(executionPacket(review));
+    expect(report.summary).toEqual({ pass: 1, fail: 0, unknown: 0, 'n/a': 0 });
+    expect(report.terms[0]).toMatchObject({ id: 'peer-sandbox', status: 'pass', reasonCode: 'sandbox-consistent', evidence: {
+      exitCode, testExecution: { status, reasonCode, exitCode, assertions: 'unknown',
+        argvSha256: hash(JSON.stringify(['fixture-command', 'synthetic-private-argument'])),
+        receiptSha256: review.sandboxReceipt.capture.receiptSha256 },
+    } });
+    expect(JSON.stringify(report)).not.toContain('synthetic-private-argument');
+    expect(JSON.stringify(report)).not.toContain('fixture prose');
+  });
+}
+
+test('a verified nonzero fetch is a setup exit, not a test or assertion failure', () => {
+  const review = sandboxReview({ role: 'fetch', exitCode: 1 });
+  const p = executionPacket(review);
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-validation-failed', evidence: {
+    testExecution: { status: 'fail', reasonCode: 'setup-exit-nonzero', exitCode: 1, assertions: 'unknown',
+      receiptSha256: review.sandboxReceipt.capture.receiptSha256 },
+  } });
+  updateSandboxCapture(review, capture => { capture.exitCode = 0; });
+  expect(peerTerm(p).evidence.testExecution).toMatchObject({ status: 'fail', exitCode: null, argvSha256: null });
+});
+
+for (const [name, change] of [
+  ['declared argv differs from executed argv', capture => { capture.argv = ['different-command']; }],
+  ['run ID appears only as an argument', capture => { capture.spawnArgv[6] = 'foreign-test'; capture.spawnArgv.push('r1-test'); }],
+  ['wrapper does not invoke argv', capture => { capture.spawnArgv[9] = 'exit 0'; }],
+]) test(`test execution stays unverified when ${name}`, () => {
+  const review = sandboxReview();
+  updateSandboxCapture(review, change);
+  expect(peerTerm(executionPacket(review))).toMatchObject({ status: 'pass', evidence: { testExecution: {
+    status: 'fail', reasonCode: 'sandbox-command-binding-mismatch', exitCode: null, argvSha256: null, assertions: 'unknown',
+  } } });
+});
+
+test('held, missing and incomplete evidence cannot report an observed exit', () => {
+  const held = { mode: 'peer', localTests: false, limitation: 'synthetic checkout gap', hold: 'synthetic host hold' };
+  expect(peerTerm(executionPacket(held)).evidence.testExecution).toMatchObject({ status: 'unknown',
+    reasonCode: 'sandbox-execution-held', limitation: held.limitation, hold: held.hold, exitCode: null, argvSha256: null });
+  held.localTests = true;
+  expect(peerTerm(executionPacket(held))).toMatchObject({ status: 'fail', evidence: {
+    testExecution: { status: 'unknown', reasonCode: 'sandbox-execution-held', exitCode: null },
+  } });
+  const review = sandboxReview();
+  const capturePath = review.sandboxReceipt.capture.receiptPath;
+  review.sandboxReceipt.capture.receiptPath = `${temporary}/absent-execution.json`;
+  expect(peerTerm(executionPacket(review)).evidence.testExecution).toMatchObject({ status: 'unknown',
+    reasonCode: 'sandbox-receipt-unavailable', exitCode: null, argvSha256: null });
+  review.sandboxReceipt.capture.receiptPath = capturePath;
+  updateSandboxCapture(review, capture => { capture.error = 'synthetic spawn failure'; });
+  expect(peerTerm(executionPacket(review)).evidence.testExecution).toMatchObject({ status: 'unknown',
+    reasonCode: 'sandbox-capture-incomplete', exitCode: null, argvSha256: null });
+});
+
 test('peer sandbox envelope binds a revalidated test capture and unchanged captured log', () => {
   const p = packet(); p.review = sandboxReview();
   expect(peerTerm(p)).toMatchObject({ status: 'pass', reasonCode: 'sandbox-consistent' });
   writeFileSync(p.review.sandboxReceipt.capture.receiptPath, '{}');
-  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-validation-failed' });
+  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-validation-failed', evidence: {
+    testExecution: { status: 'fail', reasonCode: 'sandbox-validation-failed', exitCode: null, argvSha256: null },
+  } });
 });
 for (const [name, change] of [
   ['missing envelope', r => { r.sandboxReceipt = {}; }],
@@ -250,13 +327,19 @@ test('peer local test claim with an unavailable envelope or capture path fails',
   expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-receipt-unavailable' });
 });
 
-test('peer term rejects a capture for a different head with a valid envelope digest', () => {
-  const p = packet(); p.review = sandboxReview();
-  const reference = p.review.sandboxReceipt.capture;
-  const capture = JSON.parse(readFileSync(reference.receiptPath, 'utf8'));
-  const foreign = 'f'.repeat(40);
-  capture.requested.head = foreign;
-  for (const source of [capture.sourceBefore, capture.sourceAfter]) Object.assign(source, { head: foreign, requestedHead: foreign });
-  const bytes = JSON.stringify(capture); writeFileSync(reference.receiptPath, bytes); reference.receiptSha256 = hash(bytes);
-  expect(peerTerm(p)).toMatchObject({ status: 'fail', reasonCode: 'sandbox-validation-failed' });
-});
+for (const [key, foreign] of [['repository', 'https://github.com/example/foreign.git'], ['head', 'f'.repeat(40)], ['base', 'f'.repeat(40)]]) {
+  test(`peer test execution rejects a different ${key} even with a valid envelope digest`, () => {
+    const review = sandboxReview();
+    updateSandboxCapture(review, capture => {
+      if (key === 'repository') capture.repository = foreign;
+      else capture.requested[key] = foreign;
+      for (const source of [capture.sourceBefore, capture.sourceAfter]) {
+        source[key] = foreign;
+        if (key === 'head') source.requestedHead = foreign;
+      }
+    });
+    expect(peerTerm(executionPacket(review))).toMatchObject({ status: 'fail', reasonCode: 'sandbox-validation-failed', evidence: {
+      testExecution: { status: 'fail', reasonCode: 'sandbox-validation-failed', exitCode: null, argvSha256: null },
+    } });
+  });
+}

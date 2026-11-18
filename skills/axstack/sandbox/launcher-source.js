@@ -1,6 +1,34 @@
-import { chmodSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { gitArgv } from '../scripts/git-argv.js';
-import { hold, safePath } from './launcher-policy.js';
+import { hold, safePath, validate } from './launcher-policy.js';
+
+const githubSlug = /^[a-z0-9-]+\/(?!\.{1,2}$)[a-z0-9_.-]+$/i;
+function githubRepository(origin) {
+  const match = /^(?:https:\/\/github\.com\/|ssh:\/\/git@github\.com\/|git@github\.com:)(.+)$/i.exec(origin);
+  const slug = match?.[1].replace(/\.git$/i, '');
+  return slug && githubSlug.test(slug) ? slug.toLowerCase() : null;
+}
+
+export async function bindCheckoutOrigin(request, execute) {
+  validate('request', request);
+  const repo = realpathSync(safePath(request.repo));
+  if (![request.head, request.base].every(commit => /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(commit))) throw Error('head/base must be exact commits');
+  const git = async (reason, ...args) => {
+    const result = await execute(gitArgv('--no-lazy-fetch', '--no-replace-objects', '-C', repo, ...args));
+    if (result.exitCode !== 0) hold(reason);
+    return result.stdout.trim();
+  };
+  const root = await git('checkout root unavailable', 'rev-parse', '--show-toplevel');
+  if (realpathSync(root) !== repo) hold('repo must be the checkout root');
+  const origin = await git('checkout origin unavailable', 'remote', 'get-url', 'origin');
+  const expected = githubSlug.test(request.repository) ? request.repository.toLowerCase() : githubRepository(request.repository);
+  if (!expected || githubRepository(origin) !== expected) hold('checkout origin does not match expected repository');
+  const head = await git('checkout HEAD unavailable', 'rev-parse', '--verify', 'HEAD^{commit}');
+  if (head !== request.head) hold('checkout HEAD does not match expected head');
+  const base = await git('expected base commit unavailable', 'rev-parse', '--verify', `${request.base}^{commit}`);
+  if (base !== request.base) hold('expected base is not a commit');
+  return { ...request, repository: origin };
+}
 
 const excluded = new Set(['.git', 'node_modules', '.venv', 'venv', '__pycache__', '.gradle', '.pnpm-store']);
 export async function exportSource(p, execute) {
