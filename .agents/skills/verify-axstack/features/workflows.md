@@ -575,6 +575,7 @@ Entry points: `skills/axstack/scripts/sync-default.js`, `default-policy.js`,
 doctor > "$EVIDENCE/default-routing-doctor.log" 2>&1
 bun run test tests/workflows/default-routing.test.js \
   tests/workflows/default-sol-reserve.test.js \
+  tests/workflows/resolve-models.test.js \
   tests/workflows/default-reset-timing.test.js \
   tests/workflows/default-cli.test.js tests/workflows/default-settings.test.js \
   tests/workflows/hub-usage.test.js tests/workflows/hub-secret.test.js \
@@ -585,7 +586,13 @@ bun run test tests/workflows/default-routing.test.js \
   tests/workflows/runtime-safety.test.js > "$EVIDENCE/default-routing.log" 2>&1
 ```
 
-Proof: fixture CLI dry-run changes no bytes; apply changes only the default and
+Proof: fresh fixture catalogs select Astra 6.2 medium and Sol 6.2 xhigh.
+Mixed old/new catalogs migrate old defaults to those exact selections; missing
+either required 6.2 model (including old-only catalogs) holds without substitution.
+Real mixed/codex-only preset Astra/Sol seats select 6.2 when advertised and retain
+latest-version resolution on older catalogs; Terra/Luna/Claude splits stay covered
+by the resolver suite. Fixtures establish no live availability or execution.
+Fixture CLI dry-run changes no bytes; apply changes only the default and
 preserves overrides/text-generation settings, modes and locks. A loopback hub
 drives the management envelope. Policy tests cover same-account eligibility,
 equal-account pooled minima, both-low <30% Sol admission, either-30% exclusion,
