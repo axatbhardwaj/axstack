@@ -19,6 +19,15 @@ Run from trusted cwd / with bun --no-env-file <installed-script> and explicit:
   --input FILE   Saved gh api graphql response; no network. Saved bytes prove no live freshness.
   --now ISO      Timezone-qualified comparison time; default current UTC.
   --help         Show flags, effects and limitations.
+Offline publication reconciliation (not a phase or gate):
+  --repo OWNER/NAME --pr N --head SHA --receipt FILE
+  FILE: {version:1,reviewId,submission,immediateReadback,laterReadback?}.
+  Use the original numeric review ID and trusted saved GitHub response metadata.
+  Originals need id, pull_request_url, commit_id, state and body ending in the exact
+  verdict marker; only that marker is read from the body. Later uses ID, PR and commit only.
+  Omit laterReadback to skip comparison, or set null for a missing observation.
+  No network, policy lookup or clock. Original consistency cannot prove capture order,
+  current GitHub state, review quality or reviewer time. Later drift never rewrites it.
 Without --input, one read-only gh api graphql query observes the PR and head checks.
 No writes, persistent state, retries, dispatch, submission, merge, scheduling or authority.
 API/permission/pagination gaps are unknown; unobserved checks never imply success.
@@ -30,22 +39,115 @@ Exit: 0 measured (including failed facts), 1 invalid CLI/error, 2 incomplete (un
 const time = (s) => typeof s === 'string' && /T.*(?:Z|[+-]\d\d:\d\d)$/.test(s) ? Date.parse(s) : NaN;
 const sha = (s) => typeof s === 'string' && /^[a-f0-9]{40}$/.test(s);
 function options(argv) {
-  const args = { '--policy': `${import.meta.dir}/../references/schedule-policy.json`, '--now': new Date().toISOString() };
+  const args = { '--policy': `${import.meta.dir}/../references/schedule-policy.json` };
   const seen = new Set();
   for (let i = 0; i < argv.length; i += 2) {
     const key = argv[i], value = argv[i + 1];
-    if (!['--repo', '--pr', '--head', '--base', '--base-ref', '--phase', '--policy', '--input', '--now'].includes(key) ||
+    if (!['--repo', '--pr', '--head', '--base', '--base-ref', '--phase', '--policy', '--input', '--now', '--receipt'].includes(key) ||
         !value || value.startsWith('--') || seen.has(key)) throw Error(`invalid argument: ${key}`);
     args[key] = value;
     seen.add(key);
   }
-  if (!/^[\w.-]+\/[\w.-]+$/.test(args['--repo'] ?? '') || !/^[1-9]\d*$/.test(args['--pr'] ?? '') ||
-      !Number.isSafeInteger(Number(args['--pr'])) || !sha(args['--head']) || !sha(args['--base']) ||
+  const identity = /^[\w.-]+\/[\w.-]+$/.test(args['--repo'] ?? '') && /^[1-9]\d*$/.test(args['--pr'] ?? '') &&
+    Number.isSafeInteger(Number(args['--pr'])) && sha(args['--head']);
+  if (args['--receipt']) {
+    if (!identity || [...seen].some((key) => !['--repo', '--pr', '--head', '--receipt'].includes(key))) {
+      throw Error('expected only repo, PR, full head SHA and receipt file; see --help');
+    }
+    return args;
+  }
+  args['--now'] ??= new Date().toISOString();
+  if (!identity || !sha(args['--base']) ||
       !args['--base-ref'] || !['admission', 'submission'].includes(args['--phase']) || !Number.isFinite(time(args['--now']))) {
     throw Error('expected repo, PR, full head/base SHAs, base-ref, phase and timezone-qualified now; see --help');
   }
   return args;
 }
+
+const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const validId = (value) => Number.isSafeInteger(value) && value > 0;
+const reviewStates = ['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED', 'DISMISSED', 'PENDING'];
+function markerHead(body) {
+  if (body == null) return null;
+  if (typeof body !== 'string') return '';
+  const lines = body.replace(/(?:\r?\n)+$/, '').split(/\r?\n/);
+  const candidates = lines.filter((line) => line.trimStart().startsWith('<!-- axstack-automation verdict'));
+  if (!candidates.length) return null;
+  if (candidates.length !== 1 || candidates[0] !== lines.at(-1)) return '';
+  return /^<!-- axstack-automation verdict head=([a-f0-9]{40}) -->$/.exec(candidates[0])?.[1] ?? '';
+}
+
+function receiptTerm(id) {
+  const evidence = { missing: [], malformed: [], conflicts: [] };
+  const check = (field, value, valid, expected = value) => {
+    if (value == null) evidence.missing.push(field);
+    else if (!valid(value)) evidence.malformed.push(field);
+    else {
+      if (value !== expected) evidence.conflicts.push(field);
+      return value;
+    }
+  };
+  const result = (details = {}, status = evidence.conflicts.length ? 'fail' :
+    evidence.missing.length || evidence.malformed.length ? 'unknown' : 'pass') =>
+    ({ id, status, evidence: { ...evidence, ...details } });
+  return { evidence, check, result };
+}
+
+function reconcileReceipt(args) {
+  const repo = args['--repo'], pr = Number(args['--pr']), head = args['--head'];
+  const expectedUrl = `https://api.github.com/repos/${repo.toLowerCase()}/pulls/${pr}`;
+  const validUrl = (value) => typeof value === 'string' &&
+    /^https:\/\/api\.github\.com\/repos\/[\w.-]+\/[\w.-]+\/pulls\/[1-9]\d*$/.test(value);
+  const publication = receiptTerm('publication');
+  const later = receiptTerm('laterReviewCommit');
+  let bytes, receipt, readError;
+  try { bytes = readFileSync(args['--receipt'], 'utf8'); }
+  catch (error) { readError = error.code === 'ENOENT' ? 'missing' : 'unreadable'; }
+  if (!readError) {
+    try { receipt = JSON.parse(bytes); } catch { readError = 'malformed'; }
+    if (!record(receipt)) readError = 'malformed';
+  }
+  if (readError === 'missing' || readError === 'malformed') publication.evidence[readError].push('receipt');
+  const supported = !readError && publication.check('version', receipt.version, (value) => value === 1);
+  const reviewId = supported ? publication.check('reviewId', receipt.reviewId, validId) : undefined;
+  const readback = (term, field, commitId, original = false) => {
+    const review = term.check(field, receipt[field], record);
+    if (!review) return;
+    const id = term.check(`${field}.id`, review.id, validId, reviewId);
+    const url = review.pull_request_url;
+    term.check(`${field}.pull_request_url`, validUrl(url) ? url.toLowerCase() : url, validUrl, expectedUrl);
+    const commit = term.check(`${field}.commit_id`, review.commit_id, sha, commitId);
+    if (!original) return { id, commitId: commit };
+    const marker = term.check(`${field}.marker`, markerHead(review.body), sha, head);
+    const state = term.check(`${field}.state`, review.state, (value) => reviewStates.includes(value));
+    if (state && !['APPROVED', 'CHANGES_REQUESTED'].includes(state)) term.evidence.conflicts.push(`${field}.state`);
+    return { id, commitId: commit, markerHead: marker, state };
+  };
+  const submission = supported ? readback(publication, 'submission', head, true) : undefined;
+  const immediateReadback = supported ? readback(publication, 'immediateReadback', head, true) : undefined;
+  if (submission?.state && immediateReadback?.state && submission.state !== immediateReadback.state &&
+      !publication.evidence.conflicts.includes('immediateReadback.state')) {
+    publication.evidence.conflicts.push('immediateReadback.state');
+  }
+  const original = readError === 'unreadable' ? publication.result({ reason: readError }, 'unknown') :
+    publication.result({ reviewId, state: submission?.state, submission, immediateReadback });
+  let comparison = later.result({ reason: 'not requested' }, 'n/a');
+  if (supported && Object.hasOwn(receipt, 'laterReadback')) {
+    if (original.status !== 'pass') comparison = later.result({ reason: 'original not established' }, 'unknown');
+    else {
+      const details = readback(later, 'laterReadback', undefined);
+      comparison = later.result(details);
+      if (comparison.status === 'pass' && details?.commitId !== head) {
+        comparison = later.result({ ...details, reason: 'drift' }, 'fail');
+      }
+    }
+  }
+  const terms = [original, comparison];
+  const counts = { pass: 0, fail: 0, unknown: 0, 'n/a': 0 };
+  for (const term of terms) counts[term.status]++;
+  return { version: 1, source: 'saved receipt', repo, pr, head, terms, counts };
+}
+
 function observe(args) {
   if (args['--input']) return JSON.parse(readFileSync(args['--input'], 'utf8'));
   const [owner, name] = args['--repo'].split('/');
@@ -129,7 +231,8 @@ function report(args) {
 try {
   if (process.argv.slice(2).length === 1 && process.argv[2] === '--help') console.log(HELP);
   else {
-    const result = report(options(process.argv.slice(2)));
+    const args = options(process.argv.slice(2));
+    const result = args['--receipt'] ? reconcileReceipt(args) : report(args);
     console.log(JSON.stringify(result, null, 2));
     process.exitCode = result.counts.unknown ? 2 : 0;
   }
