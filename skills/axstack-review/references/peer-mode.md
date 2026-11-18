@@ -30,8 +30,8 @@ Merged or closed: existing cleanup.
 New head: new event, never restart inside the job.
 Add no polling loop or watcher.
 
-A missing bot verdict marker selects the first review. An existing bot verdict
-marker selects follow-up from its `verdict head=` to the current head.
+Missing bot verdict marker: first review. Existing bot verdict marker: follow-up from
+its `verdict head=`. No new state store. Offline `pr-fresh --receipt` separates publication from later drift.
 
 A peer blocker is a validated behaviour defect at the current head, shown by
 reproduction or quoted code: wrong results, security, data loss or funds,
@@ -81,8 +81,7 @@ on the full diff and all six angles, independently with the identical brief
 and an isolated first pass. Never dispatch diligence in peer mode.
 Follow-up uses one reviewer (`axstack-reviewer-primary`) to mark each prior
 blocker fixed or open, read the author's replies and PR comments, and inspect
-only the delta since the last reviewed head. Read that head from the existing
-bot `verdict head=` marker, not from a new state store. When the last reviewed
+only the delta since the last reviewed head. When the last reviewed
 head is unreachable after a rebase or force-push, or the delta cannot be
 recovered, the single follow-up reviewer reviews the full current diff once
 under the peer blocking bar and closed points stay closed. The fallback is
