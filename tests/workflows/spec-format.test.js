@@ -23,6 +23,9 @@ rule('Spec loads the shared format before drafting', entry,
 rule('the brief comes first, ahead of execution and history', format,
   [/begin|open|start/i, /decision brief/i, /before|ahead of/i, /execution/i, /history/i],
   'Start with the decision brief ahead of execution detail and history.', /before|ahead of/i, 'after');
+rule('substantial drafts open with a short outcome by default', format,
+  [/default|normally/i, /substantial|larger/i, /spec|draft/i, /begin|open|start/i, /short|brief|concise/i, /outcome|summary/i],
+  'Normally start larger spec drafts with a concise outcome.', /begin|open|start/i, 'end');
 rule('identity stays compact and review rounds stay out of the opening', format,
   [/keep/i, /identity/i, /status/i, /compact/i, /review.round history/i, /after/i, /current requirements/i],
   'Keep identity and status compact, with review-round history after current requirements.', /after/i, 'before');
@@ -41,6 +44,33 @@ rule('opening exposes consequential risks and unknowns', format,
 rule('opening gathers the decisions the user needs to make', format,
   [/opening|brief/i, /collect|gather|list/i, /all|every/i, /decision/i, /user/i, /needed|needs|pending/i],
   'In the brief, list every pending decision the user needs to make.', /collect|gather|list/i, 'scatter');
+rule('considered solutions carry trade-offs and the proposed choice', format,
+  [/compare|weigh/i, /considered|explored/i, /solutions|options/i, /trade.?offs/i, /proposed|recommended/i, /choice|solution|option/i],
+  'Weigh the options explored and their trade-offs, then identify the recommended choice.', /compare|weigh/i, 'skip');
+rule('the design accounts for edge cases and dependencies', format,
+  [/cover|describe/i, /edge cases|boundary cases/i, /dependencies|prerequisites/i],
+  'Describe boundary cases and prerequisites.', /cover|describe/i, 'omit');
+rule('the brief identifies gaps in scope or evidence', format,
+  [/surface|identify/i, /gaps|unknowns/i, /scope/i, /evidence/i],
+  'Identify unknowns in the scope or evidence.', /surface|identify/i, 'hide');
+rule('small drafts combine sections while retaining decision and execution detail', format,
+  [/small|minor/i, /combine|merge/i, /sections/i, /keep|retain/i, /decisions/i, /execution|implementation/i],
+  'For minor changes, merge sections and retain detail needed for decisions and implementation.', /combine|merge/i, 'separate');
+rule('readability review checks timing and dependencies', format,
+  [/check|verify/i, /estimates|sizes/i, /open questions|unresolved questions/i, /timing|schedule/i, /dependencies|prerequisites/i],
+  'Verify that sizes and unresolved questions explain the schedule and prerequisites.', /check|verify/i, 'ignore');
+rule('planning targets and confidence-qualified estimates stay distinct', format,
+  [/distinguish|separate/i, /targets/i, /engineering estimates|effort estimates/i, /confidence/i, /basis|assumptions/i],
+  'Separate targets from effort estimates and give the confidence and assumptions behind each estimate.', /distinguish|separate/i, 'equate');
+rule('unsized work identifies missing sizing inputs', format,
+  [/unsized|without an estimate/i, /name|identify/i, /missing|needed/i, /inputs|information/i, /estimate|siz/i],
+  'For unsized work, identify the information needed for an estimate.', /name|identify/i, 'omit');
+rule('open questions show ownership, impact, blocking and timing', format,
+  [/open question/i, /record|state|capture/i, /accountable|responsible/i, /owner|role/i, /why it matters|reason it matters/i, /what it blocks|blocked work/i, /needed.by|required date/i, /when known|if known/i],
+  'For each open question, capture its responsible role, the reason it matters, any blocked work and its required date if known.', /record|state|capture/i, 'omit');
+rule('diagrams are conditional on clarifying the design', format,
+  [/include|add/i, /module|flow/i, /diagram/i, /only/i, /clarif|helps explain/i],
+  'Add a flow or module diagram only if it helps explain the design.', /only/i, 'always');
 rule('capabilities own precise requirements and acceptance', format,
   [/group|organize/i, /precise|exact/i, /requirements/i, /acceptance/i, /capability|capabilities/i, /stable/i, /ID|identifier|reference/i, /useful/i],
   'Organize exact requirements and acceptance by capability with stable identifiers where useful.', /group|organize/i, 'scatter');
@@ -84,12 +114,15 @@ test('spec format: usable example leads from a decision to exact capability acce
   const example = format.match(/```markdown\n([\s\S]*?)```/)?.[1] ?? '';
   const brief = example.split('## Execution requirements')[0];
   const execution = example.split('## Execution requirements')[1]?.split('## Evidence and history')[0] ?? '';
+  expect(brief).toMatch(/## Decision brief\s+(?:\*\*)?(?:Outcome|Summary)\b/i);
   expect(brief).toMatch(/problem|why/i);
   expect(brief).toMatch(/before:.*after:/is);
   expect(brief).toMatch(/included:.*excluded:/is);
   expect(brief).toMatch(/risk|trade.?off/i);
   expect(brief).toMatch(/unverified|unknown/i);
   expect(brief).toMatch(/decision.*approve|approve.*decision/i);
+  expect(brief).toMatch(/target.*estimate.*confidence/is);
+  expect(brief).toMatch(/open question.*owner.*blocks.*needed.by/is);
   const requirement = execution.match(/([A-Z]+-\d+):\s*\S/);
   expect(requirement, 'example needs a referenceable requirement').toBeTruthy();
   expect(execution).toMatch(new RegExp(`Acceptance.*${requirement?.[1]}`, 's'));
