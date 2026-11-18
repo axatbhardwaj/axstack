@@ -25,6 +25,15 @@ Optional review:{mode:peer|authored, localTests:boolean, sandboxReceipt:<envelop
  repository/head/base, log/source identity and sandbox tool/test/image binding.
  This measures receipt consistency, not authenticated isolation or test success.
  Capture cwd is not checked: the envelope lacks an expected source path.
+ Peer evidence.testExecution separately reports a revalidated sandbox command
+ exit, through the exact launcher wrapper for the pinned repository/head/base.
+ It includes the exit code, capture receipt digest and digest of JSON argv,
+ not raw argv or log contents. A recorded nonzero fetch exit is a setup exit;
+ a test wrapper's exit alone does not distinguish setup from test failure.
+ Capture v1 cannot attest assertions: log prose and exit codes do not establish
+ assertion coverage or outcome. Unverified exits and command digests stay null;
+ hold and limitation are caller-supplied and retained. This nested fact does not
+ change the peer-sandbox status, summary counts, CLI exit or review authority.
 Items: unique stable id, head, base, boundary, changedAt, raisedAt (ISO times),
  acceptedProofKinds (runtime | fixture | instruction-contract), sourceScope
  (tracked+untracked-nonignored | ignored | external), optional expectedExitCode
@@ -123,13 +132,26 @@ function evaluate(item, dispositions, expected, directory, allDispositions) {
   return outcome('pass', 'capture-consistent', 'new item-bound capture is consistent; semantic sufficiency requires reviewer judgment', { id: proof.id, kind: proof.kind, declaredObservedAt: proof.observedAt, chronology: 'caller-declared, not capture-attested', terms });
 }
 
+function sandboxCommandMatches(capture, envelope, role) {
+  if (!Array.isArray(capture.argv) || !text(capture.argv[0]) || !Array.isArray(capture.spawnArgv)) return false;
+  const expected = ['docker', 'exec', '--user', envelope.effectivePolicy.user, '--workdir', '/work',
+    `${envelope.runId}-${role}`, '/bin/sh', '-c', 'cp -R /source/. /work/ && chmod -R u+w /work && cd /work && exec "$@"',
+    'axstack', ...capture.argv];
+  return capture.spawnArgv.length === expected.length && expected.every((arg, index) => arg === capture.spawnArgv[index]);
+}
+
 function peerSandbox(review, expected, directory) {
-  const result = (status, reasonCode, evidence = {}) => ({ id: 'peer-sandbox', status, reasonCode, evidence });
-  if (review?.mode === 'authored') return result('n/a', 'authored-local-checks');
+  if (review?.mode === 'authored') return { id: 'peer-sandbox', status: 'n/a', reasonCode: 'authored-local-checks', evidence: {} };
+  const limitation = review?.limitation ?? null, hold = review?.hold ?? null;
+  const execution = (status, reasonCode, observed = {}) => ({ status, reasonCode, exitCode: null,
+    argvSha256: null, receiptSha256: null, assertions: 'unknown', limitation, hold, ...observed });
+  const gap = reasonCode => execution('unknown', hold ? 'sandbox-execution-held' : reasonCode);
+  const result = (status, reasonCode, evidence = {}, testExecution = execution(status, reasonCode)) =>
+    ({ id: 'peer-sandbox', status, reasonCode, evidence: { ...evidence, testExecution } });
   if (review?.mode !== 'peer' || typeof review.localTests !== 'boolean') return result('unknown', 'review-mode-missing');
   if (!review.sandboxReceipt) return review.localTests
-    ? result('fail', 'sandbox-receipt-missing')
-    : result('unknown', 'sandbox-unavailable', { limitation: review.limitation ?? null, hold: review.hold ?? null });
+    ? result('fail', 'sandbox-receipt-missing', {}, gap('sandbox-receipt-missing'))
+    : result('unknown', 'sandbox-unavailable', { limitation, hold }, gap('sandbox-unavailable'));
   try {
     const envelope = readReceipt(review.sandboxReceipt, directory);
     validate('receipt', envelope);
@@ -139,15 +161,30 @@ function peerSandbox(review, expected, directory) {
     if (sha256(bytes) !== envelope.capture.receiptSha256) throw Error('capture digest differs');
     const capture = JSON.parse(bytes.toString()), terms = captureTerms(capture, expected);
     if (terms.some(t => t.status === 'fail')) throw Error('capture identity/log/source differs');
-    if (capture.tool?.name !== 'axstack-sandbox' || capture.tool.version !== '1.0.0'
-      || capture.kind !== 'sandbox-test' || !envelope.imageDigests.includes(capture.sandboxImageDigest)
-      || capture.spawnArgv?.[0] !== 'docker' || capture.spawnArgv?.[1] !== 'exec'
-      || !capture.spawnArgv.includes(`${envelope.runId}-test`)) throw Error('capture is not the sandbox test');
-    if (terms.some(t => t.status === 'unknown')) return result('unknown', 'sandbox-capture-incomplete', { terms });
-    return result('pass', 'sandbox-consistent', { capture: envelope.capture, terms, exitCode: capture.exitCode });
+    const sandboxBound = capture.tool?.name === 'axstack-sandbox' && capture.tool.version === '1.0.0'
+      && envelope.imageDigests.includes(capture.sandboxImageDigest);
+    const incomplete = terms.some(t => t.status === 'unknown');
+    const observed = (status, reasonCode) => execution(status, reasonCode, { exitCode: capture.exitCode,
+      argvSha256: sha256(JSON.stringify(capture.argv)), receiptSha256: envelope.capture.receiptSha256 });
+    if (!sandboxBound || capture.kind !== 'sandbox-test' || capture.spawnArgv?.[0] !== 'docker'
+      || capture.spawnArgv?.[1] !== 'exec' || !capture.spawnArgv.includes(`${envelope.runId}-test`)) {
+      if (sandboxBound && capture.kind === 'sandbox-fetch' && sandboxCommandMatches(capture, envelope, 'fetch')) {
+        const details = { reason: 'capture is not the sandbox test' };
+        if (incomplete) return result('fail', 'sandbox-validation-failed', details, gap('sandbox-capture-incomplete'));
+        if (capture.exitCode !== 0) return result('fail', 'sandbox-validation-failed', details, observed('fail', 'setup-exit-nonzero'));
+      }
+      throw Error('capture is not the sandbox test');
+    }
+    if (incomplete) return result('unknown', 'sandbox-capture-incomplete', { terms }, gap('sandbox-capture-incomplete'));
+    const testExecution = !sandboxCommandMatches(capture, envelope, 'test')
+      ? execution('fail', 'sandbox-command-binding-mismatch')
+      : capture.exitCode === 0 ? observed('pass', 'test-exit-zero') : observed('fail', 'test-exit-nonzero');
+    return result('pass', 'sandbox-consistent', { capture: envelope.capture, terms, exitCode: capture.exitCode }, testExecution);
   } catch (error) {
-    return result((error.code === 'ENOENT' || error.code === 'EACCES') && !review.localTests ? 'unknown' : 'fail',
-      error.code === 'ENOENT' || error.code === 'EACCES' ? 'sandbox-receipt-unavailable' : 'sandbox-validation-failed', { reason: error.message });
+    const unavailable = error.code === 'ENOENT' || error.code === 'EACCES';
+    const reasonCode = unavailable ? 'sandbox-receipt-unavailable' : 'sandbox-validation-failed';
+    return result(unavailable && !review.localTests ? 'unknown' : 'fail', reasonCode, { reason: error.message },
+      unavailable ? gap(reasonCode) : undefined);
   }
 }
 
