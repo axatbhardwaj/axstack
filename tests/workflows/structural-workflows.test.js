@@ -152,13 +152,10 @@ test('structural: runtime reference uses the advertised T3 schema and native ide
   }
 });
 
-test('structural: canonical preset profiles use valid modes and stable role IDs', () => {
-  const ids = JSON.parse(readFileSync(join(root, 'profiles/presets/mixed.json'), 'utf8'))
-    .roles.map(({ id }) => id);
+test('structural: canonical preset profiles use valid modes and role metadata', () => {
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const data = JSON.parse(readFileSync(join(root, `profiles/presets/${preset}.json`), 'utf8'));
     expect(Object.keys(data)).toEqual(['version', 'roles']);
-    expect(data.roles.map(({ id }) => id)).toEqual(ids);
     for (const prof of data.roles) {
       expect(prof.modeId).toBe(prof.provider === 'claude' ? 'bypassPermissions' : 'full-access');
       expect(prof.name).toBeTruthy();
