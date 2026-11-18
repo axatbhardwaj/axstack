@@ -18,12 +18,12 @@ function database(run) {
 }
 
 test('native database reader includes web/mobile drivers across projects without creating or changing files', () => database((f) => {
-  f.put('a', 'claude-opus-5-5'); f.put('b', 'gpt-6-astra', 'mobile');
+  f.put('a', 'claude-opus-5-5'); f.put('b', 'gpt-6.2-astra', 'mobile');
   const before = fs.readFileSync(f.path);
   const r = readHistory(`${f.dir}/settings.json`, now);
   expect(r.complete).toBe(true);
   expect(r.threads.map((t) => [t.providerInstanceId, t.model, t.parentThreadId])).toEqual([
-    ['claude', 'claude-opus-5-5', null], ['code', 'gpt-6-astra', null],
+    ['claude', 'claude-opus-5-5', null], ['code', 'gpt-6.2-astra', null],
   ]);
   expect(fs.readFileSync(f.path)).toEqual(before);
   expect(fs.readdirSync(f.dir)).toEqual(['statev2.sqlite']);
@@ -41,10 +41,10 @@ test('native manual counts include mobile starts but cannot admit forbidden Sol'
   const thread = (id, model, instance, source) => ({ threadId: id, createdAt: new Date(now - 1000).toISOString(),
     createdBy: 'user', creationSource: source, parentThreadId: null, providerInstanceId: instance, model });
   const threads = [thread('c1', 'claude-opus-5-5', 'claude', 'web'), thread('c2', 'claude-opus-5-5', 'claude', 'mobile'),
-    ...Array.from({ length: 5 }, (_, i) => thread(`a${i}`, 'gpt-6-astra', 'code', 'mobile'))];
+    ...Array.from({ length: 5 }, (_, i) => thread(`a${i}`, 'gpt-6.2-astra', 'code', 'mobile'))];
   const r = decide(f.settings, f.usage, f.catalogs, f.now, { threads, nextCursor: null, total: threads.length });
   expect(r.selection.model).toBe('claude-opus-5-5');
-  expect(r.history.counts).toEqual({ 'claude-opus-5-5': 2, 'gpt-6-astra': 5, 'gpt-6.1-sol': 0 });
+  expect(r.history.counts).toEqual({ 'claude-opus-5-5': 2, 'gpt-6.2-astra': 5, 'gpt-6.2-sol': 0 });
 });
 
 for (const bad of [{ threads: [], nextCursor: 0 }, { threads: [], total: 9 },
@@ -76,7 +76,7 @@ test('history failure gives eligible primaries a bounded turn without per-tick c
     const again = decide(f.settings, usage, catalogs, at + 1000, { unavailable: 'database unavailable' });
     expect(again.action).toBe('unchanged');
   }
-  expect([...chosen].sort()).toEqual(['claude-opus-5-5', 'gpt-6-astra']);
+  expect([...chosen].sort()).toEqual(['claude-opus-5-5', 'gpt-6.2-astra']);
 });
 
 test('read-only history refuses a WAL without existing shared memory instead of creating sidecars', () => database((f) => {
