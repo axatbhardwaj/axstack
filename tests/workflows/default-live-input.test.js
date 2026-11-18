@@ -15,7 +15,7 @@ for (const idle of [false, true]) test(`real CLI native inputs with idle Claude=
   d.exec('CREATE TABLE orchestration_v2_projection_threads (thread_id TEXT, created_at TEXT, provider_instance_id TEXT, payload_json TEXT)');
   for (let i = 0; i < 5; i++) d.query('INSERT INTO orchestration_v2_projection_threads VALUES (?, ?, ?, ?)').run(`${i}`,
     new Date(at - 1000).toISOString(), 'code', JSON.stringify({ createdBy: 'user', creationSource: 'mobile',
-      lineage: { parentThreadId: null }, modelSelection: { model: 'gpt-6-astra' } }));
+      lineage: { parentThreadId: null }, modelSelection: { model: 'gpt-6.2-astra' } }));
   d.close();
   const server = Bun.serve({ port: 0, hostname: '127.0.0.1', async fetch(req) {
     if (req.headers.get('authorization') !== `Bearer ${sentinel}`) return new Response('', { status: 401 });
@@ -47,15 +47,15 @@ for (const idle of [false, true]) test(`real CLI native inputs with idle Claude=
       return JSON.parse(out);
     };
     const dry = await invoke();
-    expect(dry.selection.model).toBe('gpt-6-astra');
+    expect(dry.selection.model).toBe('gpt-6.2-astra');
     expect(dry.pools.codex.sessionStatus).toBe('n/a');
     expect(dry.pools.codex.weeklyRemaining).toBe(88);
-    expect(dry.history.counts['gpt-6-astra']).toBe(5);
+    expect(dry.history.counts['gpt-6.2-astra']).toBe(5);
     expect(fs.readFileSync(path, 'utf8')).toBe(before);
     await invoke('--apply');
     const after = JSON.parse(fs.readFileSync(path, 'utf8'));
     expect(after.usageLimitSources).toEqual(f.settings.usageLimitSources);
-    expect(after.defaultModelSelection.model).toBe('gpt-6-astra');
+    expect(after.defaultModelSelection.model).toBe('gpt-6.2-astra');
     expect(fs.readFileSync(secret, 'utf8')).toBe(sentinel);
     fs.unlinkSync(secret);
     const missing = Bun.spawn([process.execPath, script, '--settings', path], { stdout: 'pipe', stderr: 'pipe' });
