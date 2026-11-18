@@ -47,6 +47,18 @@ rule('opening gathers the decisions the user needs to make', format,
 rule('considered solutions carry trade-offs and the proposed choice', format,
   [/compare|weigh/i, /considered|explored/i, /solutions|options/i, /trade.?offs/i, /proposed|recommended/i, /choice|solution|option/i],
   'Weigh the options explored and their trade-offs, then identify the recommended choice.', /compare|weigh/i, 'skip');
+rule('the design accounts for edge cases and dependencies', format,
+  [/cover|describe/i, /edge cases|boundary cases/i, /dependencies|prerequisites/i],
+  'Describe boundary cases and prerequisites.', /cover|describe/i, 'omit');
+rule('the brief identifies gaps in scope or evidence', format,
+  [/surface|identify/i, /gaps|unknowns/i, /scope/i, /evidence/i],
+  'Identify unknowns in the scope or evidence.', /surface|identify/i, 'hide');
+rule('small drafts combine sections while retaining decision and execution detail', format,
+  [/small|minor/i, /combine|merge/i, /sections/i, /keep|retain/i, /decisions/i, /execution|implementation/i],
+  'For minor changes, merge sections and retain detail needed for decisions and implementation.', /combine|merge/i, 'separate');
+rule('readability review checks timing and dependencies', format,
+  [/check|verify/i, /estimates|sizes/i, /open questions|unresolved questions/i, /timing|schedule/i, /dependencies|prerequisites/i],
+  'Verify that sizes and unresolved questions explain the schedule and prerequisites.', /check|verify/i, 'ignore');
 rule('planning targets and confidence-qualified estimates stay distinct', format,
   [/distinguish|separate/i, /targets/i, /engineering estimates|effort estimates/i, /confidence/i, /basis|assumptions/i],
   'Separate targets from effort estimates and give the confidence and assumptions behind each estimate.', /distinguish|separate/i, 'equate');
