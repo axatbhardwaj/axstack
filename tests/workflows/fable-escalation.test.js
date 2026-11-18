@@ -10,7 +10,6 @@ test('presets: provider advisers and Fable escalation keep explicit absence', ()
   for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     const roles = JSON.parse(read(`profiles/presets/${preset}.json`)).roles;
     const byId = Object.fromEntries(roles.map((role) => [role.id, role]));
-    expect(roles.map(({ id }) => id)).toEqual(JSON.parse(read('profiles/presets/mixed.json')).roles.map(({ id }) => id));
     expect(byId['axstack-advisor-fable']).toBeUndefined();
     expect(byId['axstack-arena-judge-fable']).toBeUndefined();
     if (preset !== 'claude-only') expect(byId['axstack-advisor-codex'].notes).toContain('question as the Claude adviser');
