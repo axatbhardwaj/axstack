@@ -59,7 +59,7 @@ const expected = {
     g(null, 'high'),
     a('sonnet', 'high'), c('terra', 'high'),
     c('terra', 'high'), a('sonnet', 'high'),
-    a('haiku', 'medium'), c('luna', 'xhigh'),
+    a('sonnet', 'high'), c('terra', 'high'),
     a('sonnet', 'high'), c('terra', 'high'),
     a('sonnet', 'high'), c('sol', 'high'),
     a('opus', 'medium'), c('sol', 'high'),
@@ -136,7 +136,10 @@ test('presets: all canonical assets have the exact ordered role matrix', () => {
     const data = readJson(`profiles/presets/${preset}.json`);
     expect(data.version).toBe(1);
     expect(Object.keys(data)).toEqual(['version', 'roles']);
-    expect(data.roles.map(({ id }) => id)).toEqual(roleIds);
+    const expectedIds = preset === 'mixed'
+      ? roleIds.map((id) => id === 'axstack-explore-codebase-luna' ? 'axstack-explore-codebase-terra' : id)
+      : roleIds;
+    expect(data.roles.map(({ id }) => id)).toEqual(expectedIds);
     expect(data.roles.map(({ provider, model, modelClass, modeId, thinkingOptionId }) =>
       [provider, modelClass ?? model, modeId, thinkingOptionId])).toEqual(expected[preset]);
     for (const profile of data.roles) {
