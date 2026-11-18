@@ -39,9 +39,9 @@ required corroborating seat within each selected facet.
 Use the run's selected preset and role snapshot. Give seats for one facet the
 same brief without cross-reading.
 
-- In mixed, each facet requires an independent Haiku and Luna pair: one
-  `axstack-explore-codebase` (Haiku 5.5 medium) and one
-  `axstack-explore-codebase-luna` (Luna xhigh).
+- In mixed, each facet requires an independent pair:
+  `axstack-explore-codebase` (Sonnet high) and
+  `axstack-explore-codebase-terra` (Terra high).
 - In codex-only, each facet requires an independent Sol and Luna pair:
   `axstack-explore-codebase` (Sol high) and
   `axstack-explore-codebase-luna` (Luna xhigh).

@@ -321,13 +321,15 @@ export async function validateBundle(bundleDir, selectedPreset = null) {
 
     const idSets = Object.entries(presets).map(([name, roles]) => [
       name,
-      roles.map((role) => role.id).sort(),
+      roles.map(({ id }) => name === 'mixed' && id === 'axstack-explore-codebase-terra'
+        ? 'axstack-explore-codebase-luna'
+        : id).sort(),
     ]);
     const [reference] = idSets;
     for (const [name, ids] of idSets.slice(1)) {
       if (JSON.stringify(ids) !== JSON.stringify(reference[1])) {
         throw new Error(
-          `bundle presets must expose an identical role ID set; ${reference[0]} and ${name} differ`,
+          `bundle presets must expose an identical role ID set except for the mixed Scout counterpart; ${reference[0]} and ${name} differ`,
         );
       }
     }

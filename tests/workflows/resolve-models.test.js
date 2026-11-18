@@ -82,42 +82,58 @@ for (const preset of ['mixed', 'claude-only']) {
     claude.models.push(entry('claude-fable-5-2', 'effort', ['medium']));
     held(resolve(data, args, role.provider, role.thinkingOptionId), /unsupported effort high/i);
   });
-
-  test(`capabilities: ${preset} codebase mapping binds Haiku 5.5 medium without substitution`, () => {
-    const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
-    const data = fresh();
-    const claude = data.providers.find((p) => p.providerInstanceId === 'claudeAgent');
-    // Synthetic catalog only: newer and older family members cannot replace the pin.
-    const role = roles.find((role) => role.id === 'axstack-explore-codebase');
-    const args = [...(role.model ? ['--model', role.model] : []), '--class', role.modelClass];
-    claude.models = ['claude-haiku-4-5', 'claude-haiku-5-5', 'claude-haiku-5-6']
-      .map((id) => entry(id, 'effort', ['medium', 'high']));
-    const result = resolve(data, args, role.provider, role.thinkingOptionId);
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.output)).toMatchObject({ model: 'claude-haiku-5-5',
-      effortOption: { id: 'effort', value: 'medium' } });
-    claude.models = [entry('claude-haiku-4-5', 'effort')];
-    held(resolve(data, args, role.provider, role.thinkingOptionId), /missing requested model claude-haiku-5-5/i);
-    claude.models.push(entry('claude-haiku-5-5', 'effort', ['low']));
-    held(resolve(data, args, role.provider, role.thinkingOptionId), /unsupported effort medium/i);
-  });
 }
 
-test('Scout seats resolve from selected preset roles without substitution', () => {
+test('capabilities: Claude-only Scout binds Haiku 5.5 medium without substitution', () => {
+  const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/claude-only.json`, 'utf8'));
+  const data = fresh();
+  const claude = data.providers.find((p) => p.providerInstanceId === 'claudeAgent');
+  const role = roles.find((role) => role.id === 'axstack-explore-codebase');
+  const args = ['--model', role.model, '--class', role.modelClass];
+  claude.models = ['claude-haiku-4-5', 'claude-haiku-5-5', 'claude-haiku-5-6']
+    .map((id) => entry(id, 'effort', ['medium', 'high']));
+  const result = resolve(data, args, role.provider, role.thinkingOptionId);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ model: 'claude-haiku-5-5',
+    effortOption: { id: 'effort', value: 'medium' } });
+  claude.models = [entry('claude-haiku-4-5', 'effort')];
+  held(resolve(data, args, role.provider, role.thinkingOptionId), /missing requested model claude-haiku-5-5/i);
+  claude.models.push(entry('claude-haiku-5-5', 'effort', ['low']));
+  held(resolve(data, args, role.provider, role.thinkingOptionId), /unsupported effort medium/i);
+});
+
+test.each([
+  ['axstack-explore-codebase', 'claudeAgent', 'sonnet', 'claude-sonnet-5-5', 'effort'],
+  ['axstack-explore-codebase-terra', 'codex', 'terra', 'gpt-6.1-terra', 'reasoningEffort'],
+])('mixed Scout seat %s holds on missing class or high effort', (id, instanceId, modelClass, model, optionId) => {
+  const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/mixed.json`, 'utf8'));
+  const role = roles.find((item) => item.id === id);
+  expect(role).toBeDefined();
+  const data = fresh();
+  const instance = data.providers.find((provider) => provider.providerInstanceId === instanceId);
+  const args = [...(role.model ? ['--model', role.model] : []), '--class', role.modelClass];
+  instance.models = instance.models.filter((item) => item.id !== model);
+  instance.models.push(entry(model, optionId));
+  const result = resolve(data, args, role.provider, role.thinkingOptionId);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ providerInstanceId: instanceId, model,
+    effortOption: { id: optionId, value: 'high' } });
+  instance.models.pop();
+  held(resolve(data, args, role.provider, role.thinkingOptionId), new RegExp(`no matching ${modelClass} model`, 'i'));
+  instance.models.push(entry(model, optionId, ['low']));
+  held(resolve(data, args, role.provider, role.thinkingOptionId), /unsupported effort high/i);
+});
+
+test('Codex-only Scout retains its Luna xhigh seat', () => {
   const data = fresh();
   data.providers.find((provider) => provider.providerInstanceId === 'codex')
     .models.push(entry('gpt-6-luna', 'reasoningEffort', ['xhigh']));
-
-  for (const preset of ['mixed', 'codex-only']) {
-    const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
-    const luna = roles.find((role) => role.id === 'axstack-explore-codebase-luna');
-    expect(luna, `${preset} Luna seat`).toBeDefined();
-
-    const lunaResult = resolve(data, ['--class', luna.modelClass], luna.provider, luna.thinkingOptionId);
-    expect(lunaResult.status).toBe(0);
-    expect(JSON.parse(lunaResult.output)).toMatchObject({ provider: 'codex', model: 'gpt-6-luna',
-      effortOption: { id: 'reasoningEffort', value: 'xhigh' } });
-  }
+  const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/codex-only.json`, 'utf8'));
+  const luna = roles.find((role) => role.id === 'axstack-explore-codebase-luna');
+  const result = resolve(data, ['--class', luna.modelClass], luna.provider, luna.thinkingOptionId);
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.output)).toMatchObject({ provider: 'codex', model: 'gpt-6-luna',
+    effortOption: { id: 'reasoningEffort', value: 'xhigh' } });
 });
 
 test('capabilities model:null without class holds Codex/Claude and binds launch-by-agent-ID providers', () => {

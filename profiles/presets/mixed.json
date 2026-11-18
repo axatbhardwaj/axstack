@@ -179,19 +179,18 @@
       "name": "Axstack codebase explorer",
       "provider": "claude",
       "modeId": "bypassPermissions",
-      "thinkingOptionId": "medium",
-      "notes": "Haiku 5.5 medium codebase mapper: explores repository structure and interfaces for research and handoff context. T3 uses the exact claude-haiku-5-5 pin from saved capabilities; a Claude rejection holds. Missing model or medium effort holds without substitution.",
-      "modelClass": "haiku",
-      "model": "claude-haiku-5-5"
+      "thinkingOptionId": "high",
+      "notes": "Independent read-only Sonnet Scout facet explorer. T3 resolves Claude classes from saved capabilities; a Claude rejection holds. Missing model or high effort holds without substitution.",
+      "modelClass": "sonnet"
     },
     {
-      "id": "axstack-explore-codebase-luna",
-      "name": "Axstack codebase explorer Luna",
+      "id": "axstack-explore-codebase-terra",
+      "name": "Axstack codebase explorer Terra",
       "provider": "codex",
       "modeId": "full-access",
-      "thinkingOptionId": "xhigh",
-      "notes": "Independent read-only Luna Scout facet explorer. Searches the whole repository on the same brief without cross-reading; reports evidence for driver reconciliation. Unavailable model or effort holds without substitution.",
-      "modelClass": "luna"
+      "thinkingOptionId": "high",
+      "notes": "Independent read-only Terra Scout facet explorer. Searches the whole repository on the same brief without cross-reading; reports evidence for driver reconciliation. Missing model or high effort holds without substitution.",
+      "modelClass": "terra"
     },
     {
       "id": "axstack-explore-execution",

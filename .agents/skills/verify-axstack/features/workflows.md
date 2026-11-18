@@ -492,9 +492,13 @@ reference-to-head diff for own-run chains.
 Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset
 policy: Sonnet high without a model pin in mixed and Sonnet medium in claude-only.
-The preset matrix protects Fable high, Haiku exploration medium, and all 14
-claude-only Sonnet medium seats. Installed role/readiness tests exercise the
-claude-only reviewer medium contract; resolver tests retain missing-effort holds.
+The preset matrix protects Fable high, separate diligence, all 14 Claude-only
+Sonnet medium seats, and Scout's model matrix (Sonnet high and Terra high in
+mixed, unchanged single-provider seats).
+`tests/installer/preset-selection.test.js` checks installed Scout role IDs and
+bindings. `tests/workflows/resolve-models.test.js` checks that a missing class
+or high effort holds either mixed Scout seat without substitution. Installed
+role/readiness tests also exercise the Claude-only reviewer medium contract.
 Prose budgets use measured bytes. No test result proves native queue
 coverage, atomic settlement, or universal English parsing.
 Live acceptance requires the driver's exact task/thread/run identities,

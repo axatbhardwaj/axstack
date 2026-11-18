@@ -56,7 +56,7 @@ describe('explicit preset selection', () => {
     expect(snapshot.preset).toBe('mixed');
   });
 
-  test('installed mixed and Claude-only snapshots adopt pinned Haiku 5.5 medium for codebase mapping', () => {
+  test('installed mixed and Claude-only snapshots retain their Sonnet research seats', () => {
     for (const preset of ['mixed', 'claude-only']) {
       const home = makeTempRoot(`axstack-haiku-${preset}-`);
       const skillsDir = join(home, 'installed');
@@ -65,10 +65,6 @@ describe('explicit preset selection', () => {
         '--skills-dir', skillsDir, '--no-claude-settings', '--yes',
       ], { env: { HOME: home } });
       const { roles } = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
-      expect(roles.find((role) => role.id === 'axstack-explore-codebase')).toMatchObject({
-        provider: 'claude', model: 'claude-haiku-5-5', modelClass: 'haiku',
-        modeId: 'bypassPermissions', thinkingOptionId: 'medium',
-      });
       for (const id of ['axstack-research-requirements', 'axstack-research-web']) {
         expect(roles.find((role) => role.id === id)).toMatchObject({
           provider: 'claude', modelClass: 'sonnet', thinkingOptionId: preset === 'claude-only' ? 'medium' : 'high',
@@ -80,12 +76,15 @@ describe('explicit preset selection', () => {
   test('installed snapshots retain Scout seat bindings for every preset', () => {
     const expected = {
       mixed: [
-        ['axstack-explore-codebase-luna', 'codex', 'luna', 'xhigh', 'full-access'],
+        ['axstack-explore-codebase', 'claude', 'sonnet', 'high', 'bypassPermissions'],
+        ['axstack-explore-codebase-terra', 'codex', 'terra', 'high', 'full-access'],
       ],
       'codex-only': [
+        ['axstack-explore-codebase', 'codex', 'sol', 'high', 'full-access'],
         ['axstack-explore-codebase-luna', 'codex', 'luna', 'xhigh', 'full-access'],
       ],
       'claude-only': [
+        ['axstack-explore-codebase', 'claude', 'haiku', 'medium', 'bypassPermissions', 'claude-haiku-5-5'],
         ['axstack-explore-codebase-luna', 'claude', null, 'xhigh', 'bypassPermissions'],
       ],
     };
@@ -95,12 +94,10 @@ describe('explicit preset selection', () => {
       runCli(['install', '--preset', preset, '--bundle', join(import.meta.dir, '..', '..'),
         '--skills-dir', skillsDir, '--no-claude-settings', '--yes'], { env: { HOME: home } });
       const { roles } = JSON.parse(readFileSync(join(skillsDir, 'axstack', 'roles.json'), 'utf8'));
-      for (const [id, provider, binding, effort, modeId] of seats) {
-        const role = roles.find((item) => item.id === id);
-        expect(role, `${preset}: ${id}`).toBeDefined();
-        expect([role.provider, role.modelClass ?? role.model, role.thinkingOptionId, role.modeId])
-          .toEqual([provider, binding, effort, modeId]);
-      }
+      const scout = roles.filter(({ id }) => /^axstack-explore-codebase(?:-|$)/.test(id));
+      expect(scout.map(({ id, provider, modelClass, model, thinkingOptionId, modeId }) =>
+        [id, provider, modelClass ?? model, thinkingOptionId, modeId,
+          ...(modelClass && model ? [model] : [])]), preset).toEqual(seats);
     }
   });
 

@@ -106,7 +106,8 @@ profiles/presets/claude-only.json
 ```
 
 Each has exactly `{ "version": 1, "roles": [...] }` and lists all role IDs
-in the same order. Installation writes `<skills-dir>/axstack/roles.json` as
+for that preset. The mixed Scout Terra seat replaces the Luna role ID used in
+the single-provider presets. Installation writes `<skills-dir>/axstack/roles.json` as
 `{ "version": 1, "preset": "<selected preset>", "roles": [...] }` and records
 its ownership hash like every other installed skill asset. There is no second
 role store and no T3 configuration merge.
@@ -293,13 +294,12 @@ The `mixed` and `claude-only` presets assign `axstack-auditor`,
 `axstack-research-requirements`, `axstack-research-code`, `axstack-research-web`,
 `axstack-explore-execution` to the Claude Sonnet class: high effort in mixed,
 medium in claude-only. The mixed auditor resolves the class without an exact pin.
-`axstack-explore-codebase` adopts Haiku 5.5 medium with
-`modelClass: haiku` and the exact `model: claude-haiku-5-5` pin.
-Activation requires that exact ID and medium effort in saved T3 capabilities;
-missing either holds this role without substitution, including Haiku 4.5.
-The `codex-only` assignments for these roles are unchanged.
-Scout adds `axstack-explore-codebase-luna` at Codex Luna xhigh in `mixed` and
-`codex-only`. Luna has an explicit null model in `claude-only`.
+In `mixed`, each Scout facet requires `axstack-explore-codebase` (Sonnet high)
+and `axstack-explore-codebase-terra` (Terra high), both class-resolved from
+saved T3 capabilities. `codex-only` keeps Sol high and
+`axstack-explore-codebase-luna` (Luna xhigh). `claude-only` keeps only the
+Haiku medium seat pinned to `claude-haiku-5-5`; its Luna role has an explicit
+null model. An unavailable or rejected required seat holds Scout without substitution.
 The `-sol` research-code and explore-execution pair seats use Terra high in
 `mixed` and Sol high in `codex-only`; the auditor pair stays Sol high in both.
 Their role IDs remain unchanged. `claude-only` records intentional absences.

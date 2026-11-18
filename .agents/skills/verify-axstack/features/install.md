@@ -30,6 +30,9 @@ reinstalls after validated null/stale legacy metadata, checking explicit-preset
 role selection and inert provenance preservation. It also exercises the real mixed
 bundle through its installed dispatch helper, verifying Terra high/full-access for
 the UI verifier and holds when its model or effort is missing.
+Preset-validation fixtures allow the mixed Scout Terra ID to replace Luna and
+reject other role-ID mismatches. Verify the written snapshot uses the actual
+preset IDs, not the comparison IDs.
 Prerequisites: Launch's offline shell and temporary HOME; explicit selected
 preset (default `mixed` below). The installer suite covers edited legacy-record retention, its kept-copy reason,
 and a subsequent forced uninstall. The installer provisions no external tools. No network clone, live HOME write or production authentication is allowed.
@@ -69,6 +72,7 @@ if (installed.version !== 1 || installed.preset !== process.env.PRESET ||
   throw Error("installed roles differ from selected preset");'
 ROUTING_STATUS=0
 bun run test tests/installer/installed-preset-routing.test.js \
+  tests/installer/preset-bundle-validation.test.js tests/installer/preset-selection.test.js \
   > "$EVIDENCE/install-routing.log" 2>&1 || ROUTING_STATUS=$?
 printf '%s\n' "$ROUTING_STATUS" > "$EVIDENCE/install-routing-exit.txt"
 test "$ROUTING_STATUS" -eq 0

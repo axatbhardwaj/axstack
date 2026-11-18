@@ -57,6 +57,24 @@ describe('preset bundle validation', () => {
     expect(Object.keys(validated.presets).sort()).toEqual(['codex-only', 'mixed']);
   });
 
+  test('accepts only the mixed Scout Terra counterpart to the Luna seat', async () => {
+    const root = makeTempRoot('axstack-scout-preset-bundle-');
+    const luna = profile('axstack-explore-codebase-luna');
+    const terra = { ...profile('axstack-explore-codebase-terra'), model: 'gpt-6.1-terra', thinkingOptionId: 'high' };
+    const bundle = writeFixtureBundle(root, { presets: { mixed: [terra], 'codex-only': [luna] } });
+    const validated = await validateBundle(bundle, 'mixed');
+    expect(validated.bundleRoles).toEqual([terra]);
+
+    const mixedPath = join(bundle, 'profiles', 'presets', 'mixed.json');
+    writeFileSync(mixedPath, JSON.stringify({ version: 1, roles: [terra, luna] }));
+    await expect(validateBundle(bundle, 'mixed')).rejects.toThrow(/identical.*id/i);
+
+    const codexPath = join(bundle, 'profiles', 'presets', 'codex-only.json');
+    writeFileSync(mixedPath, JSON.stringify({ version: 1, roles: [luna] }));
+    writeFileSync(codexPath, JSON.stringify({ version: 1, roles: [terra] }));
+    await expect(validateBundle(bundle, 'mixed')).rejects.toThrow(/identical.*id/i);
+  });
+
   test('rejects malformed, misnamed, empty, and non-file preset payloads', async () => {
     const cases = [
       ['malformed JSON', (path) => writeFileSync(path, '{ nope'), /valid JSON/i],

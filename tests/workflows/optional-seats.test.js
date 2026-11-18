@@ -112,19 +112,21 @@ for (const path of ['skills/axstack/references/role-roster.md',
 
 test('Scout roster keeps the required seats per facet in each preset', () => {
   const roster = readFileSync(`${root}/skills/axstack/references/role-roster.md`, 'utf8');
-  const bullet = roster.split(/\n(?=- )/).find((part) => part.includes('`axstack-explore-codebase-luna`'));
-  expect(bullet).toBeDefined();
-  const text = sentences(bullet).join('. ');
+  const text = sentences(roster).join('. ');
   const direction = /\b(?:requires|must)\b/i;
-  const paired = [/Scout/i, /`axstack-explore-codebase`/, /`axstack-explore-codebase-luna`/,
-    /per facet|each facet/i, /mixed/i, /codex-only/i, direction];
-  checkRule(text, (source) => requires(source, ...paired),
-    'For Scout, mixed and codex-only must use `axstack-explore-codebase` and `axstack-explore-codebase-luna` for each facet.',
-    [[direction, 'may']], paired);
-  const claude = [/claude-only/i, /Haiku medium/i, /base seat/i, /per facet|each facet/i, direction];
-  checkRule(text, (source) => requires(source, ...claude),
-    'In claude-only, the Haiku medium base seat must be used for each facet.',
-    [[direction, 'may']], claude);
+  const base = [/Scout/i, /`axstack-explore-codebase`/, /per facet|each facet/i, direction];
+  const rows = [
+    [[/mixed/i, /Sonnet high/i, /Terra high/i, /`axstack-explore-codebase-terra`/],
+      'Mixed Scout must use `axstack-explore-codebase` (Sonnet high) and `axstack-explore-codebase-terra` (Terra high) for each facet.'],
+    [[/codex-only/i, /Sol high/i, /Luna xhigh/i, /`axstack-explore-codebase-luna`/],
+      'Codex-only Scout must use `axstack-explore-codebase` (Sol high) and `axstack-explore-codebase-luna` (Luna xhigh) per facet.'],
+    [[/claude-only/i, /Haiku (?:5\.5 )?medium/i],
+      'Claude-only Scout must use the Haiku medium `axstack-explore-codebase` seat for each facet.'],
+  ];
+  for (const [row, rewording] of rows) {
+    const concepts = [...base, ...row];
+    checkRule(text, (source) => requires(source, ...concepts), rewording, [[direction, 'may']], concepts);
+  }
 });
 
 test('shared rules qualify only optional seats and preserve required holds', () => {
