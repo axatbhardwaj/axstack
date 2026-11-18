@@ -24,7 +24,7 @@ for (const used of [70, 70.01, 100]) test(`unknown reset preserves Codex usage/r
   f.usage[0].accounts[1].usageLimits.windows.forEach((w) => { w.usedPercent = used; w.resetsAt = null; });
   const r = decide(f.settings, f.usage, f.catalogs, f.now);
   if (used === 100) expect(r.action).toBe('held');
-  else expect(r.selection.model).toBe(used === 70 ? 'gpt-6-astra' : 'gpt-6.1-sol');
+  else expect(r.selection.model).toBe(used === 70 ? 'gpt-6.2-astra' : 'gpt-6.2-sol');
 });
 
 for (const reset of [null, undefined]) for (const used of [0, 40, 100]) test(`unknown scoped Opus reset ${reset} keeps ${used}% usage`, () => {
