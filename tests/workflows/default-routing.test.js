@@ -7,27 +7,27 @@ test('underused Codex becomes the new-chat default without changing any other se
   const before = JSON.stringify(f.settings);
   const result = decide(f.settings, f.usage, f.catalogs, f.now);
   expect(result.action).toBe('update');
-  expect(result.selection).toEqual(selection('code', 'gpt-6-astra', 'medium'));
+  expect(result.selection).toEqual(selection('code', 'gpt-6.2-astra', 'medium'));
   expect(JSON.stringify(f.settings)).toBe(before);
   expect(result.projectOverrides).toEqual(['project']);
   expect(result.projectOverrideCoverage).toMatch(/legacy project records not inspected/);
 });
 
 for (const [opus, astra, model] of [
-  [29.99, 29.99, 'gpt-6.1-sol'], [29.99, 30, 'gpt-6-astra'],
+  [29.99, 29.99, 'gpt-6.2-sol'], [29.99, 30, 'gpt-6.2-astra'],
   [30, 29.99, 'claude-opus-5-5'], [30, 30, 'claude-opus-5-5'], [80, 20, 'claude-opus-5-5'],
-  [20, 80, 'gpt-6-astra'], [70, 70, 'claude-opus-5-5'],
+  [20, 80, 'gpt-6.2-astra'], [70, 70, 'claude-opus-5-5'],
 ]) test(`reserve routing with Opus ${opus}% / Astra ${astra}% remaining`, () => {
   const f = fixture();
   // Current Sol must not bypass the primary-pool threshold through hysteresis.
-  f.settings.defaultModelSelection = selection('code', 'gpt-6.1-sol', 'xhigh');
+  f.settings.defaultModelSelection = selection('code', 'gpt-6.2-sol', 'xhigh');
   f.usage[0].accounts.forEach((a, i) => {
     a.usageLimits.windows.forEach((w) => { w.usedPercent = 100 - [opus, astra][i]; });
   });
   const r = decide(f.settings, f.usage, f.catalogs, f.now, { threads: [] });
-  expect(r.action).toBe(model === 'gpt-6.1-sol' ? 'unchanged' : 'update');
+  expect(r.action).toBe(model === 'gpt-6.2-sol' ? 'unchanged' : 'update');
   expect(r.selection).toEqual(selection(model.startsWith('gpt') ? 'code' : 'claude', model,
-    model === 'gpt-6.1-sol' ? 'xhigh' : 'medium'));
+    model === 'gpt-6.2-sol' ? 'xhigh' : 'medium'));
 });
 
 test('pool mean includes exhausted accounts; one exhausted account does not exhaust the pool', () => {
@@ -80,7 +80,7 @@ test('fully exhausted pools hold, while available Opus can serve an exhausted Co
 
 test('reset timing ranks underused capacity and tiny movement does not churn', () => {
   const f = fixture();
-  f.settings.defaultModelSelection = selection('code', 'gpt-6-astra', 'medium');
+  f.settings.defaultModelSelection = selection('code', 'gpt-6.2-astra', 'medium');
   f.usage[0].accounts.forEach((a) => { a.usageLimits.windows.forEach((w) => { w.usedPercent = 30; }); });
   const stable = decide(f.settings, f.usage, f.catalogs, f.now, { threads: [] });
   expect(stable.action).toBe('unchanged');
@@ -88,7 +88,7 @@ test('reset timing ranks underused capacity and tiny movement does not churn', (
     w.resetsAt = new Date(f.now + w.windowDurationMins * 60000 * 0.1).toISOString();
   });
   const r = decide(f.settings, f.usage, f.catalogs, f.now);
-  expect(r.selection.model).toBe('gpt-6-astra');
+  expect(r.selection.model).toBe('gpt-6.2-astra');
   f.settings.defaultModelSelection = r.selection;
   f.usage[0].accounts[1].usageLimits.windows[0].usedPercent += 0.01;
   expect(decide(f.settings, f.usage, f.catalogs, f.now).action).toBe('unchanged');
@@ -100,7 +100,7 @@ test('seven-day manual driver starts break similar pressure ties once counts imp
   const history = { threads: Array.from({ length: 5 }, (_, i) => ({ id: `${i}`, createdAt: new Date(f.now - 3600000).toISOString(),
     createdBy: 'user', creationSource: 'web', parentThreadId: null, modelSelection: f.settings.defaultModelSelection })) };
   const r = decide(f.settings, f.usage, f.catalogs, f.now, history);
-  expect(r.selection.model).toBe('gpt-6-astra');
+  expect(r.selection.model).toBe('gpt-6.2-astra');
   expect(r.fairness).toBe('seven-day manual driver starts');
 });
 
@@ -122,11 +122,42 @@ test('authoritative session n/a leaves weekly reserve and eligibility applicable
   expect(r.action).toBe('update');
   expect(r.pools.codex.sessionRemaining).toBeNull();
   expect(r.pools.codex.sessionStatus).toBe('n/a');
-  expect(r.selection.model).toBe('gpt-6-astra');
+  expect(r.selection.model).toBe('gpt-6.2-astra');
   u.windows[0].usedPercent = 76;
   f.usage[0].accounts[0].usageLimits.windows.forEach((w) => { w.usedPercent = 99; });
   r = decide(f.settings, f.usage, f.catalogs, f.now);
-  expect(r.selection.model).toBe('gpt-6.1-sol');
+  expect(r.selection.model).toBe('gpt-6.2-sol');
   u.windows = [];
   expect(decide(f.settings, f.usage, f.catalogs, f.now).action).toBe('held');
 });
+
+for (const missing of ['gpt-6.2-astra', 'gpt-6.2-sol', 'both']) {
+  test(`missing required 6.2 catalog model ${missing} holds even with older alternatives`, () => {
+    const f = fixture();
+    const codex = f.catalogs[1];
+    const older = codex.models.map((m, i) => ({ ...structuredClone(m),
+      slug: ['gpt-6-astra', 'gpt-6.1-sol'][i] }));
+    codex.models = [...codex.models.filter((m) => missing !== 'both' && m.slug !== missing), ...older];
+    const before = JSON.stringify(f.settings);
+    const r = decide(f.settings, f.usage, f.catalogs, f.now);
+    expect(r.action).toBe('held');
+    expect(r.reason).toBe('unverified codex model catalog');
+    expect(r.selection).toEqual(f.settings.defaultModelSelection);
+    expect(JSON.stringify(f.settings)).toBe(before);
+  });
+}
+
+for (const low of [false, true]) {
+  test(`mixed old/new catalog moves an old default to 6.2 with both pools low=${low}`, () => {
+    const f = fixture();
+    f.catalogs[1].models.unshift(...f.catalogs[1].models.map((m, i) => ({ ...structuredClone(m),
+      slug: ['gpt-6-astra', 'gpt-6.1-sol'][i] })));
+    f.settings.defaultModelSelection = selection('code', low ? 'gpt-6.1-sol' : 'gpt-6-astra', low ? 'xhigh' : 'medium');
+    if (low) f.usage[0].accounts.forEach((a) => {
+      a.usageLimits.windows.forEach((w) => { w.usedPercent = 80; });
+    });
+    const r = decide(f.settings, f.usage, f.catalogs, f.now);
+    expect(r.action).toBe('update');
+    expect(r.selection).toEqual(selection('code', low ? 'gpt-6.2-sol' : 'gpt-6.2-astra', low ? 'xhigh' : 'medium'));
+  });
+}
