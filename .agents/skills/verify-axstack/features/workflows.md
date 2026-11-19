@@ -1,5 +1,15 @@
 # Inspect workflow instruction contracts
 
+## Optional work-chat context in VOA
+
+After Launch and Doctor, run `bun run test tests/workflows/voa-native-tools.test.js
+tests/workflows/voa-boundaries.test.js tests/workflows/voa-cli.test.js`.
+Semantic probes cover explicitly requested, scoped read-only context through
+`axstack-work-chat`, chat-free routine and scheduled sweeps, local status and
+follow-ups, coverage gaps, and private-read, posting and recovery limits.
+The existing fixture CLI continues to consume saved observations. No live
+chat, scheduling or cross-host execution is part of this drive.
+
 ## Peer sandbox adoption
 
 After Launch and Doctor, run `bun run test tests/workflows/sandbox-adoption.test.js

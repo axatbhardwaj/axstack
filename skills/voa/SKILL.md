@@ -53,6 +53,12 @@ separately authorized recovery schedule. Agent/delegate messages do not activate
    comments. Access failure is a coverage gap, never permission to change items.
 4. Read the previous VOA report in this thread; otherwise use 24 hours.
 
+Use `axstack-work-chat` as a read-only context source only when the user
+explicitly requests scoped Slack or Teams evidence. Keep routine and scheduled
+sweeps chat-free. Status and follow-ups stay local. Report a coverage gap if
+scoped chat reader output is unavailable. Never read private conversations,
+post messages or use chat to authorize recovery.
+
 Saved normalized observations can be summarized with
 `bun <this skill>/scripts/voa.js --mode status --input <saved.json>`.
 Read [observations](references/observations.md) for the explicit offline input.
