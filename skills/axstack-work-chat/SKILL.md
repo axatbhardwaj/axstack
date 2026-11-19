@@ -1,9 +1,12 @@
 ---
 name: axstack-work-chat
-description: Read and summarize an explicitly scoped Slack or Microsoft Teams conversation or supplied transcript on request.
+description: When asked to summarize a scoped Slack or Microsoft Teams source, use axstack-work-chat to read its transcript or exact message links.
 ---
 
 # Work chat
+
+For driver coordination, follow [Parallel-first ready work](../axstack/references/parallel-first.md#ready-work).
+Keep the scoped read in the current thread.
 
 Confirm the question, workspace or tenant, conversation or thread, and time
 window with timezone. A message permalink supplies the place and instant for
@@ -32,8 +35,8 @@ reader relative to the loaded skill. Resolve the installed script path, then
 run from the current harness using safely quoted arguments.
 
 ```sh
-bun /absolute/path/to/axstack-work-chat/scripts/read.js transcript '/absolute/transcript.jsonl' '2026-11-19T18:30:00+05:30' '2026-11-19T19:30:00+05:30'
-bun /absolute/path/to/axstack-work-chat/scripts/read.js message '<approved message permalink>'
+bun --no-env-file /absolute/path/to/axstack-work-chat/scripts/read.js transcript '/absolute/transcript.jsonl' '2026-11-19T18:30:00+05:30' '2026-11-19T19:30:00+05:30'
+bun --no-env-file /absolute/path/to/axstack-work-chat/scripts/read.js message '<approved message permalink>'
 ```
 
 The live path runs only as the dedicated non-root account on iosatellite. It
