@@ -23,6 +23,12 @@ Ownership transfer requires AXSTACK-ACCEPT and one idempotent proceed under
 the fleet-dispatch contract. Execution
 and hand-off procedures remain in the installed runtime/fleet references. The
 real install/check/uninstall case has a 60-second timeout for slower CI hosts.
+The work-chat fixture installs both global instruction files in temporary homes.
+It checks that explicit new scoped Slack and Teams reads and supplied transcripts
+route to iosatellite through the existing intake rules and use `axstack-work-chat`.
+Repeat install is idempotent, uninstall restores the original profile bytes, and
+fixture settings retain their bytes. The test proves the installed instructions
+and ownership behavior. Live routing and chat access need separate verification.
 Codex instruction migration uses a fixed legacy block so current prose changes
 cannot silently turn its upgrade fixture into an unchanged installation.
 Installed-routing keeper: `tests/installer/installed-preset-routing.test.js`
