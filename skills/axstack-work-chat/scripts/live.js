@@ -1,15 +1,6 @@
 import { accessSync, chmodSync, constants, lstatSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { readViaPlaywright } from './mcp.js';
 
-const account = '/home/xzat';
-const root = account + '/.local/share/axstack-work-chat';
-const profile = root + '/profile';
-const config = root + '/client/opencode.json';
-const playwright = root + '/tools/node_modules/.bin/playwright-mcp';
-const nodeBin = account + '/.local/share/mise/installs/node/latest/bin';
-const expectedCommand = [playwright, '--executable-path', '/usr/bin/chromium',
-  '--user-data-dir', profile, '--sandbox', '--headless'];
-
 function privatePath(path, uid, mode, directory) {
   const info = lstatSync(path);
   return info.uid === uid && (info.mode & 0o7777) === mode &&
@@ -19,10 +10,24 @@ function privatePath(path, uid, mode, directory) {
 export async function readLiveMessage(scope, maxLength) {
   const uid = process.getuid?.();
   let command;
+  let profile;
+  let nodeBin;
   try {
     const host = (await Bun.file('/proc/sys/kernel/hostname').text()).trim();
-    if (!uid || host !== 'iosatellite' || Bun.env.HOME !== account ||
-        lstatSync(account).uid !== uid || !privatePath(root, uid, 0o700, true) ||
+    if (!uid || host !== 'iosatellite') throw new Error();
+    const operator = (await Bun.file('/etc/passwd').text()).split('\n')
+      .find((record) => record.startsWith('xzat:'))?.split(':');
+    const account = operator?.[5];
+    if (!account?.startsWith('/') || Number(operator[2]) !== uid || Bun.env.HOME !== account ||
+        lstatSync(account).uid !== uid) throw new Error();
+    const root = account + '/.local/share/axstack-work-chat';
+    profile = root + '/profile';
+    nodeBin = account + '/.local/share/mise/installs/node/latest/bin';
+    const config = root + '/client/opencode.json';
+    const playwright = root + '/tools/node_modules/.bin/playwright-mcp';
+    const expectedCommand = [playwright, '--executable-path', '/usr/bin/chromium',
+      '--user-data-dir', profile, '--sandbox', '--headless'];
+    if (!privatePath(root, uid, 0o700, true) ||
         !privatePath(profile, uid, 0o700, true) || !privatePath(config, uid, 0o600, false)) throw new Error();
     // Read only the existing local command field. Never copy or expose the config.
     ({ command } = (await Bun.file(config).json()).mcp.servers.work_chat);
