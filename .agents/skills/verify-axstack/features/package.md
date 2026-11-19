@@ -65,7 +65,9 @@ for MEMBER in skills/axstack-align/SKILL.md \
   skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md \
   skills/axstack-explain/references/frontend-design/LICENSE.txt \
   skills/axstack-explain/references/frontend-design/PROVENANCE.md \
-  skills/axstack-watch/references/repair-publication.md; do
+  skills/axstack-watch/references/repair-publication.md \
+  skills/axstack-work-chat/SKILL.md skills/axstack-work-chat/scripts/read.js \
+  skills/axstack-work-chat/scripts/live.js skills/axstack-work-chat/scripts/mcp.js; do
   grep -Fq " $MEMBER" "$EVIDENCE/pack.log"
 done
 if grep -Eq '\.agents/|\.claude/|verify-axstack/' "$EVIDENCE/pack.log"; then
@@ -95,6 +97,12 @@ These checks prove packaged instruction contracts, not live publication.
 `package.test.js` also proves Publish's packed bytes, owned installation,
 repeat install and uninstall under all three presets.
 Gotcha: `--dry-run` proves a file selection, not a successful registry publish.
+
+Work chat verification uses `tests/installer/work-chat.test.js` for synthetic
+transcript invocation under both harness install roots and
+`tests/workflows/work-chat-reader.test.js` for the private stdio transport,
+exact Slack and Teams scopes, and refusal to read from other pages. Run both
+after Doctor. These fixtures use no real browser, profile or chat workspace.
 
 ## Parallel-first package acceptance
 
