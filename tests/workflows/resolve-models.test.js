@@ -245,15 +245,15 @@ test('mixed tracker checker resolves its configured Claude class at low effort',
     model: 'claude-sonnet-5-5', effortOption: { id: 'effort', value: 'low' } });
 });
 
-test('Rebound Sol preset seats resolve their exact model and effort from saved capabilities', () => {
+test('mixed Sol seats and the codex-only Terra reviewer resolve at high from saved capabilities', () => {
   const data = fresh();
   data.providers.find((provider) => provider.providerInstanceId === 'codex')
-    .models.push(entry('gpt-6.2-sol', 'reasoningEffort', ['medium', 'high', 'xhigh']));
-  for (const [preset, id, effort] of [
-    ['mixed', 'axstack-research-code-sol', 'high'],
-    ['mixed', 'axstack-explore-execution-sol', 'high'],
-    ['mixed', 'axstack-explainer-review', 'high'],
-    ['codex-only', 'axstack-reviewer-secondary', 'high'],
+    .models.push(entry('gpt-6.2-sol'), entry('gpt-6.1-terra'));
+  for (const [preset, id, model] of [
+    ['mixed', 'axstack-research-code-sol', 'gpt-6.2-sol'],
+    ['mixed', 'axstack-explore-execution-sol', 'gpt-6.2-sol'],
+    ['mixed', 'axstack-explainer-review', 'gpt-6.2-sol'],
+    ['codex-only', 'axstack-reviewer-secondary', 'gpt-6.1-terra'],
   ]) {
     const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
     const role = roles.find((role) => role.id === id);
@@ -261,7 +261,7 @@ test('Rebound Sol preset seats resolve their exact model and effort from saved c
     const result = resolve(data, args, role.provider, role.thinkingOptionId);
     expect(result.status, `${preset}: ${id}`).toBe(0);
     expect(JSON.parse(result.output)).toMatchObject({ provider: 'codex', providerInstanceId: 'codex',
-      model: 'gpt-6.2-sol', effortOption: { id: 'reasoningEffort', value: effort } });
+      model, effortOption: { id: 'reasoningEffort', value: 'high' } });
   }
 });
 
