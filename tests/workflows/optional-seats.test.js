@@ -116,8 +116,8 @@ test('Scout roster keeps the required seats per facet in each preset', () => {
   const direction = /\b(?:requires|must)\b/i;
   const base = [/Scout/i, /`axstack-explore-codebase`/, /per facet|each facet/i, direction];
   const rows = [
-    [[/mixed/i, /Sonnet high/i, /Terra high/i, /`axstack-explore-codebase-terra`/],
-      'Mixed Scout must use `axstack-explore-codebase` (Sonnet high) and `axstack-explore-codebase-terra` (Terra high) for each facet.'],
+    [[/mixed/i, /Sonnet high/i, /Sol high/i, /`axstack-explore-codebase-terra`/],
+      'Mixed Scout must use `axstack-explore-codebase` (Sonnet high) and `axstack-explore-codebase-terra` (Sol high) for each facet.'],
     [[/codex-only/i, /Sol high/i, /Luna xhigh/i, /`axstack-explore-codebase-luna`/],
       'Codex-only Scout must use `axstack-explore-codebase` (Sol high) and `axstack-explore-codebase-luna` (Luna xhigh) per facet.'],
     [[/claude-only/i, /Haiku (?:5\.5 )?medium/i],
