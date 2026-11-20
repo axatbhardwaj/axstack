@@ -215,7 +215,7 @@ Peer roles use the stable IDs `axstack-reviewer-primary` and
 `axstack-reviewer-peer`; their provider/class mappings come only from the
 selected preset and the ordered reviewer table above. The mixed peer coordinator and review-lane binding
 `axstack-owner` uses Sol high and never reviews. `axstack-reviewer-secondary`
-uses Sol high for Sol-authored candidates in `codex-only`. It is used
+uses Terra high for Sol-authored candidates in `codex-only`. It is used
 in the authored mapping and, alongside `axstack-reviewer-primary`,
 in codebase findings mode.
 
