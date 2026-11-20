@@ -78,5 +78,5 @@ export async function readLiveMessage(scope, maxLength) {
   } finally {
     if (privatePath(scratch, uid, 0o700, true)) rmSync(scratch, { recursive: true });
   }
-  throw new Error('The exact message could not be verified. Supply a scoped transcript.');
+  throw new Error('The scoped chat source could not be verified. Supply a scoped transcript.');
 }
