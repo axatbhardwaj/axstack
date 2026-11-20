@@ -47,7 +47,7 @@ Preserve this phase's independent source/fact and exact-byte review requirements
    The code pair is `axstack-research-code` +
    `axstack-research-code-sol`.
    In mixed the web pair is `axstack-research-web` +
-   `axstack-research-web-sol` (Terra high);
+   `axstack-research-web-sol` (Sol high);
    the execution pair is `axstack-explore-execution` +
    `axstack-explore-execution-sol`. Requirements, code, and web use Sonnet high
    in mixed, Sonnet medium in claude-only, and Codex in codex-only; X uses Grok.
@@ -65,14 +65,14 @@ Preserve this phase's independent source/fact and exact-byte review requirements
 
    - `axstack-research-requirements`: requirements and intent.
    - `axstack-research-code`: code behavior.
-   - `axstack-research-code-sol`: independent code investigation (Terra high in mixed, Sol high in codex-only).
+   - `axstack-research-code-sol`: independent code investigation (Sol high in mixed and codex-only).
    - `axstack-research-web`: web and external sources.
-   - `axstack-research-web-sol`: independent Terra high web reader in mixed; intentionally absent in both single-provider presets.
+   - `axstack-research-web-sol`: independent Sol high web reader in mixed; intentionally absent in both single-provider presets.
    - `axstack-research-x`: X (Twitter) posts and threads via Grok; cite post URLs and dates.
    - For broad codebase mapping, use `axstack-scout`.
      Never dispatch `axstack-explore-codebase` directly for broad mapping.
    - `axstack-explore-execution`: execution and runtime traces.
-   - `axstack-explore-execution-sol`: independent execution investigation (Terra high in mixed, Sol high in codex-only).
+   - `axstack-explore-execution-sol`: independent execution investigation (Sol high in mixed and codex-only).
 
    When dispatching `axstack-research-web`, `axstack-research-code` or `axstack-explore-execution`,
    dispatch its `-sol` pair independently on the same bounded brief without
