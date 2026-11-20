@@ -71,7 +71,7 @@ const expected = {
     c('astra', 'high'),
     c(null, 'xhigh'),
     c('sol', 'high'), c('sol', 'high'),
-    c('sol', 'high'), c('sol', 'high'), c('luna', 'xhigh'),
+    c('sol', 'high'), c('terra', 'high'), c('luna', 'xhigh'),
     c('sol', 'high'),
     c('luna', 'low'), c('astra', 'medium'),
     c('sol', 'high'), c('sol', 'high'), c('sol', 'low'), c(null, 'high'),
