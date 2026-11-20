@@ -3,9 +3,11 @@ import { lstatSync } from 'node:fs';
 import { readLiveMessage } from './live.js';
 
 const usage = `Usage: bun read.js message <permalink>
+       bun read.js thread <permalink> <from> <until>
        bun read.js transcript <absolute JSONL file> <from> <until>
 
-Transcript windows are inclusive at the start and exclusive at the end.
+Windows are inclusive at the start and exclusive at the end.
+Threads include only visible rows in the pane containing the exact parent.
 A live read uses the dedicated iosatellite Chromium profile and may mark a message read.
 It starts one local stdio server and Chromium, updates the dedicated profile,
 and creates, then removes, a private scratch directory for transient browser state.
@@ -58,15 +60,35 @@ export function parsePermalink(input) {
     !['tenantId', 'groupId', 'parentMessageId', 'teamName', 'channelName', 'createdTime'].includes(key))) return null;
   if (url.searchParams.has('groupId') && !tenant.test(url.searchParams.get('groupId'))) return null;
   if (url.searchParams.has('parentMessageId') && !/^\d{13}$/.test(url.searchParams.get('parentMessageId'))) return null;
+  const thread = url.searchParams.get('parentMessageId') ?? messageId;
   for (const key of ['teamName', 'channelName', 'createdTime']) url.searchParams.delete(key);
   return {
     url: url.href,
     service: 'teams',
     conversation,
     messageId,
+    thread,
     timestamp: new Date(Number(messageId)).toISOString(),
     selector: `[id="message-body-${messageId}"]`,
   };
+}
+
+function readThreadScope(scope, from, until) {
+  const start = parseTime(from);
+  const end = parseTime(until);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start >= end) {
+    throw new Error('Supply an increasing RFC 3339 window with offsets for the thread.');
+  }
+  const url = new URL(scope.url);
+  if (scope.service === 'slack') {
+    url.pathname = `/archives/${scope.conversation}/p${scope.thread.replace('.', '')}`;
+    url.searchParams.set('thread_ts', scope.thread);
+    url.searchParams.set('cid', scope.conversation);
+  } else {
+    url.pathname = url.pathname.replace(/\d{13}$/, scope.thread);
+    url.searchParams.set('parentMessageId', scope.thread);
+  }
+  return { ...parsePermalink(url.href), window: { start, end } };
 }
 
 async function readTranscript(path, from, until) {
@@ -109,7 +131,8 @@ if (import.meta.main) {
     if (mode === '--help' && source === undefined) console.log(usage);
     else if (mode === 'transcript' && until !== undefined && !extra.length) {
       console.log(JSON.stringify(await readTranscript(source, from, until)));
-    } else if (mode === 'message' && source !== undefined && from === undefined) {
+    } else if (source !== undefined && ((mode === 'message' && from === undefined) ||
+      (mode === 'thread' && until !== undefined && !extra.length))) {
       let scope;
       try {
         scope = parsePermalink(source);
@@ -117,8 +140,19 @@ if (import.meta.main) {
         // Malformed percent escapes also fail the same scope check.
       }
       if (!scope) throw new Error('Supply one supported Slack or Teams message permalink.');
-      const message = await readLiveMessage(scope, maxExcerptLength);
-      console.log(JSON.stringify({ source: scope.url, timestamp: scope.timestamp, ...message }));
+      if (mode === 'thread') {
+        const thread = readThreadScope(scope, from, until);
+        const result = await readLiveMessage(thread, maxExcerptLength);
+        console.log(JSON.stringify({
+          source: thread.url,
+          from: new Date(thread.window.start).toISOString(),
+          until: new Date(thread.window.end).toISOString(),
+          ...result,
+        }));
+      } else {
+        const message = await readLiveMessage(scope, maxExcerptLength);
+        console.log(JSON.stringify({ source: scope.url, timestamp: scope.timestamp, ...message }));
+      }
     } else throw new Error(usage);
   } catch (error) {
     console.error(error.message);
