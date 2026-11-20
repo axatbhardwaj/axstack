@@ -82,7 +82,7 @@ test('review modes: authored routing enumerates only the accepted preset mapping
   const routes = [
     ['mixed', 'codex/sol', 'axstack-reviewer-secondary', 'claude/opus', 'high'],
     ['mixed', 'claude/opus', 'axstack-reviewer-primary', 'codex/sol', 'high'],
-    ['codex-only', 'codex/sol', 'axstack-reviewer-secondary', 'codex/terra', 'high'],
+    ['codex-only', 'codex/sol', 'axstack-reviewer-secondary', 'codex/sol', 'high'],
     ['claude-only', 'claude/opus', 'axstack-reviewer-secondary', 'claude/sonnet', 'medium'],
   ];
   for (const path of ['skills/axstack-review/SKILL.md', 'skills/axstack/references/role-roster.md', 'skills/axstack-audit/SKILL.md']) {
@@ -95,8 +95,8 @@ test('review modes: authored routing enumerates only the accepted preset mapping
       const row = source.split('\n').filter(accepts).join('. ');
       checkRule(row, accepts,
         `For ${preset}, ${author} authors receive ${role} using ${reviewer} ${effort}.`,
-        [[new RegExp(reviewer), 'unavailable/model'],
-          [new RegExp(`${author}(.*?)${reviewer}`), `${reviewer}$1${author}`]], concepts);
+        [[new RegExp(`(${role}.*?)${reviewer}`), '$1unavailable/model'],
+          [new RegExp(`${author}(.*?${role})`), 'unsupported/author$1']], concepts);
     }
   }
   expect(review).toMatch(/recorded exact model ID[^.]*derive[^.]*class/i);
