@@ -4,7 +4,7 @@ import { join } from '../../src/posixpath.js';
 import { locateInstructionBlock, renderInstructionBlock } from '../../src/instructions.js';
 import { checkRule, requires, prohibits } from '../workflows/prose-contract.js';
 import { intakeFixture, NOW } from '../workflows/fleet-route-intake-fixture.js';
-import { makeTempRoot, runCli } from './helpers.js';
+import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 
 const routingRules = [
   [/before/i, /new.task intake/i, /first.*dispatch/i,
@@ -118,6 +118,46 @@ test('installed no-launch path requires local staffing before continuing', () =>
   const text = renderInstructionBlock().replaceAll('`', '').replace(/\s+/g, ' ');
   checkRule(text, (s) => prohibits(s, /no launch call/i, /stay local/i, /check staffing/i),
     'With no launch call, check staffing and stay local.', [[/stay local/i, 'launch remotely']], [/check staffing/i]);
+});
+
+test('both global instruction files route new scoped work-chat requests to iosatellite', () => {
+  const root = makeTempRoot('axstack-chat-routing-');
+  const bundle = writeFixtureBundle(root);
+  const cli = join(import.meta.dir, '../../bin/axstack.js');
+  const blocks = [];
+  for (const [harness, directory, filename] of [
+    ['codex', '.codex', 'AGENTS.md'], ['claude', '.claude', 'CLAUDE.md'],
+  ]) {
+    const home = join(root, harness);
+    const config = join(home, directory);
+    const instructions = join(config, filename);
+    const settings = join(home, '.claude/settings.json');
+    const personal = 'Account preferences.\r\n\r\nUse my existing defaults.';
+    const settingsBytes = '{ "env": { "PERSONAL_SETTING": "fixture" } }\n';
+    mkdirSync(config, { recursive: true });
+    mkdirSync(join(home, '.claude'), { recursive: true });
+    writeFileSync(instructions, personal);
+    writeFileSync(settings, settingsBytes);
+    const options = { env: { HOME: home, CODEX_HOME: join(home, '.codex') } };
+    const args = ['--harness', harness, '--no-claude-settings', '--yes'];
+    const install = ['install', '--preset', 'mixed', '--bundle', bundle, ...args];
+    runCli(cli, install, options);
+    const installed = readFileSync(instructions, 'utf8');
+    const block = locateInstructionBlock(installed).block;
+    expect(installed).toBe(`${personal}\n\n${block}`);
+    expect(runCli(cli, install, options).out).toContain('instruction unchanged:');
+    runCli(cli, ['uninstall', ...args], options);
+    expect(readFileSync(instructions, 'utf8')).toBe(personal);
+    expect(readFileSync(settings, 'utf8')).toBe(settingsBytes);
+    blocks.push(block);
+  }
+  expect(blocks[0]).toBe(blocks[1]);
+  const concepts = [/(?:new|fresh)\b/i, /\bintake\b/i, /explicit/i, /scoped?/i, /Slack/i, /Teams/i,
+    /reads?|read-only/i, /supplied transcripts?|transcripts? (?:the user )?supplies/i,
+    /rout\w*|hand.?off/i, /iosatellite/i, /axstack-work-chat/i, /(?:existing|same) (?:fleet |launch )?(?:routing |launch )?(?:rules|lifecycle)/i];
+  checkRule(blocks[0], (s) => requires(s, ...concepts),
+    'At intake, route explicit new scoped Slack and Teams reads and supplied transcripts to iosatellite via the existing fleet launch rules, using axstack-work-chat there.',
+    [[/route/i, 'never route'], [/iosatellite/i, 'iobox'], [/existing|same/i, 'separate']], concepts);
 });
 
 test('real install owns runnable pinned routing and uninstall preserves account policy', () => {

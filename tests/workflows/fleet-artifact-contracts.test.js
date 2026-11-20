@@ -36,6 +36,24 @@ const rules = [
       /no symlink escapes, ownership and exclusive writers/i, /unknown ownership holds/i],
     phrase: 'must independently\nverify', inverted: 'may skip verification of', equivalent: 'shall independently check' },
 ];
+const safeguards = [
+  { name: 'unknown attempt roots cannot become an empty inventory',
+    tests: [/reservedRoots/i, /pending and retained/i, /(?:never guess|do not assume) an empty inventory/i],
+    context: 'Record pending and retained attempts in reservedRoots.',
+    inverted: 'Assume an empty inventory if unknown.',
+    equivalent: 'Do not assume an empty inventory.' },
+  { name: 'receipt validation holds when requested isolation differs',
+    tests: [/artifactScope/i, /(?:^|[.!?]\s+)(?:verify|confirm) requested isolation is shared[.!?]/i,
+      /(?:^|[.!?]\s+)(?:hold|pause) otherwise[.!?]/i],
+    context: 'Bind the receipt to artifactScope.',
+    inverted: 'Do not verify requested isolation is shared. Do not hold otherwise.',
+    equivalent: 'Confirm requested isolation is shared. Pause otherwise.' },
+  { name: 'missing Git history never licenses a fabricated revision',
+    tests: [/missing Git history/i, /(?:never fabricate|do not invent) a revision/i],
+    context: 'Report missing Git history.',
+    inverted: 'Fabricate a revision if history is unavailable.',
+    equivalent: 'Do not invent a revision.' },
+];
 function satisfies(source, predicates) {
   return source.split(/\n\s*\n/).some((p) => predicates.every((r) => r.test(p.replace(/\s+/g, ' '))));
 }
@@ -52,6 +70,14 @@ for (const rule of rules) test(`artifact semantic contract: ${rule.name}`, () =>
   expect(satisfies(paragraphs.join('\n\n'), rule.tests)).toBe(false);
   paragraphs[index] = original.replace(rule.phrase, rule.equivalent);
   expect(satisfies(paragraphs.join('\n\n'), rule.tests)).toBe(true);
+});
+
+// Keep the mutation samples independent of the current wording in the guide.
+for (const { name, tests, context, inverted, equivalent } of safeguards) test(`artifact semantic contract: ${name}`, () => {
+  expect(satisfies(contract(), tests)).toBe(true);
+  expect(satisfies(context, tests)).toBe(false);
+  expect(satisfies(`${context} ${inverted}`, tests)).toBe(false);
+  expect(satisfies(`${context} ${equivalent}`, tests)).toBe(true);
 });
 
 test('dispatch/schema/lifecycle/role/review and all article callers join the same artifact boundary', () => {

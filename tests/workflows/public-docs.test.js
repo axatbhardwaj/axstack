@@ -23,6 +23,31 @@ test('public documentation relative links and heading anchors resolve', () => {
   expect(docLinkIssues(root)).toEqual([]);
 });
 
+test('maintainer verification runs both CI gates and holds either failure', () => {
+  const recipe = readFileSync(`${root}/.agents/skills/verify-axstack/SKILL.md`, 'utf8');
+  const block = recipe.match(/### CI lint and typecheck\n[\s\S]*?```bash\n([\s\S]*?)```/)?.[1] ?? '';
+  fixture((dir, put) => {
+    put('node_modules/.bin/biome', '');
+    chmodSync(`${dir}/node_modules/.bin/biome`, 0o700);
+    put('node_modules/typescript/bin/tsc', '');
+    put('bin/bun', '#!/bin/sh\ncase "$*" in\n"run lint") echo lint; exit "$LINT_EXIT";;\n' +
+      '"run typecheck") echo typecheck; exit "$TYPECHECK_EXIT";;\n*) exit 97;;\nesac\n');
+    chmodSync(`${dir}/bin/bun`, 0o700);
+    for (const [lint, typecheck] of [[0, 0], [5, 0], [0, 6]]) {
+      put('ci-lint.log', '');
+      put('ci-typecheck.log', '');
+      const result = Bun.spawnSync(['/bin/bash', '-e', '-c', `doctor() { :; }\n${block}`], {
+        cwd: dir, stdout: 'pipe', stderr: 'pipe',
+        env: { PATH: `${dir}/bin:/usr/bin:/bin`, REPO: dir, EVIDENCE: dir,
+          LINT_EXIT: String(lint), TYPECHECK_EXIT: String(typecheck) },
+      });
+      expect(result.exitCode).toBe(lint || typecheck ? 1 : 0);
+      expect(readFileSync(`${dir}/ci-lint.log`, 'utf8')).toBe('lint\n');
+      expect(readFileSync(`${dir}/ci-typecheck.log`, 'utf8')).toBe('typecheck\n');
+    }
+  });
+});
+
 test('public doc discovery includes new pages and excludes historical baselines', () => {
   fixture((dir, put) => {
     put('README.md', '# Start');
@@ -135,7 +160,9 @@ test('package recipe requires every entry point and both current publication ref
     'skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md',
     'skills/axstack-explain/references/frontend-design/LICENSE.txt',
     'skills/axstack-explain/references/frontend-design/PROVENANCE.md',
-    'skills/axstack-watch/references/repair-publication.md'];
+    'skills/axstack-watch/references/repair-publication.md', 'skills/axstack-work-chat/SKILL.md',
+    'skills/axstack-work-chat/scripts/read.js', 'skills/axstack-work-chat/scripts/live.js',
+    'skills/axstack-work-chat/scripts/mcp.js'];
   fixture((dir, put) => {
     // The automated recipe boundary needs only Linux/POSIX shell tools.
     put('bin/rg', '#!/bin/sh\nexit 73\n');

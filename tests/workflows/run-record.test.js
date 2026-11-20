@@ -140,6 +140,9 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
   const skillScripts = filesBelow(`${root}/skills`).filter((path) => path.includes('/scripts/')
     && !isVendored(path.slice(root.length + 1))).sort();
   expect(skillScripts).toEqual([
+    `${root}/skills/axstack-work-chat/scripts/live.js`,
+    `${root}/skills/axstack-work-chat/scripts/mcp.js`,
+    `${root}/skills/axstack-work-chat/scripts/read.js`,
     `${root}/skills/axstack/scripts/archive-evidence.js`,
     `${root}/skills/axstack/scripts/capture-identity.js`,
     `${root}/skills/axstack/scripts/check-run.js`, // Includes read-only R5 plan/trace; no new helper.
@@ -196,7 +199,7 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
 
 test('descriptions: every shipped skill is one-line, intent-first, and named', () => {
   const skillFiles = filesBelow(`${root}/skills`).filter((path) => path.endsWith('/SKILL.md'));
-  expect(skillFiles).toHaveLength(20);
+  expect(skillFiles).toHaveLength(21);
   for (const path of skillFiles) {
     const lines = readFileSync(path, 'utf8').split('\n');
     const descriptions = lines.filter((line) => line.startsWith('description:'));

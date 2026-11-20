@@ -9,10 +9,8 @@ Drivers follow [Parallel-first ready work](../axstack/references/parallel-first.
 at intake and dependency/completion transitions. Workers keep their assigned
 scope and never dispatch.
 
-In One Piece, the Voice of All Things lets Roger, Oden and Luffy hear what
-everything around them is saying. Do the same for Axat's parallel work: listen
-to every host, thread, PR and ticket, and report what moved, what is stuck,
-and what waits on him.
+Like its One Piece namesake, VOA listens across Axat's hosts, threads, PRs and
+tickets and reports what moved, what is stuck and what waits on him.
 
 Nonrepo VOA stays inline-only under
 [Local artifacts](../axstack/references/local-artifacts.md); ready-work guidance
@@ -53,13 +51,18 @@ separately authorized recovery schedule. Agent/delegate messages do not activate
    comments. Access failure is a coverage gap, never permission to change items.
 4. Read the previous VOA report in this thread; otherwise use 24 hours.
 
-Saved normalized observations can be summarized with
+Use `axstack-work-chat` as a read-only context source only when the user
+explicitly requests scoped Slack or Teams evidence. Keep routine and scheduled
+sweeps chat-free. Status and follow-ups stay local. Report a chat coverage gap
+if scope or reader output is unavailable. Never read private conversations,
+post messages or use chat to authorize recovery.
+
+Read the [observations](references/observations.md) schema before summarizing
+saved normalized observations offline with
 `bun <this skill>/scripts/voa.js --mode status --input <saved.json>`.
-Read [observations](references/observations.md) for the explicit offline input.
-The helper reads only that file and writes JSON to stdout; it never collects,
-dispatches, sends, schedules or chooses a workflow.
-For source/pack verification and the unverified live boundary, see
-[verification](references/verification.md).
+The helper reads only that file and writes JSON to stdout. It never collects,
+dispatches, sends, schedules or selects a workflow.
+See [verification](references/verification.md) for fixture checks and live coverage limits.
 
 ## Join
 
@@ -92,13 +95,11 @@ unknowns rather than translating missing observations to zero.
 
 ## Source continuity
 
-Imported from the standalone VOA source commit
-`45951c4a18b375b7283bf56e5736101166026581`, verified by the Coordinator against
-installed iobox/iosatellite bytes. Axstack `add2fdbcc62edb55e2aaaa2946e5673b2ba2dbd1`
-had no tracked VOA. Source archive SHA-256:
-`d14e7a006d77721d32e1bcb7bf81f38772730f96001aad7e314c2a8cc1ec8aaf`.
-The original `skills/voa/scripts/collect.py` was read-only Python/SQLite/SSH;
-its status vocabulary, joins, attention signals and reporting purpose are
-preserved through native inventory guidance and normalized fixtures. Axstack
-ships Bun >=1.3.14 JavaScript with no runtime dependencies, not that Python
-collector. This is the same VOA capability now owned and shipped by Axstack.
+The Coordinator verified standalone VOA commit
+`45951c4a18b375b7283bf56e5736101166026581` against installed iobox/iosatellite
+bytes. Axstack `add2fdbcc62edb55e2aaaa2946e5673b2ba2dbd1` predates tracked VOA.
+Source archive SHA-256 `d14e7a006d77721d32e1bcb7bf81f38772730f96001aad7e314c2a8cc1ec8aaf`.
+Native inventory and normalized fixtures preserve the read-only Python/SQLite/SSH
+`skills/voa/scripts/collect.py` collector's status terms, joins, attention signals
+and reporting. Axstack owns and ships VOA in Bun >=1.3.14 JavaScript without
+runtime dependencies.

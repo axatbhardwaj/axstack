@@ -84,6 +84,29 @@ doctor() {
 doctor > "$EVIDENCE/doctor.log" 2>&1
 ```
 
+### CI lint and typecheck
+
+For maintainer verification, prepare an owned checkout at the candidate SHA
+with `bun install --frozen-lockfile` in a temporary HOME and private package
+cache. Save install output and verify the lockfile stays byte-identical. Use
+that prepared checkout for offline Launch. Run the CI commands before feature
+verification. If prepared dependencies are unavailable, hold this check and
+report the gap.
+
+```bash
+doctor > "$EVIDENCE/ci-static-doctor.log" 2>&1
+test -x "$REPO/node_modules/.bin/biome"
+test -f "$REPO/node_modules/typescript/bin/tsc"
+LINT_STATUS=0
+TYPECHECK_STATUS=0
+(cd "$REPO"; bun run lint) > "$EVIDENCE/ci-lint.log" 2>&1 || LINT_STATUS=$?
+(cd "$REPO"; bun run typecheck) > "$EVIDENCE/ci-typecheck.log" 2>&1 || TYPECHECK_STATUS=$?
+printf '%s\n' "$LINT_STATUS" > "$EVIDENCE/ci-lint-exit.txt"
+printf '%s\n' "$TYPECHECK_STATUS" > "$EVIDENCE/ci-typecheck-exit.txt"
+test "$LINT_STATUS" -eq 0
+test "$TYPECHECK_STATUS" -eq 0
+```
+
 ## Drive
 
 Execute all steps in each selected feature file, including its assertions:
