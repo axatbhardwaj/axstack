@@ -45,7 +45,7 @@ This section applies to peer and authored PR modes.
      | --- | --- | --- |
      | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |
      | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
-     | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/sol` high) |
+     | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` high) |
      | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` medium) |
 
      Separate diligence does not count as a reviewer receipt; eligible combined
@@ -54,8 +54,8 @@ This section applies to peer and authored PR modes.
      From the recorded exact model ID, derive its class and match provenance
      on provider/class; record effort, but never use effort to create a mapping.
      An ID with no class is `INCOMPLETE`. Any other author provenance for the
-     selected preset is unsupported and `INCOMPLETE`, including Astra, Luna,
-     and Fable. Report the exact provenance gap and
+     selected preset is unsupported and `INCOMPLETE`, including its secondary
+     reviewer model, Astra, Luna, or Fable. Report the exact provenance gap and
      ask the user. Never derive a reverse pairing from slot position. The
      reviewer covers the complete brief alone. No package, integration, repair
      contributor or owner session may review the joined candidate, even if its
