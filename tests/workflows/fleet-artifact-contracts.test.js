@@ -35,6 +35,19 @@ const rules = [
     tests: [/helper checks lexical paths and overlaps/i, /driver (?:must independently verify|shall independently check) real paths/i,
       /no symlink escapes, ownership and exclusive writers/i, /unknown ownership holds/i],
     phrase: 'must independently\nverify', inverted: 'may skip verification of', equivalent: 'shall independently check' },
+  { name: 'unknown attempt roots cannot become an empty inventory',
+    tests: [/reservedRoots/i, /pending and retained/i, /(?:never guess|do not assume) an empty inventory/i],
+    phrase: 'Never guess an empty inventory', inverted: 'Assume an empty inventory if unknown',
+    equivalent: 'Do not assume an empty inventory' },
+  { name: 'receipt validation holds when requested isolation differs',
+    tests: [/artifactScope/i, /(?:verify|confirm) requested isolation is shared/i, /(?:hold|pause) otherwise/i],
+    phrase: 'Verify requested isolation is shared. Hold otherwise',
+    inverted: 'Accept any requested isolation. Continue otherwise',
+    equivalent: 'Confirm requested isolation is shared. Pause otherwise' },
+  { name: 'missing Git history never licenses a fabricated revision',
+    tests: [/missing Git history/i, /(?:never fabricate|do not invent) a revision/i],
+    phrase: 'Never fabricate a revision', inverted: 'Fabricate a revision',
+    equivalent: 'Do not invent a revision' },
 ];
 function satisfies(source, predicates) {
   return source.split(/\n\s*\n/).some((p) => predicates.every((r) => r.test(p.replace(/\s+/g, ' '))));
