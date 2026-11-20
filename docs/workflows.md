@@ -32,7 +32,12 @@ Direct routes need no spec ceremony:
   Debug, Improve, or Implement through the shared performance loop.
 - `axstack-research` answers one bounded source-backed question.
 - [axstack-work-chat](../skills/axstack-work-chat/SKILL.md) reads a supplied
-  transcript or exact authorized Slack or Teams message links on request.
+  transcript or an authorized Slack or Teams thread or message on request.
+  An explicit time window limits thread reads to visible rows with a verified
+  parent. Live reads use iosatellite's dedicated sandboxed Chromium profile
+  and the existing stdio command from the account's work-chat client configuration.
+  Claude and Codex invoke the same Bun reader without OpenCode or a browser
+  MCP registration in either harness.
 - `axstack-scout` gathers cited codebase evidence for broad or unfamiliar
   questions using independent, read-only seats.
 - `axstack-correct` reports repeated mistakes and proposes stronger checks.
