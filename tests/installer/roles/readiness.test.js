@@ -38,7 +38,7 @@ test('single-provider readiness accepts only the intentionally unavailable advis
     { ...role('axstack-advisor-claude', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
+    { ...role('axstack-reviewer-secondary', 'gpt-6.2-sol'), thinkingOptionId: 'high' },
   ];
 
   expect(assessRoleReadiness(roles, 'codex-only')).toEqual({ ready: true, gaps: [] });
@@ -65,13 +65,13 @@ test('authored pairing accepts all four class routes and newer exact author IDs'
   for (const [preset, author, primary, secondary] of [
     ['mixed', ['codex', 'sol', 'gpt-5.6-sol'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
     ['mixed', ['claude', 'opus', 'claude-opus-5-6'], ['codex', 'sol', 'high'], ['claude', 'opus', 'high']],
-    ['codex-only', ['codex', 'sol', 'gpt-6.1-sol'], ['codex', 'sol', 'high'], ['codex', 'terra', 'high']],
+    ['codex-only', ['codex', 'sol', 'gpt-6.1-sol'], ['codex', 'sol', 'high', 'gpt-6-sol'], ['codex', 'sol', 'high', 'gpt-6.2-sol']],
     ['claude-only', ['claude', 'opus', 'claude-opus-5-6'], ['claude', 'opus', 'medium'], ['claude', 'sonnet', 'medium']],
   ]) {
     const rows = [
       { ...role('axstack-author', author[2]), provider: author[0] },
-      { id: 'axstack-reviewer-primary', name: 'Primary', provider: primary[0], modelClass: primary[1], thinkingOptionId: primary[2] },
-      { id: 'axstack-reviewer-secondary', name: 'Secondary', provider: secondary[0], modelClass: secondary[1], thinkingOptionId: secondary[2] },
+      { id: 'axstack-reviewer-primary', name: 'Primary', provider: primary[0], modelClass: primary[1], thinkingOptionId: primary[2], model: primary[3] ?? null },
+      { id: 'axstack-reviewer-secondary', name: 'Secondary', provider: secondary[0], modelClass: secondary[1], thinkingOptionId: secondary[2], model: secondary[3] ?? null },
     ];
     expect(assessRoleReadiness(rows, preset), `${preset}: ${author[2]}`).toEqual({ ready: true, gaps: [] });
     rows[0] = { ...rows[0], modelClass: author[1] };
@@ -207,7 +207,7 @@ test('arena judge seats follow the adviser absence rule per provider preset', ()
     { ...role('axstack-advisor-claude', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
+    { ...role('axstack-reviewer-secondary', 'gpt-6.2-sol'), thinkingOptionId: 'high' },
     { ...role('axstack-arena-judge-astra', 'gpt-6-astra'), thinkingOptionId: 'xhigh' },
     { ...role('axstack-escalation-fable', null), thinkingOptionId: 'xhigh' },
   ];
@@ -247,7 +247,7 @@ test('readiness rejects a null model on a non-intentional row such as an investi
     { ...role('axstack-advisor-claude', null), thinkingOptionId: 'xhigh' },
     role('axstack-author', 'gpt-6-sol'),
     role('axstack-reviewer-primary', 'gpt-6-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
+    { ...role('axstack-reviewer-secondary', 'gpt-6.2-sol'), thinkingOptionId: 'high' },
     role('axstack-debug-investigator-1', null),
   ];
   expect(assessRoleReadiness(roles, 'codex-only').gaps).toEqual([
@@ -263,12 +263,12 @@ test('mixed checker needs a configured model or class', () => {
 test('codex-only authored route holds a Luna reviewer', () => {
   const rows = [
     role('axstack-author', 'gpt-6.1-sol'),
-    { ...role('axstack-reviewer-secondary', 'gpt-6.1-terra'), thinkingOptionId: 'high' },
+    { ...role('axstack-reviewer-secondary', 'gpt-6.2-sol'), thinkingOptionId: 'high' },
   ];
   expect(assessRoleReadiness(rows, 'codex-only')).toEqual({ ready: true, gaps: [] });
   rows[1] = { ...rows[1], model: 'gpt-6-luna', thinkingOptionId: 'xhigh' };
   expect(assessRoleReadiness(rows, 'codex-only').gaps).toContain(
-    'authored routing gap: axstack-reviewer-secondary must be codex/terra/high for author codex/sol',
+    'authored routing gap: axstack-reviewer-secondary must be codex/sol/high for author codex/sol',
   );
 });
 
