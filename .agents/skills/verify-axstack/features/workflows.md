@@ -505,7 +505,7 @@ Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset
 policy: Sonnet high without a model pin in mixed and Sonnet medium in claude-only.
 The preset matrix protects Fable high, separate diligence, all 14 Claude-only
-Sonnet medium seats, and Scout's model matrix (Sonnet high and Terra high in
+Sonnet medium seats, and Scout's model matrix (Sonnet high and Sol high in
 mixed, unchanged single-provider seats).
 `tests/installer/preset-selection.test.js` checks installed Scout role IDs and
 bindings. `tests/workflows/resolve-models.test.js` checks that a missing class
@@ -606,7 +606,7 @@ Proof: fresh fixture catalogs select Astra 6.2 medium and Sol 6.2 xhigh.
 Mixed old/new catalogs migrate old defaults to those exact selections; missing
 either required 6.2 model (including old-only catalogs) holds without substitution.
 Real mixed/codex-only preset Astra/Sol seats select 6.2 when advertised and retain
-latest-version resolution on older catalogs; Terra/Luna/Claude splits stay covered
+latest-version resolution on older catalogs; Sol/Luna/Claude splits stay covered
 by the resolver suite. Fixtures establish no live availability or execution.
 Fixture CLI dry-run changes no bytes; apply changes only the default and
 preserves overrides/text-generation settings, modes and locks. A loopback hub
