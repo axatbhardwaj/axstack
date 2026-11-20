@@ -20,9 +20,10 @@ bun --no-env-file <reader> message <approved-message-permalink>
 bun --no-env-file <reader> thread <approved-thread-permalink> <from> <until>
 ```
 
-A JSONL transcript contains one conversation with `timestamp` and `text` fields
-per line. Use explicit RFC 3339 offsets and a half-open window. Use an already
-supplied excerpt directly. Request it when a different format cannot be bounded.
+Read supplied excerpts on iosatellite. For a path on another host, request a
+scoped excerpt or destination-readable source. Never transfer a private file
+without authorization. JSONL uses `timestamp` and `text` for one conversation.
+Use a half-open RFC 3339 window with offsets. Request an excerpt if unbounded.
 
 For an explicit live read use this reader exclusively. A thread read requires
 the exact parent in a verified pane and returns visible, in-window rows only.
