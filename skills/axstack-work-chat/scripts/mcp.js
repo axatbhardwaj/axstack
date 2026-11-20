@@ -1,9 +1,10 @@
 const protocolVersion = '2024-11-05';
-const maxReplyLength = 64 * 1024;
+const maxReplyLength = 256 * 1024;
+const maxThreadRows = 25;
 
 // Playwright MCP executes this fixed function privately over stdio. Only the
 // validated permalink and its derived selector are inserted as JSON.
-async function inspectMessage(page, scope, maxLength) {
+async function inspectMessage(page, scope, maxLength, maxRows) {
   function inScope(href) {
     if (href === scope.url) return true;
     if (scope.service !== 'slack') return false;
@@ -28,20 +29,47 @@ async function inspectMessage(page, scope, maxLength) {
     const response = await page.goto(scope.url, { waitUntil: 'domcontentloaded', timeout: 15_000 });
     if (!response?.ok() || !inScope(page.url())) return null;
 
-    const message = page.locator(scope.selector);
-    await message.waitFor({ state: 'visible', timeout: 7_000 });
+    const slack = scope.service === 'slack';
+    const pane = slack ? '[data-qa="thread_flexpane"]' : '[data-tid="thread-pane"]';
+    const target = page.locator(scope.window ? pane : scope.selector);
+    await target.waitFor({ state: 'visible', timeout: 7_000 });
     const href = page.url();
     if (!inScope(href) || page.context().pages().length !== 1) return null;
-    return await message.evaluate((element, scope) => {
+    return await target.evaluate((element, { href, scope, pane, slack, maxLength, maxRows }) => {
       // Catch SPA navigation between the URL check and DOM evaluation.
-      if (location.href !== scope.href) return null;
-      const text = element.innerText?.trim();
-      if (!text) return null;
-      return {
-        text: text.slice(0, scope.maxLength),
-        ...(text.length > scope.maxLength ? { truncated: true } : {}),
-      };
-    }, { href, maxLength }, { timeout: 2_000 });
+      if (location.href !== href) return null;
+      function excerpt(node) {
+        const text = node.innerText?.trim();
+        return text ? { text: text.slice(0, maxLength),
+          ...(text.length > maxLength ? { truncated: true } : {}) } : null;
+      }
+      if (!scope.window) return excerpt(element);
+      const roots = element.querySelectorAll(scope.selector);
+      const visible = (node) => node.checkVisibility({ visibilityProperty: true, opacityProperty: true });
+      if (roots.length !== 1 || !visible(roots[0])) return null;
+      const rows = element.querySelectorAll(slack ? '[data-item-key]' : '[id^="message-body-"]');
+      const messages = [];
+      const seen = new Set();
+      let truncated = false;
+      for (const row of rows) {
+        if (row.closest(pane) !== element) continue;
+        const id = slack ? row.getAttribute('data-item-key') : row.id.slice('message-body-'.length);
+        if (!(slack ? /^\d{10}\.\d{6}$/ : /^\d{13}$/).test(id) || seen.has(id)) continue;
+        seen.add(id);
+        const time = slack ? Number(id.replace('.', '').slice(0, 13)) : Number(id);
+        if (time < scope.window.start || time >= scope.window.end) continue;
+        const bodies = slack ? row.querySelectorAll('[data-qa="message-text"]') : [row];
+        if (bodies.length !== 1 || !visible(bodies[0])) continue;
+        if (messages.length === maxRows) {
+          truncated = true;
+          break;
+        }
+        const value = excerpt(bodies[0]);
+        if (value) messages.push({ timestamp: new Date(time).toISOString(), ...value });
+      }
+      messages.sort((first, second) => first.timestamp.localeCompare(second.timestamp));
+      return { coverage: 'visible-thread', messages, ...(truncated ? { truncated: true } : {}) };
+    }, { href, scope, pane, slack, maxLength, maxRows }, { timeout: 2_000 });
   } catch {
     return null;
   }
@@ -84,15 +112,27 @@ export async function readViaPlaywright(command, scope, maxLength, { env, cwd })
     });
     if (server?.protocolVersion !== protocolVersion || !server.capabilities?.tools) return null;
     await request(undefined, 'notifications/initialized', {});
-    const code = `async (page) => (${inspectMessage.toString()})(page, ${JSON.stringify(scope)}, ${maxLength})`;
+    const code = `async (page) => (${inspectMessage.toString()})(page, ${JSON.stringify(scope)}, ${maxLength}, ${maxThreadRows})`;
     const reply = await request(2, 'tools/call', { name: 'browser_run_code_unsafe', arguments: { code } });
     if (reply?.isError || reply?.content?.length !== 1 || reply.content[0].type !== 'text') return null;
     // Even with snapshots disabled, Playwright may append page metadata. Emit
     // only the fixed function's JSON result, never the raw response or errors.
     const row = reply.content[0].text.match(/^### Result\n([^\n]+)(?:\n|$)/)?.[1];
     const result = row && JSON.parse(row);
-    if (typeof result?.text === 'string' && result.text.length > 0 && result.text.length <= maxLength) {
-      excerpt = { text: result.text, ...(result.truncated === true ? { truncated: true } : {}) };
+    const clean = (value) => typeof value?.text === 'string' && value.text.length > 0 && value.text.length <= maxLength
+      ? { text: value.text, ...(value.truncated === true ? { truncated: true } : {}) } : null;
+    if (!scope.window) excerpt = clean(result);
+    if (scope.window && result?.coverage === 'visible-thread' && Array.isArray(result.messages) &&
+      result.messages.length <= maxThreadRows) {
+      const messages = result.messages.map((message) => {
+        const time = Date.parse(message?.timestamp);
+        const value = clean(message);
+        return value && time >= scope.window.start && time < scope.window.end
+          ? { timestamp: new Date(time).toISOString(), ...value } : null;
+      });
+      if (messages.every(Boolean)) {
+        excerpt = { coverage: 'visible-thread', messages, ...(result.truncated === true ? { truncated: true } : {}) };
+      }
     }
   } catch {
     // Protocol, launch and page diagnostics may contain private page data.
