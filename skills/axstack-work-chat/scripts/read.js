@@ -24,7 +24,7 @@ function parseTime(value) {
 
 export function parsePermalink(input) {
   const url = URL.parse(input);
-  if (!url || url.protocol !== 'https:' || url.username || url.password || url.port || url.hash) return null;
+  if (url?.protocol !== 'https:' || url.username || url.password || url.port || url.hash) return null;
 
   const slack = url.pathname.match(/^\/archives\/([CDG][A-Z0-9]{8,})\/p(\d{16})$/);
   if (slack && /^[a-z0-9-]+\.slack\.com$/.test(url.hostname)) {
