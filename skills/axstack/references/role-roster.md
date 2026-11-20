@@ -30,7 +30,7 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   | --- | --- | --- |
   | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
-  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/sol` high) |
+  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` high) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` medium) |
 - `axstack-advisor-codex` (Astra high in mixed/codex-only) and
   `axstack-advisor-claude` (Fable 5.2 high in mixed/claude-only) advise and author candidates;
