@@ -122,7 +122,8 @@ another repository.
 Give each attempt owned artifact and evidence directories, canonical absolute
 strict children of workspaceRoot. Forbid traversal, shared-root writes and
 ancestor/equal overlaps. Record every other attempt's roots in `reservedRoots`,
-including pending and retained attempts. The helper checks lexical paths and overlaps.
+including pending and retained attempts. Never guess an empty inventory.
+The helper checks lexical paths and overlaps.
 This evidence supplies no lock. The driver must independently
 verify real paths, no symlink escapes, ownership and exclusive writers on disk.
 Unknown ownership holds.
@@ -151,15 +152,16 @@ authorized driver publishes.
 Retain native task/thread/run, pending-question and settings checks. Audit binds
 the SHA-256 of a driver-supplied owned read-only snapshot or manifest under
 artifactRoot. The auditor writes only evidenceRoot/audit.md and points the
-marker there. Report missing Git history. Paired auditors get independent
-owned snapshots and never cross-read reports.
+marker there. Report missing Git history. Never fabricate a revision. Paired
+auditors get independent owned snapshots and never cross-read reports.
 
 Set `attempt.candidate` and marker `head` to the 64-hex artifact SHA-256,
 `attempt.base` to null and `artifactScope` to the requested scope. Report to
 evidenceRoot with `artifact:{path,sha256,readback:{path,sha256,evidence}}` for
-the independently hashed owned snapshot. Request shared isolation. Child
-worktreePath may be null. On T3 0.1.5 it may inherit the parent's non-Git scratch
-path if `parent` saves the `t3_thread_read` observation (tool, environmentId,
+the independently hashed owned snapshot.
+Verify requested isolation is shared. Hold otherwise. Child worktreePath may
+be null. On T3 0.1.5 it may inherit the parent's non-Git scratch path if
+`parent` saves the `t3_thread_read` observation (tool, environmentId,
 args.threadId, observedAt, evidence, value.thread). Bind origin thread, project,
 child parentThreadId/subagent relation and identical canonical path within
 workspaceRoot. Verify the filesystem. Shared access supplies no Git checkout or
