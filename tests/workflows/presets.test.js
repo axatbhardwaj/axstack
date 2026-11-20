@@ -55,12 +55,12 @@ const expected = {
     c('sol', 'high'), a('opus', 'high'), a('opus', 'medium'),
     a('sonnet', 'high'),
     a('sonnet', 'low'), a('sonnet', 'high'),
-    a('sonnet', 'high'), c('terra', 'high'), a('sonnet', 'high'), c('terra', 'high'),
+    a('sonnet', 'high'), c('sol', 'high'), a('sonnet', 'high'), c('sol', 'high'),
     g(null, 'high'),
-    a('sonnet', 'high'), c('terra', 'high'),
-    c('terra', 'high'), a('sonnet', 'high'),
-    a('sonnet', 'high'), c('terra', 'high'),
-    a('sonnet', 'high'), c('terra', 'high'),
+    a('sonnet', 'high'), c('sol', 'high'),
+    c('sol', 'high'), a('sonnet', 'high'),
+    a('sonnet', 'high'), c('sol', 'high'),
+    a('sonnet', 'high'), c('sol', 'high'),
     a('sonnet', 'high'), c('sol', 'high'),
     a('opus', 'medium'), c('sol', 'high'),
     a('sonnet', 'high'), c('sol', 'high'),
@@ -275,7 +275,7 @@ test('presets: auditor route agrees with audit skill and workflow table', () => 
 });
 
 test('presets: Codex explainer reviewer uses the selected class and effort', () => {
-  for (const [preset, modelClass, effort] of [['mixed', 'terra', 'high'], ['codex-only', 'luna', 'xhigh']]) {
+  for (const [preset, modelClass, effort] of [['mixed', 'sol', 'high'], ['codex-only', 'luna', 'xhigh']]) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const reviewer = roles.find(({ id }) => id === 'axstack-explainer-review');
     expect(reviewer).toMatchObject({

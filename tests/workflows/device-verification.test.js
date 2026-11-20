@@ -18,8 +18,8 @@ function rule(name, path, concepts, equivalent, inversions, ban) {
   });
 }
 
-rule('Terra first run', ui, [/Android/i, /web\/PWA/i, /run 1/i, /axstack-ui-verifier\b/i, /Terra/i, /high/i],
-  'For Android and web/PWA, assign run 1 to axstack-ui-verifier, Terra high.', [[/run 1/i, 'run 2']]);
+rule('Sol high first run', ui, [/Android/i, /web\/PWA/i, /run 1/i, /axstack-ui-verifier\b/i, /Sol/i, /high/i],
+  'For Android and web/PWA, assign run 1 to axstack-ui-verifier, Sol high.', [[/run 1/i, 'run 2']]);
 rule('independent Sonnet second run', ui,
   [/run 2/i, /axstack-ui-verifier-sonnet/i, /independent/i, /same brief/i, /same pinned build/i],
   'Dispatch independent run 2 to axstack-ui-verifier-sonnet with the same brief and same pinned build.',
@@ -129,7 +129,7 @@ for (const preset of ['mixed', 'codex-only', 'claude-only']) {
     expect(second.thinkingOptionId).toBe('high');
     if (preset === 'mixed') {
       expect(second).toMatchObject({ provider: 'claude', modelClass: 'sonnet', modeId: 'bypassPermissions' });
-      expect(roles[index]).toMatchObject({ provider: 'codex', modelClass: 'terra', thinkingOptionId: 'high' });
+      expect(roles[index]).toMatchObject({ provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high' });
       expect(second.notes).toMatch(/read.only/i);
       expect(second.notes).toMatch(/never edits source/i);
     } else {

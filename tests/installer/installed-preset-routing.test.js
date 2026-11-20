@@ -6,7 +6,7 @@ import { prohibits, requires } from '../workflows/prose-contract.js';
 
 const CLI = join(import.meta.dir, '..', '..', 'bin', 'axstack.js');
 
-test('installed mixed UI verifier dispatches Terra high and holds when unavailable', () => {
+test('installed mixed Sol seats dispatch at high and the UI verifier holds when unavailable', () => {
   const root = makeTempRoot('axstack-ui-routing-');
   const home = join(root, 'home');
   mkdirSync(home);
@@ -19,27 +19,38 @@ test('installed mixed UI verifier dispatches Terra high and holds when unavailab
   const capabilities = JSON.parse(readFileSync(join(import.meta.dir,
     '../workflows/fixtures/t3-capabilities.json'), 'utf8'));
   const codex = capabilities.providers.find(({ providerInstanceId }) => providerInstanceId === 'codex');
-  codex.models.push({ id: 'gpt-6.1-terra', options: [
+  codex.models.push({ id: 'gpt-6.2-sol', options: [
     { id: 'reasoningEffort', options: [{ id: 'high' }] },
   ] });
   const caps = join(root, 'capabilities.json');
   writeFileSync(caps, JSON.stringify(capabilities));
   const script = join(skillsDir, 'axstack/scripts/dispatch-plan.js');
-  const args = ['--role', 'axstack-ui-verifier', '--roles', join(skillsDir, 'axstack/roles.json'),
-    '--capabilities', caps, '--kind', 'task'];
-  const result = runCli(script, args, options);
-  expect(JSON.parse(result.out)).toMatchObject({
-    target: { providerInstanceId: 'codex', model: 'gpt-6.1-terra',
-      options: [{ id: 'reasoningEffort', value: 'high' }] },
-    runtimeMode: 'full-access',
-  });
-  // Sol and Claude remain available: neither may substitute for missing Terra/high.
-  for (const models of [codex.models.filter(({ id }) => id !== 'gpt-6.1-terra'),
-    codex.models.map((model) => model.id === 'gpt-6.1-terra'
+  const rolesPath = join(skillsDir, 'axstack/roles.json');
+  const { roles } = JSON.parse(readFileSync(rolesPath, 'utf8'));
+  const args = (id) => ['--role', id, '--roles', rolesPath, '--capabilities', caps, '--kind', 'task'];
+  const reboundSeats = [
+    'axstack-research-code-sol', 'axstack-research-web-sol', 'axstack-explainer-review',
+    'axstack-ui-verifier', 'axstack-explore-codebase-terra', 'axstack-explore-execution-sol',
+  ];
+  for (const id of reboundSeats) {
+    expect(roles.find((role) => role.id === id), id).toMatchObject({
+      provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high',
+    });
+    const result = runCli(script, args(id), options);
+    expect(JSON.parse(result.out), id).toMatchObject({
+      target: { providerInstanceId: 'codex', model: 'gpt-6.2-sol',
+        options: [{ id: 'reasoningEffort', value: 'high' }] },
+      runtimeMode: 'full-access',
+    });
+  }
+  expect(roles.some(({ modelClass }) => modelClass === 'terra')).toBe(false);
+  // Other Codex classes and Claude remain available. Neither can substitute for Sol.
+  for (const models of [codex.models.filter(({ id }) => !id.endsWith('-sol')),
+    codex.models.map((model) => model.id === 'gpt-6.2-sol'
       ? { ...model, options: [{ id: 'reasoningEffort', options: [{ id: 'medium' }] }] } : model)]) {
     writeFileSync(caps, JSON.stringify({ ...capabilities, providers: capabilities.providers.map(
       (provider) => provider === codex ? { ...provider, models } : provider) }));
-    const held = Bun.spawnSync([process.execPath, script, ...args], {
+    const held = Bun.spawnSync([process.execPath, script, ...args('axstack-ui-verifier')], {
       env: { ...process.env, HOME: home }, stdout: 'pipe', stderr: 'pipe',
     });
     expect(held.exitCode).toBe(2);

@@ -505,7 +505,7 @@ Proof: source contracts pass, targeted removal and inversion fail, and accepted
 equivalent wording passes. Auditor routes derive from the selected preset
 policy: Sonnet high without a model pin in mixed and Sonnet medium in claude-only.
 The preset matrix protects Fable high, separate diligence, all 14 Claude-only
-Sonnet medium seats, and Scout's model matrix (Sonnet high and Terra high in
+Sonnet medium seats, and Scout's model matrix (Sonnet high and Sol high in
 mixed, unchanged single-provider seats).
 `tests/installer/preset-selection.test.js` checks installed Scout role IDs and
 bindings. `tests/workflows/resolve-models.test.js` checks that a missing class

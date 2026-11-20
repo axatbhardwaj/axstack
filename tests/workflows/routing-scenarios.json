@@ -5,7 +5,7 @@
     {
       "id": "mixed-analysis-sonnet-high",
       "input": { "preset": "mixed", "work": "audit plus requirements, code, and web research with execution exploration" },
-      "expected": { "routes": ["axstack-auditor: claude/claude-sonnet-5-5 high", "axstack-auditor-sol: codex/gpt-6-sol high", "axstack-research-code: claude/claude-sonnet-5-5 high", "axstack-research-code-sol: codex/gpt-6.1-terra high", "axstack-explore-execution: claude/claude-sonnet-5-5 high", "axstack-explore-execution-sol: codex/gpt-6.1-terra high"], "pairing": "independent same-brief dispatches without cross-reading; driver reconciles per claim without averaging", "sourceSpecific": ["axstack-research-x: grok"] }
+      "expected": { "routes": ["axstack-auditor: claude/claude-sonnet-5-5 high", "axstack-auditor-sol: codex/gpt-6-sol high", "axstack-research-code: claude/claude-sonnet-5-5 high", "axstack-research-code-sol: codex/gpt-6.2-sol high", "axstack-explore-execution: claude/claude-sonnet-5-5 high", "axstack-explore-execution-sol: codex/gpt-6.2-sol high"], "pairing": "independent same-brief dispatches without cross-reading; driver reconciles per claim without averaging", "sourceSpecific": ["axstack-research-x: grok"] }
     },
     {
       "id": "claude-only-sol-pairs-absent",
@@ -111,7 +111,7 @@
       "id": "mixed-web-pair",
       "input": { "preset": "mixed", "claim": "primary web sources needed", "code": "not needed" },
       "expected": {
-        "routes": ["axstack-research-web: claude/claude-sonnet-5-5 high", "axstack-research-web-sol: codex/gpt-6.1-terra high"],
+        "routes": ["axstack-research-web: claude/claude-sonnet-5-5 high", "axstack-research-web-sol: codex/gpt-6.2-sol high"],
         "pairing": "independent same bounded brief without cross-reading; driver reconciles per claim without averaging",
         "failure": "fence optional malfunction; hold if fewer than two different providers remain",
         "singleProvider": "web-sol intentionally absent; base web proceeds alone"

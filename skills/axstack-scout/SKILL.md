@@ -41,7 +41,7 @@ same brief without cross-reading.
 
 - In mixed, each facet requires an independent pair:
   `axstack-explore-codebase` (Sonnet high) and
-  `axstack-explore-codebase-terra` (Terra high).
+  `axstack-explore-codebase-terra` (Sol high).
 - In codex-only, each facet requires an independent Sol and Luna pair:
   `axstack-explore-codebase` (Sol high) and
   `axstack-explore-codebase-luna` (Luna xhigh).

@@ -104,7 +104,7 @@ test('capabilities: Claude-only Scout binds Haiku 5.5 medium without substitutio
 
 test.each([
   ['axstack-explore-codebase', 'claudeAgent', 'sonnet', 'claude-sonnet-5-5', 'effort'],
-  ['axstack-explore-codebase-terra', 'codex', 'terra', 'gpt-6.1-terra', 'reasoningEffort'],
+  ['axstack-explore-codebase-terra', 'codex', 'sol', 'gpt-6.2-sol', 'reasoningEffort'],
 ])('mixed Scout seat %s holds on missing class or high effort', (id, instanceId, modelClass, model, optionId) => {
   const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/mixed.json`, 'utf8'));
   const role = roles.find((item) => item.id === id);
@@ -112,7 +112,7 @@ test.each([
   const data = fresh();
   const instance = data.providers.find((provider) => provider.providerInstanceId === instanceId);
   const args = [...(role.model ? ['--model', role.model] : []), '--class', role.modelClass];
-  instance.models = instance.models.filter((item) => item.id !== model);
+  instance.models = instance.models.filter((item) => !item.id.endsWith(`-${modelClass}`) && item.id !== model);
   instance.models.push(entry(model, optionId));
   const result = resolve(data, args, role.provider, role.thinkingOptionId);
   expect(result.status).toBe(0);
@@ -245,15 +245,15 @@ test('mixed tracker checker resolves its configured Claude class at low effort',
     model: 'claude-sonnet-5-5', effortOption: { id: 'effort', value: 'low' } });
 });
 
-test('Terra preset seats resolve their exact model and effort from saved capabilities', () => {
+test('mixed Sol seats and the codex-only Terra reviewer resolve at high from saved capabilities', () => {
   const data = fresh();
   data.providers.find((provider) => provider.providerInstanceId === 'codex')
-    .models.push(entry('gpt-6.1-terra', 'reasoningEffort', ['medium', 'high', 'xhigh']));
-  for (const [preset, id, effort] of [
-    ['mixed', 'axstack-research-code-sol', 'high'],
-    ['mixed', 'axstack-explore-execution-sol', 'high'],
-    ['mixed', 'axstack-explainer-review', 'high'],
-    ['codex-only', 'axstack-reviewer-secondary', 'high'],
+    .models.push(entry('gpt-6.2-sol'), entry('gpt-6.1-terra'));
+  for (const [preset, id, model] of [
+    ['mixed', 'axstack-research-code-sol', 'gpt-6.2-sol'],
+    ['mixed', 'axstack-explore-execution-sol', 'gpt-6.2-sol'],
+    ['mixed', 'axstack-explainer-review', 'gpt-6.2-sol'],
+    ['codex-only', 'axstack-reviewer-secondary', 'gpt-6.1-terra'],
   ]) {
     const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
     const role = roles.find((role) => role.id === id);
@@ -261,7 +261,7 @@ test('Terra preset seats resolve their exact model and effort from saved capabil
     const result = resolve(data, args, role.provider, role.thinkingOptionId);
     expect(result.status, `${preset}: ${id}`).toBe(0);
     expect(JSON.parse(result.output)).toMatchObject({ provider: 'codex', providerInstanceId: 'codex',
-      model: 'gpt-6.1-terra', effortOption: { id: 'reasoningEffort', value: effort } });
+      model, effortOption: { id: 'reasoningEffort', value: 'high' } });
   }
 });
 

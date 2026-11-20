@@ -77,7 +77,7 @@ describe('explicit preset selection', () => {
     const expected = {
       mixed: [
         ['axstack-explore-codebase', 'claude', 'sonnet', 'high', 'bypassPermissions'],
-        ['axstack-explore-codebase-terra', 'codex', 'terra', 'high', 'full-access'],
+        ['axstack-explore-codebase-terra', 'codex', 'sol', 'high', 'full-access'],
       ],
       'codex-only': [
         ['axstack-explore-codebase', 'codex', 'sol', 'high', 'full-access'],

@@ -65,7 +65,7 @@ Apply the dual run to Android device verification or explicitly requested
 PWA/app feature verification, such as a `verify-<app>` device recipe or a user request.
 Ordinary review and watch browser checks use one `axstack-ui-verifier` pass by default.
 For these Android and web/PWA runs, assign run 1 to
-`axstack-ui-verifier` (Terra high).
+`axstack-ui-verifier` (Sol high).
 Dispatch independent run 2 to `axstack-ui-verifier-sonnet` with the same brief
 and the same pinned build.
 Never show run 2 the run 1 results.

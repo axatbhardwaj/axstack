@@ -158,7 +158,7 @@ This delivery creates no live schedule; source tests do not prove activation.
 Installation requires one explicit canonical preset. The three bundle files
 under `profiles/presets/` each contain exactly
 `{ "version": 1, "roles": [...] }` and list all role IDs for the selected preset.
-The role IDs are shared except for the mixed Scout Terra seat replacing Luna.
+The role IDs are shared except for the mixed Scout Sol high seat replacing the Luna role ID.
 
 The current chat drives on whatever model runs it; no preset carries a driver
 role.
@@ -174,30 +174,30 @@ In `mixed` and `claude-only`, `axstack-research-requirements`,
 use the Claude Sonnet class: high effort in mixed, medium in claude-only.
 Codex-only keeps its Codex assignments for those roles.
 Each mixed Scout facet requires independent Sonnet high (`axstack-explore-codebase`)
-and Terra high (`axstack-explore-codebase-terra`) seats. Codex-only keeps Sol high
+and Sol high (`axstack-explore-codebase-terra`) seats. Codex-only keeps Sol high
 and Luna xhigh; Claude-only keeps Haiku medium pinned to `claude-haiku-5-5`.
 An unavailable or rejected required seat holds Scout without substitution.
 For a needed web claim in mixed, pair `axstack-research-web` (Sonnet high)
-with optional `axstack-research-web-sol` (Terra high), independently on the same
+with optional `axstack-research-web-sol` (Sol high), independently on the same
 bounded brief without cross-reading. Both single-provider presets explicitly
 mark the web pair absent and keep their base web researcher. Optional launch
 failures retain fencing and the mixed research provider floor.
 The mixed X route uses Grok.
 The mixed `axstack-auditor` uses the Sonnet class at high effort without an exact
 model pin; missing model or effort holds without substitution. The mixed
-`axstack-explainer-review` uses Terra high; `axstack-explainer` pins
+`axstack-explainer-review` uses Sol high; `axstack-explainer` pins
 `claude-sonnet-5-5` high with class `sonnet`. The driver authors ordinary inline
 HTML and chat Mermaid, with the explainer available as a specialist. Anatomy
 keeps delegated authorship; the reviewer covers every Explain visual. The existing mixed
-`axstack-ui-verifier` resolves the Codex Terra class at high effort with
+`axstack-ui-verifier` resolves the Codex Sol class at high effort with
 full-access mode; its read-only browser verification duties stay unchanged.
 An unavailable model or effort holds without substitution.
 In `claude-only`, `axstack-auditor` uses the Claude Sonnet class at medium effort.
 The Claude adviser `axstack-advisor-claude` pins `claude-fable-5-2` with class
 `fable` at high effort in mixed/claude-only; missing that ID or high effort holds
 without substitution. Fable escalation starts at high in mixed/claude-only; the Opus arena judge retains xhigh.
-The `-sol` research-code and explore-execution seats use Terra high in `mixed`
-and Sol high in `codex-only`; the auditor pair stays Sol high in both.
+The `-sol` research-code, explore-execution and auditor seats use Sol high
+in `mixed` and `codex-only`.
 `claude-only` records each as intentionally absent. Their stable role IDs remain
 unchanged. Dispatch the base and paired seats independently on the same brief,
 then reconcile their findings per claim without averaging.
