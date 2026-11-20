@@ -101,7 +101,7 @@ Gotcha: `--dry-run` proves a file selection, not a successful registry publish.
 Work chat verification uses `tests/installer/work-chat.test.js` for synthetic
 transcript invocation under both harness install roots and
 `tests/workflows/work-chat-reader.test.js` for the private stdio transport,
-exact Slack and Teams scopes, and refusal to read from other pages. Run both
+exact Slack and Teams scopes, bounded thread rows and refusal to read other pages. Run both
 after Doctor. These fixtures use no real browser, profile or chat workspace.
 
 ## Parallel-first package acceptance
