@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { parsePermalink } from '../../skills/axstack-work-chat/scripts/read.js';
 import { readViaPlaywright } from '../../skills/axstack-work-chat/scripts/mcp.js';
+import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const slack = 'https://work.slack.com/archives/C12345678/p1795093200000000';
 const teams = 'https://teams.microsoft.com/l/message/19%3Aexample%40thread.v2/1795093200000?tenantId=12345678-1234-4321-1234-123456789012';
@@ -127,6 +128,18 @@ if (process.argv[2]?.startsWith('--fixture-')) {
     for (const line of lines) await processRequest(line);
   }
 } else {
+  test('a transcript path on another host requires a scoped source without private file transfer', async () => {
+    const skill = await Bun.file(new URL('../../skills/axstack-work-chat/SKILL.md', import.meta.url)).text();
+    const request = [/path/i, /another host/i, /request|ask/i, /scoped excerpt/i, /destination-readable source/i];
+    checkRule(skill, (text) => requires(text, ...request),
+      'For a path on another host, ask for a scoped excerpt or destination-readable source.',
+      [[/request|ask/i, 'never request']], request);
+    const ban = /never transfer|do not copy/i;
+    const transfer = [/private file/i, /without authorization/i];
+    checkRule(skill, (text) => prohibits(text, ban, ...transfer), 'Do not copy a private file without authorization.',
+      [[ban, 'Automatically transfer']], transfer);
+  });
+
   test('bounded stdio returns only the exact Slack and Teams message excerpts', async () => {
     for (const [link, scenario] of [[slack, 'slack'], [teams, 'teams']]) {
       expect(await runFixture(link, scenario)).toEqual({ text: 'fixture message evidence' });
