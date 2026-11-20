@@ -85,11 +85,12 @@ Run `bun run test tests/workflows/research-web.test.js` to exercise mixed
 Sol high web dispatch/readback and both provider-bounded explicit absences.
 The resolver suite also proves the mixed tracker checker resolves to Claude
 Sonnet with low effort; readiness rejects a checker lacking both model and class.
-It resolves the mixed research-code, execution and visual-review seats and the
-codex-only authored reviewer to Sol high. Class-based and explicit Terra pins reject
-medium/xhigh/missing effort, including through dispatch-plan; unavailable high
-holds without selecting an older model. Effective non-high readback holds. The role
-readiness suite rejects Luna or a wrong effort for that authored reviewer.
+It resolves the mixed research-code, execution and visual-review seats to Sol
+high, and the codex-only authored reviewer to Terra at exactly high effort.
+Class-based and explicit Terra pins reject medium/xhigh/missing effort, including
+through dispatch-plan; unavailable high holds without selecting an older model.
+Effective non-high readback holds. The role readiness suite rejects Luna or a
+wrong effort for that authored reviewer.
 The installed-routing boundary installs the real mixed bundle and dispatches all
 six rebound seats to Codex `gpt-6.2-sol` high/full-access from saved capabilities.
 For the UI verifier, missing Sol or high effort holds even while other model
