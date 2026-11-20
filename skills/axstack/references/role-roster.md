@@ -30,7 +30,7 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   | --- | --- | --- |
   | `mixed` | `codex/sol` | `axstack-reviewer-secondary` (`claude/opus` high) |
   | `mixed` | `claude/opus` | `axstack-reviewer-primary` (`codex/sol` high) |
-  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/terra` high) |
+  | `codex-only` | `codex/sol` | `axstack-reviewer-secondary` (`codex/sol` high) |
   | `claude-only` | `claude/opus` | `axstack-reviewer-secondary` (`claude/sonnet` medium) |
 - `axstack-advisor-codex` (Astra high in mixed/codex-only) and
   `axstack-advisor-claude` (Fable 5.2 high in mixed/claude-only) advise and author candidates;
@@ -43,7 +43,7 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   chat Mermaid by default. The specialist can author these visuals when useful;
   it retains other visual authorship, including anatomy figures.
   Mixed pins Sonnet 5.5 high exactly.
-- `axstack-explainer-review` always reviews every visual; `codex/terra` high in mixed.
+- `axstack-explainer-review` always reviews every visual; `codex/sol` high in mixed.
   Consequential or complex driver-written prose keeps its review rule; every
   whiteboard defense is consequential, in chat too.
 - `axstack-diligence`: read-only [diligence checks](diligence.md) for authored PR
@@ -55,7 +55,7 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   for every interactive page, bound to the exact bytes and SHA-256.
 - `axstack-ui-verifier-sonnet`: `claude/sonnet` high in mixed, read-only;
   independently drives Android and web/PWA run 2 under [UI checks](ui-verification.md#android-device-and-webpwa-dual-run).
-  `axstack-ui-verifier` (Terra high in mixed) drives run 1; the driver reconciles.
+  `axstack-ui-verifier` (Sol high in mixed) drives run 1; the driver reconciles.
   `axstack-ui-verifier-sonnet` is intentionally absent in both single-provider presets,
   leaving dual-run verification unverified; record the absence without substitution.
 - `axstack-research-requirements`/
@@ -66,7 +66,7 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   capabilities without an exact model pin. `claude/sonnet` medium in claude-only;
   `codex/luna` xhigh in codex-only. Missing model or effort holds without substitution.
 - `axstack-explore-codebase` (Sonnet high) and `axstack-explore-codebase-terra`
-  (Terra high): mixed Scout requires both per facet.
+  (Sol high): mixed Scout requires both per facet.
 - Codex-only Scout requires `axstack-explore-codebase` (Sol high) and
   `axstack-explore-codebase-luna` (Luna xhigh) per facet.
 - Claude-only Scout requires `axstack-explore-codebase` (Haiku medium) per
@@ -74,13 +74,12 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
   holds Scout without substitution.
 - Sol pairs (stable `-sol` IDs) `axstack-auditor-sol`/`axstack-research-code-sol`/
   `axstack-explore-execution-sol`: `codex/sol` high in
-  mixed/codex-only; intentionally absent in claude-only. In mixed,
-  research-code and explore-execution use `codex/terra` high instead. Dispatch each
+  mixed/codex-only; intentionally absent in claude-only. Dispatch each
   independently from its base seat on the same bounded brief without
   cross-reading. The driver reconciles findings per claim, never averages.
   Record intentional absence and continue with Sonnet alone.
 - Web pair `axstack-research-web`/`axstack-research-web-sol`: Sonnet high +
-  Terra high in mixed, independently on the same bounded brief without
+  Sol high in mixed, independently on the same bounded brief without
   cross-reading, with driver reconciliation per claim. The `-sol` web seat is
   intentionally absent in both single-provider presets; use the base seat alone.
 - Optional seats: `axstack-arena-candidate-grok`,
