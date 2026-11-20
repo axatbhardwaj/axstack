@@ -55,3 +55,14 @@ test('reader rejects out-of-scope URLs and unavailable dedicated setup without u
   expect(result.stdout.toString()).toBe('');
   expect(result.stderr.toString().trim()).toBe('The dedicated iosatellite account and profile are required.');
 });
+
+test('thread invocation admits an exact permalink only with explicit time bounds', () => {
+  const home = makeTempRoot('axstack-work-chat-no-thread-profile-');
+  const link = 'https://work.slack.com/archives/C12345678/p1795093201000000?thread_ts=1795093200.000000&cid=C12345678';
+  const valid = runCli(reader, ['thread', link, '2026-11-19T13:00:00Z', '2026-11-19T14:00:00Z'],
+    { expectFail: true, env: { HOME: home } });
+  expect(valid.out.trim()).toBe('The dedicated iosatellite account and profile are required.');
+  const invalid = runCli(reader, ['thread', link, '2026-11-19T13:00:00', '2026-11-19T14:00:00Z'],
+    { expectFail: true, env: { HOME: home } });
+  expect(invalid.out.trim()).toBe('Supply an increasing RFC 3339 window with offsets for the thread.');
+});
