@@ -103,12 +103,12 @@
     },
     {
       "id": "axstack-research-code-sol",
-      "name": "Axstack research code Terra",
+      "name": "Axstack research code Sol",
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Terra high research code investigator: verifies code behavior and executable evidence on the same bounded brief without cross-reading. Reports findings for driver reconciliation.",
-      "modelClass": "terra"
+      "notes": "Independent Sol high research code investigator: verifies code behavior and executable evidence on the same bounded brief without cross-reading. Reports findings for driver reconciliation.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-research-web",
@@ -121,12 +121,12 @@
     },
     {
       "id": "axstack-research-web-sol",
-      "name": "Axstack research web Terra",
+      "name": "Axstack research web Sol",
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Terra high web researcher on the same bounded brief as the Sonnet base seat without cross-reading. Cites primary sources for driver reconciliation per claim; optional seat failures follow the role roster.",
-      "modelClass": "terra"
+      "notes": "Independent Sol high web researcher on the same bounded brief as the Sonnet base seat without cross-reading. Cites primary sources for driver reconciliation per claim; optional seat failures follow the role roster.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-research-x",
@@ -153,8 +153,8 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Terra high explanation reviewer: always reviews every visual. Reviews consequential or complex driver-written prose or on request. Checks the exact artifact for text and source fidelity, including the full claim set on the first and every subsequent review, including conditions, branches, complete cited source ranges and regression of prior findings. The browser interaction pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution. Design review follows design.md hard rules, aurora.md shared identity and FRONTEND-DESIGN.md (content-specific craft subordinate to Aurora and hard rules, including calibration defaults, restraint and quality floor) for every inline HTML page and every Publish article adaptation. For non-anatomy Explain inline pages, the reviewer inspects the driver's final-byte html_preview screenshots at 728px dark and 360px light bound to the artifact SHA-256. Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review. Reuse adequate driver evidence while retaining layout, accessibility, theme and fit checks. For anatomy inline pages the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check. For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes with paths bound to the artifact SHA-256 and recorded before review. Inspect the 1440px desktop screenshot for balanced composition, intentional horizontal margins, bounded prose measure, typography, section spacing and chart legibility. Inspect the 360px and 390px mobile screenshots for gutters, readable text and chart labels. A page failing to look decent is a blocking design finding, repaired by the same author. For Anatomy and Publish only, retain Delivery's design-only exception. Never describe a remaining finding as fixed or a clean pass. Apply Delivery's progress-based repairs and dependency holds; repair count alone never abandons the requested format. Apply Delivery's normal holds for other failures and unknown renders. Chat Mermaid and anatomy keep their existing review.",
-      "modelClass": "terra"
+      "notes": "Independent Sol high explanation reviewer: always reviews every visual. Reviews consequential or complex driver-written prose or on request. Checks the exact artifact for text and source fidelity, including the full claim set on the first and every subsequent review, including conditions, branches, complete cited source ranges and regression of prior findings. The browser interaction pass belongs to axstack-ui-verifier. Any artifact change invalidates its review. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution. Design review follows design.md hard rules, aurora.md shared identity and FRONTEND-DESIGN.md (content-specific craft subordinate to Aurora and hard rules, including calibration defaults, restraint and quality floor) for every inline HTML page and every Publish article adaptation. For non-anatomy Explain inline pages, the reviewer inspects the driver's final-byte html_preview screenshots at 728px dark and 360px light bound to the artifact SHA-256. Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review. Reuse adequate driver evidence while retaining layout, accessibility, theme and fit checks. For anatomy inline pages the reviewer itself renders exact bytes with html_preview at 728px dark and 360px light as a non-publishing self-check. For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes with paths bound to the artifact SHA-256 and recorded before review. Inspect the 1440px desktop screenshot for balanced composition, intentional horizontal margins, bounded prose measure, typography, section spacing and chart legibility. Inspect the 360px and 390px mobile screenshots for gutters, readable text and chart labels. A page failing to look decent is a blocking design finding, repaired by the same author. For Anatomy and Publish only, retain Delivery's design-only exception. Never describe a remaining finding as fixed or a clean pass. Apply Delivery's progress-based repairs and dependency holds; repair count alone never abandons the requested format. Apply Delivery's normal holds for other failures and unknown renders. Chat Mermaid and anatomy keep their existing review.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-ui-verifier",
@@ -162,8 +162,8 @@
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Read-only UI verifier: uses the configured verifier browser tools against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Performs the inline page interaction pass for every interactive page, bound to the exact bytes and SHA-256. Never edits source. Resolve the Terra class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
-      "modelClass": "terra"
+      "notes": "Read-only UI verifier: uses the configured verifier browser tools against the given build, URL, or artifact; captures screenshots, interactions, accessibility, desktop/mobile, and reduced-motion evidence in the dispatch evidence folder; returns a verdict with evidence paths. Performs the inline page interaction pass for every interactive page, bound to the exact bytes and SHA-256. Never edits source. Resolve the Sol class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-ui-verifier-sonnet",
@@ -185,12 +185,12 @@
     },
     {
       "id": "axstack-explore-codebase-terra",
-      "name": "Axstack codebase explorer Terra",
+      "name": "Axstack codebase explorer Sol",
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent read-only Terra Scout facet explorer. Searches the whole repository on the same brief without cross-reading; reports evidence for driver reconciliation. Missing model or high effort holds without substitution.",
-      "modelClass": "terra"
+      "notes": "Independent read-only Sol Scout facet explorer. Searches the whole repository on the same brief without cross-reading; reports evidence for driver reconciliation. Missing model or high effort holds without substitution.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-explore-execution",
@@ -203,12 +203,12 @@
     },
     {
       "id": "axstack-explore-execution-sol",
-      "name": "Axstack execution explorer Terra",
+      "name": "Axstack execution explorer Sol",
       "provider": "codex",
       "modeId": "full-access",
       "thinkingOptionId": "high",
-      "notes": "Independent Terra high execution explorer: runs authorized bounded runtime checks on the same brief without cross-reading. Reports findings for driver reconciliation.",
-      "modelClass": "terra"
+      "notes": "Independent Sol high execution explorer: runs authorized bounded runtime checks on the same brief without cross-reading. Reports findings for driver reconciliation.",
+      "modelClass": "sol"
     },
     {
       "id": "axstack-auditor",
