@@ -7,10 +7,15 @@ const teams = 'https://teams.microsoft.com/l/message/19%3Aexample%40thread.v2/17
 const slackSelector = '[data-item-key="1795093200.000000"] [data-qa="message-text"]';
 const teamsSelector = '[id="message-body-1795093200000"]';
 
-function runFixture(permalink, scenario) {
+function runFixture(permalink, scenario, thread = {}) {
   return readViaPlaywright([process.execPath, import.meta.filename, `--fixture-${scenario}`],
-    parsePermalink(permalink), 1500, { env: {}, cwd: import.meta.dir });
+    { ...parsePermalink(permalink), ...thread }, 1500, { env: {}, cwd: import.meta.dir });
 }
+
+const start = 1795093201000;
+const end = 1795093203000;
+const window = { start, end };
+const panes = { slack: '[data-qa="thread_flexpane"]', teams: '[data-tid="thread-pane"]' };
 
 if (process.argv[2]?.startsWith('--fixture-')) {
   const scenario = process.argv[2].slice('--fixture-'.length);
@@ -58,6 +63,40 @@ if (process.argv[2]?.startsWith('--fixture-')) {
         return { ok: () => true };
       },
       locator: (selector) => {
+        if (scenario.startsWith('thread-') && Object.values(panes).includes(selector)) {
+          const service = href === teams ? 'teams' : 'slack';
+          const textSelector = '[data-qa="message-text"]';
+          const pane = {
+            checkVisibility: () => true,
+            querySelectorAll: (query) => {
+              if (query === (service === 'slack' ? slackSelector : teamsSelector)) {
+                return scenario === 'thread-wrong-root' ? [] : [pane];
+              }
+              if (query !== (service === 'slack' ? '[data-item-key]' : '[id^="message-body-"]')) return [];
+              return [0, 1000, 2000, 2001, 3000].map((offset) => {
+                const time = 1795093200000 + offset;
+                const body = {
+                  checkVisibility: () => offset !== 2001,
+                  innerText: `synthetic row ${offset / 1000}`,
+                };
+                return {
+                  ...body,
+                  id: 'message-body-' + time,
+                  getAttribute: (name) => name === 'data-item-key' ? (time / 1000).toFixed(6) : null,
+                  closest: () => offset === 2000 ? {} : pane,
+                  querySelectorAll: (selector) => selector === textSelector ? [body] : [],
+                };
+              });
+            },
+          };
+          return {
+            waitFor: async () => {},
+            evaluate: async (fn, args) => {
+              Object.defineProperty(globalThis, 'location', { value: { href } });
+              return fn(pane, args);
+            },
+          };
+        }
         if (selector !== (href === teams ? teamsSelector : slackSelector)) throw new Error('unexpected selector');
         return {
           waitFor: async () => {
@@ -98,5 +137,16 @@ if (process.argv[2]?.startsWith('--fixture-')) {
     for (const scenario of ['restored', 'redirect', 'nonunique', 'changed']) {
       expect(await runFixture(slack, scenario)).toBeNull();
     }
+  });
+
+  test('thread reads only visible in-window rows from a pane with the exact root', async () => {
+    const expected = {
+      coverage: 'visible-thread',
+      messages: [{ timestamp: new Date(start).toISOString(), text: 'synthetic row 1' }],
+    };
+    for (const [link, service] of [[slack, 'slack'], [teams, 'teams']]) {
+      expect(await runFixture(link, `thread-${service}`, { window })).toEqual(expected);
+    }
+    expect(await runFixture(slack, 'thread-wrong-root', { window })).toBeNull();
   });
 }
