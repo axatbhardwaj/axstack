@@ -281,6 +281,14 @@ Resolve measurement errors before committing; keep repository-owned checks enfor
 Preserve the check's exclusions, but never hide authored files behind generated banners or ignore globs.
 Record the staged-file size check result in the implementation receipt.
 
+Before each commit, the author runs [hooks-check](../axstack/scripts/hooks-check.js)
+with Bun and `--repo <target-repository>`.
+On exit 2, run the repository's install command from the `declared` evidence once
+and rerun hooks-check. Hold the commit until hooks-check exits 0 and record the
+result in the implementation receipt.
+Never use `--no-verify` or `-n` on commits.
+Never override `core.hooksPath` for a commit.
+
 ## 5. Verify and return the candidate
 
 Run the acceptance checks and affected integration boundaries following
@@ -322,7 +330,7 @@ Scope: <approved spec + capability | small-change intent | maintenance snapshot>
 Delivery map: <record pointer; outcomes/accepted scope drivers; current milestone evidence; held launches>
 Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
 TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence | F-repair base-green/removal-inversion-red/rewording-green evidence>
-Token limit: <staged-file size check command + observed advisories/errors before each commit>
+Token limit: <staged-file size check command + advisories/errors and hooks-check result before each commit>
 Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
 Acceptance: <check-run receipt paths + identities mapped to criteria>
 Dependencies: <parent revisions or none>
