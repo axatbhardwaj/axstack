@@ -282,10 +282,13 @@ Preserve the check's exclusions, but never hide authored files behind generated 
 Record the staged-file size check result in the implementation receipt.
 
 Before each commit, the author runs [hooks-check](../axstack/scripts/hooks-check.js)
-with Bun and `--repo <target-repository>`.
-On exit 2, run the repository's install command from the `declared` evidence once
-and rerun hooks-check. Hold the commit until hooks-check exits 0 and record the
-result in the implementation receipt.
+from a trusted cwd with `bun --no-env-file <resolved-helper> --repo <target-repository>`.
+On any nonzero hooks-check exit, hold the commit and return `AXSTACK-QUESTION`
+with the hooks-check JSON.
+Authors never install hooks or write shared Git metadata.
+The driver applies the repository's documented hook setup and resumes the author.
+After resuming, the author reruns hooks-check and commits only on exit 0.
+Record the hooks-check result in the implementation receipt.
 Never use `--no-verify` or `-n` on commits.
 Never override `core.hooksPath` for a commit.
 
