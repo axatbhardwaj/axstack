@@ -133,6 +133,7 @@ test('package recipe requires every entry point and both current publication ref
     'skills/axstack/references/ui-verification.md',
     'skills/axstack-brainstorm/SKILL.md',
     'skills/axstack-brainstorm/references/arena.md', 'bin/axstack.js', 'skills/axstack/scripts/dispatch-plan.js',
+    'skills/axstack/scripts/hooks-check.js',
     'skills/axstack/scripts/fleet-route.js', 'skills/axstack/scripts/fleet-config.js',
     'skills/axstack/scripts/fleet-facts.js', 'skills/axstack/scripts/fleet-scope.js',
     'skills/axstack/references/local-artifacts.md', 'skills/axstack/references/fleet-route-schema.md',
