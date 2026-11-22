@@ -366,9 +366,11 @@ author error resolution before committing, enforceable repository checks, no
 hiding authored files behind exclusions, and receipt recording with removal,
 inversion and equivalent-rewording probes. Helper nonzero exits and the author
 stop-on-error duty are separate contracts.
-Hook verification drives `hooks-check.js` against fixture Git repos with a
-worktree-configured dangling hook, a missing Husky directory and a live hook.
-The instruction test protects checks and hook bypass prohibitions before commits.
+Hook verification drives `hooks-check.js` against fixture Git repos with dangling
+and missing configured hooks, including checkouts without a known hook manager.
+The fixtures cover executable hooks and inherited Git repository redirection.
+The instruction test protects the trusted invocation, author holds, driver-owned
+hook setup, and the pre-commit bypass prohibitions.
 Also run these two staged-file test files with `TMPDIR` unset, as in CI; their
 shared temp root falls back to `/tmp`. Keep that `/tmp` private to the dispatch
 (e.g. a mount namespace bound to owned 0700 scratch outside HOME).
