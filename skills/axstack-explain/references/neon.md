@@ -10,8 +10,9 @@ Use neon green, purple and blue accents with assigned roles on a near-black grou
 Neon green marks data and the primary series, blue marks links and interactive
 cues, and purple marks comparison and emphasis. Keep white ink for body text
 and a muted grey for secondary text.
-Standalone HTML and published articles are dark-only with `color-scheme: dark`.
-Never add a light theme or a `prefers-color-scheme` switch to them.
+Standalone HTML and published articles are dark-only by default with `color-scheme: dark`.
+Without an explicit user theme, never add a light theme or a `prefers-color-scheme` switch to them.
+An explicit user theme replaces the dark default, including Publish captures.
 This bounded token example gives every text accent at least 4.5:1 contrast on
 both ground and surface; check actual sizes, mixes and chart fills.
 For an explicit user theme, emit its requested tokens while preserving role meaning.
