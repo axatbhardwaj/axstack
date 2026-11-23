@@ -260,6 +260,27 @@ rule(publish, 'publication hold excludes only second-round design delivery',
   [/hold/i, /publication/i, /required check or review/i, /missing or failed/i, /except for|apart from/i, /design.only delivery/i, /after the second round/i],
   'Apart from design-only delivery after the second round, hold publication when a required check or review is missing or failed.',
   [[/except for|apart from/i, 'including'], [/after the second round/i, 'before the first round'], [/design.only delivery/i, 'any delivery']]);
+rule(explain, 'standalone HTML loads all three design references',
+  [/load/i, /design\.md/i, /neon\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every explicitly requested standalone HTML file/i],
+  'For every explicitly requested standalone HTML file, the author loads design.md and neon.md and reads FRONTEND-DESIGN.md.',
+  [[/loads?/i, 'skips'], [/every explicitly requested standalone HTML file/i, 'some standalone files']]);
+rule(explain, 'standalone anatomy files skip design references', [/anatomy/i, /standalone/i],
+  'Never load these references for standalone anatomy files.', [[/never/i, 'always']], /never load/i);
+for (const [path, label] of [[explain, 'Explain'], [qa, 'Visual QA']]) {
+  rule(path, `${label} gives standalone HTML exact-byte design review in dark Neon by default`,
+    [/standalone HTML files/i, /exact.byte design review/i, /dark Neon theme/i, /explicit user theme/i],
+    'Standalone HTML files get exact-byte design review in the dark Neon theme or an explicit user theme.',
+    [[/exact.byte design review/i, 'source review only'], [/dark Neon theme/i, 'light theme']]);
+}
+rule(qa, 'design review covers standalone HTML', [/design review/i, /covers/i, /every explicitly requested standalone HTML file/i],
+  'Design review covers every explicitly requested standalone HTML file.',
+  [[/covers/i, 'skips'], [/every explicitly requested standalone HTML file/i, 'some standalone files']]);
+rule(qa, 'Publish review uses explicit theme captures', [/explicit user theme/i, /PNGs/i, /that theme/i, /same four widths/i],
+  'With an explicit user theme, the PNGs show that theme at the same four widths.',
+  [[/that theme/i, 'the dark theme']]);
+rule(neon, 'explicit theme replaces the dark default', [/explicit user theme/i, /replaces/i, /dark default/i, /captures/i],
+  'An explicit user theme replaces the dark default, including captures.',
+  [[/replaces/i, 'keeps']]);
 rule(explain, 'chat Mermaid and anatomy skip design references', [/load/i, /(?:either reference|any of these references)/i, /chat Mermaid/i, /anatomy/i],
   'Never load either reference for chat Mermaid or anatomy figures.', [[/never/i, 'always']], /never load/i);
 rule(publish, 'Publish delegates article adaptation to explainer',
