@@ -41,7 +41,7 @@ Prose status is interim blocked status and leaves the requested visual incomplet
 For inline HTML pages and Publish article adaptations, judge the exact-byte renders
 against [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md), including its calibration defaults,
 restraint and quality floor, plus [design.md](design.md)'s hard rules.
-Follow [aurora.md](aurora.md) for shared identity; apply frontend-design for content-specific craft subordinate to Aurora and the hard rules.
+Follow [neon.md](neon.md) for the palette; frontend-design is the lead design and craft authority, bound only by the hard rules and that palette.
 A page failing to look decent is a blocking design finding, repaired by the same author.
 Cosmetic preferences alone never block Explain delivery.
 Deliver the Explain visual with each remaining cosmetic preference named.
