@@ -153,6 +153,7 @@ test('run-record helpers stay in packaged skills; evidence archival has no runti
     `${root}/skills/axstack/scripts/default-settings.js`,
     `${root}/skills/axstack/scripts/hub-secret.js`,
     `${root}/skills/axstack/scripts/driver-history.js`,
+    `${root}/skills/axstack/scripts/hooks-check.js`,
     `${root}/skills/axstack/scripts/hub-usage.js`,
     `${root}/skills/axstack/scripts/image-evidence.js`,
     `${root}/skills/axstack/scripts/lane-owner.js`,

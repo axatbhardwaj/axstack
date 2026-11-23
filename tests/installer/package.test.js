@@ -242,6 +242,7 @@ test('tarball members match the full source tree with no silent omissions', () =
   expect(listing).toContain('package/skills/axstack-publish/SKILL.md');
   expect(listing).toContain('package/skills/axstack-work-chat/SKILL.md');
   expect(listing).toContain('package/skills/axstack-work-chat/scripts/read.js');
+  expect(listing).toContain('package/skills/axstack/scripts/hooks-check.js');
   expect([...expected].filter((m) => !listing.includes(m))).toEqual([]);
   expect(listing.filter((m) => !expected.has(m))).toEqual([]);
   for (const asset of ['scripts/single-server.js', 'systemd/axstack-single-server.service', 'systemd/axstack-single-server.timer']) {

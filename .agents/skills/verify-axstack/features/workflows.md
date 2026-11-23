@@ -366,6 +366,11 @@ author error resolution before committing, enforceable repository checks, no
 hiding authored files behind exclusions, and receipt recording with removal,
 inversion and equivalent-rewording probes. Helper nonzero exits and the author
 stop-on-error duty are separate contracts.
+Hook verification drives `hooks-check.js` against fixture Git repos with dangling
+and missing configured hooks, including checkouts without a known hook manager.
+The fixtures cover executable hooks and inherited Git repository redirection.
+The instruction test protects the trusted invocation, author holds, driver-owned
+hook setup, and the pre-commit bypass prohibitions.
 Also run these two staged-file test files with `TMPDIR` unset, as in CI; their
 shared temp root falls back to `/tmp`. Keep that `/tmp` private to the dispatch
 (e.g. a mount namespace bound to owned 0700 scratch outside HOME).
@@ -422,6 +427,8 @@ bun run test tests/workflows/completion-guards.test.js \
   tests/workflows/adoption-disposition.test.js \
   tests/workflows/staged-file-tokens.test.js \
   tests/workflows/staged-token-gate.test.js \
+  tests/workflows/hooks-check.test.js \
+  tests/workflows/hooks-check-instruction.test.js \
   tests/workflows/settle-readback.test.js \
   tests/workflows/native-pr-watch.test.js \
   tests/workflows/chat-run-watch.test.js \
