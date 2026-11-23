@@ -55,11 +55,31 @@ test('mixed visual author pins Opus 5.5 medium and reviewer uses Sol high', () =
     provider: 'claude', modelClass: 'opus', model: 'claude-opus-5-5', thinkingOptionId: 'medium',
   });
   expect(readJson('profiles/presets/claude-only.json').roles.find(({id}) => id === 'axstack-explainer'))
-    .toMatchObject({ provider: 'claude', modelClass: 'opus', thinkingOptionId: 'medium' });
+    .toMatchObject({ provider: 'claude', modelClass: 'opus', model: 'claude-opus-5-5', thinkingOptionId: 'medium' });
   expect(readJson('profiles/presets/codex-only.json').roles.find(({id}) => id === 'axstack-explainer'))
     .toMatchObject({ provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high' });
   expect(roles.find(({id}) => id === 'axstack-explainer-review')).toMatchObject({provider:'codex', modelClass:'sol', thinkingOptionId:'high'});
 });
+
+test('shipped explainer seat docs name the exact Opus 5.5 medium pin', () => {
+  const roster = readFileSync(`${root}/skills/axstack/references/role-roster.md`, 'utf8');
+  const entry = roster.split('- `axstack-explainer`:')[1]?.split('\n- ')[0] ?? '';
+  expect(entry).toMatch(/Opus 5\.5 \(`claude-opus-5-5`\) medium/);
+  expect(entry).not.toMatch(/sonnet/i);
+  const docs = readFileSync(`${root}/docs/workflows.md`, 'utf8').replace(/\s+/g, ' ');
+  expect(docs).toMatch(/`axstack-explainer` pins `claude-opus-5-5` medium with class `opus`/);
+  expect(docs).not.toMatch(/`axstack-explainer` pins `claude-sonnet/);
+});
+
+for (const preset of presetNames) {
+  test(`Publish explicit theme captures: ${preset} explanation reviewer`, () => {
+    const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer-review').notes;
+    const concepts = [/explicit user theme/i, /PNGs/i, /that theme/i, /same four widths/i];
+    checkRule(notes, (text) => requires(text, ...concepts),
+      'With an explicit user theme, the PNGs show that theme at the same four widths.',
+      [[/that theme/i, 'the dark theme']], concepts);
+  });
+}
 
 for (const preset of presetNames) {
   test(`design render sources: ${preset} explanation reviewer`, () => {
