@@ -3,7 +3,7 @@
 For inline pages, follow [Inline pages](inline-pages.md) instead of this checklist.
 
 Design review against [design.md](design.md) hard rules and [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) covers every inline HTML page and every Publish article adaptation, including its calibration defaults, restraint and quality floor.
-Follow [aurora.md](aurora.md) for shared identity; apply frontend-design for content-specific craft subordinate to Aurora and the hard rules.
+Follow [neon.md](neon.md) for the palette; frontend-design is the lead design and craft authority, bound only by the hard rules and that palette.
 For non-anatomy Explain inline pages, the reviewer inspects the driver's final-byte
 `html_preview` screenshots at 728px dark and 360px light, bound to the artifact SHA-256.
 Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review.
@@ -11,13 +11,13 @@ Reuse adequate driver evidence rather than requiring a duplicate render;
 retain all layout, accessibility, theme and fit checks and any required verifier pass.
 For anatomy inline pages, the reviewer itself renders exact bytes with `html_preview`
 at 728px dark and 360px light as a non-publishing self-check, supplementing driver previews.
-For Publish, the reviewer opens `axstack-ui-verifier` PNGs at 728px dark and
-360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes,
-with paths bound to the artifact SHA-256 and recorded before review.
+For Publish, the reviewer opens `axstack-ui-verifier` PNGs at 360px, 390px mobile,
+728px and 1440px desktop, all four widths dark, with paths bound to the artifact
+SHA-256 and recorded before review. Publish articles never get a light-theme pass.
 Inspect the 1440px desktop screenshot for balanced composition, intentional horizontal margins,
 bounded prose measure, typography, section spacing and chart legibility.
 Inspect the 360px and 390px mobile screenshots for gutters, readable text and chart labels.
-Check every width and theme for clipping and horizontal scroll, recording defects and observations.
+Check every captured width and theme for clipping and horizontal scroll, recording defects and observations.
 The driver forwards those paths and SHA-256; changed bytes require fresh screenshots and review.
 A page failing to look decent is a blocking design finding, repaired by the same author.
 For Anatomy and Publish only, retain Delivery's design-only exception.
@@ -37,7 +37,7 @@ its private evidence folder. Playwright checks and source/design review remain
 bound to the exact final SHA-256 before public publication.
 
 1. Identify the final artifact bytes and theme. The explicit user theme wins;
-   otherwise use `prefers-color-scheme`.
+   otherwise use the dark Neon theme.
 2. Delegate the rendered pass through [UI verification](../../axstack/references/ui-verification.md).
    Record actual desktop and mobile observations, or name the missing layout
    check.
