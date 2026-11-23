@@ -129,12 +129,38 @@ rule('external-edit overwrite warnings reach the user',
   'Inform the user when overwrote_external_edit is true.',
   [[/tell|inform|notify/i, 'hide from'], [/true/i, 'false'], [/user/i, 'worker']]);
 
-rule('final bytes get dark mobile, intermediate and real desktop previews',
-  [/preview/i, /these exact bytes|final bytes/i, /dark/i, /360/i, /390/i, /728/i, /1440px/i],
-  'Preview final bytes dark at 360, 390, 728 and 1440px.',
-  [[/preview/i, 'skip'], [/dark/i, 'light'], [/1440px/i, '1024px']]);
-rule('final-byte previews add no light pass', [/light pass/i],
-  'Never add a light pass.', [[/never/i, 'always']], /never|no/i);
+// The captured page itself must be dark by default; a dark frame around a light
+// page, or a mandatory light pass, inverts the rule.
+const darkCapture = [/captur\w*|preview\w*/i, /these exact bytes|final (?:bytes|artifact)/i,
+  /dark (?:Neon )?(?:mode|theme)/i, /360/i, /390/i, /728/i, /1,?440/i];
+const capturesDark = (text) => requires(text, ...darkCapture)
+  && !sentences(text).some((sentence) => /\blight\b/i.test(sentence) && /captur|preview|pass/i.test(sentence)
+    && !/\bnever\b|omit all|without an explicit|explicit user theme/i.test(sentence));
+test('final bytes are captured as a dark page at all four widths by default', () => {
+  checkRule(page, capturesDark,
+    'Capture the final artifact in dark mode at 360px, 390px, 728px and 1,440px with Playwright MCP.',
+    [[/dark (?:Neon )?(?:mode|theme)/i, 'light theme with a dark frame'], [/1,?440/i, '1024']], darkCapture);
+});
+const explicitCapture = [/when|if/i, /explicit (?:user )?theme/i, /captur\w*/i, /that theme/i, /same four widths/i];
+rule('an explicit user theme is captured at the same four widths',
+  explicitCapture,
+  'If the user supplies an explicit theme, capture the page in that theme at the same four widths instead.',
+  [[/that theme/i, 'the dark theme'], [/same four widths/i, '728px only']]);
+const noLight = [/without an explicit (?:user )?theme|unless the user supplies an explicit theme/i, /light/i];
+rule('no light capture without an explicit theme', noLight,
+  'Omit all light-mode captures unless the user supplies an explicit theme.',
+  [[/omit all|never capture/i, 'require']], /never capture|omit all/i);
+test('reviewer publish theme mutations are rejected and correct rewording accepted', () => {
+  const accepts = (text) => capturesDark(text) && prohibits(text, /never capture|omit all/i, ...noLight)
+    && requires(text, ...explicitCapture);
+  expect(accepts(page)).toBe(true);
+  const swap = (from, to) => { const next = page.replace(from, to); expect(next).not.toBe(page); return next; };
+  const inverted = swap(/in the dark Neon theme at 360, 390, 728 and 1440px/, 'light at 360, 390, 728 and 1440px with a dark frame around the capture');
+  expect(accepts(inverted)).toBe(false);
+  expect(accepts(swap(/Without an explicit theme, never capture a light theme\./, 'Never omit a light pass.'))).toBe(false);
+  expect(accepts(swap(/Without an explicit theme, never capture a light theme\./,
+    'Omit all light-mode captures unless the user supplies an explicit theme.'))).toBe(true);
+});
 
 rule('publication receipt returns URL version and SHA',
   [/return|report/i, /URL/i, /\bversion\b/i, /SHA-256/i],
