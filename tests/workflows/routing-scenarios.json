@@ -98,8 +98,8 @@
       "expected": { "status": "HOLD checker work only", "action": "ask the user for an explicit decision to add the configured checker to this run", "activeRun": "keep axstack-checker unconfigured in the recorded snapshot unless the user explicitly adds it", "forbidden": ["silently adopt the later-installed checker", "resolve checker from the changed installed preset", "hold the whole run", "invent a provider default"] }
     },
     {
-      "id": "claude-sonnet-explanation-exception",
-      "input": { "preset": "claude-only", "artifact": "explanation", "author": "axstack-explainer Sonnet medium", "reviewer": "axstack-explainer-review Sonnet medium" },
+      "id": "claude-only-explanation-exception",
+      "input": { "preset": "claude-only", "artifact": "explanation", "author": "axstack-explainer Opus 5.5 medium", "reviewer": "axstack-explainer-review Sonnet medium" },
       "expected": { "allowed": "separate-session explanation review", "independence": "session independence only", "forbidden": ["cross-provider claim", "same-model code review"] }
     },
     {
