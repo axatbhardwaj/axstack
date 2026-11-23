@@ -79,7 +79,7 @@ export async function collectInventory({ listLinks, listThreads, localHost, page
     let countStable = true;
     while (pages < maxPages) {
       const cursor = result.nextCursor;
-      const page = await read(listThreads, { environmentId, allProjects: true, includeSubagents: false, limit: pageSize,
+      const page = await read(listThreads, { environmentId, allProjects: true, includeSubagents: false, settled: false, limit: pageSize,
         ...(cursor !== null && { cursor }) });
       if (!Array.isArray(page?.threads)) {
         gaps.add(page === deadline ? 'deadline' : 'page-error');

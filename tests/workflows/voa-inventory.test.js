@@ -36,16 +36,29 @@ test('a slow first page does not block a sibling from following its own cursor',
       return page();
     }));
   expect(calls).toEqual([
-    { environmentId: env('io'), allProjects: true, includeSubagents: false, limit: 8 },
-    { environmentId: env('iobox'), allProjects: true, includeSubagents: false, limit: 8 },
-    { environmentId: env('iosatellite'), allProjects: true, includeSubagents: false, limit: 8 },
-    { environmentId: env('iobox'), allProjects: true, includeSubagents: false, limit: 8, cursor: 1 },
+    { environmentId: env('io'), allProjects: true, includeSubagents: false, settled: false, limit: 8 },
+    { environmentId: env('iobox'), allProjects: true, includeSubagents: false, settled: false, limit: 8 },
+    { environmentId: env('iosatellite'), allProjects: true, includeSubagents: false, settled: false, limit: 8 },
+    { environmentId: env('iobox'), allProjects: true, includeSubagents: false, settled: false, limit: 8, cursor: 1 },
   ]);
   expect(hosts.map(({ host, coverage, threads }) => [host, coverage, threads.map((t) => t.threadId)])).toEqual([
     ['io', 'complete', ['owner-3']], ['iobook', 'unknown', []], ['iobox', 'complete', ['owner-1', 'owner-2']],
     ['iosatellite', 'complete', []], ['axat-vps', 'unknown', []],
   ]);
   expect(lookup(hosts, 'axat-vps')).toMatchObject({ environmentId: env('axat-vps'), gaps: ['unreachable'] });
+});
+
+test('an older waiting owner remains visible behind recent settled threads', async () => {
+  const recent = Array.from({ length: 20 }, (_, i) => row('iobox', `settled-${i}`));
+  const owner = row('iobox', 'owner', { status: 'waiting', settled: false });
+  const hosts = await collectInventory(inputs([], async ({ settled, limit, cursor = 0 }) => {
+    const rows = [...recent, owner].filter((t) => settled === undefined || t.settled === settled);
+    const next = cursor + limit;
+    return page(rows.slice(cursor, next), next < rows.length ? next : null, rows.length);
+  }));
+  expect(lookup(hosts, 'iobox')).toMatchObject({
+    coverage: 'complete', total: 1, threads: [{ threadId: 'owner', flags: ['waiting'] }],
+  });
 });
 
 test('page cap, bad cursors, later failures and no readable page have distinct coverage', async () => {

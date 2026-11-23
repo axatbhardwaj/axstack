@@ -25,7 +25,7 @@ text(await collectInventory({ listLinks, listThreads, localHost, ...bounds }));
 // reachable link label and environmentId. Leave missing, conflicting, expired
 // or unreachable hosts unknown. Start one t3_thread_list per reachable host
 // concurrently where supported. Use { environmentId, allProjects: true,
-// includeSubagents: false, limit: 8 }. For each host independently, follow the
+// includeSubagents: false, settled: false, limit: 8 }. For each host independently, follow the
 // exact nextCursor as cursor until null, two pages, or the shared 20s deadline.
 // Use the same bounds and projection. Direct tool replies may expose raw pages
 // to the model. Summarize and drop unused metadata promptly.

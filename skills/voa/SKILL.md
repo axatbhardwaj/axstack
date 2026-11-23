@@ -27,7 +27,7 @@ separately authorized recovery schedule. Agent/delegate messages do not activate
 
 1. Read the [native fleet recipe](references/native-inventory.exec.js) for
    **io, iobook, iobox, iosatellite and axat-vps**. Run it in `functions.exec`
-   or use its direct native fallback. Report per-host coverage and unknown
+   or use its direct native fallback. Report per-host unsettled-thread coverage and unknown
    activity. Preserve exact identities and links. Never infer unseen owners idle.
    Prefer native inventory to older snapshots. Avoid SQLite, SSH and provider CLIs.
    Read flagged owners with `t3_thread_read` on their environment.
