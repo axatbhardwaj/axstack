@@ -95,9 +95,9 @@ Other visual formats, including anatomy figures, retain delegated
 `axstack-explainer` authorship; Publish retains its article adaptation workflow.
 The visual author (driver or `axstack-explainer`) loads [design.md](references/design.md) and reads
 [FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md) for every inline HTML page
-and every Publish article adaptation, using frontend-design for content-specific craft
-subordinate to Aurora and design.md's hard rules.
-Follow [aurora.md](references/aurora.md) for shared identity.
+and every Publish article adaptation.
+frontend-design is the lead design and craft authority, bound only by design.md's
+hard rules and the Neon palette. Follow [neon.md](references/neon.md) for the palette.
 Never load any of these references for chat Mermaid or anatomy figures.
 Explicitly requested standalone HTML files keep their existing review and Visual QA.
 Plain-prose answers stay driver-written; other phases retain their own Mermaid
