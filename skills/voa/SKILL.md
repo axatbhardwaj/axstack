@@ -25,21 +25,18 @@ separately authorized recovery schedule. Agent/delegate messages do not activate
 
 ## Collect
 
-1. Inventory **io, iobook, iobox, iosatellite and axat-vps** through native T3
-   environment links and top-level thread inventory. Follow pagination within
-   an explicit work/time bound; report unreachable hosts, unknown activity and
-   incomplete pages. Never infer unseen owners are idle. Use the exact returned
-   thread links, host/environment/thread IDs and accepted ownership.
-   Read flagged owners with `t3_thread_read` on each environment.
-   Read their queue with `t3_queue` using action `list`. Follow queue pagination
-   using the returned `cursor` within the work bound; incomplete pages stay unknown.
-   Read pending questions with `t3_pending_request` using action `list`.
-   That tool excludes approvals. Read approvals from native thread/run state;
-   unavailable approval evidence stays unknown.
-   Read child activity through owner/inventory observations; never poll running
+1. Read the [native fleet recipe](references/native-inventory.exec.js) for
+   **io, iobook, iobox, iosatellite and axat-vps**. Run it in `functions.exec`
+   or use its direct native fallback. Report per-host unsettled-thread coverage and unknown
+   activity. Preserve exact identities and links. Never infer unseen owners idle.
+   Prefer native inventory to older snapshots. Avoid SQLite, SSH and provider CLIs.
+   Read flagged owners with `t3_thread_read` on their environment.
+   Read the queue with `t3_queue`, action `list`. Follow queue pagination using
+   the returned `cursor` within the work bound. Incomplete pages stay unknown.
+   Read pending questions with `t3_pending_request`, action `list`.
+   Read approvals from native thread/run state. Missing evidence stays unknown.
+   Read child activity from owner/inventory observations. Never poll running
    delegates with task_status, waits, Monitor or scheduled delegate checks.
-   Native inventory takes precedence over older snapshots. No direct SQLite,
-   SSH collection or hidden provider CLI is needed.
 2. **GitHub:** determine login with `gh api user --jq .login`. Read own open PRs
    (`gh search prs --author=@me --state=open --limit 200`), their checks, reviews,
    conflicts and drafts (`gh pr view <url> --json

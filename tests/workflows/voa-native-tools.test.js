@@ -1,8 +1,13 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { checkRule, prohibits, requires } from './prose-contract.js';
+import { checkRule, loadedReferences, prohibits, requires } from './prose-contract.js';
 
 const skill = readFileSync('skills/voa/SKILL.md', 'utf8').replace(/\s+/g, ' ');
+
+test('normal VOA collection loads the native inventory recipe', () => {
+  const collect = skill.split('## Collect')[1].split('## Join')[0];
+  expect(loadedReferences(collect)).toContain('references/native-inventory.exec.js');
+});
 
 test('VOA names callable native list APIs instead of obsolete aliases', () => {
   expect(skill).not.toMatch(/`t3_(?:queue|pending_request)_list`/);
