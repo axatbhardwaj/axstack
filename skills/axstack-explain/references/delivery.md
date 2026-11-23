@@ -38,7 +38,7 @@ If a required author or reviewer seat is unavailable, hold the visual and
 answer in plain prose naming the held visual.
 Prose status is interim blocked status and leaves the requested visual incomplete.
 
-For inline HTML pages, explicitly requested standalone HTML files and Publish article adaptations, judge the exact-byte renders
+For inline HTML pages, non-anatomy standalone HTML files and Publish article adaptations, judge the exact-byte renders
 against [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md), including its calibration defaults,
 restraint and quality floor, plus [design.md](design.md)'s hard rules.
 Follow [neon.md](neon.md) for the palette; frontend-design is the lead design and craft authority, bound only by the hard rules and that palette.
