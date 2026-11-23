@@ -3,9 +3,9 @@
 For inline pages, follow [Inline pages](inline-pages.md) instead of this checklist.
 
 Design review against [design.md](design.md) hard rules and [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) covers every inline HTML page and every Publish article adaptation, including its calibration defaults, restraint and quality floor.
-Design review also covers every explicitly requested standalone HTML file; anatomy figures stay excluded.
-Standalone HTML files get exact-byte design review in the dark Neon theme, or in an explicit user theme when one is supplied.
+Design review covers every explicitly requested standalone HTML file: standalone HTML files get exact-byte design review in the dark Neon theme or an explicit user theme.
 Follow [neon.md](neon.md) for the palette; frontend-design is the lead design and craft authority, bound only by the hard rules and that palette.
+Design review checks that, after any token adjustment, derivation or mix, every text accent keeps at least 4.5:1 contrast on ground and surface.
 For non-anatomy Explain inline pages, the reviewer inspects the driver's final-byte
 `html_preview` screenshots at 728px dark and 360px light, bound to the artifact SHA-256.
 Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review.
@@ -26,7 +26,7 @@ A page failing to look decent is a blocking design finding, repaired by the same
 For Anatomy and Publish only, retain Delivery's design-only exception.
 Never describe a remaining finding as fixed or a clean pass.
 Follow [Delivery](delivery.md) for other failure holds and unknown-render holds.
-Chat Mermaid and anatomy keep their existing review. Explicitly requested standalone HTML files keep their existing review and Visual QA plus this design review.
+Chat Mermaid and anatomy keep their existing review. Explicitly requested standalone HTML files keep their existing review and Visual QA.
 Interaction checks remain with `axstack-ui-verifier`; source-fidelity review is unchanged.
 
 Use this checklist for every HTML explanation and other visual artifacts where
@@ -39,8 +39,9 @@ use the local shared delegate with an owned exact-byte snapshot under
 its private evidence folder. Playwright checks and source/design review remain
 bound to the exact final SHA-256 before public publication.
 
-1. Identify the final artifact bytes and theme. The explicit user theme wins;
-   otherwise use the dark Neon theme.
+1. Identify the final artifact bytes and theme. For Publish articles and non-anatomy
+   standalone HTML, use the explicit user theme, otherwise the dark Neon theme.
+   Anatomy figures never take the Neon default.
 2. Delegate the rendered pass through [UI verification](../../axstack/references/ui-verification.md).
    Record actual desktop and mobile observations, or name the missing layout
    check.
