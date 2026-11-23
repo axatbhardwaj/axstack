@@ -1,7 +1,7 @@
 # Design
 
-[FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) is the lead design and craft authority for every inline HTML page, every explicitly requested standalone HTML file and every Publish article adaptation: typography, layout, composition and art direction.
-[neon.md](neon.md) defines the required Neon palette for every inline HTML page, every explicitly requested standalone HTML file and every Publish article adaptation.
+[FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) is the lead design and craft authority for every inline HTML page, every non-anatomy standalone HTML file and every Publish article adaptation: typography, layout, composition and art direction.
+[neon.md](neon.md) defines the required Neon palette for every inline HTML page, every non-anatomy standalone HTML file and every Publish article adaptation.
 On conflict, only these hard rules and the Neon palette requirement win over frontend-design.
 
 - Never load network resources or font files. Inline pages use T3 font variables or system font stacks. Published articles use system font stacks.
