@@ -97,9 +97,9 @@ for (const preset of presetNames) {
         [[/opens/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review'],
           [/390px mobile/i, '390px omitted'], [/1440px desktop/i, '728px intermediate'],
           [/all four widths dark/i, 'one width dark']]],
-      [[/design review/i, /follows/i, /design\.md/i, /neon\.md/i, /palette/i, /FRONTEND-DESIGN\.md/i, /lead design and craft authority/i, /every inline HTML page/i, /every explicitly requested standalone HTML file/i, /every Publish article adaptation/i],
-        'Design review follows design.md hard rules, the neon.md palette and FRONTEND-DESIGN.md as lead design and craft authority for every inline HTML page, every explicitly requested standalone HTML file and every Publish article adaptation.',
-        [[/follows/i, 'skips'], [/lead/i, 'subordinate'], [/every inline HTML page/i, 'some inline pages'], [/every explicitly requested standalone HTML file/i, 'some standalone files'], [/every Publish article adaptation/i, 'some Publish articles']]],
+      [[/design review/i, /follows/i, /design\.md/i, /neon\.md/i, /palette/i, /FRONTEND-DESIGN\.md/i, /lead design and craft authority/i, /every inline HTML page/i, /every non-anatomy standalone HTML file/i, /every Publish article adaptation/i],
+        'Design review follows design.md hard rules, the neon.md palette and FRONTEND-DESIGN.md as lead design and craft authority for every inline HTML page, every non-anatomy standalone HTML file and every Publish article adaptation.',
+        [[/follows/i, 'skips'], [/lead/i, 'subordinate'], [/every inline HTML page/i, 'some inline pages'], [/every non-anatomy standalone HTML file/i, 'some standalone files'], [/non-anatomy /i, ''], [/every Publish article adaptation/i, 'some Publish articles']]],
     ];
     for (const [concepts, rewording, inversions] of rules) {
       checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);
