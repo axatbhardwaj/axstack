@@ -95,13 +95,13 @@ Other visual formats, including anatomy figures, retain delegated
 `axstack-explainer` authorship; Publish retains its article adaptation workflow.
 The visual author (driver or `axstack-explainer`) loads [design.md](references/design.md) and
 [neon.md](references/neon.md) and reads [FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md)
-for every inline HTML page, every explicitly requested standalone HTML file
+for every inline HTML page, every non-anatomy standalone HTML file
 and every Publish article adaptation.
 frontend-design is the lead design and craft authority, bound only by design.md's
 hard rules and the Neon palette. Follow [neon.md](references/neon.md) for the palette.
 Never load any of these references for chat Mermaid or anatomy figures, including standalone anatomy files.
 Explicitly requested standalone HTML files keep their existing review and Visual QA.
-Standalone HTML files also get exact-byte design review in the dark Neon theme or an explicit user theme.
+Non-anatomy standalone HTML files also get exact-byte design review in the dark Neon theme or an explicit user theme.
 Plain-prose answers stay driver-written; other phases retain their own Mermaid
 owners, and README/docs diagram edits go through Implement under these rules.
 Use inline SVG or CSS inside inline pages. Never use Mermaid in inline pages.
@@ -148,7 +148,7 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
    claims or on request.
    The `axstack-explainer-review` always reviews every visual at its exact final
    bytes before delivery.
-   For inline HTML pages, explicitly requested standalone HTML files and Publish article adaptations,
+   For inline HTML pages, non-anatomy standalone HTML files and Publish article adaptations,
    include the [design review](references/visual-qa.md) and [Delivery](references/delivery.md) rules.
    Consequential claims include gap or missing-claim reports, blast-radius
    safety facts, spec readbacks, and every whiteboard-defense explanation in chat too.
