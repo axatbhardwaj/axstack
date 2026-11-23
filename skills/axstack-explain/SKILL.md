@@ -93,13 +93,15 @@ brief when useful. Keep one writer per visual, including specialist delegation;
 repairs return to that author.
 Other visual formats, including anatomy figures, retain delegated
 `axstack-explainer` authorship; Publish retains its article adaptation workflow.
-The visual author (driver or `axstack-explainer`) loads [design.md](references/design.md) and reads
-[FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md) for every inline HTML page
+The visual author (driver or `axstack-explainer`) loads [design.md](references/design.md) and
+[neon.md](references/neon.md) and reads [FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md)
+for every inline HTML page, every explicitly requested standalone HTML file
 and every Publish article adaptation.
 frontend-design is the lead design and craft authority, bound only by design.md's
 hard rules and the Neon palette. Follow [neon.md](references/neon.md) for the palette.
-Never load any of these references for chat Mermaid or anatomy figures.
+Never load any of these references for chat Mermaid or anatomy figures, including standalone anatomy files.
 Explicitly requested standalone HTML files keep their existing review and Visual QA.
+Standalone HTML files also get exact-byte design review in the dark Neon theme, or in an explicit user theme when one is supplied.
 Plain-prose answers stay driver-written; other phases retain their own Mermaid
 owners, and README/docs diagram edits go through Implement under these rules.
 Use inline SVG or CSS inside inline pages. Never use Mermaid in inline pages.
