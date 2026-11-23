@@ -14,13 +14,22 @@ function rule(name, path, concepts, rewording, inversions, select = (text) => te
 }
 
 const explainRoles = JSON.parse(read('profiles/presets/claude-only.json')).roles;
-const authorEffort = explainRoles.find(({ id }) => id === 'axstack-explainer').thinkingOptionId;
-const reviewEffort = explainRoles.find(({ id }) => id === 'axstack-explainer-review').thinkingOptionId;
-rule('F1: Claude-only explanation efforts agree with the selected preset',
-  'skills/axstack-explain/SKILL.md', [/claude-only/i, /Sonnet/i,
-    new RegExp(`author ${authorEffort}\\b`), new RegExp(`reviewer ${reviewEffort}\\b`), /separate/i],
-  `For claude-only explanations, separate Sonnet reviewer ${reviewEffort} and author ${authorEffort} sessions are allowed.`,
-  [[new RegExp(`author ${authorEffort}\\b`), 'author xhigh'], [/separate/i, 'shared']]);
+const explainSeat = (id) => explainRoles.find((role) => role.id === id);
+const seatName = ({ modelClass }) => modelClass[0].toUpperCase() + modelClass.slice(1);
+const author = explainSeat('axstack-explainer');
+const reviewer = explainSeat('axstack-explainer-review');
+// Class and effort come from the shipped preset, so stale model wording fails.
+const authorSeat = new RegExp(`${seatName(author)}(?: \\d\\.\\d)? author ${author.thinkingOptionId}\\b`, 'i');
+const reviewerSeat = new RegExp(`${seatName(reviewer)}(?: \\d\\.\\d)? reviewer ${reviewer.thinkingOptionId}\\b`, 'i');
+for (const path of ['skills/axstack-explain/SKILL.md', 'skills/axstack-review/references/review-candidate.md']) {
+  rule(`F1: ${path} claude-only explanation seats agree with the selected preset`,
+    path, [/claude-only/i, authorSeat, reviewerSeat, /separate/i],
+    `For claude-only explanations, separate ${seatName(reviewer)} reviewer ${reviewer.thinkingOptionId} and ${seatName(author)} author ${author.thinkingOptionId} sessions are allowed.`,
+    [[authorSeat, 'Sonnet author xhigh'], [/separate/i, 'shared']]);
+  rule(`F1: ${path} claude-only explanation exception stays session independence only`,
+    path, [/session independence only/i, /explanations?/i],
+    'Explanations get session independence only.', [[/session independence only/i, 'cross-provider independence']]);
+}
 
 rule('F2: weekly test audit names its review-before-publication exception',
   shared('test-audit-weekly'), [/weekly test audit/i, /exception/i,
