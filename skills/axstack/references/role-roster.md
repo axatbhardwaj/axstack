@@ -42,7 +42,7 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
 - `axstack-explainer`: for Explain, the driver authors ordinary inline HTML and
   chat Mermaid by default. The specialist can author these visuals when useful;
   it retains other visual authorship, including anatomy figures.
-  Mixed pins Sonnet 5.5 high exactly.
+  Mixed and claude-only pin Opus 5.5 (`claude-opus-5-5`) medium exactly.
 - `axstack-explainer-review` always reviews every visual; `codex/sol` high in mixed.
   Consequential or complex driver-written prose keeps its review rule; every
   whiteboard defense is consequential, in chat too.
