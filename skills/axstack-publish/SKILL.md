@@ -83,26 +83,25 @@ For public mode, run Explain's [self-contained asset check](../axstack-explain/r
 Reuse Explain's [page rules](../axstack-explain/references/inline-pages.md#page-rules)
 and [Visual QA](../axstack-explain/references/visual-qa.md) for checks and verifier routing.
 
-Send the article adaptation, including art direction and standalone light/dark theme,
+Send the article adaptation, including art direction and the dark Neon theme,
 to `axstack-explainer` with a bounded brief.
+The `axstack-explainer` author seat produces the article adaptation; the driver never authors it.
 The explainer loads and follows Explain's [design guidance](../axstack-explain/references/design.md)
 and reads [frontend-design](../axstack-explain/references/frontend-design/FRONTEND-DESIGN.md).
-Follow [aurora.md](../axstack-explain/references/aurora.md) for shared identity,
-including its published palette defaults and type, layout and chart grammar.
-Require inline defaults and `prefers-color-scheme` so the article works outside T3;
+Follow [neon.md](../axstack-explain/references/neon.md) for the palette and chart truth rules;
+frontend-design is the lead design and craft authority, bound only by design.md's hard rules and that palette.
+Require inline dark-only defaults with `color-scheme: dark` so the article works outside T3;
 honor an explicit user theme request.
 Theme adaptation changes bytes: save `final.html`, its byte count and SHA-256,
 then rerun the referenced Explain page checks on these final bytes.
 Before independent review, have `axstack-ui-verifier` preview these exact bytes with
-Playwright MCP at 728px dark and 360px light plus 390px mobile and 1440px desktop,
-covering all four widths in both themes, and record screenshots with paths,
+Playwright MCP dark at 360, 390, 728 and 1440px, and record screenshots with paths,
 their artifact SHA-256 and the Explain QA results.
 Require a fresh independent `axstack-explainer-review` on the final bytes.
 The driver forwards the verifier PNG paths and bound artifact SHA-256 for the
 reviewer's design review against FRONTEND-DESIGN.md (calibration defaults, restraint
 and quality floor) plus design.md's hard rules, alongside source-fidelity review.
-Apply frontend-design for content-specific craft subordinate to Aurora and the hard rules;
-include aurora.md in the review brief.
+Include neon.md in the review brief. Never add a light pass.
 A page failing to look decent is a blocking design finding, repaired by the same author.
 If only design findings remain after the second round, deliver the visual with each finding named and recorded in evidence.
 Design-only means cosmetic preferences under Delivery; factual, citation and other blocking failures are excluded.
