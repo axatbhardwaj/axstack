@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
+import { themeConflicts } from './theme-contract.js';
 
 const base = `${import.meta.dir}/../../skills/`;
 const guide = 'axstack-explain/references/design.md';
@@ -281,6 +282,56 @@ rule(qa, 'Publish review uses explicit theme captures', [/explicit user theme/i,
 rule(neon, 'explicit theme replaces the dark default', [/explicit user theme/i, /replaces/i, /dark default/i, /captures/i],
   'An explicit user theme replaces the dark default, including captures.',
   [[/replaces/i, 'keeps']]);
+const briefs = 'axstack-publish/references/review-briefs.md';
+const pageRules = 'axstack-explain/references/inline-pages.md';
+// Publish loads all of these; a two-theme or light demand outside inline T3 or an
+// explicit user theme contradicts the dark Neon default.
+test('design: loaded guidance has no unscoped light or two-theme demand', () => {
+  for (const path of [guide, explain, qa, delivery, publish, neon, briefs, pageRules]) {
+    expect(themeConflicts(readFileSync(base + path, 'utf8')), path).toEqual([]);
+  }
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    const notes = JSON.parse(readFileSync(`${base}../profiles/presets/${preset}.json`, 'utf8'))
+      .roles.find(({ id }) => id === 'axstack-explainer-review').notes;
+    expect(themeConflicts(notes), preset).toEqual([]);
+  }
+  // Reviewer mutation: dropping Visual QA's explicit-theme scope must conflict.
+  const list = sentences(readFileSync(base + qa, 'utf8'));
+  const target = list.findIndex((sentence) => /light.theme pass/i.test(sentence));
+  expect(target).toBeGreaterThanOrEqual(0);
+  const unscoped = list.map((sentence, at) => at === target ? 'Publish articles never get a light-theme pass' : sentence);
+  expect(themeConflicts(unscoped.join('. ')).length).toBeGreaterThan(0);
+  expect(themeConflicts(`${readFileSync(base + publish, 'utf8')}\nNever omit a light pass.`).length).toBeGreaterThan(0);
+});
+rule(briefs, 'Publish review brief reviews the selected theme at four widths',
+  [/review/i, /dark Neon theme/i, /explicit user theme/i, /all four widths/i],
+  'Review the dark Neon theme at all four widths, or the explicit user theme when one is supplied.',
+  [[/all four widths/i, '728px only'], [/review/i, 'skip']]);
+for (const [path, label] of [[neon, 'Neon'], [qa, 'Visual QA']]) {
+  rule(path, `${label} keeps every text accent at 4.5:1 after adjustments`,
+    [/every text accent/i, /at least 4\.5:1/i, /ground and surface/i, /after any token adjustment, derivation or mix/i],
+    'After any token adjustment, derivation or mix, every text accent keeps at least 4.5:1 contrast on ground and surface.',
+    [[/at least 4\.5:1/i, 'about 3:1'], [/every text accent/i, 'the example accents']]);
+}
+rule(explain, 'reviewer handoff includes standalone HTML design review',
+  [/inline HTML pages/i, /explicitly requested standalone HTML files/i, /Publish article adaptations/i, /include/i, /design review/i],
+  'Include the design review for inline HTML pages, explicitly requested standalone HTML files and Publish article adaptations.',
+  [[/include/i, 'omit'], [/explicitly requested standalone HTML files/i, 'no standalone files']]);
+rule(delivery, 'delivery judges standalone HTML renders',
+  [/inline HTML pages/i, /explicitly requested standalone HTML files/i, /Publish article adaptations/i, /judge/i, /exact.byte renders/i],
+  'Judge the exact-byte renders of inline HTML pages, explicitly requested standalone HTML files and Publish article adaptations.',
+  [[/judge/i, 'ignore'], [/explicitly requested standalone HTML files/i, 'no standalone files']]);
+rule(qa, 'Neon default theme is scoped to Publish and non-anatomy standalone HTML',
+  [/Publish articles/i, /non-anatomy standalone HTML/i, /explicit user theme/i, /dark Neon theme/i],
+  'For Publish articles and non-anatomy standalone HTML, use the explicit user theme, otherwise the dark Neon theme.',
+  [[/non-anatomy standalone HTML/i, 'every non-inline visual']]);
+rule(qa, 'anatomy keeps its own kit themes', [/anatomy/i, /Neon default/i],
+  'Anatomy figures never take the Neon default.', [[/never/i, 'always']], /never take/i);
+for (const path of [guide, neon]) {
+  rule(path, `${path} scopes the dark default to non-anatomy standalone HTML`,
+    [/non-anatomy standalone HTML/i, /dark.only by default/i],
+    'Non-anatomy standalone HTML is dark-only by default.', [[/non-anatomy standalone HTML/i, 'all standalone figures']]);
+}
 rule(explain, 'chat Mermaid and anatomy skip design references', [/load/i, /(?:either reference|any of these references)/i, /chat Mermaid/i, /anatomy/i],
   'Never load either reference for chat Mermaid or anatomy figures.', [[/never/i, 'always']], /never load/i);
 rule(publish, 'Publish delegates article adaptation to explainer',
