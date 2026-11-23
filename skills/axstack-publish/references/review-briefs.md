@@ -3,6 +3,8 @@
 Use these templates for source-fidelity review and repair of Explain/Publish
 articles. Fill the placeholders from the exact artifact and research record.
 Keep the existing design, verification and delivery rules alongside this brief.
+Design review follows design.md, neon.md and lead FRONTEND-DESIGN.md; review the
+dark Neon theme at all four widths, or the explicit user theme when one is supplied.
 
 ## Review brief template
 

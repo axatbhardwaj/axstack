@@ -144,7 +144,7 @@ test('review modes: preset boundaries and Sonnet explanation exception stay expl
   expect(routing).toContain("holds that role with no substitution");
   expect(routing).toMatch(/provider[^.]*model[^.]*effort[^.]*no substitution/i);
   expect(review).toMatch(/single-provider[^.]*not[^.]*cross-provider/i);
-  expect(review).toMatch(/Sonnet[^.]*explanation[^.]*session independence only/i);
+  expect(review).toMatch(/claude-only explanation exception[^.]*session independence only/i);
   expect(review).toMatch(/never[^.]*same-model code review|does not permit[^.]*same-model code review/i);
 });
 

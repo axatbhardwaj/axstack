@@ -49,13 +49,37 @@ for (const [id, concepts, rewording, inversions] of explanationRoles) {
   });
 }
 
-test('mixed visual author pins Sonnet 5.5 high and reviewer uses Sol high', () => {
+test('mixed visual author pins Opus 5.5 medium and reviewer uses Sol high', () => {
   const roles = readJson('profiles/presets/mixed.json').roles;
   expect(roles.find(({id}) => id === 'axstack-explainer')).toMatchObject({
-    provider: 'claude', modelClass: 'sonnet', model: 'claude-sonnet-5-5', thinkingOptionId: 'high',
+    provider: 'claude', modelClass: 'opus', model: 'claude-opus-5-5', thinkingOptionId: 'medium',
   });
+  expect(readJson('profiles/presets/claude-only.json').roles.find(({id}) => id === 'axstack-explainer'))
+    .toMatchObject({ provider: 'claude', modelClass: 'opus', model: 'claude-opus-5-5', thinkingOptionId: 'medium' });
+  expect(readJson('profiles/presets/codex-only.json').roles.find(({id}) => id === 'axstack-explainer'))
+    .toMatchObject({ provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high' });
   expect(roles.find(({id}) => id === 'axstack-explainer-review')).toMatchObject({provider:'codex', modelClass:'sol', thinkingOptionId:'high'});
 });
+
+test('shipped explainer seat docs name the exact Opus 5.5 medium pin', () => {
+  const roster = readFileSync(`${root}/skills/axstack/references/role-roster.md`, 'utf8');
+  const entry = roster.split('- `axstack-explainer`:')[1]?.split('\n- ')[0] ?? '';
+  expect(entry).toMatch(/Opus 5\.5 \(`claude-opus-5-5`\) medium/);
+  expect(entry).not.toMatch(/sonnet/i);
+  const docs = readFileSync(`${root}/docs/workflows.md`, 'utf8').replace(/\s+/g, ' ');
+  expect(docs).toMatch(/`axstack-explainer` pins `claude-opus-5-5` medium with class `opus`/);
+  expect(docs).not.toMatch(/`axstack-explainer` pins `claude-sonnet/);
+});
+
+for (const preset of presetNames) {
+  test(`Publish explicit theme captures: ${preset} explanation reviewer`, () => {
+    const notes = readJson(`profiles/presets/${preset}.json`).roles.find(({ id }) => id === 'axstack-explainer-review').notes;
+    const concepts = [/explicit user theme/i, /PNGs/i, /that theme/i, /same four widths/i];
+    checkRule(notes, (text) => requires(text, ...concepts),
+      'With an explicit user theme, the PNGs show that theme at the same four widths.',
+      [[/that theme/i, 'the dark theme']], concepts);
+  });
+}
 
 for (const preset of presetNames) {
   test(`design render sources: ${preset} explanation reviewer`, () => {
@@ -67,15 +91,15 @@ for (const preset of presetNames) {
       [[/missing/i, /stale/i, /unreadable/i, /inadequate/i, /preview evidence/i, /requires/i, /fresh capture/i, /before review/i],
         'Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review.',
         [[/requires/i, 'waives'], [/before review/i, 'after delivery']]],
-      [[/Publish/i, /reviewer/i, /opens/i, /axstack-ui-verifier/i, /PNGs/i, /728px dark/i, /360px light/i,
-        /390px mobile/i, /1440px desktop/i, /all four widths in both themes/i, /artifact SHA-256/i, /before review/i],
-        'For Publish the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes bound to the artifact SHA-256 before review.',
+      [[/Publish/i, /reviewer/i, /opens/i, /axstack-ui-verifier/i, /PNGs/i, /360px/i,
+        /390px mobile/i, /728px/i, /1440px desktop/i, /all four widths dark/i, /artifact SHA-256/i, /before review/i],
+        'For Publish the reviewer opens axstack-ui-verifier PNGs at 360px, 390px mobile, 728px and 1440px desktop, all four widths dark, bound to the artifact SHA-256 before review.',
         [[/opens/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review'],
           [/390px mobile/i, '390px omitted'], [/1440px desktop/i, '728px intermediate'],
-          [/all four widths in both themes/i, 'one theme per width']]],
-      [[/design review/i, /follows/i, /design\.md/i, /aurora\.md/i, /shared identity/i, /FRONTEND-DESIGN\.md/i, /content.specific craft/i, /subordinate to Aurora and hard rules/i, /every inline HTML page/i, /every Publish article adaptation/i],
-        'Design review follows design.md, aurora.md shared identity and FRONTEND-DESIGN.md content-specific craft subordinate to Aurora and hard rules for every inline HTML page and every Publish article adaptation.',
-        [[/follows/i, 'skips'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]],
+          [/all four widths dark/i, 'one width dark']]],
+      [[/design review/i, /follows/i, /design\.md/i, /neon\.md/i, /palette/i, /FRONTEND-DESIGN\.md/i, /lead design and craft authority/i, /every inline HTML page/i, /every non-anatomy standalone HTML file/i, /every Publish article adaptation/i],
+        'Design review follows design.md hard rules, the neon.md palette and FRONTEND-DESIGN.md as lead design and craft authority for every inline HTML page, every non-anatomy standalone HTML file and every Publish article adaptation.',
+        [[/follows/i, 'skips'], [/lead/i, 'subordinate'], [/every inline HTML page/i, 'some inline pages'], [/every non-anatomy standalone HTML file/i, 'some standalone files'], [/non-anatomy /i, ''], [/every Publish article adaptation/i, 'some Publish articles']]],
     ];
     for (const [concepts, rewording, inversions] of rules) {
       checkRule(notes, (text) => requires(text, ...concepts), rewording, inversions, concepts);

@@ -1,12 +1,12 @@
 # Design
 
-[aurora.md](aurora.md) establishes the shared visual identity for every inline HTML page and every Publish article adaptation.
-Use [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) for content-specific craft subordinate to Aurora and the hard rules.
-These hard rules win on conflict.
+[FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) is the lead design and craft authority for every inline HTML page, every non-anatomy standalone HTML file and every Publish article adaptation: typography, layout, composition and art direction.
+[neon.md](neon.md) defines the required Neon palette for every inline HTML page, every non-anatomy standalone HTML file and every Publish article adaptation.
+On conflict, only these hard rules and the Neon palette requirement win over frontend-design.
 
 - Never load network resources or font files. Inline pages use T3 font variables or system font stacks. Published articles use system font stacks.
-- Inline pages follow the live T3 theme: derive every colour from T3 theme variables — ground from `--background`, ink from `--foreground`, all other colours via `color-mix()` with them or T3 semantic/chart variables (`--muted-foreground`, `--accent`, `--success`, `--warning`, `--destructive`, `--info`, `--chart-1`…`--chart-6`). Keep every colour legible in light and dark. `var()` fallbacks are allowed for standalone viewing. Never switch inline palettes on `prefers-color-scheme`; T3's theme leaves that query unchanged. Never redefine T3's own variables in inline pages. Published articles support light and dark via `prefers-color-scheme` outside T3.
-- Keep pages responsive down to 360px with visible keyboard focus, reduced motion respected and sufficient contrast in both themes.
+- Inline pages follow the live T3 theme: derive every colour from T3 theme variables — ground from `--background`, ink from `--foreground`, all other colours via `color-mix()` with them or T3 semantic/chart variables (`--muted-foreground`, `--accent`, `--success`, `--warning`, `--destructive`, `--info`, `--chart-1`…`--chart-6`). Keep every colour legible in light and dark T3 themes. `var()` fallbacks are allowed for standalone viewing. Never switch inline palettes on `prefers-color-scheme`; T3's theme leaves that query unchanged. Never redefine T3's own variables in inline pages. Published articles and non-anatomy standalone HTML files are dark-only by default and set `color-scheme: dark`; an explicit user theme replaces that default. Never switch published palettes on `prefers-color-scheme`.
+- Keep pages responsive down to 360px with visible keyboard focus, reduced motion respected and sufficient contrast in every rendered theme.
 - Never stop to confirm the subject: the brief and evidence are the subject.
 - Never keep design notes or history across pages. This overrides frontend-design's note hint.
 - Source fidelity beats any design choice: diagram edges, order, tables and code paths show the source.

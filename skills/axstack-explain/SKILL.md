@@ -93,13 +93,15 @@ brief when useful. Keep one writer per visual, including specialist delegation;
 repairs return to that author.
 Other visual formats, including anatomy figures, retain delegated
 `axstack-explainer` authorship; Publish retains its article adaptation workflow.
-The visual author (driver or `axstack-explainer`) loads [design.md](references/design.md) and reads
-[FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md) for every inline HTML page
-and every Publish article adaptation, using frontend-design for content-specific craft
-subordinate to Aurora and design.md's hard rules.
-Follow [aurora.md](references/aurora.md) for shared identity.
-Never load any of these references for chat Mermaid or anatomy figures.
+The visual author (driver or `axstack-explainer`) loads [design.md](references/design.md) and
+[neon.md](references/neon.md) and reads [FRONTEND-DESIGN.md](references/frontend-design/FRONTEND-DESIGN.md)
+for every inline HTML page, every non-anatomy standalone HTML file
+and every Publish article adaptation.
+frontend-design is the lead design and craft authority, bound only by design.md's
+hard rules and the Neon palette. Follow [neon.md](references/neon.md) for the palette.
+Never load any of these references for chat Mermaid or anatomy figures, including standalone anatomy files.
 Explicitly requested standalone HTML files keep their existing review and Visual QA.
+Non-anatomy standalone HTML files also get exact-byte design review in the dark Neon theme or an explicit user theme.
 Plain-prose answers stay driver-written; other phases retain their own Mermaid
 owners, and README/docs diagram edits go through Implement under these rules.
 Use inline SVG or CSS inside inline pages. Never use Mermaid in inline pages.
@@ -146,16 +148,16 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
    claims or on request.
    The `axstack-explainer-review` always reviews every visual at its exact final
    bytes before delivery.
-   For inline HTML pages and Publish article adaptations, include the
-   [design review](references/visual-qa.md) and [Delivery](references/delivery.md) rules.
+   For inline HTML pages, non-anatomy standalone HTML files and Publish article adaptations,
+   include the [design review](references/visual-qa.md) and [Delivery](references/delivery.md) rules.
    Consequential claims include gap or missing-claim reports, blast-radius
    safety facts, spec readbacks, and every whiteboard-defense explanation in chat too.
    On every review, verify the full claim set from the first review onward,
    including regression of prior findings on subsequent checks.
    Bind it to the exact artifact identity.
    Any byte change invalidates
-   that review and requires a fresh check. In `claude-only`, separate Sonnet
-   author medium and reviewer medium sessions are allowed for explanations and every visual as
+   that review and requires a fresh check. In `claude-only`, separate Opus 5.5
+   author medium and Sonnet reviewer medium sessions are allowed for explanations and every visual as
    session independence only. This exception never permits same-model code
    review or a cross-provider-independence claim.
 3. Report source, tests, rendered observations, independent review, and

@@ -62,9 +62,10 @@ This section applies to peer and authored PR modes.
      role or provider label changes.
 
    Mixed authored review is cross-provider. Single-provider review uses different
-   models, not cross-provider independence. The claude-only Sonnet explanation
-   exception is session independence only: separate `axstack-explainer` and
-   `axstack-explainer-review` at high. It never permits same-model code review.
+   models, not cross-provider independence. The claude-only explanation exception
+   is session independence only for explanations: separate Opus 5.5 author medium
+   and Sonnet reviewer medium sessions.
+   It never permits same-model code review or a cross-provider-independence claim.
 
    For the existing high-stakes Opus high author / Sol high checkpoint route,
    an eligible current non-author, non-owner checkpoint can satisfy the authored

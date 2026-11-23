@@ -64,7 +64,7 @@ Inline pages have no card exemption.
 Prefer static pages.
 Interactive means the page has script, form controls, or `<details>`.
 Plain links are not interactive.
-Use semantic elements, labels, visible focus, and sufficient contrast in both themes.
+Use semantic elements, labels, visible focus, and sufficient contrast in both T3 themes on inline pages and in the selected theme on Publish articles.
 Pages never use storage, cookies, modals, or popups.
 
 ## Check the exact bytes

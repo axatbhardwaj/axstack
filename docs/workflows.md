@@ -186,7 +186,7 @@ The mixed X route uses Grok.
 The mixed `axstack-auditor` uses the Sonnet class at high effort without an exact
 model pin; missing model or effort holds without substitution. The mixed
 `axstack-explainer-review` uses Sol high; `axstack-explainer` pins
-`claude-sonnet-5-5` high with class `sonnet`. The driver authors ordinary inline
+`claude-opus-5-5` medium with class `opus`. The driver authors ordinary inline
 HTML and chat Mermaid, with the explainer available as a specialist. Anatomy
 keeps delegated authorship; the reviewer covers every Explain visual. The existing mixed
 `axstack-ui-verifier` resolves the Codex Sol class at high effort with
