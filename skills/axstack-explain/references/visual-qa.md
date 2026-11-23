@@ -3,7 +3,7 @@
 For inline pages, follow [Inline pages](inline-pages.md) instead of this checklist.
 
 Design review against [design.md](design.md) hard rules and [FRONTEND-DESIGN.md](frontend-design/FRONTEND-DESIGN.md) covers every inline HTML page and every Publish article adaptation, including its calibration defaults, restraint and quality floor.
-Design review covers every explicitly requested standalone HTML file: standalone HTML files get exact-byte design review in the dark Neon theme or an explicit user theme.
+Design review covers every non-anatomy standalone HTML file: non-anatomy standalone HTML files get exact-byte design review in the dark Neon theme or an explicit user theme.
 Follow [neon.md](neon.md) for the palette; frontend-design is the lead design and craft authority, bound only by the hard rules and that palette.
 Design review checks that, after any token adjustment, derivation or mix, every text accent keeps at least 4.5:1 contrast on ground and surface.
 For non-anatomy Explain inline pages, the reviewer inspects the driver's final-byte
