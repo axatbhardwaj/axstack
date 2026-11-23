@@ -11,16 +11,16 @@ const writerConcepts = [/process(?:es)?\b/i, /file[- ]?system/i, /containers?\b/
   /clean[- ]?up/i, /scratch (?:execution|running)/i, /capture/i, /sandbox (?:run\/reap|reap\/run)/i];
 
 const rules = [
-  ['scope', (text) => requires(text, /only the new helpers/i, /dispatch-plan/, /pr-shape/, /readiness/, /run-init/, ...newHelperNames),
-    'Only the new helpers quiet gate observations, drift inspection, image resource extraction, sandbox, capture, scratch, pr-fresh, lane owner facts, evidence inspection, usage-split, run-init, readiness, pr-shape and dispatch-plan follow this rule.',
-    [[/only the new helpers/i, 'all scripts']], newHelperNames],
+  ['scope', (text) => requires(text, /only the new helpers/i, /dispatch-plan/, /pr-shape/, /readiness/, /run-init/, /hooks-check/, ...newHelperNames),
+    'Only the new helpers quiet gate observations, drift inspection, image resource extraction, sandbox, capture, scratch, pr-fresh, lane owner facts, evidence inspection, usage-split, hooks-check, run-init, readiness, pr-shape and dispatch-plan follow this rule.',
+    [[/only the new helpers/i, 'all scripts']], [/hooks-check/, ...newHelperNames]],
   ['legacy behavior', (text) => requires(text, /existing scripts/i, /retain|keep/i, /behavior/i),
     'The existing scripts keep their behavior.', [[/retain|keep/i, 'change']]],
   ['pure facts', (text) => prohibits(text, /no state between calls/i, /fact.*plan helpers/i,
-    /dispatch-plan/, /pr-shape/, /readiness without --run/, /explicit inputs/i, /read-only/i,
+    /dispatch-plan/, /pr-shape/, /readiness without --run/, /hooks-check/, /explicit inputs/i, /read-only/i,
     /git/, /gh/, /saved T3 JSON/, /SQLite (?:exports|snapshots)/i, /stdout/, /caller-given path/i),
-    'Fact and plan helpers dispatch-plan, pr-shape and readiness without --run consume explicit inputs, read-only git/gh or saved T3 JSON or SQLite snapshots, emit to stdout or a caller-given path, and retain no state between calls.',
-    [[/no state between calls/i, 'persistent state between calls'], [/read-only/i, 'read-write']], [/SQLite (?:exports|snapshots)/i]],
+    'Fact and plan helpers dispatch-plan, pr-shape, hooks-check and readiness without --run consume explicit inputs, read-only git/gh or saved T3 JSON or SQLite snapshots, emit to stdout or a caller-given path, and retain no state between calls.',
+    [[/no state between calls/i, 'persistent state between calls'], [/read-only/i, 'read-write']], [/hooks-check/, /SQLite (?:exports|snapshots)/i]],
   ['writer boundaries', (text) => requires(text, /writer helpers/i, /run-init/, /readiness --run/,
     /every side effect/i, /--help/, /write only (?:those|disclosed) paths/i, ...writerConcepts),
     'Writer helpers capture, scratch running, sandbox reap/run, readiness --run and run-init must list every side effect in --help covering processes, file system, containers, networks and clean-up, and write only disclosed paths.',
