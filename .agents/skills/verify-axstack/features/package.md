@@ -61,7 +61,7 @@ for MEMBER in skills/axstack-align/SKILL.md \
   skills/axstack-publish/SKILL.md skills/axstack-publish/references/review-briefs.md \
   skills/axstack/scripts/ledger-reconcile.js \
   skills/axstack-explain/references/design.md \
-  skills/axstack-explain/references/aurora.md \
+  skills/axstack-explain/references/neon.md \
   skills/axstack-explain/references/frontend-design/FRONTEND-DESIGN.md \
   skills/axstack-explain/references/frontend-design/LICENSE.txt \
   skills/axstack-explain/references/frontend-design/PROVENANCE.md \
