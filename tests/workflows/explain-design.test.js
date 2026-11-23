@@ -262,20 +262,25 @@ rule(publish, 'publication hold excludes only second-round design delivery',
   'Apart from design-only delivery after the second round, hold publication when a required check or review is missing or failed.',
   [[/except for|apart from/i, 'including'], [/after the second round/i, 'before the first round'], [/design.only delivery/i, 'any delivery']]);
 rule(explain, 'standalone HTML loads all three design references',
-  [/load/i, /design\.md/i, /neon\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every explicitly requested standalone HTML file/i],
-  'For every explicitly requested standalone HTML file, the author loads design.md and neon.md and reads FRONTEND-DESIGN.md.',
-  [[/loads?/i, 'skips'], [/every explicitly requested standalone HTML file/i, 'some standalone files']]);
+  [/load/i, /design\.md/i, /neon\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every non-anatomy standalone HTML file/i],
+  'For every non-anatomy standalone HTML file, the author loads design.md and neon.md and reads FRONTEND-DESIGN.md.',
+  [[/loads?/i, 'skips'], [/every non-anatomy standalone HTML file/i, 'some standalone files'], [/non-anatomy /i, '']]);
 rule(explain, 'standalone anatomy files skip design references', [/anatomy/i, /standalone/i],
   'Never load these references for standalone anatomy files.', [[/never/i, 'always']], /never load/i);
 for (const [path, label] of [[explain, 'Explain'], [qa, 'Visual QA']]) {
   rule(path, `${label} gives standalone HTML exact-byte design review in dark Neon by default`,
-    [/standalone HTML files/i, /exact.byte design review/i, /dark Neon theme/i, /explicit user theme/i],
-    'Standalone HTML files get exact-byte design review in the dark Neon theme or an explicit user theme.',
-    [[/exact.byte design review/i, 'source review only'], [/dark Neon theme/i, 'light theme']]);
+    [/non-anatomy standalone HTML files/i, /exact.byte design review/i, /dark Neon theme/i, /explicit user theme/i],
+    'Non-anatomy standalone HTML files get exact-byte design review in the dark Neon theme or an explicit user theme.',
+    [[/exact.byte design review/i, 'source review only'], [/dark Neon theme/i, 'light theme'], [/non-anatomy /i, '']]);
 }
-rule(qa, 'design review covers standalone HTML', [/design review/i, /covers/i, /every explicitly requested standalone HTML file/i],
-  'Design review covers every explicitly requested standalone HTML file.',
-  [[/covers/i, 'skips'], [/every explicitly requested standalone HTML file/i, 'some standalone files']]);
+rule(qa, 'design review covers standalone HTML', [/design review/i, /covers/i, /every non-anatomy standalone HTML file/i],
+  'Design review covers every non-anatomy standalone HTML file.',
+  [[/covers/i, 'skips'], [/every non-anatomy standalone HTML file/i, 'some standalone files'], [/non-anatomy /i, '']]);
+for (const [concept, label] of [[/lead design and craft authority/i, 'lead authority'], [/required Neon palette/i, 'Neon palette']]) {
+  rule(guide, `${label} covers non-anatomy standalone HTML`, [concept, /every non-anatomy standalone HTML file/i],
+    `The ${label} applies to every non-anatomy standalone HTML file: lead design and craft authority, required Neon palette.`,
+    [[/non-anatomy /i, '']]);
+}
 rule(qa, 'Publish review uses explicit theme captures', [/explicit user theme/i, /PNGs/i, /that theme/i, /same four widths/i],
   'With an explicit user theme, the PNGs show that theme at the same four widths.',
   [[/that theme/i, 'the dark theme']]);
@@ -314,13 +319,13 @@ for (const [path, label] of [[neon, 'Neon'], [qa, 'Visual QA']]) {
     [[/at least 4\.5:1/i, 'about 3:1'], [/every text accent/i, 'the example accents']]);
 }
 rule(explain, 'reviewer handoff includes standalone HTML design review',
-  [/inline HTML pages/i, /explicitly requested standalone HTML files/i, /Publish article adaptations/i, /include/i, /design review/i],
-  'Include the design review for inline HTML pages, explicitly requested standalone HTML files and Publish article adaptations.',
-  [[/include/i, 'omit'], [/explicitly requested standalone HTML files/i, 'no standalone files']]);
+  [/inline HTML pages/i, /non-anatomy standalone HTML files/i, /Publish article adaptations/i, /include/i, /design review/i],
+  'Include the design review for inline HTML pages, non-anatomy standalone HTML files and Publish article adaptations.',
+  [[/include/i, 'omit'], [/non-anatomy standalone HTML files/i, 'no standalone files'], [/non-anatomy /i, '']]);
 rule(delivery, 'delivery judges standalone HTML renders',
-  [/inline HTML pages/i, /explicitly requested standalone HTML files/i, /Publish article adaptations/i, /judge/i, /exact.byte renders/i],
-  'Judge the exact-byte renders of inline HTML pages, explicitly requested standalone HTML files and Publish article adaptations.',
-  [[/judge/i, 'ignore'], [/explicitly requested standalone HTML files/i, 'no standalone files']]);
+  [/inline HTML pages/i, /non-anatomy standalone HTML files/i, /Publish article adaptations/i, /judge/i, /exact.byte renders/i],
+  'Judge the exact-byte renders of inline HTML pages, non-anatomy standalone HTML files and Publish article adaptations.',
+  [[/judge/i, 'ignore'], [/non-anatomy standalone HTML files/i, 'no standalone files'], [/non-anatomy /i, '']]);
 rule(qa, 'Neon default theme is scoped to Publish and non-anatomy standalone HTML',
   [/Publish articles/i, /non-anatomy standalone HTML/i, /explicit user theme/i, /dark Neon theme/i],
   'For Publish articles and non-anatomy standalone HTML, use the explicit user theme, otherwise the dark Neon theme.',
