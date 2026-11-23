@@ -10,7 +10,7 @@ const head = 'a'.repeat(40);
 const url = 'https://github.com/one/project/pull/';
 
 async function run(repositories, mode = 'mixed') {
-  const dir = mkdtempSync(`${process.env.TMPDIR}/pr-triage-`);
+  const dir = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/pr-triage-`);
   try {
     const trace = `${dir}/calls`;
     writeFileSync(`${dir}/gh`, `#!/bin/sh\nexec "${process.execPath}" --no-env-file "$TRIAGE_FIXTURE" "$@"\n`);
