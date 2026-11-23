@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
-import { themeConflicts } from './theme-contract.js';
+import { bansLight, themeConflicts } from './theme-contract.js';
 
 const page = sentences(readFileSync(`${import.meta.dir}/../../skills/axstack-publish/SKILL.md`, 'utf8')).join('. ');
 
@@ -145,13 +145,12 @@ rule('an explicit user theme is captured at the same four widths',
   explicitCapture,
   'If the user supplies an explicit theme, capture the page in that theme at the same four widths instead.',
   [[/that theme/i, 'the dark theme'], [/same four widths/i, '728px only']]);
-const lightBan = /never capture|omit all/i;
 const noLight = [/(?:without|unless)\b.*explicit (?:user )?theme/i, /light/i];
-rule('no light capture without an explicit theme', noLight,
+test('no light capture without an explicit theme', () => checkRule(page, bansLight,
   'Omit all light-mode captures unless the user supplies an explicit theme.',
-  [[/omit all|never capture/i, 'require']], lightBan);
+  [[/omit all|never capture/i, 'require']], noLight));
 test('reviewer publish theme mutations are rejected and correct rewording accepted', () => {
-  const accepts = (text) => capturesDark(text) && prohibits(text, lightBan, ...noLight)
+  const accepts = (text) => capturesDark(text) && bansLight(text)
     && requires(text, ...explicitCapture);
   expect(accepts(page)).toBe(true);
   // Locate targets semantically so equivalent source wording keeps the mutations meaningful.
@@ -162,7 +161,7 @@ test('reviewer publish theme mutations are rejected and correct rewording accept
     return list.map((sentence, at) => (at === index ? next : sentence)).join('. ');
   };
   const isCapture = (sentence) => requires(sentence, ...darkCapture);
-  const isBan = (sentence) => prohibits(sentence, lightBan, ...noLight);
+  const isBan = (sentence) => bansLight(sentence);
   const isExplicit = (sentence) => requires(sentence, ...explicitCapture);
   for (const bad of [
     replace(isCapture, 'Capture these exact bytes with Playwright MCP light at 360, 390, 728 and 1440px with a dark frame around the capture'),
