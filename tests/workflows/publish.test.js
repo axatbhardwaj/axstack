@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
+import { themeConflicts } from './theme-contract.js';
 
 const page = sentences(readFileSync(`${import.meta.dir}/../../skills/axstack-publish/SKILL.md`, 'utf8')).join('. ');
 
@@ -130,12 +131,10 @@ rule('external-edit overwrite warnings reach the user',
   [[/tell|inform|notify/i, 'hide from'], [/true/i, 'false'], [/user/i, 'worker']]);
 
 // The captured page itself must be dark by default; a dark frame around a light
-// page, or a mandatory light pass, inverts the rule.
+// page, or any unscoped light pass, inverts the rule.
 const darkCapture = [/captur\w*|preview\w*/i, /these exact bytes|final (?:bytes|artifact)/i,
   /dark (?:Neon )?(?:mode|theme)/i, /360/i, /390/i, /728/i, /1,?440/i];
-const capturesDark = (text) => requires(text, ...darkCapture)
-  && !sentences(text).some((sentence) => /\blight\b/i.test(sentence) && /captur|preview|pass/i.test(sentence)
-    && !/\bnever\b|omit all|without an explicit|explicit user theme/i.test(sentence));
+const capturesDark = (text) => requires(text, ...darkCapture) && themeConflicts(text).length === 0;
 test('final bytes are captured as a dark page at all four widths by default', () => {
   checkRule(page, capturesDark,
     'Capture the final artifact in dark mode at 360px, 390px, 728px and 1,440px with Playwright MCP.',
@@ -146,20 +145,38 @@ rule('an explicit user theme is captured at the same four widths',
   explicitCapture,
   'If the user supplies an explicit theme, capture the page in that theme at the same four widths instead.',
   [[/that theme/i, 'the dark theme'], [/same four widths/i, '728px only']]);
-const noLight = [/without an explicit (?:user )?theme|unless the user supplies an explicit theme/i, /light/i];
+const lightBan = /never capture|omit all/i;
+const noLight = [/(?:without|unless)\b.*explicit (?:user )?theme/i, /light/i];
 rule('no light capture without an explicit theme', noLight,
   'Omit all light-mode captures unless the user supplies an explicit theme.',
-  [[/omit all|never capture/i, 'require']], /never capture|omit all/i);
+  [[/omit all|never capture/i, 'require']], lightBan);
 test('reviewer publish theme mutations are rejected and correct rewording accepted', () => {
-  const accepts = (text) => capturesDark(text) && prohibits(text, /never capture|omit all/i, ...noLight)
+  const accepts = (text) => capturesDark(text) && prohibits(text, lightBan, ...noLight)
     && requires(text, ...explicitCapture);
   expect(accepts(page)).toBe(true);
-  const swap = (from, to) => { const next = page.replace(from, to); expect(next).not.toBe(page); return next; };
-  const inverted = swap(/in the dark Neon theme at 360, 390, 728 and 1440px/, 'light at 360, 390, 728 and 1440px with a dark frame around the capture');
-  expect(accepts(inverted)).toBe(false);
-  expect(accepts(swap(/Without an explicit theme, never capture a light theme\./, 'Never omit a light pass.'))).toBe(false);
-  expect(accepts(swap(/Without an explicit theme, never capture a light theme\./,
-    'Omit all light-mode captures unless the user supplies an explicit theme.'))).toBe(true);
+  // Locate targets semantically so equivalent source wording keeps the mutations meaningful.
+  const list = sentences(page);
+  const replace = (matches, next) => {
+    const index = list.findIndex(matches);
+    expect(index).toBeGreaterThanOrEqual(0);
+    return list.map((sentence, at) => (at === index ? next : sentence)).join('. ');
+  };
+  const isCapture = (sentence) => requires(sentence, ...darkCapture);
+  const isBan = (sentence) => prohibits(sentence, lightBan, ...noLight);
+  const isExplicit = (sentence) => requires(sentence, ...explicitCapture);
+  for (const bad of [
+    replace(isCapture, 'Capture these exact bytes with Playwright MCP light at 360, 390, 728 and 1440px with a dark frame around the capture'),
+    replace(isBan, 'Never omit a light pass'),
+    replace(isBan, 'Never capture a light theme'),
+    replace(isExplicit, 'Capture every page in the dark theme at the same four widths'),
+    `${page}. Never omit a light pass`,
+    `${page}. Also capture both themes at every width`,
+  ]) expect(accepts(bad)).toBe(false);
+  for (const good of [
+    replace(isBan, 'Omit all light-mode captures unless the user supplies an explicit theme'),
+    replace(isBan, 'Unless the user supplies an explicit theme, never capture a light theme'),
+    replace(isCapture, 'Capture the final artifact in dark mode at 360px, 390px, 728px and 1,440px with Playwright MCP'),
+  ]) expect(accepts(good)).toBe(true);
 });
 
 rule('publication receipt returns URL version and SHA',
