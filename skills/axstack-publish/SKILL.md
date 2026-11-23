@@ -94,14 +94,16 @@ Require inline dark-only defaults with `color-scheme: dark` so the article works
 honor an explicit user theme request.
 Theme adaptation changes bytes: save `final.html`, its byte count and SHA-256,
 then rerun the referenced Explain page checks on these final bytes.
-Before independent review, have `axstack-ui-verifier` preview these exact bytes with
-Playwright MCP dark at 360, 390, 728 and 1440px, and record screenshots with paths,
-their artifact SHA-256 and the Explain QA results.
+Before independent review, have `axstack-ui-verifier` capture these exact bytes with
+Playwright MCP in the dark Neon theme at 360, 390, 728 and 1440px, and record screenshots
+with paths, their artifact SHA-256 and the Explain QA results.
+If the user supplies an explicit theme, capture the page in that theme at the same four widths instead.
+Without an explicit theme, never capture a light theme.
 Require a fresh independent `axstack-explainer-review` on the final bytes.
 The driver forwards the verifier PNG paths and bound artifact SHA-256 for the
 reviewer's design review against FRONTEND-DESIGN.md (calibration defaults, restraint
 and quality floor) plus design.md's hard rules, alongside source-fidelity review.
-Include neon.md in the review brief. Never add a light pass.
+Include neon.md in the review brief.
 A page failing to look decent is a blocking design finding, repaired by the same author.
 If only design findings remain after the second round, deliver the visual with each finding named and recorded in evidence.
 Design-only means cosmetic preferences under Delivery; factual, citation and other blocking failures are excluded.
