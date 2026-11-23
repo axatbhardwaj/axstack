@@ -8,7 +8,7 @@ const explain = 'axstack-explain/SKILL.md';
 const qa = 'axstack-explain/references/visual-qa.md';
 const delivery = 'axstack-explain/references/delivery.md';
 const publish = 'axstack-publish/SKILL.md';
-const aurora = 'axstack-explain/references/aurora.md';
+const neon = 'axstack-explain/references/neon.md';
 
 // These contracts check operative instructions, including removal, reversal and
 // equivalent wording. They do not claim that a seat has followed the prompt.
@@ -20,81 +20,98 @@ function rule(path, name, concepts, rewording, inversions, prohibition) {
   });
 }
 
-rule(guide, 'Aurora establishes shared identity on both page kinds',
-  [/aurora\.md/i, /establishes|defines/i, /shared.*identity/i, /every inline HTML page/i, /every Publish article adaptation/i],
-  'For every Publish article adaptation and every inline HTML page, aurora.md defines the shared visual identity.',
+rule(guide, 'frontend-design leads design and craft on both page kinds',
+  [/FRONTEND-DESIGN\.md/i, /lead/i, /design and craft authority/i, /every inline HTML page/i, /every Publish article adaptation/i],
+  'For every Publish article adaptation and every inline HTML page, FRONTEND-DESIGN.md is the lead design and craft authority.',
+  [[/lead/i, 'subordinate'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
+rule(guide, 'Neon establishes the palette on both page kinds',
+  [/neon\.md/i, /establishes|defines/i, /Neon palette/i, /every inline HTML page/i, /every Publish article adaptation/i],
+  'For every Publish article adaptation and every inline HTML page, neon.md defines the required Neon palette.',
   [[/establishes|defines/i, 'suggests'], [/every inline HTML page/i, 'some inline pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
-rule(guide, 'frontend craft stays subordinate to Aurora and hard rules',
-  [/FRONTEND-DESIGN\.md/i, /content.specific craft/i, /subordinate to/i, /Aurora/i, /hard rules/i],
-  'Use FRONTEND-DESIGN.md for content-specific craft subordinate to Aurora and the hard rules.',
-  [[/subordinate to/i, 'overriding'], [/content.specific craft/i, 'sole authority']]);
+rule(guide, 'only hard rules and the Neon palette win over frontend-design',
+  [/only/i, /hard rules/i, /Neon palette/i, /win over|override/i, /frontend-design/i, /conflict/i],
+  'On conflict, only the hard rules and the Neon palette requirement override frontend-design.',
+  [[/win over|override/i, 'yield to']]);
 for (const path of [explain, publish, qa, delivery]) {
-  rule(path, `${path} follows shared Aurora identity`, [/follow/i, /aurora\.md/i, /shared identity/i],
-    'Follow aurora.md for shared identity.', [[/follow/i, 'ignore'], [/shared identity/i, 'optional inspiration']]);
+  rule(path, `${path} follows the Neon palette`, [/follow/i, /neon\.md/i, /palette/i],
+    'Follow neon.md for the palette.', [[/follow/i, 'ignore'], [/palette/i, 'optional inspiration']]);
+  rule(path, `${path} keeps frontend-design as lead authority`, [/frontend-design/i, /lead/i, /design.*authority/i],
+    'frontend-design is the lead design authority.', [[/lead/i, 'subordinate']]);
 }
-rule(aurora, 'explicit user themes take precedence', [/explicit user themes/i, /take precedence|override/i, /Aurora defaults/i],
-  'Explicit user themes override Aurora defaults.', [[/take precedence|override/i, 'yield to']]);
-rule(aurora, 'published defaults adapt to system theme',
-  [/published articles/i, /default/i, /Aurora light and dark/i, /prefers-color-scheme/i, /custom tokens/i],
-  'Published articles default to Aurora light and dark with custom tokens using prefers-color-scheme.',
-  [[/default/i, 'ignore'], [/prefers-color-scheme/i, 'a fixed palette']]);
-rule(aurora, 'inline shares grammar with live T3 colors',
-  [/inline pages/i, /use/i, /live T3 theme variables/i, /colou?rs/i, /same type, layout and chart grammar/i],
-  'Inline pages use live T3 theme variables for colors and the same type, layout and chart grammar.',
-  [[/use/i, 'ignore'], [/live T3 theme variables/i, 'published hex values']]);
-rule(aurora, 'typography establishes bounded editorial hierarchy',
-  [/use/i, /system serif headings/i, /system sans body/i, /restrained hierarchy/i, /60.68ch/i, /body measure/i],
-  'Use system serif headings, system sans body and a restrained hierarchy with a 60–68ch body measure.',
-  [[/use/i, 'ignore'], [/system serif headings/i, 'display webfonts'], [/60.68ch/i, 'unbounded']]);
-rule(aurora, 'composition avoids stranded margins',
-  [/use/i, /centered or grid composition/i, /generous.*controlled spacing/i, /prevent/i, /stranded margins/i],
-  'Use centered or grid composition with generous yet controlled spacing to prevent stranded margins.',
-  [[/use/i, 'ignore'], [/prevent/i, 'create']]);
-rule(aurora, 'compact Explain follows content shape',
-  [/keep/i, /Explain/i, /compact and content.shaped/i, /rather than|instead of/i, /shrunken article/i],
-  'Keep Explain compact and content-shaped instead of a shrunken article.',
-  [[/keep/i, 'ignore'], [/rather than|instead of/i, 'as']]);
-rule(aurora, 'citations preserve qualifications adjacent to claims',
+test('design: Aurora is retired from shipped guidance and presets', () => {
+  expect(existsSync(base + 'axstack-explain/references/aurora.md')).toBe(false);
+  for (const path of [guide, explain, qa, delivery, publish, 'axstack-publish/references/review-briefs.md', neon]) {
+    expect(readFileSync(base + path, 'utf8'), path).not.toMatch(/aurora|subordinate to/i);
+  }
+  for (const preset of ['mixed', 'codex-only', 'claude-only']) {
+    expect(readFileSync(`${base}../profiles/presets/${preset}.json`, 'utf8'), preset).not.toMatch(/aurora|subordinate to/i);
+  }
+});
+rule(neon, 'explicit user themes take precedence', [/explicit user themes/i, /take precedence|override/i, /Neon defaults/i],
+  'Explicit user themes override Neon defaults.', [[/take precedence|override/i, 'yield to']]);
+rule(neon, 'near-black ground carries neon green purple and blue accents',
+  [/use/i, /near-black ground/i, /neon green/i, /purple/i, /blue/i, /accents/i, /assigned roles/i],
+  'Use neon green, purple and blue accents with assigned roles on a near-black ground.',
+  [[/use/i, 'ignore'], [/near-black ground/i, 'white ground']]);
+rule(neon, 'published articles and standalone HTML are dark-only',
+  [/published articles/i, /standalone HTML/i, /dark.only/i, /color-scheme: dark/i],
+  'Standalone HTML and published articles are dark-only with color-scheme: dark.',
+  [[/dark.only/i, 'light and dark'], [/color-scheme: dark/i, 'color-scheme: light dark']]);
+rule(neon, 'published palettes add no light theme or system switching',
+  [/light theme/i, /prefers-color-scheme/i], 'Never add a light theme or a prefers-color-scheme switch.',
+  [[/never/i, 'always']], /never add/i);
+rule(neon, 'art direction is left to frontend-design',
+  [/leaves?|left/i, /typography/i, /layout/i, /composition/i, /art direction/i, /frontend-design/i],
+  'Typography, layout, composition and art direction are left to the author under frontend-design.',
+  [[/frontend-design/i, 'Neon presets']]);
+test('design: Neon prescribes no fonts, measure or composition', () => {
+  const source = existsSync(base + neon) ? readFileSync(base + neon, 'utf8') : 'missing';
+  expect(source).not.toMatch(/serif|Georgia|Palatino|\d+.\d+ch|centered or grid|missing/i);
+});
+rule(neon, 'inline pages bind Neon roles to live T3 variables',
+  [/inline pages/i, /bind|map/i, /roles/i, /live T3 theme variables/i],
+  'Inline pages map the Neon roles to live T3 theme variables.',
+  [[/bind|map/i, 'ignore'], [/live T3 theme variables/i, 'Neon hex values']]);
+rule(neon, 'inline pages never copy Neon hex', [/Neon hex/i, /inline pages/i],
+  'Never copy Neon hex values into inline pages.', [[/never/i, 'always']], /never copy/i);
+rule(neon, 'citations preserve qualifications adjacent to claims',
   [/keep/i, /quiet citations/i, /adjacent to claims/i, /preserve/i, /dates and qualifications/i],
   'Keep quiet citations adjacent to claims and preserve dates and qualifications.',
   [[/keep/i, 'ignore'], [/preserve/i, 'discard']]);
-rule(aurora, 'unknown counts stay out of proportions', [/unknown counts/i, /proportions/i],
+rule(neon, 'unknown counts stay out of proportions', [/unknown counts/i, /proportions/i],
   'Never visualize unknown counts as proportions.', [[/never/i, 'always']], /never visualize/i);
-rule(aurora, 'truthful charts have labels scales and zero-baseline bars',
+rule(neon, 'truthful charts have labels scales and zero-baseline bars',
   [/use/i, /direct labels/i, /true scales/i, /zero.baseline bars/i, /text alternatives/i],
   'Use direct labels, true scales, zero-baseline bars and text alternatives for charts.',
   [[/use/i, 'ignore'], [/zero.baseline bars/i, 'truncated bars'], [/true scales/i, 'decorative scales']]);
-rule(aurora, 'color carries no exclusive meaning', [/colou?r/i, /sole encoding/i],
+rule(neon, 'color carries no exclusive meaning', [/colou?r/i, /sole encoding/i],
   'Never use color as the sole encoding.', [[/never/i, 'always']], /never use/i);
-rule(aurora, 'decoration and repetitive structures are excluded',
-  [/decorative glow/i, /split.color headlines/i, /repetitive badge legends/i, /obligatory card grids/i, /repeated verdicts/i],
-  'Avoid decorative glow, split-color headlines, repetitive badge legends, obligatory card grids and repeated verdicts.',
-  [[/avoid/i, 'require']], /avoid/i);
 
-test('design: published token example preserves Aurora dark identity and accessible accents', () => {
-  const source = existsSync(base + aurora) ? readFileSync(base + aurora, 'utf8') : '';
+test('design: Neon token example is dark-only with accessible neon accents', () => {
+  const source = existsSync(base + neon) ? readFileSync(base + neon, 'utf8') : '';
   const css = source.match(/```css\n([\s\S]*?)```/)?.[1] ?? '';
-  const [light, dark] = css.split('@media (prefers-color-scheme: dark)');
-  const tokens = (text) => Object.fromEntries([...text.matchAll(/--aurora-([a-z]+):\s*(#[a-f\d]{6})/gi)]
+  expect(css).toMatch(/color-scheme:\s*dark\s*;/);
+  expect(css).not.toMatch(/prefers-color-scheme|light/i);
+  const palette = Object.fromEntries([...css.matchAll(/--neon-([a-z]+):\s*(#[a-f\d]{6})/gi)]
     .map(([, role, hex]) => [role, hex.toLowerCase()]));
-  const palettes = [tokens(light), tokens(dark ?? '')];
-  // The selected palette is an exact public visual identity, not prose wording.
-  expect(palettes[1]).toEqual({ ground: '#0a100d', surface: '#12221a', ink: '#fdfffd',
-    data: '#62e2a4', link: '#7dd6c8', comparison: '#a8f0b3', uncertainty: '#e6d59a' });
+  const rgb = (hex) => hex.slice(1).match(/../g).map((byte) => Number.parseInt(byte, 16));
   const luminance = (hex) => {
-    const channels = hex.slice(1).match(/../g).map((byte) => {
-      const value = Number.parseInt(byte, 16) / 255;
+    const [r, g, b] = rgb(hex).map((byte) => {
+      const value = byte / 255;
       return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
     });
-    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    return r * 0.2126 + g * 0.7152 + b * 0.0722;
   };
-  for (const palette of palettes) {
-    for (const background of ['ground', 'surface']) {
-      for (const role of ['ink', 'data', 'link', 'comparison', 'uncertainty']) {
-        expect(palette[role]).toMatch(/^#[a-f\d]{6}$/);
-        const values = [luminance(palette[role]), luminance(palette[background])].sort((a, b) => b - a);
-        expect((values[0] + 0.05) / (values[1] + 0.05), `${role} on ${background}`).toBeGreaterThanOrEqual(4.5);
-      }
+  for (const role of ['ground', 'surface', 'ink', 'muted', 'data', 'link', 'emphasis']) expect(palette[role], role).toMatch(/^#[a-f\d]{6}$/);
+  // Roles carry the requested hues: green data, blue links, purple emphasis.
+  const [dr, dg, db] = rgb(palette.data); expect(dg).toBeGreaterThan(Math.max(dr, db));
+  const [lr, lg, lb] = rgb(palette.link); expect(lb).toBeGreaterThan(Math.max(lr, lg));
+  const [er, eg, eb] = rgb(palette.emphasis); expect(Math.min(er, eb)).toBeGreaterThan(eg);
+  for (const background of ['ground', 'surface']) {
+    expect(luminance(palette[background]), `${background} is near-black`).toBeLessThan(0.02);
+    for (const role of ['ink', 'muted', 'data', 'link', 'emphasis']) {
+      const values = [luminance(palette[role]), luminance(palette[background])].sort((a, b) => b - a);
+      expect((values[0] + 0.05) / (values[1] + 0.05), `${role} on ${background}`).toBeGreaterThanOrEqual(4.5);
     }
   }
 });
@@ -146,14 +163,18 @@ rule(guide, 'standalone viewing allows variable fallbacks',
   [/var\(\)/i, /fallbacks/i, /allowed|permitted/i, /standalone viewing/i],
   'For standalone viewing, var() fallbacks are permitted.',
   [[/allowed|permitted/i, 'forbidden'], [/standalone viewing/i, 'T3 internals']]);
-rule(guide, 'published articles support both themes outside T3 through the system query',
-  [/published articles/i, /support/i, /light and dark/i, /prefers-color-scheme/i, /outside T3/i],
-  'Outside T3, published articles support light and dark using prefers-color-scheme.',
-  [[/support/i, 'ignore'], [/light and dark/i, 'light only'], [/prefers-color-scheme/i, 'the T3 class']]);
+rule(guide, 'published articles are dark-only',
+  [/published articles/i, /dark.only/i, /color-scheme: dark/i],
+  'Published articles are dark-only and set color-scheme: dark.',
+  [[/dark.only/i, 'light and dark'], [/color-scheme: dark/i, 'color-scheme: light dark']]);
+rule(guide, 'published palettes never switch on the system colour query',
+  [/published palettes/i, /prefers-color-scheme/i],
+  'Never switch published palettes using prefers-color-scheme.',
+  [[/never/i, 'always']], /never switch/i);
 rule(guide, 'accessibility floor covers mobile focus motion and contrast',
-  [/responsive/i, /360px/i, /visible keyboard focus/i, /reduced motion/i, /respected/i, /sufficient contrast/i, /both themes/i],
-  'Keep pages responsive down to 360px with visible keyboard focus, reduced motion respected and sufficient contrast in both themes.',
-  [[/360px/i, '728px'], [/visible keyboard focus/i, 'hidden focus'], [/respected/i, 'ignored'], [/both themes/i, 'one theme']]);
+  [/responsive/i, /360px/i, /visible keyboard focus/i, /reduced motion/i, /respected/i, /sufficient contrast/i, /every rendered theme/i],
+  'Keep pages responsive down to 360px with visible keyboard focus, reduced motion respected and sufficient contrast in every rendered theme.',
+  [[/360px/i, '728px'], [/visible keyboard focus/i, 'hidden focus'], [/respected/i, 'ignored'], [/every rendered theme/i, 'one theme']]);
 rule(guide, 'font files and network are prohibited', [/font files/i, /network resources/i],
   'Never load font files or network resources.', [[/never/i, 'always']], /never load/i);
 rule(guide, 'design history is not kept across pages', [/design notes/i, /history/i, /across pages/i],
@@ -231,10 +252,10 @@ rule(explain, 'driver or specialist loads both references for both page kinds',
   [/driver/i, /axstack-explainer/i, /load/i, /design\.md/i, /read/i, /FRONTEND-DESIGN\.md/i, /every inline HTML page/i, /every Publish article adaptation/i],
   'The author, whether driver or axstack-explainer, loads design.md and reads FRONTEND-DESIGN.md for every inline HTML page and every Publish article adaptation.',
   [[/driver/i, 'specialist'], [/loads?/i, 'skips'], [/reads?/i, 'skips'], [/every inline HTML page/i, 'some inline HTML pages'], [/every Publish article adaptation/i, 'some Publish articles']]);
-rule(explain, 'explainer authority stays bound by hard rules',
-  [/frontend-design/i, /content.specific craft/i, /subordinate to/i, /Aurora/i, /design\.md's hard rules/i],
-  "Use frontend-design for content-specific craft subordinate to Aurora and design.md's hard rules.",
-  [[/subordinate to/i, 'overriding'], [/content.specific craft/i, 'sole authority']]);
+rule(explain, 'frontend-design leads within hard rules and the Neon palette',
+  [/frontend-design/i, /lead design and craft authority/i, /only/i, /design\.md's hard rules/i, /Neon palette/i],
+  "frontend-design is the lead design and craft authority, bound only by design.md's hard rules and the Neon palette.",
+  [[/lead/i, 'subordinate']]);
 rule(publish, 'publication hold excludes only second-round design delivery',
   [/hold/i, /publication/i, /required check or review/i, /missing or failed/i, /except for|apart from/i, /design.only delivery/i, /after the second round/i],
   'Apart from design-only delivery after the second round, hold publication when a required check or review is missing or failed.',
@@ -242,10 +263,16 @@ rule(publish, 'publication hold excludes only second-round design delivery',
 rule(explain, 'chat Mermaid and anatomy skip design references', [/load/i, /(?:either reference|any of these references)/i, /chat Mermaid/i, /anatomy/i],
   'Never load either reference for chat Mermaid or anatomy figures.', [[/never/i, 'always']], /never load/i);
 rule(publish, 'Publish delegates article adaptation to explainer',
-  [/send/i, /article adaptation/i, /art direction/i, /standalone light\/dark theme/i, /axstack-explainer/i, /bounded brief/i],
-  'Send the article adaptation, including art direction and standalone light/dark theme, to axstack-explainer with a bounded brief.',
-  [[/send/i, 'skip'], [/axstack-explainer/i, 'driver']]);
+  [/send/i, /article adaptation/i, /art direction/i, /dark Neon theme/i, /axstack-explainer/i, /bounded brief/i],
+  'Send the article adaptation, including art direction and the dark Neon theme, to axstack-explainer with a bounded brief.',
+  [[/send/i, 'skip'], [/axstack-explainer/i, 'driver'], [/dark Neon theme/i, 'light/dark theme']]);
+rule(publish, 'the author seat produces the article adaptation',
+  [/axstack-explainer/i, /author seat/i, /produces/i, /article adaptation/i],
+  'The axstack-explainer author seat produces the article adaptation.',
+  [[/axstack-explainer/i, 'driver'], [/produces/i, 'reviews']]);
 
+rule(qa, 'Publish review adds no light pass', [/Publish/i, /light.theme pass/i],
+  'Publish never gets a light-theme pass.', [[/never/i, 'always']], /never|no/i);
 rule(qa, 'design review covers exactly inline and Publish pages',
   [/design review/i, /covers/i, /design\.md/i, /FRONTEND-DESIGN\.md/i, /calibration defaults/i, /restraint/i, /quality floor/i, /every inline HTML page/i, /every Publish article adaptation/i],
   'Design review against design.md and FRONTEND-DESIGN.md covers every inline HTML page and every Publish article adaptation, including calibration defaults, restraint and quality floor.',
@@ -259,12 +286,12 @@ rule(qa, 'inadequate preview evidence requires fresh capture',
   'Missing, stale, unreadable or inadequate preview evidence requires fresh capture before review.',
   [[/requires/i, 'waives'], [/before review/i, 'after delivery']]);
 rule(qa, 'Publish reviewer opens verifier PNGs bound to final bytes',
-  [/Publish/i, /reviewer/i, /opens?/i, /axstack-ui-verifier/i, /PNG/i, /728px dark/i, /360px light/i,
-    /390px mobile/i, /1440px desktop/i, /all four widths in both themes/i, /artifact SHA-256/i, /before review/i],
-  'For Publish, the reviewer opens axstack-ui-verifier PNGs at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes with paths bound to the artifact SHA-256 before review.',
+  [/Publish/i, /reviewer/i, /opens?/i, /axstack-ui-verifier/i, /PNG/i, /360px/i,
+    /390px mobile/i, /728px/i, /1440px desktop/i, /all four widths dark/i, /artifact SHA-256/i, /before review/i],
+  'For Publish, the reviewer opens axstack-ui-verifier PNGs at 360px, 390px mobile, 728px and 1440px desktop, all four widths dark, with paths bound to the artifact SHA-256 before review.',
   [[/opens?/i, 'skips'], [/axstack-ui-verifier/i, 'author'], [/before review/i, 'after review'],
     [/artifact SHA-256/i, 'draft title'], [/1440px desktop/i, '728px intermediate'],
-    [/all four widths in both themes/i, 'one theme per width']]);
+    [/all four widths dark/i, 'one width dark']]);
 rule(qa, 'desktop screenshot inspection checks composition beyond absence of overflow',
   [/inspect/i, /1440px desktop screenshot/i, /balanced composition/i, /horizontal margins/i,
     /prose measure/i, /typography/i, /section spacing/i, /chart legibility/i],
