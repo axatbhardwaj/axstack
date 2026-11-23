@@ -133,8 +133,8 @@ bytes on its own isolated host-loopback instance and checks layout, theme,
 console/network, all interactive states and accessibility.
 - Inline pages: screenshots at 728px dark and 360px light, following the live T3 theme.
 - Publish articles: screenshots of the page in the dark Neon theme at 360, 390, 728
-  and real 1440px desktop before independent review, with no light pass; an explicit
-  user theme replaces dark at the same four widths.
+  and real 1440px desktop before independent review. Without an explicit user theme
+  there is no light pass; an explicit user theme replaces dark at the same four widths.
 Inspect desktop balance, horizontal margins, prose measure, typography, section rhythm
 and chart legibility; inspect mobile gutters and readable text/labels, with clipping
 and horizontal-scroll checks throughout. A 728px render alone leaves desktop unproven.
