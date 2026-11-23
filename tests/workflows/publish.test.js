@@ -149,34 +149,68 @@ const noLight = [/(?:without|unless)\b.*explicit (?:user )?theme/i, /light/i];
 test('no light capture without an explicit theme', () => checkRule(page, bansLight,
   'Omit all light-mode captures unless the user supplies an explicit theme.',
   [[/omit all|never capture/i, 'require']], noLight));
-test('reviewer publish theme mutations are rejected and correct rewording accepted', () => {
-  const accepts = (text) => capturesDark(text) && bansLight(text)
-    && requires(text, ...explicitCapture);
-  expect(accepts(page)).toBe(true);
-  // Locate targets semantically so equivalent source wording keeps the mutations meaningful.
-  const list = sentences(page);
-  const replace = (matches, next) => {
-    const index = list.findIndex(matches);
-    expect(index).toBeGreaterThanOrEqual(0);
-    return list.map((sentence, at) => (at === index ? next : sentence)).join('. ');
-  };
-  const isCapture = (sentence) => requires(sentence, ...darkCapture);
-  const isBan = (sentence) => bansLight(sentence);
-  const isExplicit = (sentence) => requires(sentence, ...explicitCapture);
-  for (const bad of [
-    replace(isCapture, 'Capture these exact bytes with Playwright MCP light at 360, 390, 728 and 1440px with a dark frame around the capture'),
-    replace(isBan, 'Never omit a light pass'),
-    replace(isBan, 'Never capture a light theme'),
-    replace(isExplicit, 'Capture every page in the dark theme at the same four widths'),
-    `${page}. Never omit a light pass`,
-    `${page}. Also capture both themes at every width`,
-  ]) expect(accepts(bad)).toBe(false);
-  for (const good of [
-    replace(isBan, 'Omit all light-mode captures unless the user supplies an explicit theme'),
-    replace(isBan, 'Unless the user supplies an explicit theme, never capture a light theme'),
-    replace(isCapture, 'Capture the final artifact in dark mode at 360px, 390px, 728px and 1,440px with Playwright MCP'),
-  ]) expect(accepts(good)).toBe(true);
-});
+// In-suite mutation table: reviewer r2/r3 theme mutations plus adviser keyword-excuse
+// cases. Targets are located semantically; each replay must change its target text.
+const skillText = (path) => sentences(readFileSync(`${import.meta.dir}/../../skills/${path}`, 'utf8')).join('. ');
+const briefs = skillText('axstack-publish/references/review-briefs.md');
+const qaText = skillText('axstack-explain/references/visual-qa.md');
+const mixedNotes = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/mixed.json`, 'utf8'))
+  .roles.find(({ id }) => id === 'axstack-explainer-review').notes;
+const publishAccepts = (text) => capturesDark(text) && bansLight(text)
+  && requires(text, ...explicitCapture);
+const clean = (text) => themeConflicts(text).length === 0;
+const at = (text, matches, transform) => {
+  const list = sentences(text);
+  const index = list.findIndex(matches);
+  expect(index).toBeGreaterThanOrEqual(0);
+  return list.map((sentence, position) => (position === index ? transform(sentence) : sentence)).join('. ');
+};
+const isCapture = (sentence) => requires(sentence, ...darkCapture);
+const isBan = (sentence) => bansLight(sentence);
+const isExplicit = (sentence) => requires(sentence, ...explicitCapture);
+const isHandoff = (sentence) => /forwards the verifier PNG paths/i.test(sentence);
+const replaceWith = (next) => () => next;
+const after = (extra) => (sentence) => `${sentence}. ${extra}`;
+const themeMutations = [
+  ['r2 light page in a dark frame', page, publishAccepts, isCapture,
+    replaceWith('Capture these exact bytes with Playwright MCP light at 360, 390, 728 and 1440px with a dark frame around the capture'), false],
+  ['r2 inverted light pass', page, publishAccepts, isBan, replaceWith('Never omit a light pass'), false],
+  ['r2 contradicting light pass', page, publishAccepts, isBan, after('Never omit a light pass'), false],
+  ['r2 removed explicit-theme capture', page, publishAccepts, isExplicit, replaceWith('Capture every page in the dark theme at the same four widths'), false],
+  ['r2 valid omit-all reword', page, publishAccepts, isBan, replaceWith('Omit all light-mode captures unless the user supplies an explicit theme'), true],
+  ['r3 valid skip-light reword', page, publishAccepts, isBan, replaceWith('Without an explicit user theme, skip light-mode screenshots'), true],
+  ['r3 CSS light demand', briefs, clean, /explicit user theme/i.test.bind(/explicit user theme/i),
+    after('Also capture the same article with `color-scheme: light` at every width'), false],
+  ['r3 mis-scoped light demand', briefs, clean, /explicit user theme/i.test.bind(/explicit user theme/i),
+    after('Regardless of whether the user supplies an explicit user theme, require a light theme capture of every Publish article'), false],
+  ['r2 Visual QA lost explicit-theme scope', qaText, clean, (sentence) => /light.theme pass/i.test(sentence),
+    replaceWith('Publish articles never get a light-theme pass'), false],
+  ['contradiction at the review handoff', page, publishAccepts, isHandoff, after('The reviewer also requires a light theme capture of every article'), false],
+  ['adviser inline keyword excuse', briefs, clean, /explicit user theme/i.test.bind(/explicit user theme/i),
+    after('Like inline pages, Publish articles also get a light theme capture'), false],
+  ['adviser T3 keyword excuse', briefs, clean, /explicit user theme/i.test.bind(/explicit user theme/i),
+    after('As in T3, capture every article in light mode too'), false],
+  ['adviser both colour schemes', briefs, clean, /explicit user theme/i.test.bind(/explicit user theme/i),
+    after('Capture both colour schemes at every width'), false],
+  ['adviser each theme', briefs, clean, /explicit user theme/i.test.bind(/explicit user theme/i),
+    after('Capture each theme at all four widths'), false],
+  ['adviser conditioned double negative', page, publishAccepts, isBan, replaceWith('Without an explicit theme, never skip the light theme capture'), false],
+  ['adviser do-not-skip', page, publishAccepts, isBan, replaceWith('Without an explicit theme, do not skip light captures'), false],
+  ['adviser preset dark to light', mixedNotes, clean, (sentence) => /all four widths dark/i.test(sentence),
+    (sentence) => sentence.replace(/all four widths dark/i, 'all four widths light'), false],
+  ['adviser valid unless reword', page, publishAccepts, isBan, replaceWith('Unless the user supplies an explicit theme, never capture a light theme'), true],
+  ['adviser valid drop reword', page, publishAccepts, isBan, replaceWith('Absent an explicit user theme, drop any light-theme capture'), true],
+  ['valid dark-mode capture reword', page, publishAccepts, isCapture,
+    replaceWith('Capture the final artifact in dark mode at 360px, 390px, 728px and 1,440px with Playwright MCP'), true],
+];
+for (const [name, text, accepts, matches, transform, expected] of themeMutations) {
+  test(`theme mutation: ${name}`, () => {
+    expect(accepts(text)).toBe(true);
+    const mutated = at(text, matches, transform);
+    expect(mutated).not.toBe(text);
+    expect(accepts(mutated)).toBe(expected);
+  });
+}
 
 rule('publication receipt returns URL version and SHA',
   [/return|report/i, /URL/i, /\bversion\b/i, /SHA-256/i],
