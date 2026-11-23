@@ -129,10 +129,12 @@ Exercise unavailable-seat and single-provider controls without substituting seat
 Unrun live cases remain unverified; offline contracts do not prove orchestration.
 For page behavior, delegate this feature path to `axstack-ui-verifier` with the
 reviewed artifact's SHA-256 and private evidence folder. It serves the exact
-bytes on its own isolated host-loopback instance and checks 728px dark/360px
-light, layout, theme, console/network, all interactive states and accessibility.
-For standalone Publish articles, also capture 390px mobile and real 1440px desktop
-screenshots and cover all four widths dark before independent review.
+bytes on its own isolated host-loopback instance and checks layout, theme,
+console/network, all interactive states and accessibility.
+- Inline pages: screenshots at 728px dark and 360px light, following the live T3 theme.
+- Publish articles: screenshots of the page in the dark Neon theme at 360, 390, 728
+  and real 1440px desktop before independent review, with no light pass; an explicit
+  user theme replaces dark at the same four widths.
 Inspect desktop balance, horizontal margins, prose measure, typography, section rhythm
 and chart legibility; inspect mobile gutters and readable text/labels, with clipping
 and horizontal-scroll checks throughout. A 728px render alone leaves desktop unproven.
