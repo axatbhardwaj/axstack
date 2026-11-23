@@ -129,13 +129,12 @@ rule('external-edit overwrite warnings reach the user',
   'Inform the user when overwrote_external_edit is true.',
   [[/tell|inform|notify/i, 'hide from'], [/true/i, 'false'], [/user/i, 'worker']]);
 
-rule('final bytes get mobile, intermediate and real desktop previews in both themes',
-  [/preview/i, /these exact bytes|final bytes/i, /728px dark/i, /360px light/i,
-    /390px mobile/i, /1440px desktop/i, /all four widths in both themes/i],
-  'Preview final bytes at 728px dark and 360px light plus 390px mobile and 1440px desktop, covering all four widths in both themes.',
-  [[/preview/i, 'skip'], [/these exact bytes|final bytes/i, 'draft bytes'],
-    [/728px dark/i, '728px light'], [/360px light/i, '360px dark'],
-    [/1440px desktop/i, '728px intermediate'], [/all four widths in both themes/i, 'one theme per width']]);
+rule('final bytes get dark mobile, intermediate and real desktop previews',
+  [/preview/i, /these exact bytes|final bytes/i, /dark/i, /360/i, /390/i, /728/i, /1440px/i],
+  'Preview final bytes dark at 360, 390, 728 and 1440px.',
+  [[/preview/i, 'skip'], [/dark/i, 'light'], [/1440px/i, '1024px']]);
+rule('final-byte previews add no light pass', [/light pass/i],
+  'Never add a light pass.', [[/never/i, 'always']], /never|no/i);
 
 rule('publication receipt returns URL version and SHA',
   [/return|report/i, /URL/i, /\bversion\b/i, /SHA-256/i],
