@@ -64,19 +64,19 @@ publication, final-byte previews, external-edit warnings and URL/version/SHA rec
 Private proof checks published=true, version comparison and null/pending holds;
 earlier publication grants no authority, and theme adaptation requires final-byte
 rechecks. Input limits, output SHA/origin comparisons and missing-check holds are covered.
-Publish and `explain-design.test.js` also check Aurora's shared identity and subordinate frontend-design craft,
+Publish and `explain-design.test.js` also check the Neon palette and frontend-design as lead design authority,
 inline font choices and published system stacks, inline colours derived from T3 theme variables,
 theme legibility and the accessibility floor, plus screenshot
-review at 360, 390, 728 and 1440px in both themes with exact-byte identity.
-Aurora keepers reject instruction removal/inversion and accept equivalent wording for
-shared author/reviewer guidance, typography, composition, citations, truthful charts
-and unknown counts. The published token example preserves the selected dark identity
-and verifies 4.5:1 text-accent contrast against both surfaces in both palettes.
+review at 360, 390, 728 and 1440px dark-only with exact-byte identity.
+Neon keepers reject instruction removal/inversion and accept equivalent wording for
+shared author/reviewer guidance, dark-only articles, left-open art direction, citations,
+truthful charts and unknown counts. The dark-only token example checks green/blue/purple
+role hues and 4.5:1 text-accent contrast against ground and surface.
 These checks establish guidance, not generated-page quality or live theme contrast.
 Inline pages never switch palettes on `prefers-color-scheme` or redefine T3 variables.
 The Publish reuse contract retains the complete Explain page rules alongside
 Visual QA, including word counting, static/interactive definitions and storage rules.
-Preset reviewer-note contracts mirror Publish's four-width, both-theme inputs and
+Preset reviewer-note contracts mirror Publish's four-width, dark-only inputs and
 desktop/mobile inspection duties across mixed, codex-only and claude-only snapshots,
 while reusing driver previews for non-anatomy Explain inline pages and preserving Anatomy self-checks.
 This offline recipe proves instructions only. The driver separately runs the
@@ -84,7 +84,7 @@ candidate skill against the deployed stack with one public and one private
 test article; reader-side access requires the authorized AC23 end-to-end run.
 
 Entry points: `skills/axstack-explain/SKILL.md` and its `inline-pages`,
-`delivery`, `design`, `aurora`, `fidelity`, `visual-qa` and `whiteboard-defense` references.
+`delivery`, `design`, `neon`, `fidelity`, `visual-qa` and `whiteboard-defense` references.
 Architecture/system-map requests additionally use `architecture-diagram.md`.
 After base-revision Launch and Doctor, the authored reviewer runs the declared
 workflow checks above plus the full Explain boundary below at the final head.
@@ -100,7 +100,7 @@ test "$STATUS" -eq 0
 ```
 
 Proof covers visual author/reviewer bindings, whiteboard evidence/gaps,
-700-word counting without card exemptions, Aurora identity, subordinate frontend-design craft and hard rules,
+700-word counting without card exemptions, Neon palette, lead frontend-design authority and hard rules,
 driver authorship for ordinary inline HTML/chat Mermaid, shared final-byte reviewer previews
 and Publish verifier PNGs before review,
 progress-based same-author repairs preserving requested visual/inline acceptance,
@@ -132,7 +132,7 @@ reviewed artifact's SHA-256 and private evidence folder. It serves the exact
 bytes on its own isolated host-loopback instance and checks 728px dark/360px
 light, layout, theme, console/network, all interactive states and accessibility.
 For standalone Publish articles, also capture 390px mobile and real 1440px desktop
-screenshots and cover all four widths in both themes before independent review.
+screenshots and cover all four widths dark before independent review.
 Inspect desktop balance, horizontal margins, prose measure, typography, section rhythm
 and chart legibility; inspect mobile gutters and readable text/labels, with clipping
 and horizontal-scroll checks throughout. A 728px render alone leaves desktop unproven.
@@ -158,7 +158,7 @@ route or unread skill load is unverified, never a pass from the contract suite.
    invalid key rejects; cache hit returns; miss computes, stores, then returns.
    Keep the expected steps/edges in private evidence. Request an ordinary static
    inline HTML explanation. Observe driver authorship by default, required
-   design.md, Aurora and FRONTEND-DESIGN.md loads, and an independent reviewer.
+   design.md, Neon and FRONTEND-DESIGN.md loads, and an independent reviewer.
    Also request chat Mermaid in an owned case: driver authorship, accessibility
    labels and full independent review still apply. Optional specialist authorship
    keeps one writer; Anatomy and Publish retain their existing paths.
