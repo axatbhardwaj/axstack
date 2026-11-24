@@ -109,6 +109,8 @@ function activeReferences(base) {
       for (const name of readdirSync(absolute)) scan(`${path}/${name}`);
       return;
     }
+    // The pinned Mermaid bundle has upstream identifiers unrelated to Axstack routing.
+    if (isVendored(path) && path === 'skills/axstack/vendor/mermaid/mermaid.min.js') return;
     let text = readFileSync(absolute, 'utf8');
     // Pinned anatomy geometry identifiers are unrelated to the retired runtime.
     if (isVendored(path) && path === 'skills/axstack-anatomy/examples/ripple-tank/build.mjs') {
