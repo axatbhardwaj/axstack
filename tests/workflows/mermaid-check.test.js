@@ -104,6 +104,28 @@ const breaches = [
   ['timeline-class', 'timeline\naccTitle: Years\naccDescr: Dates.\nclassDef unknown stroke-dasharray:2 3\n2025 : Review\n', /classDef.*timeline/],
   ['sequence-class', `${sequence}classDef planned stroke-dasharray:6 4\n`, /classDef.*sequenceDiagram/],
   ['legibility', `${flow.replace('flowchart TB', 'flowchart LR')}B --> C[Reporting service] --> D[Long downstream service] --> E[Another external service]\n`, /12px at 860px.*restructure/i],
+  ['node-semicolon', flow.replace('["PR #263"]', '["Queued; ready"]'), /semicolon in node label.*comma or dash/],
+  ['edge-semicolon', flow.replace(' --> ', ' -->|Review; queue| '), /semicolon in edge label.*comma or dash/],
+  ['inline-edge-semicolon', flow.replace(' --> ', ' -- Review; style guide --> '), /semicolon in edge label.*comma or dash/],
+  ['message-semicolon', sequence.replace('Review PR #263', 'Review; queue'), /semicolon in sequence message.*comma or dash/],
+  ['quote-server-alias', sequence.replace('  A->>B:', '  participant A as Quote server (planned; key held here)\n  A->>B:'),
+    /semicolon in participant alias.*move status to message text/],
+  ['quoted-alias-semicolon', sequence.replace('  A->>B:', '  participant A as "Quote; participant B"\n  A->>B:'),
+    /semicolon in participant alias.*move status to message text/],
+  ['alias-parentheses', sequence.replace('  A->>B:', '  participant A as Quote server (planned)\n  A->>B:'),
+    /brackets or parentheses in participant alias.*move status to message text/],
+  ['alias-brackets', sequence.replace('  A->>B:', '  actor A as Quote server [unknown]\n  A->>B:'),
+    /brackets or parentheses in participant alias.*move status to message text/],
+  ['node-asterisk', flow.replace('["PR #263"]', '["Quote *"]'), /asterisk in flowchart node label.*✱/],
+  ['edge-asterisk', flow.replace(' --> ', ' -->|cached *| '), /asterisk in flowchart edge label.*✱/],
+  ['state-label-semicolon', 'stateDiagram-v2\naccTitle: Review\naccDescr: Starts.\nstate "Review; queue" as R\n[*] --> R\n',
+    /semicolon in node label.*comma or dash/],
+  ['state-transition-semicolon', 'stateDiagram-v2\naccTitle: Review\naccDescr: Starts.\n[*] --> R: Review; queue\n',
+    /semicolon in edge label.*comma or dash/],
+  ['er-label-semicolon', 'erDiagram\naccTitle: Review\naccDescr: Starts.\nA ||--o{ B : "Review; queue"\n',
+    /semicolon in edge label.*comma or dash/],
+  ['timeline-label-semicolon', 'timeline\naccTitle: Review\naccDescr: Starts.\n2026 : Review; queue\n',
+    /semicolon in node label.*comma or dash/],
   ['type', 'gantt\naccTitle: Schedule\naccDescr: Dates.\n', /diagram type/],
 ];
 
@@ -140,10 +162,21 @@ test('accepts only the explicitly allowed extra diagram type', async () => {
 });
 
 test('keeps styling words and hex-like tokens in labels', async () => {
-  const source = flow.replace('["PR #263"]', '[PR #263; style guide]');
+  const source = flow.replace('["PR #263"]', '[PR #263, style guide]');
   const result = await check('label.mmd', source);
   expect(result.code).toBe(0);
   expect(result.err).toBe('');
+});
+
+test('keeps punctuation used by shapes, statement separators and sequence message status', async () => {
+  const flowSource = `${flow.replace('["PR #263"]', '["Quote ✱"]').replace('B[Review]', 'B[(Review)]')}A --> B; C[Label #42;] --> D{{Route}}\n`;
+  const sequenceSource = sequence.replace('  A->>B:', '  participant A as Quote server; actor B as Reviewer\n  A->>B:')
+    .replace('Review PR #263', 'Review (planned) [pending]; B-->>A: Confirmed');
+  for (const [name, source] of [['shapes', flowSource], ['statements', sequenceSource]]) {
+    const result = await check(`${name}.mmd`, source);
+    expect(result.err).toBe('');
+    expect(result.code).toBe(0);
+  }
 });
 
 test('reports the Markdown source line on a parse failure', async () => {
