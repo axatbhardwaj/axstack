@@ -52,7 +52,8 @@ Direct routes need no spec ceremony:
 - [axstack-anatomy](../skills/axstack-anatomy/SKILL.md) builds an isometric,
   physical-object, or anatomy-style figure with the vendored kit and Bun.
 - `axstack-explain` separates implemented, intended, tested, live, and unknown
-  behavior. Explanations default to checked inline T3 pages above a short reply.
+  behavior. Diagram-led explanations default to prose and native Mermaid
+  fences in chat. Non-diagram layouts default to checked inline T3 pages.
   The driver authors ordinary inline HTML and chat Mermaid; `axstack-explainer`
   is optional for these and retains other visual authorship, including Anatomy.
   Every visual is independently reviewed by `axstack-explainer-review`;
@@ -65,7 +66,8 @@ Direct routes need no spec ceremony:
   Whole-work understanding and defense covers high-level flow, decisions,
   data/state, misbehaviour at trust boundaries and visible failure, with open
   evidence gaps. Narrow questions stay proportional.
-  Explain owns SVG/CSS in inline pages and Mermaid in chat, GitHub and docs.
+  Explain uses [Mermaid](../skills/axstack-explain/references/mermaid.md) for
+  diagrams and embeds checked, pre-rendered SVG in requested HTML artifacts.
   Use Anatomy only on an explicit isometric or physical-object figure request.
 - `axstack-improve` returns a small ranked set of evidenced improvement
   candidates without editing code. Its test-audit lens marks every declaration
