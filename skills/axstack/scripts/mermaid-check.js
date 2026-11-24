@@ -101,6 +101,60 @@ async function loadRenderer(path) {
   }
 }
 
+function rejectSemicolon(label, text) {
+  if (!text?.includes(';')) return;
+  const hint = label === 'participant alias' ? 'use a comma or dash and move status to message text' : 'use a comma or dash';
+  throw new Error(`semicolon in ${label}; ${hint}`);
+}
+
+function sequenceText(line) {
+  const alias = line.match(/^(?:actor|participant)\s+\S+?(?:\s*@\{[^{}]*\})?\s+as\s+(.*)$/i);
+  if (alias) return ['participant alias', alias[1]];
+  const message = line.match(/^[^:\s]+\s*(?:<<)?-+[-<>x)]+\s*[^:\s]+\s*:\s*(.*)$/);
+  if (message) return ['sequence message', message[1]];
+  return [];
+}
+
+function withoutMermaidEntities(text) {
+  // Mermaid entities such as #42; use a semicolon as syntax.
+  return text.replace(/#(?:\d+|[a-z]+);/gi, '');
+}
+
+function textBeforeParse(type, line) {
+  if (type === 'sequenceDiagram') {
+    const [label, text] = sequenceText(line);
+    if (!label) return;
+    // Pele can read a quoted semicolon as a separator and accept the altered sequence.
+    for (const [quoted] of withoutMermaidEntities(text).matchAll(/"(?:[^"\\]|\\.)*"/g)) rejectSemicolon(label, quoted);
+  }
+  if (type === 'stateDiagram-v2') {
+    const label = line.match(/^(?!acc(?:Title|Descr)\s*:)([^:\s]+(?:\s*-->\s*[^:\s]+)?)\s*:\s*(.*)$/i);
+    if (!label) return;
+    // Pele drops text after an ambiguous semicolon in a state label. Leave explicit next statements alone.
+    const text = withoutMermaidEntities(label[2]).split(/;\s*(?:(?:state|note|direction|class)\b|[^;\s]+\s*-->)/i)[0];
+    rejectSemicolon(label[1].includes('-->') ? 'edge label' : 'node label', text.replace(/;$/, ''));
+  }
+}
+
+function parseDiagram(pele, source, type) {
+  try {
+    return pele.parse(source);
+  } catch (error) {
+    if (error instanceof pele.PeleError && error.line) {
+      const line = source.split(/\r?\n/)[error.line - 1]?.trim() ?? '';
+      if (type === 'sequenceDiagram') {
+        const [label, text] = sequenceText(line);
+        if (label) rejectSemicolon(label, withoutMermaidEntities(text).replace(/;$/, ''));
+      }
+      if (type === 'erDiagram') {
+        const label = line.match(/^\S+\s+[^:\s]*[-.]{2}[^:\s]*\s+\S+\s*:\s*(.*)$/)?.[1];
+        if (label) rejectSemicolon('edge label', withoutMermaidEntities(label).replace(/;$/, ''));
+      }
+    }
+    throw error;
+  }
+}
+
 function sourceRules(source, extraType) {
   const init = source.match(/%%\s*\{\s*(init|initialize)\b/i);
   if (init) throw new Error(`${init[1]} directive is forbidden`);
@@ -130,8 +184,9 @@ function sourceRules(source, extraType) {
   }
 
   // Flowcharts accept semicolons both between statements and inside labels.
-  const flowLabels = /"(?:[^"\\]|\\.)*"|\[[^\]]*\]|\([^()]*\)|\{[^{}]*\}|\|[^|]*\|/g;
+  const flowLabels = /(?:--|-\.+|==)\s+.+?\s+(?:--+>|\.+->|==+>)|"(?:[^"\\]|\\.)*"|\[[^\]]*\]|\([^()]*\)|\{[^{}]*\}|\|[^|]*\|/g;
   for (const line of body) {
+    textBeforeParse(type, line.trim());
     const statements = type === 'flowchart' ? line.replace(flowLabels, '""').split(';') : [line];
     for (const statement of statements) {
       const rule = statement.trim();
@@ -196,18 +251,41 @@ function checkModel(type, model, overview) {
   }
   if (model.boxes?.some((box) => box.fill !== 'transparent')) throw new Error('coloured box is forbidden');
 
-  const labels = [
+  const nodeLabels = [
     ...nodes.map((node) => node.text),
-    ...(model.edges ?? []).map((edge) => edge.text),
-    ...[...(model.actors?.values() ?? [])].map((actor) => actor.description ?? actor.name),
     ...[...(model.states?.values() ?? [])].flatMap((state) => state.descriptions),
-    ...(model.relations ?? []).map((edge) => edge.description),
     ...[...(model.entities?.values() ?? [])].map((entity) => entity.alias || entity.label),
-    ...(model.relationships ?? []).map((edge) => edge.roleA),
     ...(model.periods ?? []).flatMap((period) => [period.text, ...period.events]),
   ];
+  const edgeLabels = [
+    ...(model.edges ?? []).map((edge) => edge.text),
+    ...(model.relations ?? []).map((edge) => edge.relationTitle),
+    ...(model.relationships ?? []).map((edge) => edge.roleA),
+  ];
+  const actors = [...(model.actors?.values() ?? [])];
+  const aliases = actors.filter((actor) => actor.description !== actor.name).map((actor) => actor.description);
+  const messages = (model.messages ?? []).map((message) => message.message);
+
+  for (const [label, texts] of [
+    ['node label', nodeLabels],
+    ['edge label', edgeLabels],
+    ['participant alias', aliases],
+    ['sequence message', messages],
+  ]) {
+    for (const text of texts) {
+      if (!text) continue;
+      rejectSemicolon(label, text);
+      if (type === 'flowchart' && text.includes('*')) {
+        throw new Error(`asterisk in flowchart ${label}; use ✱`);
+      }
+      if (label === 'participant alias' && /[()[\]]/.test(text)) {
+        throw new Error('brackets or parentheses in participant alias; use a plain name and move status to message text');
+      }
+    }
+  }
+  const labels = [...nodeLabels, ...edgeLabels, ...actors.map((actor) => actor.description ?? actor.name)];
   if (labels.some((label) => label?.length > 40)) warnings.push('label exceeds 40 characters; shorten it or split the view');
-  if (model.messages?.some((message) => message.message?.length > 28)) {
+  if (messages.some((message) => message?.length > 28)) {
     warnings.push('sequence message exceeds 28 characters; shorten it or split the view');
   }
   return warnings;
@@ -261,7 +339,7 @@ async function main(args) {
     const where = `${options.path} block ${number} (line ${block.line})`;
     try {
       const type = sourceRules(block.source, options.extraType);
-      const warnings = checkModel(type, pele.parse(block.source), options.overview && index === 0);
+      const warnings = checkModel(type, parseDiagram(pele, block.source, type), options.overview && index === 0);
       const digest = sha256(block.source);
       const id = `mermaid-${number}-${digest.slice(0, 12)}`;
       const { svg, width } = pele.render(block.source, { idPrefix: id });
