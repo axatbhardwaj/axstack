@@ -55,7 +55,8 @@ Write one self-contained HTML document with inline styles and scripts.
 Never load network resources, including CDN scripts, fonts, images, or Mermaid.
 Use images as `data:` URIs. Never include absolute local paths in page bytes.
 Allow plain `<a href>` links, with GitHub URLs or `path@<sha>` for source links.
-Use inline SVG or CSS for diagrams, with a text alternative.
+Embed pre-rendered SVG for Mermaid diagrams with a text alternative.
+Follow [Mermaid](mermaid.md) for checker output and render proof.
 
 Count page and reply together under the 700-word cap for inline T3 pages only.
 Use body `textContent` minus script and style, including collapsed content and SVG labels.
@@ -66,6 +67,37 @@ Interactive means the page has script, form controls, or `<details>`.
 Plain links are not interactive.
 Use semantic elements, labels, visible focus, and sufficient contrast in both T3 themes on inline pages and in the selected theme on Publish articles.
 Pages never use storage, cookies, modals, or popups.
+
+### Embed Mermaid
+
+Use the SVG from the checker on the reviewed source. Prefer TB flowcharts.
+Keep each figure in a horizontal scroller and override Pele’s inline
+`max-width:100%` so its SVG keeps its intrinsic width and readable labels.
+For inline pages, reuse T3’s `.pele` theme mapping.
+
+```css
+.mermaid-scroll {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.mermaid-scroll > svg {
+  display: block;
+  max-width: none !important;
+  --pele-bg: var(--background);
+  --pele-fg: var(--foreground);
+  --pele-muted: var(--muted-foreground);
+  --pele-line: var(--muted-foreground);
+  --pele-surface: var(--secondary);
+  --pele-surface-alt: var(--accent);
+  --pele-border: var(--foreground);
+  --pele-accent: var(--primary);
+  --pele-critical: var(--destructive);
+}
+```
+
+Bind the Mermaid source, SVG and final-page hashes in review evidence.
+Verify any needed horizontal scrolling by keyboard and keep overflow inside the figure.
 
 ## Check the exact bytes
 
