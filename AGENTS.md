@@ -109,7 +109,8 @@
 - Docker is a prerequisite only for sandbox review execution on axat-vps;
   installation, check and other helpers work without Docker.
 
-- Target Bun >=1.3.14 JavaScript with no runtime dependencies. Use only the
+- Target Bun >=1.3.14 JavaScript with no runtime package dependencies.
+  Vendored payloads need provenance and their upstream license. Use only the
   narrow Bun-backed `node:fs` and `node:fs/promises` built-in exception; do not
   introduce a Node.js runtime contract.
 - Run vendored Node-oriented anatomy code with Bun.
