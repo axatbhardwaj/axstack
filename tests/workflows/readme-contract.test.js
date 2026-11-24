@@ -156,19 +156,18 @@ test('README gives a bounded first task and both harness invocation forms', () =
 // User docs are a separate discovery surface from the skills and role notes.
 for (const path of ['README.md', 'docs/workflows.md', 'docs/getting-started.md', 'docs/installation.md']) {
   test(`explain docs: ${path}: pages by default`, () => {
-    const text = sentences(readFileSync(`${root}/${path}`, 'utf8')).join('. ');
-    const scoped = path === 'docs/workflows.md';
-    const subject = scoped ? /non.diagram layouts/i : /explain|explanations/i;
-    const page = [subject, /default/i, /inline T3 pages?/i];
+    const text = readFileSync(`${root}/${path}`, 'utf8');
+    const page = [/non.diagram layouts/i, /default/i, /inline T3 pages?/i];
     checkRule(text, (source) => requires(source, ...page),
-      scoped ? 'Non-diagram layouts default to inline T3 pages.' : 'Explanations default to inline T3 pages.',
+      'Non-diagram layouts default to inline T3 pages.',
       [[/default/i, 'sometimes route'], [/inline T3 pages?/i, 'unreviewed visuals']], page);
-    if (scoped) {
-      const chat = [/diagram.led explanations/i, /default/i, /Mermaid fences/i, /chat/i];
-      checkRule(text, (source) => requires(source, ...chat),
-        'Diagram-led explanations default to chat with Mermaid fences.',
-        [[/default/i, 'sometimes go'], [/chat/i, 'the page']], chat);
-    }
+  });
+  test(`explain docs: ${path}: Mermaid chat by default`, () => {
+    const text = readFileSync(`${root}/${path}`, 'utf8');
+    const chat = [/diagram.led explanations/i, /default/i, /Mermaid fences/i, /chat/i];
+    checkRule(text, (source) => requires(source, ...chat),
+      'Diagram-led explanations default to chat with Mermaid fences.',
+      [[/default/i, 'sometimes go'], [/chat/i, 'the page']], chat);
   });
   test(`explain docs: ${path}: anatomy by request`, () => {
     const text = sentences(readFileSync(`${root}/${path}`, 'utf8')).join('. ');
