@@ -134,6 +134,10 @@ test('package recipe requires every entry point and both current publication ref
     'skills/axstack-brainstorm/SKILL.md',
     'skills/axstack-brainstorm/references/arena.md', 'bin/axstack.js', 'skills/axstack/scripts/dispatch-plan.js',
     'skills/axstack/scripts/hooks-check.js',
+    'skills/axstack/scripts/mermaid-check.js', 'skills/axstack/scripts/mermaid-export.js',
+    'skills/axstack/assets/mermaid-export.js', 'skills/axstack/vendor/mermaid/mermaid.min.js',
+    'skills/axstack/vendor/mermaid/LICENSE', 'skills/axstack/vendor/mermaid/ELK-LICENSE',
+    'skills/axstack/vendor/mermaid/THIRD-PARTY-NOTICES', 'skills/axstack/vendor/mermaid/PROVENANCE.md',
     'skills/axstack/scripts/fleet-route.js', 'skills/axstack/scripts/fleet-config.js',
     'skills/axstack/scripts/fleet-facts.js', 'skills/axstack/scripts/fleet-scope.js',
     'skills/axstack/references/local-artifacts.md', 'skills/axstack/references/fleet-route-schema.md',
@@ -233,5 +237,6 @@ test('package recipe rejects repository-only verification assets without ripgrep
     expect(check('skills/axstack-brainstorm/SKILL.md')).toBe(0);
     expect(check('.agents/skills/verify-axstack/SKILL.md')).toBe(1);
     expect(check('.claude/skills/verify-axstack')).toBe(1);
+    expect(check('tests/workflows/fixtures/mermaid/ga-v10.md')).toBe(1);
   });
 });
