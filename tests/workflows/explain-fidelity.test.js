@@ -129,3 +129,32 @@ for (const rule of rules) {
   });
 }
 
+function alternativeDiagramDefault(source) {
+  return sentences(source).find((clause) => {
+    const alternative = /\b(?:bespoke|custom|hand[- ](?:drawn|authored|written|coded))\s+(?:SVG|HTML)\b/i;
+    const offered = /\b(?:use|draw|choose|accept|allow|offer|prefer|include|option|example)\w*\b/i;
+    const prohibited = /\b(?:never|do not|don't)\s+(?:use|draw|choose|offer|include|allow)\b|\b(?:forbidden|prohibited|banned)\b/i;
+    const explicitRequest = /\b(?:only (?:on|at|upon|if|when)|if|when|upon)\b.*\b(?:explicit(?:ly)?|specific(?:ally)?)\b.*\b(?:request|ask)\w*\b/i;
+    return alternative.test(clause) && offered.test(clause)
+      && !prohibited.test(clause) && !explicitRequest.test(clause);
+  });
+}
+
+test('Explain reserves custom diagram formats for explicit requests', () => {
+  const source = read(router);
+  expect(alternativeDiagramDefault(source)).toBeUndefined();
+
+  const superseded = 'Choose the best visual for the concept: flowchart, sequence, state, architecture map, timeline, comparison or bespoke SVG are examples, not a taxonomy.';
+  const reworded = 'Authors may choose custom SVG as another diagram format.';
+  const inverted = 'Use hand-drawn HTML diagrams unless the user requests a different format.';
+  for (const addition of [superseded, reworded, inverted]) {
+    expect(alternativeDiagramDefault(`${source}\n\n${addition}`)).toBeDefined();
+  }
+  for (const allowed of [
+    'Use a bespoke SVG diagram only on an explicit user request.',
+    'If the user specifically asks for a custom SVG diagram, use that format.',
+    'Never offer hand-authored SVG as a default diagram format.',
+  ]) {
+    expect(alternativeDiagramDefault(`${source}\n\n${allowed}`)).toBeUndefined();
+  }
+});
