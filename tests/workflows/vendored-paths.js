@@ -1,5 +1,7 @@
 // The pinned upstream payload only; owned front-door guidance and theme.js stay checked.
 export const VENDORED_PATHS = [
+  'skills/axstack/vendor/pele/pele.js',
+  'skills/axstack/vendor/pele/LICENSE',
   'skills/axstack-anatomy/kit/**',
   'skills/axstack-anatomy/scripts/**',
   'skills/axstack-anatomy/references/**',
