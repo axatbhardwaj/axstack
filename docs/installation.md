@@ -75,7 +75,9 @@ the settings sidecar preserves the value while any other install still owns it.
 - `--yes` confirms writes under the user's home directory. Tests use temporary
   homes and fixtures only.
 
-Explanations default to inline T3 pages. Use Anatomy only on an explicit
+Diagram-led explanations default to prose and native Mermaid fences in chat.
+Non-diagram layouts default to checked inline T3 pages.
+Use Anatomy only on an explicit
 isometric or physical-object figure request. The driver authors ordinary inline
 HTML and chat Mermaid, with an optional specialist author. Anatomy keeps
 delegated authorship. Every visual receives independent review through the

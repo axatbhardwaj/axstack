@@ -47,7 +47,8 @@ PRs/chains use Git and `gh pr`. With this harness target, check also reports the
 owned instruction binding. Any reported gap exits 1; follow
 [troubleshooting](installation.md#exit-codes-and-troubleshooting) before starting a task.
 
-Explanations default to checked inline T3 pages above a short reply.
+Diagram-led explanations default to prose and native Mermaid fences in chat.
+Non-diagram layouts default to checked inline T3 pages.
 Use Anatomy only on an explicit isometric or physical-object figure request.
 Every Explain visual receives author and reviewer dispatches. Spec approval readbacks also
 use inline pages, identifying the revision you approve.

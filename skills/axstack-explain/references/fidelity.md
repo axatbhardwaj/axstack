@@ -8,11 +8,10 @@ Display the short SHA.
 
 Give planned and unknown nodes a visible marker in the node label.
 Give planned and unknown edges a visible `planned` or `unknown` marker in the edge label.
-In Mermaid, use the same visible markers and a dashed cue where its syntax permits.
+Follow [Mermaid](mermaid.md) for status markers that preserve each diagram type’s syntax.
 
-Treat about 9 core nodes as a signal to split.
-This is a design signal rather than a hard gate.
-Use 1–2 accent nodes.
+Use Mermaid density warnings as an advisory to split and legibility as a gate.
+Use at most two accent nodes per flowchart.
 Keep labels short and name each relationship's direction and meaning.
 Provide a text alternative that describes nodes and edges.
 Never load network assets in the HTML.

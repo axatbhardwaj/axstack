@@ -4,6 +4,8 @@ import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 const router = 'skills/axstack-explain/SKILL.md';
+const mermaid = 'skills/axstack-explain/references/mermaid.md';
+const publish = 'skills/axstack-publish/SKILL.md';
 const fidelity = 'skills/axstack-explain/references/fidelity.md';
 const ui = 'skills/axstack/references/ui-verification.md';
 const pages = 'skills/axstack-explain/references/inline-pages.md';
@@ -12,18 +14,45 @@ const read = (path) => existsSync(`${root}/${path}`) ? readFileSync(`${root}/${p
 // Existing explain tests do not cover this skill. All probes use real source
 // in memory; no test writes tracked files or adds a production test hook.
 const rules = [
-  ['portable destination', router, [/chat/i, /GitHub/i, /docs/i, /(?:use|choose) Mermaid/i],
+  ['Mermaid for every diagram', router, [/every Explain diagram/i, /(?:use|choose) Mermaid/i, /explicitly requests/i, /different drawing format/i],
+    /every/i, 'some', 'Choose Mermaid for every Explain diagram unless the user explicitly requests a different drawing format.'],
+  ['portable destination', mermaid, [/chat/i, /GitHub/i, /docs/i, /(?:use|choose) Mermaid/i],
     /Mermaid/i, 'plain prose', 'Choose Mermaid for chat, GitHub, and docs.'],
-  ['inline page diagrams', router, [/inline pages/i, /inline SVG/i, /CSS/i, /use|choose/i],
-    /inline SVG/i, 'remote image', 'Choose inline SVG or CSS inside inline pages.'],
-  ['no Mermaid in pages', router, [/Mermaid/i, /inline pages/i],
-    /never use|do not use/i, 'Use', 'Do not use Mermaid in inline pages.', /never use|do not use/i],
-  ['Mermaid accessibility', router, [/Mermaid/i, /accTitle/i, /accDescr/i, /include|supply/i],
+  ['inline page diagrams', router, [/inline pages/i, /embed|insert/i, /checker-rendered SVG/i],
+    /checker-rendered SVG/i, 'a client-rendered diagram', 'Insert checker-rendered SVG in inline pages.'],
+  ['no Mermaid runtime in pages', router, [/Mermaid/i, /pele/i, /runtime/i, /inline pages/i],
+    /never use|do not load/i, 'Use', 'Do not load any Mermaid or pele runtime in inline pages.', /never use|do not load/i],
+  ['no Mermaid runtime in Publish', publish, [/Mermaid/i, /pele/i, /runtime/i, /articles/i],
+    /never use|do not load/i, 'Use', 'Do not load a Mermaid or pele runtime in articles.', /never use|do not load/i],
+  ['Publish embeds checker output', publish, [/embed|insert/i, /checker-rendered SVG/i, /reviewed Mermaid source/i],
+    /checker-rendered SVG/i, 'client-rendered diagrams', 'Insert checker-rendered SVG from the reviewed Mermaid source.'],
+  ['Mermaid checker required', mermaid, [/run|execute/i, /mermaid-check\.js/i, /every Mermaid view/i, /before delivery/i],
+    /every/i, 'some', 'Execute mermaid-check.js on every Mermaid view before delivery.'],
+  ['check every Mermaid block before posting in chat', mermaid,
+    [/before posting|prior to posting/i, /every|any/i, /Mermaid blocks?/i, /chat/i, /mermaid-check\.js/i, /require|run/i, /parse/i, /render/i, /pinned Pele/i],
+    /before posting|prior to posting/i, 'after posting', 'Prior to posting any Mermaid block in chat, run mermaid-check.js to parse and render it with pinned Pele.'],
+  ['Mermaid accessibility', mermaid, [/Mermaid/i, /accTitle/i, /accDescr/i, /include|supply/i],
     /include|supply/i, 'omit', 'Supply accTitle and accDescr in each Mermaid view.'],
-  ['Mermaid theme', router, [/Mermaid/i, /theme init/i],
+  ['Mermaid theme', mermaid, [/Mermaid/i, /theme init/i],
     /never use|do not add/i, 'Use', 'Do not add theme init to Mermaid.', /never use|do not add/i],
-  ['split Mermaid', router, [/split|divide/i, /large Mermaid/i, /views/i],
+  ['split Mermaid', mermaid, [/split|divide/i, /(?:wide|large) Mermaid/i, /views/i],
     /split|divide/i, 'merge', 'Divide large Mermaid diagrams into views.'],
+  ['system design opens with a whole-system overview', mermaid, [/open|start/i, /every/i, /system.design/i, /one/i, /whole.system/i, /overview/i, /flowchart TB/i],
+    /open|start/i, 'end', 'Start every system-design explanation with one whole-system overview in flowchart TB.'],
+  ['keep the overview when splitting', mermaid, [/split/i, /only/i, /retain|keep/i, /overview/i],
+    /retain|keep/i, 'discard', 'Split only if you retain the overview.'],
+  ['restructure a diagram that fails legibility', mermaid, [/restructure|reorganize/i, /fail|below/i, /legibility|12px/i],
+    /restructure|reorganize/i, 'leave', 'Reorganize a diagram that fails legibility.'],
+  ['never shrink labels to pass', mermaid, [/shrink|reduce/i, /text|label/i, /legibility/i],
+    /never|do not/i, 'always', 'Do not reduce label size to pass the legibility gate.', /never|do not/i],
+  ['checker proof is exact', mermaid, [/checker pass/i, /proves|establishes/i, /contract/i, /pinned.pele/i, /parse/i, /size/i, /exact/i],
+    /exact/i, 'approximate', 'A checker pass establishes contract compliance and pinned-pele parse and size on the exact source bytes.'],
+  ['host render is separate', mermaid, [/checker pass/i, /prove|establish/i, /T3/i, /GitHub/i, /appearance/i],
+    /never proves|does not establish/i, 'proves', 'A checker pass does not establish T3 or GitHub appearance.', /never proves|does not establish/i],
+  ['unobserved T3 boundary', mermaid, [/record|mark/i, /T3 render: unobserved/i, /unless|without/i, /actual.*(?:render|inline)/i],
+    /unobserved/i, 'verified', 'Mark T3 render: unobserved without an actual inline observation.'],
+  ['GitHub/docs fidelity needs a fixture', mermaid, [/claim/i, /GitHub.*docs|docs.*GitHub/i, /fidelity/i, /only after/i, /fixture render/i, /host/i],
+    /only after/i, 'without', 'Claim docs or GitHub fidelity only after a fixture render on that host.'],
   ['factual source pins', fidelity, [/factual nodes and edges/i, /inspected (?:source )?path/i, /recorded full revision/i, /map|bind/i],
     /recorded full revision/i, 'floating branch', 'Bind factual nodes and edges to an inspected source path at a recorded full revision.'],
   ['unsupported facts', fidelity, [/drop|remove/i, /unsupported factual/i],
@@ -40,8 +69,8 @@ const rules = [
     /short SHA/i, 'floating branch', 'Display the short SHA.'],
   ['offline HTML', fidelity, [/HTML/i, /network assets/i],
     /never load|do not fetch/i, 'Load', 'Do not fetch network assets in the HTML.', /never load|do not fetch/i],
-  ['density signal', fidelity, [/about (?:9|nine) core nodes/i, /split/i, /signal/i],
-    /split/i, 'merge', 'Treat about nine core nodes as a signal to split.'],
+  ['density signal', fidelity, [/Mermaid/i, /density/i, /advisory|signal/i, /split/i, /legibility/i, /gate/i],
+    /advisory|signal/i, 'hard limit', 'Treat Mermaid density as an advisory to split and legibility as a gate.'],
   ['repository persistence', fidelity, [/diagrams/i, /repo docs/i, /only/i, /user (?:asks|requests)/i, /write|save/i],
     /only/i, 'even without', 'Save diagrams into repo docs only when the user requests them.'],
   ['driver previews are the first exception', ui, [/first/i, /named (?:author )?browser exception/i, /driver.*two.*html_preview/i, /728px dark/i, /360px light/i],
@@ -103,3 +132,32 @@ for (const rule of rules) {
   });
 }
 
+function alternativeDiagramDefault(source) {
+  return sentences(source).find((clause) => {
+    const alternative = /\b(?:bespoke|custom|hand[- ](?:drawn|authored|written|coded))\s+(?:SVG|HTML)\b/i;
+    const offered = /\b(?:use|draw|choose|accept|allow|offer|prefer|include|option|example)\w*\b/i;
+    const prohibited = /\b(?:never|do not|don't)\s+(?:use|draw|choose|offer|include|allow)\b|\b(?:forbidden|prohibited|banned)\b/i;
+    const explicitRequest = /\b(?:only (?:on|at|upon|if|when)|if|when|upon)\b.*\b(?:explicit(?:ly)?|specific(?:ally)?)\b.*\b(?:request|ask)\w*\b/i;
+    return alternative.test(clause) && offered.test(clause)
+      && !prohibited.test(clause) && !explicitRequest.test(clause);
+  });
+}
+
+test('Explain reserves custom diagram formats for explicit requests', () => {
+  const source = read(router);
+  expect(alternativeDiagramDefault(source)).toBeUndefined();
+
+  const superseded = 'Choose the best visual for the concept: flowchart, sequence, state, architecture map, timeline, comparison or bespoke SVG are examples, not a taxonomy.';
+  const reworded = 'Authors may choose custom SVG as another diagram format.';
+  const inverted = 'Use hand-drawn HTML diagrams unless the user requests a different format.';
+  for (const addition of [superseded, reworded, inverted]) {
+    expect(alternativeDiagramDefault(`${source}\n\n${addition}`)).toBeDefined();
+  }
+  for (const allowed of [
+    'Use a bespoke SVG diagram only on an explicit user request.',
+    'If the user specifically asks for a custom SVG diagram, use that format.',
+    'Never offer hand-authored SVG as a default diagram format.',
+  ]) {
+    expect(alternativeDiagramDefault(`${source}\n\n${allowed}`)).toBeUndefined();
+  }
+});

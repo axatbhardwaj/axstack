@@ -42,10 +42,12 @@ Engineering authors and code reviewers cannot acquire this artifact authority.
 - `axstack-explainer`: for Explain, the driver authors ordinary inline HTML and
   chat Mermaid by default. The specialist can author these visuals when useful;
   it retains other visual authorship, including anatomy figures.
+  Diagram authors follow [Mermaid](../../axstack-explain/references/mermaid.md).
   Mixed and claude-only pin Opus 5.5 (`claude-opus-5-5`) medium exactly.
 - `axstack-explainer-review` always reviews every visual; `codex/sol` high in mixed.
   Consequential or complex driver-written prose keeps its review rule; every
   whiteboard defense is consequential, in chat too.
+  Rerun the Mermaid checker on the exact reviewed diagram source.
 - `axstack-diligence`: read-only [diligence checks](diligence.md) for authored PR
   review rounds and bounded research, spec, ticket, receipt, and release claims.
   Follow the [applicable diligence gate](diligence.md#applicable-diligence-gate):

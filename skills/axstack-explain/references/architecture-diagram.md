@@ -37,7 +37,8 @@ Include the bounded question, audience, format, inspected identities and open ga
 Require `axstack-explainer` as the one writer of the architecture diagram.
 The driver never authors architecture diagrams.
 Return every repair to the same author.
-The author follows Explain's existing format and design references.
+The author follows [Mermaid](mermaid.md) for every diagram view and the design
+references for the requested artifact format.
 
 ## 3. Review the final artifact
 
@@ -52,17 +53,20 @@ markers, legend and prior findings.
 Give the reviewer the source map and reconciled evidence so it can reopen the
 sources independently, rather than trusting the author's account.
 
+Rerun the checker with `--overview` on the exact source. Check visible
+relationships and status against the source map. Follow [Mermaid render
+proof](mermaid.md#render-proof) for chat and embed evidence.
 For inline HTML, the driver captures 728px dark and 360px light previews before
 review, bound to SHA-256. The reviewer inspects the driver's 728px dark and
 360px light previews for design review.
-Follow [Inline pages](inline-pages.md) for exact-byte scans, preview acceptance
-and any interaction verification, and [Visual QA](visual-qa.md) for reviewer
-design checks and other requested artifact formats.
+For HTML, follow [Inline pages](inline-pages.md) and [Visual QA](visual-qa.md)
+for exact-byte and interaction checks.
 Every byte change requires fresh review.
 
 ## 4. Deliver or hold
 
 The driver renders only reviewed bytes after the review passes.
+For chat, send the reviewed Mermaid fences with the explanation.
 Follow [Delivery](delivery.md) for repairs, missing evidence or tools, and
 delivery readback; interim prose leaves the requested diagram incomplete.
 If a required seat is unavailable or rejected, hold the diagram and name the

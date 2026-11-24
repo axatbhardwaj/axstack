@@ -26,7 +26,11 @@ A page failing to look decent is a blocking design finding, repaired by the same
 For Anatomy and Publish only, retain Delivery's design-only exception.
 Never describe a remaining finding as fixed or a clean pass.
 Follow [Delivery](delivery.md) for other failure holds and unknown-render holds.
-Chat Mermaid and anatomy keep their existing review. Explicitly requested standalone HTML files keep their existing review and Visual QA.
+Chat Mermaid and anatomy keep their existing review.
+For Mermaid, follow [Mermaid](mermaid.md) for checker and host render proof.
+For embedded Mermaid SVG, check intrinsic size, label fit and colour in the page’s
+tested theme and widths. Keep horizontal scrolling inside the figure.
+Explicitly requested standalone HTML files keep their existing review and Visual QA.
 Interaction checks remain with `axstack-ui-verifier`; source-fidelity review is unchanged.
 
 Use this checklist for every HTML explanation and other visual artifacts where

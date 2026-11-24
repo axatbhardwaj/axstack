@@ -82,8 +82,12 @@ Preserve this phase's independent source/fact and exact-byte review requirements
 ## 2. Choose proportional output
 
 Explain owns evidence gathering, claim labels, the 700-word cap, dispatch, and delivery.
-Choose the best visual for the concept: flowchart, sequence, state, architecture
-map, timeline, comparison or bespoke SVG are examples, not a taxonomy.
+Use a diagram whenever it can show the structure being explained.
+Use Mermaid for every Explain diagram unless the user explicitly requests a
+different drawing format.
+For diagrams, follow [Mermaid](references/mermaid.md).
+Quantitative charts that need true scales follow Neon's evidence-graphics rules.
+Anatomy figures follow the explicit-request path below.
 Follow [Fidelity](references/fidelity.md) for every visual.
 For whole-work understanding or defense, follow [Whiteboard defense](references/whiteboard-defense.md).
 For architecture and system-map diagram requests, follow [Architecture diagrams](references/architecture-diagram.md).
@@ -104,10 +108,8 @@ Explicitly requested standalone HTML files keep their existing review and Visual
 Non-anatomy standalone HTML files also get exact-byte design review in the dark Neon theme or an explicit user theme.
 Plain-prose answers stay driver-written; other phases retain their own Mermaid
 owners, and README/docs diagram edits go through Implement under these rules.
-Use inline SVG or CSS inside inline pages. Never use Mermaid in inline pages.
-Use Mermaid for chat, GitHub, and docs.
-Include `accTitle` and `accDescr` in each Mermaid view.
-Never use theme init in Mermaid. Split large Mermaid diagrams into views.
+Never use a Mermaid or pele runtime in inline pages.
+Embed checker-rendered SVG in inline pages.
 Use anatomy only on an explicit isometric, physical-object or anatomy request,
 through [Anatomy](../axstack-anatomy/SKILL.md).
 
@@ -126,10 +128,13 @@ through [Anatomy](../axstack-anatomy/SKILL.md).
    supporting detail to a separate linked ticket or appendix. Essential answers
    must not be hidden behind links, and evidence must not be silently discarded.
    Count node labels, headings, captions, and all page text.
-2. Use chat only for an explicit chat request, an answer outside the description's conditions,
-   or interim blocked status under Delivery.
-   Use a compact diagram when useful.
-3. For the conditions in the description, create an inline page by default.
+2. Use chat only for diagram-led explanations, an explicit chat request, an answer outside
+   the description's conditions, or interim blocked status under Delivery.
+   A diagram-led explanation uses the diagram to show its main content, such as a
+   structure, flow, sequence, state or map, with prose as annotation.
+   Deliver diagram-led explanations as prose plus native Mermaid fences in chat.
+   Spec readbacks, prototype pages and whiteboard defense keep their routes and formats.
+3. Create an inline page by default for non-diagram layouts that meet the description's conditions.
    Honor an explicitly requested artifact format.
    The reply adds only what the page omits.
 4. Profile IDs are presets, not availability proof. Before dispatch, follow the
