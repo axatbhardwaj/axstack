@@ -194,7 +194,7 @@ flowchart TB
   N3["Node 3<br/>Detail"]:::tone1
   N4["Node 4<br/>Detail"]:::tone2
   N5["Node 5<br/>Detail"]:::tone2
-  N6["Node 6 ✱<br/>Detail"]:::tone1
+  N6["Node 6 ✱ ✱<br/>Detail"]:::tone1
   N7["Node 7<br/>Detail"]:::tone1
   N8["Node 8<br/>Detail"]:::tone2
   N1 -->|"E1 ✱"| N3
