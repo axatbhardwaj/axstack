@@ -2,6 +2,8 @@ import { afterAll, expect, test } from 'bun:test';
 import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 
 const checker = `${import.meta.dir}/../../skills/axstack/scripts/mermaid-check.js`;
+const fixtures = `${import.meta.dir}/fixtures/mermaid`;
+const guide = `${import.meta.dir}/../../skills/axstack-explain/references/mermaid.md`;
 const scratch = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/axstack-mermaid-test-`);
 afterAll(() => rmSync(scratch, { recursive: true }));
 
@@ -43,6 +45,18 @@ function cli(...args) {
   const result = Bun.spawnSync([process.execPath, '--no-env-file', checker, ...args]);
   return { code: result.exitCode, out: result.stdout.toString(), err: result.stderr.toString() };
 }
+
+test('checks all nine flowchart views and reports the dense ELK overview limit', () => {
+  const { code, out, err } = cli('--overview', `${fixtures}/ga-v10.md`);
+  expect(code, err).toBe(0);
+  expect(out.match(/block \d+.*flowchart/g)).toHaveLength(9);
+  expect(out).toMatch(/block 1.*dense ELK overview: needs zoom\/pan in chat; geometry not measured \(pinned pele ignores ELK\)/);
+});
+
+test('checks the guide examples with the overview policy', () => {
+  const { code, err } = cli('--overview', guide);
+  expect(code, err).toBe(0);
+});
 
 async function check(name, source, ...args) {
   const path = `${scratch}/${name}`;
@@ -88,23 +102,42 @@ const breaches = [
   ['init', `%%{init: {}}%%\n${flow}`, /init directive/],
   ['initialize', `%%{initialize: {}}%%\n${flow}`, /initialize directive/],
   ['theme', flow.replace('  flowchart:', '  theme: dark\n  flowchart:'), /theme key/],
-  ['frontmatter', flow.replace('nodeSpacing: 90', 'nodeSpacing: 91'), /canonical frontmatter/],
-  ['one-line-frontmatter', flow.replace(/config:[\s\S]*?\n---/, 'config: {flowchart: {nodeSpacing: 90, rankSpacing: 110, curve: step}}\n---'), /canonical frontmatter/],
-  ['misplaced-title', flow.replace('    nodeSpacing: 90', 'title: Review\n    nodeSpacing: 90'), /canonical frontmatter/],
-  ['missing-frontmatter', flow.slice(flow.indexOf('flowchart TB')), /canonical frontmatter/],
-  ['classdef', flow.replace('stroke-width:2px', 'stroke-width:3px'), /canonical classDef/],
-  ['style', `${flow}style B fill:red\n`, /style statement/],
-  ['inline-style', `${flow}A --> C; style C fill:red\n`, /style statement/],
-  ['linkstyle', `${flow}linkStyle 0 stroke:red\n`, /linkStyle statement/],
+  ['node-spacing', flow.replace('nodeSpacing: 90', 'nodeSpacing: 30'), /nodeSpacing.*40.*150/],
+  ['rank-spacing', flow.replace('rankSpacing: 110', 'rankSpacing: 200'), /rankSpacing.*40.*150/],
+  ['sequence-spacing', sequence.replace('messageMargin: 48', 'messageMargin: 40.5'), /messageMargin.*integer/],
+  ['missing-spacing', flow.replace('    rankSpacing: 110\n', ''), /required.*rankSpacing|rankSpacing.*required/],
+  ['unknown-config', flow.replace('    curve: step', '    padding: 90'), /unknown.*config.flowchart.padding/],
+  ['non-elk', flow.replace('  flowchart:', '  layout: dagre\n  flowchart:'), /config.layout.*elk/],
+  ['sequence-elk', sequence.replace('  sequence:', '  layout: elk\n  sequence:'), /config.layout.*flowchart/],
+  ['curve', flow.replace('curve: step', 'curve: cardinal'), /curve.*step.*linear.*basis/],
+  ['one-line-frontmatter', flow.replace(/config:[\s\S]*?\n---/, 'config: {flowchart: {nodeSpacing: 90, rankSpacing: 110, curve: step}}\n---'), /frontmatter.*multiline|multiline.*frontmatter/],
+  ['misplaced-title', flow.replace('    nodeSpacing: 90', 'title: Review\n    nodeSpacing: 90'), /frontmatter/],
+  ['missing-frontmatter', flow.slice(flow.indexOf('flowchart TB')), /frontmatter.*nodeSpacing|nodeSpacing.*frontmatter/],
+  ['opaque-class-fill', flow.replace('stroke:#5b7bd5', 'fill:#abc,stroke:#5b7bd5'), /classDef.*fill.*transparent.*none/],
+  ['opaque-node-fill', `${flow}style B fill:red\n`, /style.*fill.*transparent.*none/],
+  ['class-property', flow.replace('stroke:#5b7bd5', 'color:#5b7bd5'), /classDef.*color.*forbidden/],
+  ['inline-style-property', `${flow}A --> C; style C color:#abc\n`, /style.*color.*forbidden/],
+  ['linkstyle', `${flow}linkStyle 0 stroke:red\n`, /linkStyle.*stroke.*forbidden/],
+  ['accent', `${flow.replace('#5b7bd5', '#14b8a6')}style A stroke:orange\n`, /one accent hue/],
+  ['accent-spread', `${flow.replace('#5b7bd5', '#ff0000')}style A stroke:#ff4c00\nstyle B stroke:#ff004c\n`, /one accent hue/],
+  ['missing-status', `${flow.replace('B[Review]', 'B["Review (planned)"]')}classDef future stroke-dasharray:6 4\nclass A,B future\n`, /dashed class.*future.*A.*status word/],
+  ['missing-default-status', `${flow}classDef default stroke-dasharray:6 4\n`, /dashed class.*default.*status word/],
+  ['dashed-node-style', `${flow}style A stroke-dasharray:6 4\n`, /dashed style on A.*status word.*node label/],
+  ['dashed-subgraph-style', `${tier}style Review stroke-dasharray:6 4\n`, /dashed style on Review.*status word.*subgraph label/],
+  ['dashed-subgraph-class', `${tier}classDef future stroke-dasharray:6 4\nclass Review future\n`, /dashed class future on Review.*status word.*subgraph label/],
+  ['dashed-er-entity-style', 'erDiagram\naccTitle: Orders\naccDescr: One entity owns another.\nA ||--o{ B : owns\nstyle A stroke-dasharray:6 4\n',
+    /dashed style on A.*status word.*node label/],
+  ['dashed-er-subgraph-style', 'erDiagram\naccTitle: Orders\naccDescr: One entity owns another.\nsubgraph G [Review]\nA ||--o{ B : owns\nend\nstyle G stroke-dasharray:6 4\n',
+    /dashed style on G.*status word.*subgraph label/],
   ['rect', `${sequence}rect rgb(0, 20, 60)\nA->>B: secret\nend\n`, /rect statement/],
   ['colored-box', `${sequence}box Aqua Review\nparticipant C\nend\n`, /colou?red box/],
-  ['accent', flow.replace('A["PR #263"]', 'A["PR #263"]:::accent') + 'B --> C:::accent\n', /at most two.*accent/],
   ['state-class', 'stateDiagram-v2\naccTitle: Review\naccDescr: Starts.\nclassDef planned stroke-dasharray:6 4\n[*] --> Review\n', /classDef.*stateDiagram-v2/],
   ['state-arrow', 'stateDiagram-v2\naccTitle: Review\naccDescr: Starts.\nOpen -.-> Review\n', /stateDiagram-v2.*-\.->/],
   ['timeline-class', 'timeline\naccTitle: Years\naccDescr: Dates.\nclassDef unknown stroke-dasharray:2 3\n2025 : Review\n', /classDef.*timeline/],
   ['sequence-class', `${sequence}classDef planned stroke-dasharray:6 4\n`, /classDef.*sequenceDiagram/],
   ['legibility', `${flow.replace('flowchart TB', 'flowchart LR')}B --> C[Reporting service] --> D[Long downstream service] --> E[Another external service]\n`, /12px at 860px.*restructure/i],
-  ['node-semicolon', flow.replace('["PR #263"]', '["Queued; ready"]'), /semicolon in node label.*comma or dash/],
+  ['node-semicolon', flow.replace('["PR #263"]', '[Queued; ready]'), /semicolon in node label.*comma or dash/],
+  ['metadata-semicolon', `${flow}C@{label: Queued; ready, shape: rect}\n`, /semicolon in node label.*comma or dash/],
   ['edge-semicolon', flow.replace(' --> ', ' -->|Review; queue| '), /semicolon in edge label.*comma or dash/],
   ['inline-edge-semicolon', flow.replace(' --> ', ' -- Review; style guide --> '), /semicolon in edge label.*comma or dash/],
   ['message-semicolon', sequence.replace('Review PR #263', 'Review; queue'), /semicolon in sequence message.*comma or dash/],
@@ -137,10 +170,45 @@ for (const [name, source, rule] of breaches) {
   });
 }
 
-test('accepts two accent nodes and keeps timeline direction for longer diagrams', async () => {
-  const two = await check('two-accent.mmd', flow.replace('A["PR #263"]', 'A["PR #263"]:::accent'));
-  expect(two.err).toBe('');
-  expect(two.code).toBe(0);
+test('allows calm styles, different accents and optional curves', async () => {
+  const teal = tier.replace('#5b7bd5', '#14b8a6').replace('    curve: step\n', '').replace('nodeSpacing: 90', 'nodeSpacing: 40')
+    .replace('rankSpacing: 110', 'rankSpacing: 150')
+    .replace('A[Driver]', 'A["Driver; ready"]:::accent')
+    .replace('--> B[Reviewer]:::accent', '-->|"E1; review"| B["Reviewer (partial)"]:::accent')
+    .replace('accTitle: Review', 'accTitle: Review; intake')
+    .replace('accDescr: The author', 'accDescr: Review; the author');
+  const source = `${teal}B -.->|E2| C[Summary]:::accent\nclassDef future fill:none,stroke-dasharray:8 3 2 3\nclass B future\n`
+    + 'style Review fill:transparent,stroke:#8a909b,stroke-width:1.5px\n'
+    + 'style C stroke:#15b7b0\nlinkStyle default stroke-width:2px\nlinkStyle 0,1 stroke-width:3px\n';
+  const result = await check('calm-styles.mmd', source);
+  expect(result.code, result.err).toBe(0);
+  const blue = `${flow.replace('A["PR #263"]', 'A["PR #263"]:::accent')}B --> C:::accent\n`;
+  const wrappedHue = `${flow.replace('#5b7bd5', '#ff001a')}style A stroke:#ff1a00\n`;
+  for (const [name, chart] of [['blue', blue], ['red-across-zero', wrappedHue]]) {
+    const accepted = await check(`${name}.mmd`, chart);
+    expect(accepted.code, accepted.err).toBe(0);
+  }
+});
+
+test('accepts status in the visible labels of styled nodes and subgraphs', async () => {
+  const source = tier.replace('A[Driver]', 'A["Driver (retiring)"]')
+    .replace('Review [Review tier]', 'Review ["Review tier (partial)"]');
+  const result = await check('dashed-labels.mmd',
+    `${source}style A stroke-dasharray:6 4\nstyle Review stroke-dasharray:2 3\n`);
+  expect(result.code, result.err).toBe(0);
+});
+
+test('uses the punctuation rules for quoted metadata labels and multiline accessibility text', async () => {
+  const source = flow.replace(/ {2}accDescr:.*\n/, '  accDescr {Review; grouped\n    style B color:red\n  }\n')
+    + 'C@{label: "Queued; ready", shape: rect}\n';
+  const accepted = await check('accessibility.mmd', source);
+  expect(accepted.code, accepted.err).toBe(0);
+  const rejected = await check('accessibility-style.mmd', source.replace('  }\n', '  }; style B color:red\n'));
+  expect(rejected.err).toMatch(/style.*color.*forbidden/);
+  expect(rejected.code).toBe(1);
+});
+
+test('keeps timeline direction for longer diagrams', async () => {
   const timeline = 'timeline\naccTitle: Years\naccDescr: Dates.\n'
     + Array.from({ length: 5 }, (_, index) => `${2020 + index} : Stage ${index}`).join('\n') + '\n';
   const horizontal = await check('horizontal.mmd', timeline);
@@ -210,6 +278,7 @@ test('requires a TB flowchart with a subgraph as the first overview block', asyn
     ['missing', '# No diagrams', /overview.*block 1/i],
     ['zoom-first', fenced(sequence) + fenced(tier), /overview.*flowchart TB/],
     ['lr', fenced(tier.replace('flowchart TB', 'flowchart LR')), /overview.*flowchart TB/],
+    ['lr-elk', fenced(tier.replace('flowchart TB', 'flowchart LR').replace('config:', 'config:\n  layout: elk')), /overview.*flowchart TB/],
     ['no-tier', fenced(flow), /overview.*subgraph/],
   ];
   for (const [name, source, rule] of candidates) {
@@ -221,9 +290,11 @@ test('requires a TB flowchart with a subgraph as the first overview block', asyn
 
 test('applies legibility to zoom-ins too', async () => {
   const zoom = `${flow.replace('flowchart TB', 'flowchart LR')}B --> C[Reporting service] --> D[Long downstream service] --> E[Another external service]\n`;
-  const result = await check('wide-zoom.md', fenced(tier) + fenced(zoom), '--overview');
-  expect(result.err).toMatch(/block 2.*12px at 860px.*restructure/i);
-  expect(result.code).toBe(1);
+  for (const [name, chart] of [['wide', zoom], ['wide-elk', zoom.replace('config:', 'config:\n  layout: elk')]]) {
+    const result = await check(`${name}-zoom.md`, fenced(tier) + fenced(chart), '--overview');
+    expect(result.err).toMatch(/block 2.*12px at 860px.*restructure/i);
+    expect(result.code).toBe(1);
+  }
 });
 
 test('warns about crowded overview tiers and long overview names without the detail density prompts', async () => {
@@ -294,6 +365,21 @@ test('exports deterministic SVGs with scoped accessibility ids and a theme-bound
   });
   expect(new Set(ids).size).toBe(4);
   expect(cli('--svg-out', dir, path)).toEqual(result);
+});
+
+test('exports teal accent strokes with the theme accent while preserving neutral strokes and labels', async () => {
+  const chart = tier.replace('#5b7bd5', '#14B8A6').replace('A[Driver]', 'A["Driver #14B8A6"]');
+  const source = `${chart}style A stroke:teal\nstyle Review stroke:#8a909b\n`;
+  const dir = `${scratch}/teal-svg`;
+  const result = await check('teal.mmd', source, '--svg-out', dir);
+  expect(result.code, result.err).toBe(0);
+  const [name] = readdirSync(dir);
+  const svg = await Bun.file(`${dir}/${name}`).text();
+  expect(svg.match(/stroke:var\(--_c\)/g)).toHaveLength(2);
+  expect(svg).not.toMatch(/stroke:(?:#14b8a6|teal)(?=[;"])/i);
+  expect(svg).toContain('stroke:#8a909b');
+  expect(svg).toContain('Driver #14B8A6');
+  expect(result.out).toContain(sha256(svg));
 });
 
 test('documents CLI switches and signals usage errors', () => {
