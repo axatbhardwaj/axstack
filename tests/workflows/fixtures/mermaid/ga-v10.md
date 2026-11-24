@@ -101,6 +101,7 @@ flowchart LR
 ```mermaid
 ---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 90
     rankSpacing: 120
@@ -133,6 +134,7 @@ flowchart TB
 ```mermaid
 ---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 90
     rankSpacing: 120
@@ -156,6 +158,7 @@ flowchart TB
 ```mermaid
 ---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 90
     rankSpacing: 120
@@ -182,6 +185,7 @@ flowchart TB
 ```mermaid
 ---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 90
     rankSpacing: 120
@@ -213,6 +217,7 @@ flowchart TB
 ```mermaid
 ---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 80
     rankSpacing: 140
@@ -243,6 +248,7 @@ flowchart LR
 ```mermaid
 ---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 90
     rankSpacing: 100
@@ -265,6 +271,7 @@ flowchart LR
 ```mermaid
 ---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 90
     rankSpacing: 120
@@ -291,6 +298,7 @@ flowchart LR
 ```mermaid
 ---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 80
     rankSpacing: 140
