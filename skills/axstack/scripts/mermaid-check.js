@@ -237,7 +237,7 @@ function checkAccentHues(hues) {
   if (360 - maxGap > 30) throw new Error('use neutral grey strokes and one accent hue within ±15° per diagram');
 }
 
-function checkStyle(rule, kind, hues) {
+function checkStyle(rule, kind, accentStrokes) {
   const declaration = rule.match(/^\w+\s+[^\s,]+(?:\s*,\s*[^\s,]+)*\s+(.+)$/);
   if (!declaration) throw new Error(`expected ${kind} targets and style properties`);
   const allowed = kind === 'linkStyle' ? LINK_STYLE : NODE_STYLE;
@@ -250,7 +250,7 @@ function checkStyle(rule, kind, hues) {
     }
     if (key === 'stroke') {
       const hue = strokeHue(value);
-      if (hue !== undefined) hues.push(hue);
+      if (hue !== undefined) accentStrokes.set(value.toLowerCase(), hue);
     }
   }
 }
@@ -294,7 +294,7 @@ function sourceRules(source, extraType) {
 
   // Flowcharts accept semicolons both between statements and inside labels.
   const flowLabels = /(?:--|-\.+|==)\s+.+?\s+(?:--+>|\.+->|==+>)|"(?:[^"\\]|\\.)*"|\[[^\]]*\]|\([^()]*\)|\{[^{}]*\}|\|[^|]*\|/g;
-  const hues = [];
+  const accentStrokes = new Map();
   for (const line of lintable.split('\n')) {
     textBeforeParse(type, line.trim());
     const statements = type === 'flowchart'
@@ -310,11 +310,11 @@ function sourceRules(source, extraType) {
       const kind = rule.match(/^(classDef|style|linkStyle)(?=\s|$)/)?.[1];
       if (!kind) continue;
       if (kind === 'classDef' && NO_CLASSES.has(type)) throw new Error(`classDef is forbidden in ${type}`);
-      checkStyle(rule, kind, hues);
+      checkStyle(rule, kind, accentStrokes);
     }
   }
-  checkAccentHues(hues);
-  return { type, elk };
+  checkAccentHues([...accentStrokes.values()]);
+  return { type, elk, accentStrokes };
 }
 
 function overviewWarnings(type, model, dense, denseElk) {
@@ -338,23 +338,42 @@ function overviewWarnings(type, model, dense, denseElk) {
   return warnings;
 }
 
-function checkDashedClasses(type, model) {
-  const dashed = [...(model.classes?.values() ?? [])]
-    .filter(({ styles }) => styles?.some((style) => /^stroke-dasharray\s*:/.test(style)))
-    .map(({ id }) => id);
-  if (!dashed.length) return;
+function hasDashPattern(styles) {
+  return styles?.some((style) => /^stroke-dasharray\s*:/.test(style));
+}
+
+function checkDashedStatus(type, model) {
+  const dashed = new Set([...(model.classes?.values() ?? [])]
+    .filter(({ styles }) => hasDashPattern(styles))
+    .map(({ id }) => id));
+
+  function requireStatus({ id, text, classes, styles }, labelKind) {
+    const statusClass = classes.find((name) => dashed.has(name))
+      ?? (labelKind === 'node' && dashed.has('default') ? 'default' : undefined);
+    if (!statusClass && !hasDashPattern(styles)) return;
+    if (!STATUS_WORD.test((text || id).replace(/<[^>]*>/g, ' '))) {
+      const marker = statusClass ? `dashed class ${statusClass}` : 'dashed style';
+      throw new Error(`${marker} on ${id} requires a status word in the ${labelKind} label`);
+    }
+  }
+
   const nodes = type === 'flowchart'
     ? [...model.nodes.values()].filter(({ id }) => !model.subgraphLookup.has(id))
     : [...model.entities.values()].map((entity) => ({
       id: entity.label,
       text: entity.alias || entity.label,
       classes: entity.cssClasses.split(/\s+/),
+      styles: entity.cssStyles,
     }));
-  for (const node of nodes) {
-    const statusClass = dashed.find((name) => name === 'default' || node.classes.includes(name));
-    if (statusClass && !STATUS_WORD.test((node.text || node.id).replace(/<[^>]*>/g, ' '))) {
-      throw new Error(`dashed class ${statusClass} on ${node.id} requires a status word in the node label`);
-    }
+  for (const node of nodes) requireStatus(node, 'node');
+  for (const group of model.subgraphs) {
+    requireStatus({
+      id: group.id,
+      text: group.title,
+      classes: group.classes,
+      // Pele exposes flowchart subgraph styles on the node with the same ID.
+      styles: group.cssStyles ?? model.nodes?.get(group.id)?.styles,
+    }, 'subgraph');
   }
 }
 
@@ -377,7 +396,7 @@ function checkModel(type, model, overview, dense, denseElk) {
   }
   const nodes = [...(model.nodes?.values() ?? [])];
   if (model.boxes?.some((box) => box.fill !== 'transparent')) throw new Error('coloured box is forbidden');
-  if (type === 'flowchart' || type === 'erDiagram') checkDashedClasses(type, model);
+  if (type === 'flowchart' || type === 'erDiagram') checkDashedStatus(type, model);
 
   const edges = model.edges ?? [];
   if (type === 'flowchart') {
@@ -432,10 +451,12 @@ function checkModel(type, model, overview, dense, denseElk) {
   return warnings;
 }
 
-function embeddedSvg(svg) {
-  // Rewrite only an inline stroke declaration. Keep Pele's theme fallbacks and label text.
+function embeddedSvg(svg, accentStrokes) {
+  if (!accentStrokes.size) return svg;
+  // Rewrite only declared accent strokes. Keep neutral strokes, theme fallbacks and label text.
   return svg.replace(/(<[^<>]*\sstyle=")([^"]*)"/g, (_, opening, style) =>
-    `${opening}${style.replace(/(^|;)stroke:#5b7bd5(?=;|$)/g, '$1stroke:var(--_c)')}"`);
+    `${opening}${style.replace(/(^|;)stroke\s*:\s*([^;]+)/g, (declaration, separator, value) =>
+      accentStrokes.has(value.trim().toLowerCase()) ? `${separator}stroke:var(--_c)` : declaration)}"`);
 }
 
 async function main(args) {
@@ -479,7 +500,7 @@ async function main(args) {
     const number = index + 1;
     const where = `${options.path} block ${number} (line ${block.line})`;
     try {
-      const { type, elk } = sourceRules(block.source, options.extraType);
+      const { type, elk, accentStrokes } = sourceRules(block.source, options.extraType);
       const model = parseDiagram(pele, block.source, type);
       const overview = options.overview && index === 0;
       const dense = overview && type === 'flowchart' && model.edges.length > DENSE_OVERVIEW_EDGES;
@@ -496,7 +517,7 @@ async function main(args) {
       const measurement = denseElk
         ? `${DENSE_ELK_NOTE}; natural-size labels ${labelSize}px`
         : `${elk ? 'default layout ' : ''}${width}px`;
-      views.push({ where, type, measurement, digest, id, svg });
+      views.push({ where, type, measurement, digest, id, svg, accentStrokes });
     } catch (error) {
       const location = error.line ? ` at line ${block.firstLine + error.line - 1}, column ${error.column}` : '';
       const message = error instanceof pele.PeleError ? `Pele parse/render failure${location}: ${error.message}` : error.message;
@@ -508,11 +529,11 @@ async function main(args) {
 
   try {
     if (options.svgDir) mkdirSync(options.svgDir, { recursive: true });
-    for (const { where, type, measurement, digest, id, svg } of views) {
+    for (const { where, type, measurement, digest, id, svg, accentStrokes } of views) {
       let svgProof = '';
       if (options.svgDir) {
         const path = `${options.svgDir}/${id}.svg`;
-        const output = embeddedSvg(svg);
+        const output = embeddedSvg(svg, accentStrokes);
         await Bun.write(path, output);
         svgProof = `; SVG sha256=${sha256(output)} ${path}`;
       }
