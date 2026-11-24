@@ -73,7 +73,9 @@ Pages never use storage, cookies, modals, or popups.
 Use the SVG from the checker on the reviewed source. Prefer TB flowcharts.
 Keep each figure in a horizontal scroller and override Pele’s inline
 `max-width:100%` so its SVG keeps its intrinsic width and readable labels.
-For inline pages, reuse T3’s `.pele` theme mapping.
+ELK exports include intrinsic width and height. Keep a dense overview at that
+size and provide zoom or pan. For inline pages, reuse T3’s `.pele` theme
+mapping for both ELK and Pele SVGs.
 
 ```css
 .mermaid-scroll {
