@@ -122,6 +122,13 @@ const breaches = [
   ['accent-spread', `${flow.replace('#5b7bd5', '#ff0000')}style A stroke:#ff4c00\nstyle B stroke:#ff004c\n`, /one accent hue/],
   ['missing-status', `${flow.replace('B[Review]', 'B["Review (planned)"]')}classDef future stroke-dasharray:6 4\nclass A,B future\n`, /dashed class.*future.*A.*status word/],
   ['missing-default-status', `${flow}classDef default stroke-dasharray:6 4\n`, /dashed class.*default.*status word/],
+  ['dashed-node-style', `${flow}style A stroke-dasharray:6 4\n`, /dashed style on A.*status word.*node label/],
+  ['dashed-subgraph-style', `${tier}style Review stroke-dasharray:6 4\n`, /dashed style on Review.*status word.*subgraph label/],
+  ['dashed-subgraph-class', `${tier}classDef future stroke-dasharray:6 4\nclass Review future\n`, /dashed class future on Review.*status word.*subgraph label/],
+  ['dashed-er-entity-style', 'erDiagram\naccTitle: Orders\naccDescr: One entity owns another.\nA ||--o{ B : owns\nstyle A stroke-dasharray:6 4\n',
+    /dashed style on A.*status word.*node label/],
+  ['dashed-er-subgraph-style', 'erDiagram\naccTitle: Orders\naccDescr: One entity owns another.\nsubgraph G [Review]\nA ||--o{ B : owns\nend\nstyle G stroke-dasharray:6 4\n',
+    /dashed style on G.*status word.*subgraph label/],
   ['rect', `${sequence}rect rgb(0, 20, 60)\nA->>B: secret\nend\n`, /rect statement/],
   ['colored-box', `${sequence}box Aqua Review\nparticipant C\nend\n`, /colou?red box/],
   ['state-class', 'stateDiagram-v2\naccTitle: Review\naccDescr: Starts.\nclassDef planned stroke-dasharray:6 4\n[*] --> Review\n', /classDef.*stateDiagram-v2/],
@@ -181,6 +188,14 @@ test('allows calm styles, different accents and optional curves', async () => {
     const accepted = await check(`${name}.mmd`, chart);
     expect(accepted.code, accepted.err).toBe(0);
   }
+});
+
+test('accepts status in the visible labels of styled nodes and subgraphs', async () => {
+  const source = tier.replace('A[Driver]', 'A["Driver (retiring)"]')
+    .replace('Review [Review tier]', 'Review ["Review tier (partial)"]');
+  const result = await check('dashed-labels.mmd',
+    `${source}style A stroke-dasharray:6 4\nstyle Review stroke-dasharray:2 3\n`);
+  expect(result.code, result.err).toBe(0);
 });
 
 test('uses the punctuation rules for quoted metadata labels and multiline accessibility text', async () => {
@@ -350,6 +365,21 @@ test('exports deterministic SVGs with scoped accessibility ids and a theme-bound
   });
   expect(new Set(ids).size).toBe(4);
   expect(cli('--svg-out', dir, path)).toEqual(result);
+});
+
+test('exports teal accent strokes with the theme accent while preserving neutral strokes and labels', async () => {
+  const chart = tier.replace('#5b7bd5', '#14B8A6').replace('A[Driver]', 'A["Driver #14B8A6"]');
+  const source = `${chart}style A stroke:teal\nstyle Review stroke:#8a909b\n`;
+  const dir = `${scratch}/teal-svg`;
+  const result = await check('teal.mmd', source, '--svg-out', dir);
+  expect(result.code, result.err).toBe(0);
+  const [name] = readdirSync(dir);
+  const svg = await Bun.file(`${dir}/${name}`).text();
+  expect(svg.match(/stroke:var\(--_c\)/g)).toHaveLength(2);
+  expect(svg).not.toMatch(/stroke:(?:#14b8a6|teal)(?=[;"])/i);
+  expect(svg).toContain('stroke:#8a909b');
+  expect(svg).toContain('Driver #14B8A6');
+  expect(result.out).toContain(sha256(svg));
 });
 
 test('documents CLI switches and signals usage errors', () => {
