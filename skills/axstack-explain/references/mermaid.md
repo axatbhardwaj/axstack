@@ -50,6 +50,11 @@ Do not use `style`, `linkStyle`, `rect`, coloured `box`, or sequence
   four periods.
 - In those three types use `(planned)` or `(unknown)` as the status text.
 
+Use a comma or dash in labels, sequence messages and participant aliases
+in place of semicolons. Keep brackets and parentheses out of participant
+aliases. Put status in message text. Use `✱` for an asterisk in a flowchart
+label.
+
 ## Canonical overview and zoom-in
 
 ```mermaid
@@ -98,7 +103,9 @@ sequenceDiagram
 
 ## Check and render
 
-Run `mermaid-check.js` on every Mermaid view before delivery.
+Run `mermaid-check.js` on every Mermaid view before delivery. Before posting
+any Mermaid block in chat, run `mermaid-check.js` to parse and render that block
+with pinned Pele.
 From the installed Explain skill directory, check reviewed Markdown or raw
 `.mmd` source with Bun.
 
