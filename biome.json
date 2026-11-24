@@ -32,7 +32,8 @@
   "linter": {
     "includes": [
       "**/*.js",
-      "!skills/axstack/vendor/pele/**",
+      "!skills/axstack/vendor/pele/pele.js",
+      "!skills/axstack/vendor/pele/LICENSE",
       "!skills/axstack-anatomy/kit/**",
       "!skills/axstack-anatomy/scripts/**",
       "!skills/axstack-anatomy/references/**",
