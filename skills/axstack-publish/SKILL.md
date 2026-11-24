@@ -82,6 +82,13 @@ to remove private paths, IDs, credentials, prompts, messages and internal record
 For public mode, run Explain's [self-contained asset check](../axstack-explain/references/inline-pages.md#check-the-exact-bytes).
 Reuse Explain's [page rules](../axstack-explain/references/inline-pages.md#page-rules)
 and [Visual QA](../axstack-explain/references/visual-qa.md) for checks and verifier routing.
+For diagrams, follow [Mermaid](../axstack-explain/references/mermaid.md).
+Never use a Mermaid or pele runtime in articles.
+Embed checker-rendered SVG from the reviewed Mermaid source.
+Use the [figure scroller](../axstack-explain/references/inline-pages.md#embed-mermaid)
+and bind `--pele-*` to the article’s Neon tokens. Use ground for background,
+ink for foreground, muted for lines and borders, surface for fills, and
+`--neon-emphasis` for `--pele-accent`.
 
 Send the article adaptation, including art direction and the dark Neon theme,
 to `axstack-explainer` with a bounded brief.
