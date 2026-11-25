@@ -95,11 +95,12 @@ test('live reads and posts require the operator’s work-chat MCP and dedicated 
     [[/require|only/i, 'may use'], [/--user-data-dir/, '--profile-directory']], concepts);
 });
 
-test('an absent, isolated or different browser profile holds live work', () => {
-  const hold = [/hold|pause/i, /ask|consult/i, /user/i, /browser/i,
-    /absent|missing/i, /isolated/i, /another profile|different profile|bound elsewhere/i];
+test('an unusable browser binding or unsafe browser process holds live work', () => {
+  const hold = [/hold|pause/i, /ask|consult/i, /user/i, /browser|Chromium/i,
+    /absent|missing/i, /isolated/i, /another profile|different profile|bound elsewhere/i,
+    /runs as root|root privileges/i, /unsandboxed|without a sandbox/i];
   checkRule(skill, (text) => requires(text, ...hold),
-    'Pause and consult the user if the browser is missing, isolated or uses a different profile.',
+    'Pause and consult the user if the browser is missing, isolated, uses a different profile, has root privileges or runs without a sandbox.',
     [[/hold|pause/i, 'proceed'], [/ask|consult/i, 'skip contacting']], hold);
 });
 
