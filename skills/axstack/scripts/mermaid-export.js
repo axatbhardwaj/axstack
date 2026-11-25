@@ -5,6 +5,7 @@ const BUNDLE_SHA256 = '336df803d87a38b70a01e736e666c8f7601d2ce42f5e47c8fafe5d721
 const BUNDLE = `${import.meta.dir}/../vendor/mermaid/mermaid.min.js`;
 const BROWSER_SCRIPT = `${import.meta.dir}/../assets/mermaid-export.js`;
 const TIMEOUT_MS = 30_000;
+const SANDBOX_STARTUP = /\b(?:ZygoteHostImpl::Init|zygote_host_impl_linux\.cc|no usable sandbox|(?:setuid|SUID) sandbox helper|running as root without --no-sandbox)\b/i;
 const PAGE = `<!doctype html>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'">
@@ -45,10 +46,11 @@ export function findChromium(override = '') {
   }
 }
 
-async function renderPage(chromium, scratch) {
+async function renderPage(chromium, scratch, browserNoSandbox) {
   const child = Bun.spawn([
     chromium,
     '--headless',
+    ...(browserNoSandbox ? ['--no-sandbox'] : []),
     '--disable-background-networking',
     '--disable-component-update',
     '--disable-crash-reporter',
@@ -81,7 +83,17 @@ async function renderPage(chromium, scratch) {
   const [dom, stderr, status] = await Promise.all([
     new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited,
   ]);
-  if (status !== 0) throw new Error(`Chromium export failed (${child.signalCode ?? status}): ${stderr.trim().slice(-1600)}`);
+  if (status !== 0) {
+    const diagnostic = dom.trim() ? undefined : stderr.split(/\r?\n/).find((line) => SANDBOX_STARTUP.test(line));
+    const exit = child.signalCode ?? status;
+    if (diagnostic) {
+      const action = browserNoSandbox
+        ? 'Use a Chromium installation that can start with --browser-no-sandbox on this host.'
+        : 'Restore Chromium sandbox support or explicitly pass --browser-no-sandbox for trusted local diagrams.';
+      throw new RendererUnavailable(`Chromium sandbox startup failed (${exit}). ${action} ${diagnostic.trim().slice(0, 500)}`);
+    }
+    throw new Error(`Chromium export failed (${exit}): ${stderr.trim().slice(-1600)}`);
+  }
   const result = dom.match(/<pre id="result" data-status="(ok|error)">([^<]+)<\/pre>/);
   if (!result) throw new Error('Chromium did not report completion of the Mermaid export');
   const data = JSON.parse(decodeURIComponent(result[2]));
@@ -89,7 +101,7 @@ async function renderPage(chromium, scratch) {
   return data;
 }
 
-export async function exportBrowserSvgs(views, { browser, width }) {
+export async function exportBrowserSvgs(views, { browser, browserNoSandbox, width }) {
   const bundle = await verifiedBundle();
   const chromium = findChromium(browser);
   if (!chromium) {
@@ -108,7 +120,7 @@ export async function exportBrowserSvgs(views, { browser, width }) {
       Bun.write(`${scratch}/views.js`, `globalThis.mermaidExport = ${JSON.stringify({ jobs, width })};\n`),
       Bun.write(`${scratch}/mermaid.min.js`, bundle),
     ]);
-    const renders = await renderPage(chromium, scratch);
+    const renders = await renderPage(chromium, scratch, browserNoSandbox);
     if (!Array.isArray(renders) || renders.length !== views.length
         || renders.some((render, index) => render.id !== views[index].id || typeof render.svg !== 'string'
           || !(render.minLabelPx === null || Number.isFinite(render.minLabelPx)))) {
