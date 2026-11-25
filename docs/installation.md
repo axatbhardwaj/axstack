@@ -3,9 +3,9 @@
 Linux is the only supported host OS.
 
 Axstack's Bun CLI installs owned chat skills plus one selected role snapshot and
-checks host capabilities. T3 Code is the only supported active runtime. The CLI
-does not dispatch agents, edit T3 settings, run a scheduler, or maintain a
-workflow database.
+checks host capabilities. T3 Code is the only supported active runtime.
+Installation activates no workflows. The CLI leaves agent dispatch and T3
+settings to T3.
 
 Requirements: Bun >=1.3.14, Git, `gh`, and a running
 T3 Code stable `0.1.0` or newer. The driver is a T3 thread
@@ -220,11 +220,14 @@ also routes every subagent, delegated worker, reviewer, and cross-harness dispat
 through the `t3-code` MCP. It forbids harness-native subagent tools. The current
 T3 thread is the driver. Use async `delegate_task` for every role, including authors with
 `isolation:"worktree"` in their own SHA-pinned worktrees.
-Every top-level launch, including an author fallback, requires an explicit user request.
 Top-level drivers use `t3_thread_launch` only after an explicit user request.
 Preserve existing accepted authorization within its exact scope.
-Use `t3_thread_launch` as a rare author fallback only when
-worktree isolation is unavailable and record each use in the run record. The standing block
+A packaged workflow's `agent()` step can start a thread on its own host for
+its own run with explicit model binding. Drivers can start packaged workflow
+runs. Workflows must not launch threads across hosts.
+Use `t3_thread_launch` as a rare author fallback only when worktree isolation
+is unavailable and after an explicit user request, and record each use in the
+run record. The standing block
 authorizes delegated writers and worktrees within approved scope;
 it grants no blanket top-level launch permission;
 it grants no push, merge, release, or host mutation.
