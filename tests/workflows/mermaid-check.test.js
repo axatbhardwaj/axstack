@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from 'bun:test';
-import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { findChromium } from '../../skills/axstack/scripts/mermaid-export.js';
 
 const checker = `${import.meta.dir}/../../skills/axstack/scripts/mermaid-check.js`;
@@ -448,6 +448,7 @@ ulimit -c 0
 printf '%s\\n' "$@" > "$0.args"
 for arg do
   if [ "$arg" = --no-sandbox ]; then
+    printf '%s\\n' '<html></html>'
     printf '%s\\n' 'fixture stopped after receiving explicit opt-in' >&2
     exit 42
   fi
@@ -478,6 +479,83 @@ kill -ABRT "$$"
   expect(lateFailure.code, lateFailure.err).toBe(1);
   expect(lateFailure.err).toMatch(/Chromium export failed/);
 });
+
+test('retains root and fatal startup diagnostics through an arbitrarily long stack dump', async () => {
+  const fake = `${scratch}/root-browser`;
+  await Bun.write(fake, `#!/bin/sh
+printf '%s\\n' 'first startup line' '[ERROR:zygote_host_impl_linux.cc(101)] Running as root without --no-sandbox is not supported' '[FATAL:gpu_init.cc] Secondary startup diagnostic' >&2
+printf '%02200d\\n' 0 >&2
+printf '%s\\n' 'last startup line' >&2
+exit 1
+`);
+  chmodSync(fake, 0o700);
+  const output = `${scratch}/root-svg`;
+  const result = await check('root-browser.mmd', flow, '--svg-out', output, '--browser', fake);
+  expect(result.code, result.err).toBe(3);
+  expect(result.err).toContain('--browser-no-sandbox');
+  for (const diagnostic of ['first startup line', 'Running as root without --no-sandbox', 'Secondary startup diagnostic', 'last startup line']) {
+    expect(result.err).toContain(diagnostic);
+  }
+  expect(existsSync(output)).toBe(false);
+});
+
+test('holds when Chromium exits unsuccessfully before any page output', async () => {
+  const fake = `${scratch}/aborting-browser`;
+  await Bun.write(fake, '#!/bin/sh\nprintf "%s\\n" "startup failed to load a library" >&2\nexit 127\n');
+  chmodSync(fake, 0o700);
+  const result = await check('aborting-browser.mmd', flow, '--svg-out', `${scratch}/abort-svg`, '--browser', fake);
+  expect(result.code, result.err).toBe(3);
+  expect(result.err).toContain('startup failed to load a library');
+  expect(result.err).toContain('--browser-no-sandbox');
+});
+
+test('ends a hung Chromium process group even when its child keeps stdout open', async () => {
+  const fake = `${scratch}/hung-browser`;
+  await Bun.write(fake, `#!/bin/sh
+trap '' TERM
+if [ "$1" = hold ]; then
+  while true; do sleep 1; done
+fi
+"$0" hold &
+printf '%s\\n' "$$" "$!" > "$0.pids"
+wait
+`);
+  chmodSync(fake, 0o700);
+  const source = `${scratch}/hung-browser.mmd`;
+  await Bun.write(source, flow);
+  const output = `${scratch}/hung-svg`;
+  const start = performance.now();
+  const checkerProc = Bun.spawn([process.execPath, '--no-env-file', checker, '--svg-out', output, '--browser', fake, source], {
+    stdout: 'ignore', stderr: 'pipe', timeout: 33_000, killSignal: 'SIGKILL',
+  });
+  const isLive = (pid) => {
+    try { return !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); }
+    catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+  };
+  try {
+    const code = await checkerProc.exited;
+    const stderr = await new Response(checkerProc.stderr).text();
+    const elapsed = Math.round(performance.now() - start);
+    expect(elapsed, `exit=${code} stderr=${stderr}`).toBeLessThan(32_500);
+    expect(code, stderr).toBe(3);
+    expect(stderr).toMatch(/Chromium.*timed out.*30/);
+    const pids = readFileSync(`${fake}.pids`, 'utf8').trim().split('\n').map(Number);
+    expect(pids).toHaveLength(2);
+    // Give the OS a short window to report the killed processes as gone or zombies.
+    for (let attempt = 0; attempt < 10 && pids.some(isLive); attempt++) await Bun.sleep(20);
+    expect(pids.filter(isLive)).toEqual([]);
+    expect(existsSync(output)).toBe(false);
+  } finally {
+    if (existsSync(`${fake}.pids`)) {
+      for (const pid of readFileSync(`${fake}.pids`, 'utf8').trim().split('\n').map(Number)) {
+        if (!Number.isInteger(pid) || pid <= 1 || !isLive(pid)) continue;
+        try {
+          if (readFileSync(`/proc/${pid}/cmdline`, 'utf8').split('\0').includes(fake)) process.kill(pid, 'SIGKILL');
+        } catch (error) { if (!['ENOENT', 'ESRCH'].includes(error.code)) console.error(error.message); }
+      }
+    }
+  }
+}, 36_000);
 
 const browser = findChromium();
 if (!browser) test.skip('Chromium SVG acceptance: chromium, google-chrome and T3 headless shell unavailable', () => {});
