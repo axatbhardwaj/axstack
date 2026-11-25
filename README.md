@@ -90,7 +90,7 @@ and [guides](docs/guides.md) for features, reviews, watches, debugging and relea
 | Understand | [axstack-scout](skills/axstack-scout/SKILL.md) | Gather codebase evidence for an agent across several areas. |
 | Understand | [axstack-explain](skills/axstack-explain/SKILL.md) | Explain a system and separate known behavior from gaps. |
 | Understand | [axstack-anatomy](skills/axstack-anatomy/SKILL.md) | Build an isometric physical-object figure with the vendored anatomy kit. |
-| Understand | [axstack-work-chat](skills/axstack-work-chat/SKILL.md) | Read Slack or Teams channels, threads, messages or transcripts on request, and post a reviewed draft after user confirmation. |
+| Understand | [axstack-work-chat](skills/axstack-work-chat/SKILL.md) | Read Slack or Teams channels, threads, messages or transcripts on request. For a requested post, Sol checks the draft and the user sees it before sending. |
 
 Diagram-led explanations default to prose and native Mermaid fences in chat.
 Non-diagram layouts default to checked inline T3 pages.
