@@ -91,6 +91,9 @@ changes remain C4/C6. Remote authors stay disabled; keep local isolated fallback
   current/intended behavior and bounded gaps from docs and renders.
   "What could this break" follows
   [Blast radius](blast-radius.md). Publication needs separate authority.
+- Bounded repair of existing failing, flaky, or weak tests ->
+  [axstack-test-fixing](../../axstack-test-fixing/SKILL.md).
+  Send suspected product regressions to Debug and keep audit-only requests report-only.
 - A bug, failing test, regression, or wrong behavior, red loop wanted ->
   `axstack-debug`: diagnose, escalate via adviser-directed investigators, hand
   off a classified repair (explain: how; debug: what's wrong).

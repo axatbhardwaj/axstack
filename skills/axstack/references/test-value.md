@@ -1,28 +1,23 @@
 # Test value
 
-Use this reference when authoring or reviewing tests and investigating audit
-candidates. Judge assertions and the production boundary, not test names.
-There is no deletion quota or quality score; zero candidates is valid.
+Use for test authorship, review and audits. Judge assertions and production
+boundaries. Audits have no deletion quota or quality score.
 
 ## Authoring gate
 
-For every new or changed test, answer:
+1. Assert observable outcomes through a caller boundary (CLI, API, UI or
+   emitted artifacts). Exercise the real entry point without test-only seams.
+2. Choose expected results from the accepted contract or an independent source.
+3. Add a new test only for a plausible regression existing tests would miss.
+   Prefer extending the owner test. Another layer needs a distinct risk.
+4. New tests and changed tests must survive behavior-preserving refactors. If a check pins
+   implementation details, identify the independent contract they encode.
+   Without one, assert the outcome at the caller boundary.
+5. Verify CI executes the test body and record whether failure blocks merge.
+   Check discovery, conditions and skips, then check merge requirements.
 
-1. Which observable behavior or independent contract does it protect?
-2. Which plausible regression would make it fail?
-3. Why would existing coverage miss that regression? Prefer extending the
-   primary boundary test; another layer needs a distinct risk.
-4. Does it require an export, flag, wrapper, or hook used only by tests?
-   If so, exercise the real production boundary instead.
-
-Also ask: if every imported function returned `undefined`, would it still pass?
-Investigate a yes. Missing answers or an unproven independent contract fail
-the gate: do not add the test. A test that breaks under a behavior-preserving
-refactor needs a boundary assertion unless it guards an independent contract.
-
-For a bug fix, demonstrate the regression test failing on pre-fix code for
-the intended reason, then passing with the fix. Protect the bug once at its
-owner boundary; repeated scenarios at other layers need a separate risk.
+If all imports returned `undefined`, would the test still pass? Investigate any
+yes. Missing proof fails the gate.
 
 ## Investigate junk patterns
 
@@ -72,6 +67,8 @@ An authorized F repair preserves its contract: the repaired check passes on the
 base, goes red when its instruction or code is removed or inverted by a
 targeted disposable mutation restored byte for byte, and survives equivalent
 rewording for semantic prose. Never weaken or loosen an assertion.
+Where relevant, verify the repaired check stays green under an equivalent code
+refactor. Preserve CI gating.
 
 ## Deletion proof
 

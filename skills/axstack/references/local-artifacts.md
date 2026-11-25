@@ -106,11 +106,12 @@ probes and implementation remain outside artifact authority.
 | Watch | Unsupported; PR/repository ownership and forge rules remain required |
 | Correct, Cleanup, VOA | Inline only; no worker workflow added; existing identity, ownership and read-only/status limits remain |
 
-Repository-mode Correct/Cleanup may assign bounded read-only evidence analysis
-within their phase, with no cleanup mutation authority. Work chat also stays
-inline, using its scoped reader. Static checks and fixtures leave native provider,
-browser, tracker, publication and installed-host execution unverified. Record
-missing prerequisites without fabricating repository identity, alias or approval.
+Repository-mode Correct/Cleanup may delegate bounded read-only analysis in
+their phase without cleanup mutation authority. Work chat stays inline, reads
+via bound Playwright or optional reader and delegates post drafts to Opus and
+checks to Sol. Fixtures and static checks leave provider, browser, tracker,
+publication and host execution unverified. Report missing prerequisites.
+Never invent repo identity, alias or approval.
 
 Bind the parent project and real workspaceRoot with explicit null
 repositoryIdentity in project-read and complete project-list. Hold omitted,

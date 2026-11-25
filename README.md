@@ -67,7 +67,7 @@ You make decisions at holds and substantial-spec approval.
 Follow [getting started](docs/getting-started.md) for the full first-task journey
 and [guides](docs/guides.md) for features, reviews, watches, debugging and releases.
 
-## What you can do (21 skills)
+## What you can do (22 skills)
 
 | Layer | Skill | What it does |
 | --- | --- | --- |
@@ -77,6 +77,7 @@ and [guides](docs/guides.md) for features, reviews, watches, debugging and relea
 | Plan | [axstack-tickets](skills/axstack-tickets/SKILL.md) | Break approved scope into executable tasks. |
 | Build | [axstack-implement](skills/axstack-implement/SKILL.md) | Build with strict TDD and an author → review → repair loop. |
 | Build | [axstack-debug](skills/axstack-debug/SKILL.md) | Diagnose a bug with a failing check and hand off a bounded repair. |
+| Build | [axstack-test-fixing](skills/axstack-test-fixing/SKILL.md) | Repair existing failing, flaky, or weak tests and preserve their regression coverage. |
 | Build | [axstack-perf](skills/axstack-perf/SKILL.md) | Route measured performance work to Debug, Improve, or Implement. |
 | Verify | [axstack-review](skills/axstack-review/SKILL.md) | Review a PR or bounded codebase at an exact revision. |
 | Verify | [axstack-verify](skills/axstack-verify/SKILL.md) | Create, prove and maintain a repository verification skill. |
@@ -90,7 +91,7 @@ and [guides](docs/guides.md) for features, reviews, watches, debugging and relea
 | Understand | [axstack-scout](skills/axstack-scout/SKILL.md) | Gather codebase evidence for an agent across several areas. |
 | Understand | [axstack-explain](skills/axstack-explain/SKILL.md) | Explain a system and separate known behavior from gaps. |
 | Understand | [axstack-anatomy](skills/axstack-anatomy/SKILL.md) | Build an isometric physical-object figure with the vendored anatomy kit. |
-| Understand | [axstack-work-chat](skills/axstack-work-chat/SKILL.md) | Answer a scoped Slack or Teams question from a transcript or authorized thread or message link. |
+| Understand | [axstack-work-chat](skills/axstack-work-chat/SKILL.md) | Read Slack or Teams channels, threads, messages or transcripts on request. For a requested post, Sol checks the draft and the user sees it before sending. |
 
 Diagram-led explanations default to prose and native Mermaid fences in chat.
 Non-diagram layouts default to checked inline T3 pages.
