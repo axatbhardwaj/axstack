@@ -85,6 +85,9 @@ and [Visual QA](../axstack-explain/references/visual-qa.md) for checks and verif
 For diagrams, follow [Mermaid](../axstack-explain/references/mermaid.md).
 Never use a Mermaid or pele runtime in articles.
 Embed checker-rendered SVG from the reviewed Mermaid source.
+Use the diagram viewer by default for dense or wide Mermaid figures in articles.
+Use [Mermaid's HTML figure export](../axstack-explain/references/mermaid.md#html-figures)
+and inline its assets. Keep smaller figures static.
 Use `config.layout: elk` by default for flowcharts, state and ER diagrams.
 Run the export label gate with `--width <px>` at the narrowest available figure
 width used for fitted SVGs, then check the actual labels at all four capture
@@ -109,6 +112,8 @@ then rerun the referenced Explain page checks on these final bytes.
 Before independent review, have `axstack-ui-verifier` capture these exact bytes with
 Playwright MCP in the dark Neon theme at 360, 390, 728 and 1440px, and record screenshots
 with paths, their artifact SHA-256 and the Explain QA results.
+Exercise any diagram viewer controls at all four widths under
+[Explain's interactive checks](../axstack-explain/references/inline-pages.md#check-the-exact-bytes).
 If the user supplies an explicit theme, capture the page in that theme at the same four widths instead.
 Without an explicit theme, never capture a light theme.
 Require a fresh independent `axstack-explainer-review` on the final bytes.
