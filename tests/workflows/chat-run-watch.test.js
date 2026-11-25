@@ -129,7 +129,9 @@ test('own open PRs use the original T3 driver with the runtime fallback cadence'
   expect(runtime()).toContain('`bindToCurrentThread:true`, `everyMs:3600000`');
   expect(runtime()).toMatch(/record[^.]*schedule ID[^.]*driver thread[^.]*native schedule lifetime/i);
   expect(runtime()).toMatch(/each wake[^.]*maintenance loop/i);
-  expect(runtime()).toMatch(/delegated[^.]*T3 runtime[^.]*no daemon[^.]*no polling model between wakes/i);
+  expect(runtime()).toMatch(/delegated[^.]*T3 runtime/i);
+  expect(runtime()).toMatch(/T3[^.]*watch wakes[^.]*schedules/i);
+  expect(runtime()).toMatch(/(?:no|never)[^.]*poll[^.]*between wakes/i);
 });
 
 test('chat-run wake waits for settled work and release; docs describe the default', () => {

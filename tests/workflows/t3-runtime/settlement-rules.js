@@ -96,7 +96,7 @@ export const settlementRules = [
   ["dispatch identity record", [/\btaskId\/childThreadId\/childRunId/, /\bthreadId\/runId\/worktree\/branch\/base SHA/]],
   ["dispatch revision record", [/\bcheckout path/i, /\bcandidate/i, /\bbase SHAs/i]],
   ["dispatch evidence record", [/\bevidence folder/i, /\bscope\/authority/i, /\bowner/i, /\bpending receipts/i, /\b(?:holds?|held)\b/i, /\bNext/]],
-  ["native runtime boundary", [/\bboundary/i, /\bAxstack daemon/i, /\bDB/, /\block/i, /\bscheduler/i], /\bno Axstack daemon/i],
+  ["native runtime boundary", [/\bnative\b/i, /\bT3\b/i, /\bworkflows/i, /\bschedules/i, /\b(?:owns?|holds?)\b/i, /\b(?:automation|workflow) state/i]],
   ["publication authority", [/\bprivate evidence/i, /\brequir/i, /\bexplicit publication authority/i, /\bbefore sharing/i]],
   ["receipt authority", [/\breceipts/i, /\bmerge/i, /\brelease/i, /\bpublication/i, /\bmodel.substitution/i, /\bhost.mutation/i, /\bexpanded scope authority/i], /\bno merge/i],
 ];

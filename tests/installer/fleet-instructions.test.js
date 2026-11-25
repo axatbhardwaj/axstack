@@ -92,6 +92,13 @@ test('cross-host launches are solely the intake hand-off, never workers or repla
     [[/only/i, 'also'], [/never/i, 'including']], concepts);
 });
 
+test('packaged workflows cannot launch across hosts', () => {
+  const concepts = [/workflows/i, /cross.host/i, /(?:launch|start)/i];
+  const denial = /never|must not/i;
+  checkRule(renderInstructionBlock().replaceAll('`', ''), (text) => prohibits(text, denial, ...concepts),
+    'Workflows must not launch cross-host threads.', [[denial, 'always']], concepts);
+});
+
 test('global cross-host prohibition leaves same-key launch retries available', () => {
   const text = renderInstructionBlock().replaceAll('`', '');
   const bansRetry = (s) => prohibits(s, /never/i, /cross.host/i, /t3_thread_launch/, /\bretr(?:y|ies)\b/i);
@@ -110,8 +117,8 @@ test('an uncertain launch cannot create a second driver', () => {
     [/start a second driver/i, /while the first may exist/i]);
 });
 
-test('global authority and routing block stays below 2400 bytes', () => {
-  expect(Buffer.byteLength(renderInstructionBlock())).toBeLessThanOrEqual(2400);
+test('global authority and routing block stays within 2605 bytes', () => {
+  expect(Buffer.byteLength(renderInstructionBlock())).toBeLessThanOrEqual(2605);
 });
 
 test('installed no-launch path requires local staffing before continuing', () => {

@@ -164,7 +164,7 @@ with every existing per-resource guard; it never delegates cleanup mutation.
 In repository mode, bounded read-only evidence analysis may use existing
 research/exploration roles; the driver
 rechecks ownership and preservation before every mutation.
-Axstack creates no heartbeat or substitute scheduler.
+T3 supplies timer-driven lifecycle wakes through native schedules and workflows.
 Tracking grants no merge, release, model-substitution, or scope authority.
 
 ## Host-qualified fleet receipts
@@ -197,7 +197,7 @@ lane project on a 30-minute T3 scheduled task (`everyMs:1800000`). It admits
 actionable PR events
 within measured host capacity; waiting PRs remain covered without reserving slots.
 Bounded PR jobs use driver-made detached checkouts and settle after descendants.
-Build no custom scheduler, state engine or legacy fallback. See
+T3 owns review manager schedules and runtime state. See
 [Review manager](automations.md) for binding, capacity and schedule health.
 
 ## Audit hook (close-out and meaningful checkpoints)

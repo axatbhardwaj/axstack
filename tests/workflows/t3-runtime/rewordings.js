@@ -126,7 +126,7 @@ export const rewordings = {
   "dispatch identity record": "Use taskId/childThreadId/childRunId or threadId/runId/worktree/branch/base SHA.",
   "dispatch revision record": "Base SHAs and candidate accompany the checkout path.",
   "dispatch evidence record": "Next and hold join pending receipts, owner, scope/authority and evidence folder.",
-  "native runtime boundary": "The boundary has no Axstack daemon, DB, lock or scheduler.",
+  "native runtime boundary": "For native schedules and workflows, T3 holds durable workflow state.",
   "publication authority": "Before sharing, private evidence requires explicit publication authority.",
   "receipt authority": "Receipts grant no merge, release, publication, model-substitution, host-mutation or expanded scope authority.",
 };

@@ -4,13 +4,14 @@ import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
 test('repository permits only the two bounded opt-in timers', () => {
-  const concepts = [/exception/i, /only/i, /opt.in/i, /systemd user timers/i,
-    /axstack-single-server/, /axstack-default-sync/];
-  const allows = /\b(?:allow\w*|permit\w*)\b/i;
-  checkRule(readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' '), (text) => requires(text, ...concepts, allows),
-    'Exception: permit only the opt-in systemd user timers axstack-single-server and axstack-default-sync.',
-    [[allows, 'forbid'], [/only/i, 'any']], [...concepts, allows]);
-  const doc = readFileSync(`${root}/AGENTS.md`, 'utf8').replace(/\s+/g, ' ');
+  const doc = readFileSync(`${root}/AGENTS.md`, 'utf8').replaceAll('`', '');
+  const exclusion = /(?:adds no|forbids?)/i;
+  const exception = /except(?: for)?|apart from/i;
+  const concepts = [/outside T3/i, /daemon/i, /scheduler/i, /runtime database/i,
+    exception, /(?:two|both) opt-in/i, /systemd user timers/i, /axstack-single-server/, /axstack-default-sync/];
+  checkRule(doc, (text) => prohibits(text, exclusion, ...concepts),
+    'Outside T3, forbid any daemon, scheduler or runtime database apart from both opt-in systemd user timers axstack-single-server and axstack-default-sync.',
+    [[exclusion, 'allows'], [exception, 'including']], concepts);
   const noState = /(?:no|zero) workflow state/i;
   checkRule(doc, (text) => prohibits(text, noState, /timer/i),
     'The timer keeps zero workflow state.', [[noState, 'persistent workflow state']], [/timer/i, noState]);

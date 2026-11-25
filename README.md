@@ -135,13 +135,9 @@ Eligible own PRs use guarded automatic merge; see [merge boundaries, exclusions 
 
 ## Some notes
 
-- T3 Code is the only supported active runtime. Axstack adds no daemon or runtime
-  database. The exception is exactly one opt-in systemd user timer:
-  `axstack-single-server` removes duplicate `t3 serve` process trees for one
-  base dir while keeping the ownership-lock holder, otherwise the recorded
-  server. It runs a stateless script, keeps
-  no workflow state and launches no agent; see
-  [Single T3 server](docs/host-operations.md#single-t3-server).
+- T3 Code is the only supported active runtime. T3 owns durable automation state
+  for native workflows and schedules. The two opt-in systemd user timers
+  run stateless host maintenance. See [Runtime preflight and schedules](docs/host-operations.md#runtime-preflight-and-schedules).
 - The recorded owning watch thread merges eligible own PRs; excluded PRs use a merge card.
 - This is an early project; expect the workflows to evolve.
 
