@@ -29,7 +29,7 @@ Check Mermaid source with pinned Pele ${PELE_VERSION}.
   --pele <path>        Use an alternate copy of the pinned renderer
   --allow-type <type>  Allow one additional type explicitly requested by the user
   --help               Show this help
-Exit codes: 0 pass, 1 input/contract/render failure, 2 usage, 3 renderer missing, invalid or unable to start.`;
+Exit codes: 0 pass, 1 input/contract/render failure, 2 usage, 3 renderer unavailable before page output (including a deadline).`;
 
 const TYPES = new Set(['flowchart', 'sequenceDiagram', 'stateDiagram-v2', 'erDiagram', 'timeline']);
 const ELK_TYPES = new Set(['flowchart', 'stateDiagram-v2', 'erDiagram', 'classDiagram', 'mindmap', 'requirementDiagram']);
