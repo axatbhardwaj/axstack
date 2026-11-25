@@ -1,8 +1,20 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { checkRule, sentences } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../../skills`;
 const contract = () => readFileSync(`${root}/axstack/references/local-artifacts.md`, 'utf8');
+
+test('repository Correct/Cleanup delegates have no cleanup mutation authority', () => {
+  const limit = /\b(?:no|without) (?:cleanup mutation authority|authority to perform cleanup mutations)\b/i;
+  const concepts = [/repo(?:sitory)?[- ]mode/i, /Correct\/Cleanup/i, /(?:may|can) (?:delegate|assign)/i,
+    /bounded read-only (?:evidence )?analysis/i, /(?:in|within) (?:their|the) phase/i, limit];
+  const accepts = (text) => sentences(text).some((sentence) => concepts.every((concept) => concept.test(sentence)));
+  checkRule(contract(), accepts,
+    'In repository mode, Correct/Cleanup can assign bounded read-only evidence analysis within their phase without authority to perform cleanup mutations.',
+    [[limit, 'with cleanup mutation authority']], concepts);
+});
+
 const rules = [
   { name: 'substantive report workflows retain independent inherited audit',
     tests: [/substantive.*each supported workflow/i, /axstack-auditor.*axstack-auditor-sol/i,
