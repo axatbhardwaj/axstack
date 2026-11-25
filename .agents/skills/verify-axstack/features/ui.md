@@ -44,8 +44,12 @@ nominal Pele chat sizing. With Chromium, it checks both layout engines in the
 pinned browser asset, standalone SVG XML, disjoint IDs, theme bindings and
 actual minimum label size. Missing Chromium skips the browser checks with a
 reason. Run this test alongside `explain-fidelity.test.js` for Mermaid changes.
-These fixtures prove the local export path. T3 chat and final Publish captures
-remain separate observations.
+Run `diagram-viewer.test.js` in the same targeted suite. It checks the
+figure export's static, dense and wide choices, exact SVG embedding, and the
+offline viewer assets and author instructions. With Chromium, it exercises
+zoom, wheel scope, literal Find, IME keys, visibility and the CSS Fit fallback.
+These fixtures prove the local export and interaction paths. T3 chat and
+final Publish captures remain separate observations.
 
 Publish audience keeper: `publish-audience.test.js` checks private-only discovery
 and questions, enabled/complete and unshared status, one-slug/one-audience consent,
