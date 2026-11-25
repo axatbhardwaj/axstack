@@ -17,6 +17,7 @@ const watch = /this is not a watch merge: watch §5 and (?:the )?peer rules (?:d
 const guards = [
   ['repository scope', /(?:in|for) this repository/i, 'in any repository'],
   ['driver permission', driver, 'any worker must merge'],
+  ['workflow driver binding', /(?:a workflow-started driver thread|a driver thread started by a workflow) with (?:the )?axstack-owner binding (?:counts as|qualifies as) (?:an|the) agent driver/i, 'any workflow thread counts as an agent driver'],
   ['all guards mandatory', /only (?:when|if) (?:all hold|every condition holds)/i, 'when any condition holds'],
   ['bot author', /(?:author is|authored by) dependabot\[bot\]/i, 'author is any account'],
   ['Actions branch', /(?:head )?branch (?:is|matches) dependabot\/github_actions\/\*/i, 'branch matches any Dependabot ecosystem'],
@@ -66,6 +67,7 @@ const rewording = `- For this repository, an agent driver can merge a Dependabot
   A release tag means a published GitHub Release tag or its vN/vN.N major/minor alias pointing to that same commit.
   ci has executed on that head and all checks on that head have finished successfully (one or more checks; no pending, failed or cancelled checks), then use gh pr merge <number> --merge --match-head-commit <sha>.
   Otherwise the user handles the PR; if either claim or tag cannot be established or verified, the user handles the PR.
+  A driver thread started by a workflow with the axstack-owner binding qualifies as an agent driver.
   This is not a watch merge: watch §5 and peer rules are inapplicable; only these guards grant merge authority.`;
 
 test('the real instruction contract survives equivalent rewording and reflow', () => {

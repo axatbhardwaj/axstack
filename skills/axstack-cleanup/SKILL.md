@@ -59,8 +59,11 @@ resources may proceed.
 
 Never clean a user-created thread, the current driver, a user-taken-over thread, an active or unknown worker, an unsettled descendant, or a resource with ambiguous ownership.
 Preserve unknown files, unmerged author work, ambiguous publication, and evidence that has not been durably preserved.
-Do not force removal, bulk-clean, edit a runtime database, or add a scheduler,
-daemon or state machine. Report other projects' resources; never touch them.
+With recorded authority, owners can activate the packaged T3 workflow for
+fleet cleanup.
+Its agent follows the same per-resource guards.
+Do not force removal, bulk-clean, or edit a runtime database.
+Report other projects' resources. Never touch them.
 
 ## Wait registrations and owned wakes
 

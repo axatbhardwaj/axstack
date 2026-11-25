@@ -1,7 +1,8 @@
 # Parallel-first delivery
 
-Apply this default across every Axstack phase within its accepted scope. It
-adds no planning phase, worker quota, role, scheduler or execution authority.
+Apply this default across every Axstack phase within its accepted scope.
+Parallel-first delivery uses T3 orchestration and schedules. It adds no
+planning phase, worker quota, role or execution authority.
 
 ## Ready work
 

@@ -62,11 +62,12 @@ do not belong in it.
 
 Delegation uses the `t3-code` MCP. Use async `delegate_task` for every role, including authors with
 `isolation:"worktree"` in their own SHA-pinned worktrees.
-Every top-level launch, including an author fallback, requires an explicit user request.
+Every other top-level launch, including an author fallback, requires an explicit user request.
 Top-level drivers use `t3_thread_launch` only after an explicit user request.
 Preserve existing accepted authorization within its exact scope.
-Use `t3_thread_launch` as a rare author fallback only when
-worktree isolation is unavailable and record each use in the run record. Configuration read-back,
+Use `t3_thread_launch` as a rare author fallback only when worktree isolation
+is unavailable and after an explicit user request, and record each use in the
+run record. Configuration read-back,
 run receipts and revision-bound completion are separate from capability
 discovery. Read the [runtime contract](../skills/axstack/references/t3-runtime.md)
 immediately before dispatch, receipt consumption or recovery.
