@@ -22,11 +22,14 @@ Check Mermaid source with pinned Pele ${PELE_VERSION}.
   --svg-out <dir>      Write checked SVGs and print source and SVG SHA-256 digests
                        ELK-capable views spawn Chromium offline and clean up its temporary profile
   --browser <path>    Specify Chromium for SVG export (otherwise auto-detected)
+  --browser-no-sandbox
+                       Explicitly disable Chromium's process sandbox for trusted local input
+                       The offline page still uses the verified bundle and CSP connect-src 'none'
   --width <px>        Set the available SVG label-check width (default ${TARGET_WIDTH})
   --pele <path>        Use an alternate copy of the pinned renderer
   --allow-type <type>  Allow one additional type explicitly requested by the user
   --help               Show this help
-Exit codes: 0 pass, 1 input/contract/render failure, 2 usage, 3 renderer missing or invalid.`;
+Exit codes: 0 pass, 1 input/contract/render failure, 2 usage, 3 renderer missing, invalid or blocked at sandbox startup.`;
 
 const TYPES = new Set(['flowchart', 'sequenceDiagram', 'stateDiagram-v2', 'erDiagram', 'timeline']);
 const ELK_TYPES = new Set(['flowchart', 'stateDiagram-v2', 'erDiagram', 'classDiagram', 'mindmap', 'requirementDiagram']);
@@ -41,7 +44,8 @@ const sha256 = (bytes) => new Bun.CryptoHasher('sha256').update(bytes).digest('h
 
 function optionsFor(args) {
   const options = {
-    path: '', renderer: PELE_PATH, svgDir: '', browser: '', width: TARGET_WIDTH, extraType: '', expect: true, overview: false,
+    path: '', renderer: PELE_PATH, svgDir: '', browser: '', browserNoSandbox: false,
+    width: TARGET_WIDTH, extraType: '', expect: true, overview: false,
   };
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
@@ -49,6 +53,8 @@ function optionsFor(args) {
       options.expect = arg === '--expect';
     } else if (arg === '--overview') {
       options.overview = true;
+    } else if (arg === '--browser-no-sandbox') {
+      options.browserNoSandbox = true;
     } else if (['--pele', '--svg-out', '--allow-type', '--browser', '--width'].includes(arg)) {
       const value = args[++index];
       if (!value || value.startsWith('--')) return undefined;
