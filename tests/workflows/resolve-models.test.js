@@ -364,20 +364,20 @@ test.each([[{}], ['x'], [false], [0], [''], [[null]], [[{ id: 42 }]]])(
 for (const preset of ['mixed', 'codex-only']) {
   test(`${preset} Astra/Sol seats select 6.2 when advertised and retain old-catalog resolution`, () => {
     const { roles } = JSON.parse(readFileSync(`${import.meta.dir}/../../profiles/presets/${preset}.json`, 'utf8'));
-    for (const [id, oldModel, newModel] of [
-      ['axstack-advisor-codex', 'gpt-6-astra', 'gpt-6.2-astra'],
-      ['axstack-author', 'gpt-6.1-sol', 'gpt-6.2-sol'],
+    for (const [id, oldModel, newModel, effort] of [
+      ['axstack-advisor-codex', 'gpt-6-astra', 'gpt-6.2-astra', 'high'],
+      ['axstack-author', 'gpt-6.1-sol', 'gpt-6.2-sol', 'xhigh'],
     ]) {
       const role = roles.find((role) => role.id === id);
       const args = [...(role.model ? ['--model', role.model] : []), '--class', role.modelClass];
       for (const advertised of [false, true]) {
         const data = fresh();
         if (advertised) data.providers[0].models.unshift(
-          entry('gpt-6.2-astra'), entry('gpt-6.2-sol'));
+          entry('gpt-6.2-astra'), entry('gpt-6.2-sol', 'reasoningEffort', ['high', 'xhigh']));
         const result = resolve(data, args, role.provider, role.thinkingOptionId);
         expect(result.status).toBe(0);
         expect(JSON.parse(result.output)).toMatchObject({ provider: 'codex', providerInstanceId: 'codex',
-          model: advertised ? newModel : oldModel, effortOption: { id: 'reasoningEffort', value: 'high' } });
+          model: advertised ? newModel : oldModel, effortOption: { id: 'reasoningEffort', value: effort } });
       }
     }
   });

@@ -51,7 +51,7 @@ const expected = {
   mixed: [
     c('astra', 'high'),
     a('fable', 'high'),
-    c('sol', 'high'), c('sol', 'high'),
+    c('sol', 'high'), c('sol', 'xhigh'),
     c('sol', 'high'), a('opus', 'high'), a('opus', 'medium'),
     a('sonnet', 'high'),
     a('sonnet', 'low'), a('sonnet', 'high'),
@@ -70,7 +70,7 @@ const expected = {
   'codex-only': [
     c('astra', 'high'),
     c(null, 'xhigh'),
-    c('sol', 'high'), c('sol', 'high'),
+    c('sol', 'high'), c('sol', 'xhigh'),
     c('sol', 'high'), c('terra', 'high'), c('luna', 'xhigh'),
     c('sol', 'high'),
     c('luna', 'low'), c('astra', 'medium'),
@@ -230,12 +230,12 @@ test('UI verification: shared routing lists the verifier role', () => {
   expect(roster).toMatch(/^- `axstack-ui-verifier`:.*\(ui-verification\.md\)/m);
 });
 
-test('presets: Sol author and primary reviewer run at high effort', () => {
+test('presets: Sol author runs at xhigh and primary reviewer runs at high', () => {
   for (const preset of ['mixed', 'codex-only']) {
     const roles = readJson(`profiles/presets/${preset}.json`).roles;
     const byId = Object.fromEntries(roles.map((role) => [role.id, role]));
     expect(byId['axstack-author']).toMatchObject({
-      provider: 'codex', modelClass: 'sol', thinkingOptionId: 'high',
+      provider: 'codex', modelClass: 'sol', thinkingOptionId: 'xhigh',
     });
     expect(byId['axstack-reviewer-primary'].thinkingOptionId).toBe('high');
   }
@@ -354,7 +354,7 @@ test('presets: public docs and shared references describe all role IDs', () => {
 test('presets: public workflow table names the current codex-only peer model families', () => {
   const workflows = readFileSync(`${root}/docs/workflows.md`, 'utf8');
   expect(workflows).toContain(
-    '| `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |',
+    '| `codex-only` | Sol xhigh | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |',
   );
 });
 
