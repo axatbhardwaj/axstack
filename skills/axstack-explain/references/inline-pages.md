@@ -74,7 +74,18 @@ Use the SVG from the checker on the reviewed source. Prefer TB flowcharts.
 Keep each figure in a horizontal scroller and override Pele’s inline
 `max-width:100%` so its SVG keeps its intrinsic width and readable labels.
 ELK exports include intrinsic width and height. Keep a dense overview at that
-size and provide zoom or pan. For inline pages, reuse T3’s `.pele` theme
+size and provide zoom or pan. Use the diagram viewer by default for dense or
+wide Mermaid figures in inline T3 pages and standalone HTML. Export figures
+and inline the viewer assets using [Mermaid's HTML recipe](mermaid.md#html-figures).
+Keep smaller diagrams static.
+
+Use a `type=button` control for Find without a `<form>`.
+For Find with Enter, ignore IME composition (`isComposing`).
+Find scrolls the match into view with `scrollIntoView({ block: 'nearest' })`.
+Call `preventDefault` on wheel events only inside the viewer.
+Without JavaScript, keep the intrinsic-size scroll frame and a Fit checkbox.
+
+For inline pages, reuse T3’s `.pele` theme
 mapping for both ELK and Pele SVGs.
 
 ```css
@@ -86,6 +97,9 @@ mapping for both ELK and Pele SVGs.
 .mermaid-scroll > svg {
   display: block;
   max-width: none !important;
+}
+.mermaid-scroll > svg,
+.diagram-viewer {
   --pele-bg: var(--background);
   --pele-fg: var(--foreground);
   --pele-muted: var(--muted-foreground);
@@ -123,6 +137,10 @@ For an explicit theme override, also check that requested theme.
 
 For every interactive page, require a real-browser `axstack-ui-verifier` pass
 for clicks, keyboard, and expanded states.
+For diagram viewers, exercise zoom, Fit and Reset, drag, pinch, literal Find,
+and the no-JavaScript fallback at 360, 390, 728 and 1440px.
+Check focus, reduced motion and that wheel events outside the diagram still
+reach the host.
 Give the evidence path and SHA-256 of the exact bytes in the verifier brief.
 Follow [UI verification](../../axstack/references/ui-verification.md) for that pass.
 
