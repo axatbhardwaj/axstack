@@ -112,7 +112,16 @@ async function capturePage(child) {
   }
 }
 
-async function renderPage(chromium, scratch, browserNoSandbox) {
+export async function dumpChromiumPage(chromium, page, { browserNoSandbox = false, scratch = '' } = {}) {
+  if (!scratch) {
+    // Keep Chromium's SingletonSocket path short regardless of the caller's TMPDIR.
+    const owned = mkdtempSync('/tmp/axstack-mermaid-page-');
+    try {
+      return await dumpChromiumPage(chromium, page, { browserNoSandbox, scratch: owned });
+    } finally {
+      rmSync(owned, { recursive: true, force: true });
+    }
+  }
   const argv = [
     chromium,
     '--headless',
@@ -131,7 +140,7 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
     `--user-data-dir=${scratch}/profile`,
     `--virtual-time-budget=${TIMEOUT_MS}`,
     '--dump-dom',
-    Bun.pathToFileURL(`${scratch}/export.html`).href,
+    Bun.pathToFileURL(page).href,
   ];
   let child;
   try {
@@ -162,6 +171,10 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
   const exit = child.signalCode ?? status;
   if (!hasPageOutput) throw startupError(exit, stderr, browserNoSandbox);
   if (status !== 0) throw new Error(`Chromium export failed (${exit}): ${usefulDiagnostics(stderr)}`);
+  return dom;
+}
+
+function readExport(dom) {
   const result = dom.match(/<pre id="result" data-status="(ok|error)">([^<]+)<\/pre>/);
   if (!result) throw new Error('Chromium did not report completion of the Mermaid export');
   const data = JSON.parse(decodeURIComponent(result[2]));
@@ -169,7 +182,7 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
   return data;
 }
 
-export async function exportBrowserSvgs(views, { browser, browserNoSandbox, width }) {
+export async function exportBrowserSvgs(views, { browser, browserNoSandbox, width, figureExport = false }) {
   const bundle = await verifiedBundle();
   const chromium = findChromium(browser);
   if (!chromium) {
@@ -179,8 +192,8 @@ export async function exportBrowserSvgs(views, { browser, browserNoSandbox, widt
   // the caller's TMPDIR is nested inside a long worktree path.
   const scratch = mkdtempSync('/tmp/axstack-mermaid-');
   try {
-    const jobs = views.map(({ id, source, dense, elk, accentStrokes }) => ({
-      id, source, dense, layout: elk ? 'elk' : 'dagre', accents: [...accentStrokes.keys()],
+    const jobs = views.map(({ id, source, dense, overEdgeLimit, elk, accentStrokes }) => ({
+      id, source, dense: dense || (figureExport && overEdgeLimit), figureExport, layout: elk ? 'elk' : 'dagre', accents: [...accentStrokes.keys()],
     }));
     await Promise.all([
       Bun.write(`${scratch}/export.html`, PAGE),
@@ -188,9 +201,11 @@ export async function exportBrowserSvgs(views, { browser, browserNoSandbox, widt
       Bun.write(`${scratch}/views.js`, `globalThis.mermaidExport = ${JSON.stringify({ jobs, width })};\n`),
       Bun.write(`${scratch}/mermaid.min.js`, bundle),
     ]);
-    const renders = await renderPage(chromium, scratch, browserNoSandbox);
+    const dom = await dumpChromiumPage(chromium, `${scratch}/export.html`, { browserNoSandbox, scratch });
+    const renders = readExport(dom);
     if (!Array.isArray(renders) || renders.length !== views.length
         || renders.some((render, index) => render.id !== views[index].id || typeof render.svg !== 'string'
+          || typeof render.naturalSize !== 'boolean'
           || !(render.minLabelPx === null || Number.isFinite(render.minLabelPx)))) {
       throw new Error('Chromium returned incomplete Mermaid SVG results');
     }
