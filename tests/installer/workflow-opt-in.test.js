@@ -65,6 +65,7 @@ test('ordinary install is idempotent and leaves the temp T3 home untouched', () 
   call(install);
   expect(call(install)).toContain('idempotent');
   expect(readdirSync(base)).toEqual(['userdata']);
+  expect(existsSync(join(home, 'skills/axstack/workflows'))).toBe(false);
   expect(readFileSync(settings, 'utf8')).toBe('{"workflowsEnabled":false}');
 });
 
