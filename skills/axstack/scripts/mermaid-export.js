@@ -54,13 +54,22 @@ function usefulDiagnostics(stderr) {
     || /\b(?:FATAL|ERROR)\b/i.test(line) || SANDBOX_STARTUP.test(line)).join('\n');
 }
 
-function startupError(reason, stderr, browserNoSandbox) {
-  const browser = SANDBOX_STARTUP.test(stderr) ? 'Chromium sandbox' : 'Chromium';
-  const action = browserNoSandbox
-    ? 'Check the Chromium installation and its support for --browser-no-sandbox.'
-    : 'Check Chromium and its sandbox setup. For sandbox restrictions on trusted local diagrams, explicitly pass --browser-no-sandbox.';
+function withDiagnostics(message, stderr) {
   const diagnostic = usefulDiagnostics(stderr);
-  return new RendererUnavailable(`${browser} ${reason}. ${action}${diagnostic ? `\n${diagnostic}` : ''}`);
+  return diagnostic ? `${message}\n${diagnostic}` : message;
+}
+
+function startupError(exit, stderr, browserNoSandbox) {
+  if (SANDBOX_STARTUP.test(stderr)) {
+    const action = browserNoSandbox
+      ? 'Check the Chromium installation and its support for --browser-no-sandbox.'
+      : 'Check Chromium and its sandbox setup. For trusted local diagrams, explicitly pass --browser-no-sandbox.';
+    return new RendererUnavailable(withDiagnostics(`Chromium sandbox startup failed (${exit}). ${action}`, stderr));
+  }
+  const action = exit === 127
+    ? 'Check the Chromium installation and its shared libraries.'
+    : 'Check the selected Chromium installation and the diagnostics below.';
+  return new RendererUnavailable(withDiagnostics(`Chromium exited without returning the export page (${exit}). ${action}`, stderr));
 }
 
 /** @param {Bun.Subprocess<'ignore', 'pipe', 'pipe'>} child */
@@ -141,15 +150,17 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
       detached: true,
     });
   } catch (error) {
-    throw startupError('failed to launch', error.message, browserNoSandbox);
+    const message = 'Could not launch Chromium. Check that the executable and its interpreter exist and can run, or select a working installation with --browser <path>.';
+    throw new RendererUnavailable(withDiagnostics(message, error.message));
   }
   const { dom, stderr, status, timingOut } = await capturePage(child);
-  const exit = child.signalCode ?? status;
-  if (!dom.trim()) {
-    const reason = timingOut ? `startup timed out after ${TIMEOUT_MS / 1_000} seconds` : `startup failed (${exit})`;
-    throw startupError(reason, stderr, browserNoSandbox);
+  const hasPageOutput = Boolean(dom.trim());
+  if (timingOut) {
+    const message = withDiagnostics(`Chromium did not finish (startup or render) within ${TIMEOUT_MS / 1_000}s.`, stderr);
+    throw hasPageOutput ? new Error(message) : new RendererUnavailable(message);
   }
-  if (timingOut) throw new Error(`Chromium export timed out after ${TIMEOUT_MS / 1_000} seconds: ${usefulDiagnostics(stderr)}`);
+  const exit = child.signalCode ?? status;
+  if (!hasPageOutput) throw startupError(exit, stderr, browserNoSandbox);
   if (status !== 0) throw new Error(`Chromium export failed (${exit}): ${usefulDiagnostics(stderr)}`);
   const result = dom.match(/<pre id="result" data-status="(ok|error)">([^<]+)<\/pre>/);
   if (!result) throw new Error('Chromium did not report completion of the Mermaid export');
