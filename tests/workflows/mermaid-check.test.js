@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from 'bun:test';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { findChromium } from '../../skills/axstack/scripts/mermaid-export.js';
 
 const checker = `${import.meta.dir}/../../skills/axstack/scripts/mermaid-check.js`;
@@ -379,7 +379,7 @@ test('exports deterministic Pele SVGs with scoped accessibility ids and a theme 
 test('documents CLI switches and signals usage errors', () => {
   const { code, out } = cli('--help');
   expect(code).toBe(0);
-  for (const term of ['Usage:', '--expect', '--no-expect', '--svg-out', '--browser', '--width', '--pele', '--overview', '.mmd', 'Exit']) {
+  for (const term of ['Usage:', '--expect', '--no-expect', '--svg-out', '--browser', '--browser-no-sandbox', '--width', '--pele', '--overview', '.mmd', 'Exit']) {
     expect(out).toContain(term);
   }
   expect(cli().code).toBe(2);
@@ -441,13 +441,68 @@ test('holds ELK-applicable SVG export when the explicit browser is missing', asy
   expect(automatic.stderr.toString()).toMatch(/Chromium unavailable/);
 });
 
+test('holds on a Chromium sandbox startup abort and forwards only an explicit sandbox opt-in', async () => {
+  const fake = `${scratch}/zygote-browser`;
+  await Bun.write(fake, `#!/bin/sh
+ulimit -c 0
+printf '%s\\n' "$@" > "$0.args"
+for arg do
+  if [ "$arg" = --no-sandbox ]; then
+    printf '%s\\n' 'fixture stopped after receiving explicit opt-in' >&2
+    exit 42
+  fi
+done
+printf '%s\\n' 'FATAL:zygote_host_impl_linux.cc:207] Check failed: Permission denied (13)' 'content::ZygoteHostImpl::Init()' >&2
+kill -ABRT "$$"
+`);
+  chmodSync(fake, 0o700);
+  const output = `${scratch}/zygote-svg`;
+  const args = ['--svg-out', output, '--browser', fake];
+  const blocked = await check('zygote.mmd', flow, ...args);
+  expect(blocked.code, blocked.err).toBe(3);
+  expect(blocked.err).toMatch(/Chromium sandbox startup failed/);
+  expect(blocked.err).toContain('--browser-no-sandbox');
+  expect(await Bun.file(`${fake}.args`).text()).not.toContain('--no-sandbox');
+  expect(existsSync(output)).toBe(false);
+
+  const optIn = cli(...args, '--browser-no-sandbox', `${scratch}/zygote.mmd`);
+  expect(optIn.code, optIn.err).toBe(1);
+  expect(optIn.err).toContain('fixture stopped after receiving explicit opt-in');
+  expect((await Bun.file(`${fake}.args`).text()).split('\n')).toContain('--no-sandbox');
+  expect(existsSync(output)).toBe(false);
+
+  const late = `${scratch}/late-browser`;
+  await Bun.write(late, '#!/bin/sh\nprintf "%s\\n" "<html></html>"\nprintf "%s\\n" "No usable sandbox" >&2\nexit 1\n');
+  chmodSync(late, 0o700);
+  const lateFailure = cli('--svg-out', output, '--browser', late, `${scratch}/zygote.mmd`);
+  expect(lateFailure.code, lateFailure.err).toBe(1);
+  expect(lateFailure.err).toMatch(/Chromium export failed/);
+});
+
 const browser = findChromium();
 if (!browser) test.skip('Chromium SVG acceptance: chromium, google-chrome and T3 headless shell unavailable', () => {});
 const browserTest = test.skipIf(!browser);
 
+let sandboxProbe;
+function browserFlags() {
+  sandboxProbe ??= check('chromium-probe.mmd', flow, '--svg-out', `${scratch}/probe-svg`, '--browser', browser)
+    .then((probe) => {
+      const checkerArgs = ['--browser', browser];
+      if (probe.code === 3 && probe.err.includes('Chromium sandbox startup failed')) {
+        expect(probe.err).toContain('--browser-no-sandbox');
+        console.warn('Chromium sandbox startup held. Running browser tests with explicit --browser-no-sandbox.');
+        return { checkerArgs: [...checkerArgs, '--browser-no-sandbox'], chromiumArgs: ['--no-sandbox'] };
+      }
+      expect(probe.code, probe.err).toBe(0);
+      return { checkerArgs, chromiumArgs: [] };
+    });
+  return sandboxProbe;
+}
+
 browserTest('exports and XML-parses all nine GA SVGs offline with disjoint IDs and a dense scroller', async () => {
+  const { checkerArgs, chromiumArgs } = await browserFlags();
   const dir = `${scratch}/ga-svg`;
-  const result = cli('--overview', '--svg-out', dir, '--browser', browser, `${fixtures}/ga-v10.md`);
+  const result = cli('--overview', '--svg-out', dir, ...checkerArgs, `${fixtures}/ga-v10.md`);
   expect(result.code, result.err).toBe(0);
   expect(result.out.match(/Mermaid 12\.3\.0 ELK/g)).toHaveLength(9);
   expect(result.out).toMatch(/block 1.*SVG.*zoom\/pan/i);
@@ -481,7 +536,7 @@ browserTest('exports and XML-parses all nine GA SVGs offline with disjoint IDs a
   const profile = mkdtempSync('/tmp/axstack-mermaid-xml-');
   try {
     const validate = Bun.spawnSync([
-      browser, '--headless', '--disable-gpu', '--disable-background-networking', '--disable-component-update',
+      browser, '--headless', ...chromiumArgs, '--disable-gpu', '--disable-background-networking', '--disable-component-update',
       '--host-resolver-rules=MAP * ~NOTFOUND', '--no-first-run', '--disable-crash-reporter',
       `--user-data-dir=${profile}/profile`, '--dump-dom', Bun.pathToFileURL(page).href,
     ], {
@@ -499,8 +554,9 @@ browserTest('selects ELK geometry over Dagre in the same browser asset and keeps
   const branch = `${tier}    B --> C --> E\n    A --> D --> E\n`;
   const input = fenced(branch) + fenced(addFallback(withoutElk(branch))) + fenced(branch)
     + fenced(elkHeader + state) + fenced(elkHeader + er) + fenced(sequence);
+  const { checkerArgs } = await browserFlags();
   const dir = `${scratch}/engines`;
-  const result = await check('engines.md', input, '--svg-out', dir, '--browser', browser);
+  const result = await check('engines.md', input, '--svg-out', dir, ...checkerArgs);
   expect(result.code, result.err).toBe(0);
   expect(result.out).toMatch(/block 1.*Mermaid 12\.3\.0 ELK/);
   expect(result.out).toMatch(/block 2.*Mermaid 12\.3\.0 Dagre/);
@@ -517,7 +573,7 @@ browserTest('selects ELK geometry over Dagre in the same browser asset and keeps
   expect(outputs[0]).toContain('stroke:var(--_c');
   expect(outputs[0]).toContain('var(--pele-fg');
   expect(outputs[0]).toContain('var(--pele-surface');
-  expect(cli('--svg-out', dir, '--browser', browser, `${scratch}/engines.md`)).toEqual(result);
+  expect(cli('--svg-out', dir, ...checkerArgs, `${scratch}/engines.md`)).toEqual(result);
 }, 30_000);
 
 browserTest('rejects an ELK export whose actual labels fall below 12px at the target width', async () => {
@@ -525,12 +581,13 @@ browserTest('rejects an ELK export whose actual labels fall below 12px at the ta
     'A[A] -->|"Intake to Review"| B[B] -->|"Review to Routing"| C[C] -->|"Route to Result"| D[D]');
   const chat = await check('wide-elk-export.mmd', wide);
   expect(chat.code, chat.err).toBe(0);
+  const { checkerArgs } = await browserFlags();
   const dir = `${scratch}/wide-elk`;
-  const atDefault = await check('wide-elk-export.mmd', wide, '--svg-out', dir, '--browser', browser);
+  const atDefault = await check('wide-elk-export.mmd', wide, '--svg-out', dir, ...checkerArgs);
   expect(atDefault.code, atDefault.out).toBe(1);
   expect(atDefault.err).toMatch(/ELK label size.*below 12px at 860px/);
   expect(existsSync(dir)).toBe(false);
-  const wideFigure = await check('wide-elk-export.mmd', wide, '--svg-out', dir, '--browser', browser, '--width', '1250');
+  const wideFigure = await check('wide-elk-export.mmd', wide, '--svg-out', dir, ...checkerArgs, '--width', '1250');
   expect(wideFigure.code, wideFigure.err).toBe(0);
   expect(wideFigure.out).toMatch(/minimum label at 1250px/);
 }, 30_000);
@@ -538,8 +595,9 @@ browserTest('rejects an ELK export whose actual labels fall below 12px at the ta
 browserTest('exports teal strokes with the theme accent while preserving neutral strokes and label text', async () => {
   const chart = tier.replace('#5b7bd5', '#14B8A6').replace('A[Driver]', 'A["Driver #14B8A6"]');
   const source = `${chart}style A stroke:teal\nstyle Review stroke:#8a909b\n`;
+  const { checkerArgs } = await browserFlags();
   const dir = `${scratch}/teal-svg`;
-  const result = await check('teal.mmd', source, '--svg-out', dir, '--browser', browser);
+  const result = await check('teal.mmd', source, '--svg-out', dir, ...checkerArgs);
   expect(result.code, result.err).toBe(0);
   const [name] = readdirSync(dir);
   const svg = await Bun.file(`${dir}/${name}`).text();
