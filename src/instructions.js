@@ -10,6 +10,8 @@ export function renderInstructionBlock() {
     'Use Axstack for engineering work: invoke the matching `axstack-*` skill directly.',
     'Route subagents, delegated workers, reviewers and cross-harness dispatch via T3 Code orchestration (`t3-code` MCP).',
     'Use `delegate_task` for every role, including authors with `isolation:"worktree"`.',
+    "A packaged workflow's `agent()` step can start a thread on its own host for its own run with explicit model binding.",
+    'Drivers can start packaged workflow runs. Workflows must not launch cross-host threads.',
     'Top-level drivers use `t3_thread_launch` only on explicit user request for a new thread or a runtime-accepted user standing intake grant for that one hand-off. Cross-host `t3_thread_launch` is only one intake hand-off, never remote workers, subagents or replacement launches.',
     'Use `t3_thread_launch` for rare author fallback only when worktree isolation is unavailable on explicit user request for a new thread and record each use in the run record.',
     'Follow `references/t3-runtime.md` in the installed `axstack` skill.',
