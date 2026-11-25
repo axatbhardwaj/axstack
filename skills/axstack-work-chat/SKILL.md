@@ -14,9 +14,9 @@ react, join, download, record, schedule, subscribe or monitor.
 Live reads and posts require iosatellite's operator-provisioned `work_chat`
 session-attached Playwright MCP with
 `--user-data-dir ~/.local/share/axstack-work-chat/profile`
-(`~/.local/share/axstack-work-chat/client/opencode.json`). Use non-root sandboxed
-Chromium. Hold and ask the user if the browser is absent, isolated, bound
-elsewhere or unverified. Operator signs in headed. Leave locks to owners.
+(`~/.local/share/axstack-work-chat/client/opencode.json`). Hold and ask the user if
+Chromium runs as root or is absent, isolated, bound elsewhere, unverified or
+unsandboxed. Operator signs in headed. Leave locks to owners.
 Reads may mark messages read.
 
 ## Read
@@ -28,8 +28,8 @@ or destination-readable source. Never transfer a private file without authorizat
 Optional [reader](scripts/read.js) for transcripts, messages or threads.
 Quote args. See `--help`.
 
-Cite sources, timestamps, requested and inspected windows with timezone, gaps
-and truncation. Distinguish decisions, proposals and inference. Say
+Cite sources, times, requested and inspected windows, timezone, gaps and
+truncation. Distinguish decisions, proposals and inference. Say
 "not found in the inspected material" for missing evidence.
 
 ## Post
