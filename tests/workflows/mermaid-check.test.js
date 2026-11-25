@@ -68,10 +68,14 @@ test('checks the guide examples with the overview policy', () => {
   expect(code, err).toBe(0);
 });
 
-async function check(name, source, ...args) {
+async function writeFixture(name, source) {
   const path = `${scratch}/${name}`;
   await Bun.write(path, source);
-  return cli(...args, path);
+  return path;
+}
+
+async function check(name, source, ...args) {
+  return cli(...args, await writeFixture(name, source));
 }
 
 test('checks Markdown fences and ignores a literal example inside a different fence', async () => {
@@ -561,26 +565,31 @@ const browser = findChromium();
 if (!browser) test.skip('Chromium SVG acceptance: chromium, google-chrome and T3 headless shell unavailable', () => {});
 const browserTest = test.skipIf(!browser);
 
-let sandboxProbe;
-function browserFlags() {
-  sandboxProbe ??= check('chromium-probe.mmd', flow, '--svg-out', `${scratch}/probe-svg`, '--browser', browser)
-    .then((probe) => {
-      const checkerArgs = ['--browser', browser];
-      if (probe.code === 3 && probe.err.includes('Chromium sandbox startup failed')) {
-        expect(probe.err).toContain('--browser-no-sandbox');
-        console.warn('Chromium sandbox startup held. Running browser tests with explicit --browser-no-sandbox.');
-        return { checkerArgs: [...checkerArgs, '--browser-no-sandbox'], chromiumArgs: ['--no-sandbox'] };
-      }
-      expect(probe.code, probe.err).toBe(0);
-      return { checkerArgs, chromiumArgs: [] };
-    });
-  return sandboxProbe;
+const checkerArgs = ['--browser', browser];
+const XML_VALIDATION_TIMEOUT_MS = 15_000;
+let checkedBrowserSandbox = false;
+
+function browserCli(...args) {
+  const result = cli(...checkerArgs, ...args);
+  if (checkedBrowserSandbox) return result;
+  checkedBrowserSandbox = true;
+  // Use the first actual export to check startup. Only retry a sandbox hold.
+  if (result.code !== 3 || !result.err.includes('Chromium sandbox startup failed')) return result;
+  expect(result.err).toContain('--browser-no-sandbox');
+  console.warn('Chromium sandbox startup held. Retrying the export with explicit --browser-no-sandbox.');
+  checkerArgs.push('--browser-no-sandbox');
+  return cli(...checkerArgs, ...args);
+}
+
+function browserTestTimeout(exportCount, validationMs = 0) {
+  // Budget each export's 30s hard limit, one sandbox retry when run alone,
+  // optional XML validation, and 15s of test-runner headroom.
+  return (exportCount + 1) * 30_000 + validationMs + 15_000;
 }
 
 browserTest('exports and XML-parses all nine GA SVGs offline with disjoint IDs and a dense scroller', async () => {
-  const { checkerArgs, chromiumArgs } = await browserFlags();
   const dir = `${scratch}/ga-svg`;
-  const result = cli('--overview', '--svg-out', dir, ...checkerArgs, `${fixtures}/ga-v10.md`);
+  const result = browserCli('--overview', '--svg-out', dir, `${fixtures}/ga-v10.md`);
   expect(result.code, result.err).toBe(0);
   expect(result.out.match(/Mermaid 12\.3\.0 ELK/g)).toHaveLength(9);
   expect(result.out).toMatch(/block 1.*SVG.*zoom\/pan/i);
@@ -611,6 +620,7 @@ browserTest('exports and XML-parses all nine GA SVGs offline with disjoint IDs a
     document.body.dataset.valid = 'yes';
   `);
   await Bun.write(page, '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\'; connect-src \'none\'"><body><script src="validate.js"></script>');
+  const chromiumArgs = checkerArgs.includes('--browser-no-sandbox') ? ['--no-sandbox'] : [];
   const profile = mkdtempSync('/tmp/axstack-mermaid-xml-');
   try {
     const validate = Bun.spawnSync([
@@ -619,22 +629,23 @@ browserTest('exports and XML-parses all nine GA SVGs offline with disjoint IDs a
       `--user-data-dir=${profile}/profile`, '--dump-dom', Bun.pathToFileURL(page).href,
     ], {
       env: { PATH: process.env.PATH, HOME: profile, TMPDIR: profile, XDG_CONFIG_HOME: profile, XDG_CACHE_HOME: profile },
-      timeout: 15_000,
+      timeout: XML_VALIDATION_TIMEOUT_MS,
+      killSignal: 'SIGKILL',
     });
     expect(validate.exitCode, validate.stderr.toString()).toBe(0);
     expect(validate.stdout.toString()).toContain('data-valid="yes"');
   } finally {
     rmSync(profile, { recursive: true, force: true });
   }
-}, 30_000);
+}, browserTestTimeout(1, XML_VALIDATION_TIMEOUT_MS));
 
 browserTest('selects ELK geometry over Dagre in the same browser asset and keeps other types on Pele', async () => {
   const branch = `${tier}    B --> C --> E\n    A --> D --> E\n`;
   const input = fenced(branch) + fenced(addFallback(withoutElk(branch))) + fenced(branch)
     + fenced(elkHeader + state) + fenced(elkHeader + er) + fenced(sequence);
-  const { checkerArgs } = await browserFlags();
+  const path = await writeFixture('engines.md', input);
   const dir = `${scratch}/engines`;
-  const result = await check('engines.md', input, '--svg-out', dir, ...checkerArgs);
+  const result = browserCli('--svg-out', dir, path);
   expect(result.code, result.err).toBe(0);
   expect(result.out).toMatch(/block 1.*Mermaid 12\.3\.0 ELK/);
   expect(result.out).toMatch(/block 2.*Mermaid 12\.3\.0 Dagre/);
@@ -651,31 +662,31 @@ browserTest('selects ELK geometry over Dagre in the same browser asset and keeps
   expect(outputs[0]).toContain('stroke:var(--_c');
   expect(outputs[0]).toContain('var(--pele-fg');
   expect(outputs[0]).toContain('var(--pele-surface');
-  expect(cli('--svg-out', dir, ...checkerArgs, `${scratch}/engines.md`)).toEqual(result);
-}, 30_000);
+  expect(browserCli('--svg-out', dir, path)).toEqual(result);
+}, browserTestTimeout(2));
 
 browserTest('rejects an ELK export whose actual labels fall below 12px at the target width', async () => {
   const wide = flow.replace('flowchart TB', 'flowchart LR').replace('A["PR #263"] --> B[Review]:::accent',
     'A[A] -->|"Intake to Review"| B[B] -->|"Review to Routing"| C[C] -->|"Route to Result"| D[D]');
-  const chat = await check('wide-elk-export.mmd', wide);
+  const path = await writeFixture('wide-elk-export.mmd', wide);
+  const chat = cli(path);
   expect(chat.code, chat.err).toBe(0);
-  const { checkerArgs } = await browserFlags();
   const dir = `${scratch}/wide-elk`;
-  const atDefault = await check('wide-elk-export.mmd', wide, '--svg-out', dir, ...checkerArgs);
+  const atDefault = browserCli('--svg-out', dir, path);
   expect(atDefault.code, atDefault.out).toBe(1);
   expect(atDefault.err).toMatch(/ELK label size.*below 12px at 860px/);
   expect(existsSync(dir)).toBe(false);
-  const wideFigure = await check('wide-elk-export.mmd', wide, '--svg-out', dir, ...checkerArgs, '--width', '1250');
+  const wideFigure = browserCli('--svg-out', dir, '--width', '1250', path);
   expect(wideFigure.code, wideFigure.err).toBe(0);
   expect(wideFigure.out).toMatch(/minimum label at 1250px/);
-}, 30_000);
+}, browserTestTimeout(2));
 
 browserTest('exports teal strokes with the theme accent while preserving neutral strokes and label text', async () => {
   const chart = tier.replace('#5b7bd5', '#14B8A6').replace('A[Driver]', 'A["Driver #14B8A6"]');
   const source = `${chart}style A stroke:teal\nstyle Review stroke:#8a909b\n`;
-  const { checkerArgs } = await browserFlags();
+  const path = await writeFixture('teal.mmd', source);
   const dir = `${scratch}/teal-svg`;
-  const result = await check('teal.mmd', source, '--svg-out', dir, ...checkerArgs);
+  const result = browserCli('--svg-out', dir, path);
   expect(result.code, result.err).toBe(0);
   const [name] = readdirSync(dir);
   const svg = await Bun.file(`${dir}/${name}`).text();
@@ -684,7 +695,7 @@ browserTest('exports teal strokes with the theme accent while preserving neutral
   expect(svg).toMatch(/stroke:\s*#8a909b/);
   expect(svg).toContain('Driver #14B8A6');
   expect(result.out).toContain(sha256(svg));
-}, 30_000);
+}, browserTestTimeout(1));
 
 test('holds SVG export on a changed bundle before Chromium can load it', async () => {
   const isolated = `${scratch}/changed-bundle`;
