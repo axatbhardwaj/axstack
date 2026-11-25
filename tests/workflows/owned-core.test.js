@@ -259,14 +259,14 @@ test('owned-core: watch updates report milestones and the next actionable wake',
   expect(text).toMatch(/never poll/i);
 });
 
-test('owned-core: review, watch and autopilot do not introduce outside-T3 runtime or decision authority', () => {
+test('owned-core: owned skills stay compact references, no daemon or programmatic gate', () => {
   for (const name of ['axstack-review', 'axstack-watch']) {
     const text = skill(name);
     expect(
       /(?:create|build|introduce|ship|run)\s+(?:a\s+|new\s+)?daemon/i.test(text),
       `${name}: must not introduce a daemon`,
     ).toBe(false);
-    expect(/(?:custom|external) (?:scheduler|state machine)|Axstack runtime database/i.test(text)).toBe(false);
+    expect(/state machine/i.test(text), `${name}: must not introduce a state machine`).toBe(false);
     expect(
       /programmatic gate|decision engine/i.test(text),
       `${name}: must not introduce a programmatic gate/engine`,
@@ -274,7 +274,7 @@ test('owned-core: review, watch and autopilot do not introduce outside-T3 runtim
   }
   const autopilot = readFileSync(join(skillsDir, 'axstack', 'references', 'autopilot.md'), 'utf8');
   expect(/(?:create|build|introduce|ship|run)\s+(?:a\s+|new\s+)?daemon/i.test(autopilot)).toBe(false);
-  expect(/(?:custom|external) (?:scheduler|state machine)|Axstack runtime database|programmatic gate|decision engine/i.test(autopilot)).toBe(false);
+  expect(/state machine|programmatic gate|decision engine/i.test(autopilot)).toBe(false);
 });
 
 test('owned-core: no preset exposes retired reviewer role IDs', () => {
