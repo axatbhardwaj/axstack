@@ -97,7 +97,7 @@ function minimumLabelSize(svg) {
   return Number.isFinite(minimum) ? minimum : null;
 }
 
-async function render({ id, source, dense, layout, accents }) {
+async function render({ id, source, dense, figureExport, layout, accents }) {
   const accentColours = new Set(accents.map(normalizeColour).filter(Boolean));
   const theme = themeFor(layout, accentColours);
   const { svg } = await mermaid.render(id, source);
@@ -110,7 +110,8 @@ async function render({ id, source, dense, layout, accents }) {
 
   applyTheme(root, theme, accentColours);
   root.style.removeProperty('max-width');
-  const fitted = dense ? naturalWidth : Math.min(naturalWidth, width);
+  const naturalSize = dense || (figureExport && naturalWidth > width);
+  const fitted = naturalSize ? naturalWidth : Math.min(naturalWidth, width);
   root.setAttribute('width', fitted);
   root.setAttribute('height', fitted * naturalHeight / naturalWidth);
   document.body.append(root);
@@ -121,7 +122,7 @@ async function render({ id, source, dense, layout, accents }) {
   const standalone = new XMLSerializer().serializeToString(root);
   const xml = new DOMParser().parseFromString(standalone, 'image/svg+xml');
   if (xml.documentElement.localName !== 'svg' || xml.querySelector('parsererror')) throw new Error('Mermaid returned invalid SVG XML');
-  return { id, svg: standalone, minLabelPx };
+  return { id, svg: standalone, naturalSize, minLabelPx };
 }
 
 function finish(status, value) {
