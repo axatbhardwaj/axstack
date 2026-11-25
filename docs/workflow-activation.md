@@ -2,6 +2,7 @@
 
 Axstack ships workflow sources and bundles with the npm package. Installing,
 upgrading, or uninstalling Axstack skills leaves T3 workflow activation alone.
+The workflow assets and conformance fixtures stay in the npm package during skill installation.
 The bundled `axstack-load-probe` has no triggers. Its only result is its own
 `name@version` and confirmation that the binding bytes match the opt-in digest.
 
