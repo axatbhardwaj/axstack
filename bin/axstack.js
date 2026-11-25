@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 // axstack — installation/setup CLI. Installs owned skill bundles and selected
-// role data, configures Claude settings, and checks host capabilities. Chat
-// CLI performs installation bookkeeping only (no runtime, scheduler, or
-// model calls).
+// role data, configures Claude settings, and checks host capabilities.
+// Installation activates no workflows. T3 owns runtime and model calls.
 import { readFileSync } from 'node:fs';
 import { join, resolve } from '../src/posixpath.js';
 import {
