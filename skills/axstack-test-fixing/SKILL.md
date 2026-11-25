@@ -1,6 +1,6 @@
 ---
 name: axstack-test-fixing
-description: When an existing test is failing, flaky, or weak, use axstack-test-fixing for a scoped repair that preserves its contract.
+description: When repairing an existing failing, flaky, or weak test, use axstack-test-fixing for a scoped repair that preserves its contract.
 ---
 
 # Test Fixing
@@ -23,9 +23,15 @@ repair and deletion proof. Audit-only requests stay report-only.
    causes and suspected product regressions. Hand off confirmed product
    regressions with their repro for scoped [Implement](../axstack-implement/SKILL.md) work.
 3. **Repair within scope.** Deliver authorized assertion, fixture, or harness
-   repairs through Implement. Preserve the contract and every unique regression
-   protection. Skips, retries, and looser assertions can hide the failure.
-4. **Prove the repair.** Rerun the original check and the affected suite. For
+   repairs through Implement. Name the proof path in the handoff: a reproducible
+   test or harness defect uses its original failing check as red, a flake uses
+   matched trials, a weak assertion needs explicit F-repair scope, and a
+   consolidation or removal needs deletion proof. Preserve the contract and every unique regression
+   protection. Do not add skips, retries, or looser assertions to make a test pass.
+4. **Prove the repair.** Rerun the original check and the affected suite. For a flake,
+   compare failure counts using the same command, environment, trial count
+   and seed schedule where supported. Report an unobserved baseline failure
+   as inconclusive. For
    a weak assertion use the shared [F proof](../axstack/references/test-value.md#f-proof).
    For consolidation or removal apply the shared
    [deletion proof](../axstack/references/test-value.md#deletion-proof).
