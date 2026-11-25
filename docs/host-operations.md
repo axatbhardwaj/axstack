@@ -35,10 +35,11 @@ and save the actual `orchestrator_capabilities` JSON. Missing capability holds
 the affected operation. Provider/model routing, Linear documents through the
 executor MCP, and live schedule behavior need separate preflights.
 
-Installation creates no production schedule and never enables a timer.
-Axstack allows exactly one opt-in systemd user timer as a scheduler exception:
-`axstack-single-server` removes duplicate server processes for one base dir.
-It runs a stateless script, keeps no workflow state and launches no agent.
+Installation activates no workflows. It creates no production schedule and
+enables no timer. The two opt-in systemd user timers are `axstack-single-server`
+and `axstack-default-sync`. The former removes duplicate server processes for
+one base dir. The latter updates New-chat model defaults. Both run stateless
+scripts and launch no agents.
 Every verified own-PR publication arms or joins the driver's chat-run watch.
 Its bound T3 schedule uses the cadence in [Chat-run watch activation](#chat-run-watch-activation).
 See [Chat-run PR watch](workflows.md#chat-run-pr-watch) for authority, schedule identity and stop conditions.
@@ -69,8 +70,9 @@ and a current-state read.
 The run record holds the schedule ID and driver thread.
 Each wake reconciles all unsettled dispatch attempts
 and runs the own-PR maintenance loop: feedback, base movement, required CI,
-and approval. Delegated work follows the T3 runtime contract. There is no
-daemon or polling model between wakes.
+and approval. Delegated work follows the T3 runtime contract. T3 supplies
+chat-run watch wakes through native events and schedules. Drivers never poll
+delegated tasks between wakes.
 
 Delete the schedule by
 its recorded ID and verify absence through `list_scheduled_tasks`; uncertain
@@ -133,10 +135,10 @@ cleanup; dirty source, ignored non-cache content, unpushed commits,
 user-taken-over threads, uncertain publication, and unknown liveness hold
 retirement. No broad scratch deletion or forced worktree removal applies.
 Manual review and user-driven `axstack-watch` remain outside this schedule.
-Requested peer reviews cover any accessible repository. T3 owns schedules,
-threads, runs, and delegated tasks; Axstack adds no queue engine, cursor files,
-or historical runtime fallback. The only scheduler exception is the opt-in
-systemd user timer described in [Single T3 server](#single-t3-server).
+Requested peer reviews cover any accessible repository. T3 owns threads,
+runs, delegated tasks and durable automation state for native workflows and
+schedules. The review manager keeps its
+[continuity guards](../skills/axstack/references/automations.md#per-pr-jobs).
 
 ## Review automation
 
