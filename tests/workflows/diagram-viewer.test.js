@@ -1,6 +1,8 @@
 import { afterAll, expect, test } from 'bun:test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { dumpChromiumPage, findChromium } from '../../skills/axstack/scripts/mermaid-export.js';
+import { mermaidFigure } from '../../skills/axstack/scripts/mermaid-figure.js';
+import { driveChromiumInput } from './diagram-viewer-browser.js';
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const root = `${import.meta.dir}/../..`;
@@ -162,6 +164,85 @@ test.skipIf(!browser)('Chromium verifies viewer zoom, wheel scope, literal Find 
   const fallback = await dumpChromiumPage(browser, fallbackPage, { browserNoSandbox });
   expect(fallback.match(/<pre id="result"[^>]*>[^<]*<\/pre>/)?.[0]).toContain('data-status="pass"');
 }, 130_000);
+
+test.skipIf(!browser)('Chromium zoom keeps the diagram point under buttons, wheel and an emulated pinch', async () => {
+  const script = await Bun.file(`${assets}/diagram-viewer.js`).text();
+  const css = await Bun.file(`${assets}/diagram-viewer.css`).text();
+  const figure = mermaidFigure({
+    id: 'anchor',
+    svg: '<svg width="2400" height="1600" viewBox="0 0 2400 1600"><rect width="2400" height="1600"/></svg>',
+    viewer: true,
+  });
+  const page = `${scratch}/anchor.html`;
+  await Bun.write(page, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+    <style>${css} body { margin: 16px; }</style>${figure}<script>${script}</script>`);
+  const observations = await driveChromiumInput(browser, async (send) => {
+    const evaluate = async (expression) => {
+      const { result, exceptionDetails } = await send('Runtime.evaluate', { expression, returnByValue: true });
+      if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
+      return result.value;
+    };
+    const frame = "document.querySelector('.diagram-viewer__frame')";
+    const svg = `${frame}.querySelector('svg')`;
+    const observations = [];
+    for (const width of [360, 1440]) {
+      const mobile = width === 360;
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 850, deviceScaleFactor: 1, mobile });
+      await send('Emulation.setTouchEmulationEnabled', { enabled: mobile });
+      const { errorText } = await send('Page.navigate', { url: Bun.pathToFileURL(page).href });
+      expect(errorText).toBeUndefined();
+      // Wait for the script to enhance the freshly navigated page before sending input.
+      const deadline = performance.now() + 5_000;
+      while (!await evaluate("Boolean(document.querySelector('[data-diagram-ready]'))")) {
+        if (performance.now() > deadline) throw new Error('Viewer did not initialize after navigation');
+        await Bun.sleep(25);
+      }
+
+      for (const input of mobile ? ['button', 'wheel', 'pinch'] : ['button', 'wheel']) {
+        const initial = await evaluate(`(() => {
+          document.querySelector('[data-diagram-action=reset]').click();
+          const frame = ${frame};
+          frame.scrollLeft = (frame.scrollWidth - frame.clientWidth) / 2;
+          frame.scrollTop = (frame.scrollHeight - frame.clientHeight) / 2;
+          const rect = frame.getBoundingClientRect();
+          const x = rect.left + frame.clientLeft + frame.clientWidth * ${input === 'wheel' ? 0.3 : 0.5};
+          const y = rect.top + frame.clientTop + frame.clientHeight * ${input === 'wheel' ? 0.4 : 0.5};
+          const matrix = ${svg}.getScreenCTM();
+          const anchor = new DOMPoint(x, y).matrixTransform(matrix.inverse());
+          return { x, y, anchorX: anchor.x, anchorY: anchor.y, scale: matrix.a,
+            left: frame.scrollLeft, top: frame.scrollTop };
+        })()`);
+        expect(initial.left).toBeGreaterThan(0);
+        expect(initial.top).toBeGreaterThan(0);
+
+        const { x, y } = initial;
+        if (input === 'button') {
+          await evaluate("document.querySelector('[data-diagram-action=in]').click()");
+        } else if (input === 'wheel') {
+          await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x, y, deltaX: 0, deltaY: -120 });
+        } else {
+          const touch = (type, touchPoints) => send('Input.dispatchTouchEvent', { type, touchPoints });
+          const contacts = (offset) => [{ x: x - offset, y, id: 1 }, { x: x + offset, y, id: 2 }];
+          await touch('touchStart', contacts(24));
+          await touch('touchMove', contacts(48));
+          await touch('touchMove', contacts(70));
+          await touch('touchEnd', []);
+        }
+
+        observations.push(await evaluate(`(() => {
+          const matrix = ${svg}.getScreenCTM();
+          const point = new DOMPoint(${initial.anchorX}, ${initial.anchorY}).matrixTransform(matrix);
+          return { input: "${input}", width: ${width}, scale: matrix.a, left: ${frame}.scrollLeft,
+            top: ${frame}.scrollTop, drift: Math.hypot(point.x - ${x}, point.y - ${y}) };
+        })()`));
+      }
+    }
+    return observations;
+  });
+  expect(observations).toHaveLength(5);
+  expect(observations.filter(({ scale, left, top, drift }) =>
+    !(scale > 1 && left > 0 && top > 0 && drift < 4))).toEqual([]);
+}, 100_000);
 
 const guide = async (path) => Bun.file(`${root}/skills/${path}`).text();
 const defaults = [/use|embed|choose/i, /diagram viewer/i, /by default|automatically/i, /dense/i, /wide|wider/i];
