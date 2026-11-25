@@ -81,8 +81,9 @@ arming or a work restart; the parking and forge-resolved wait rules above still 
 Read back each schedule update and record its receipt; an uncertain update holds affected work.
 Each wake reconciles unsettled launched-fallback Writer runs before running the authorized maintenance loop.
 A failed run holds incomplete work even when its writer sent no receipt.
-A missing schedule capability holds activation. Delegated roles follow T3 runtime;
-add no daemon and no polling model between wakes.
+A missing schedule capability holds activation. Delegated roles follow T3 runtime.
+T3 supplies chat-run watch wakes through native events and schedules.
+Drivers never poll delegated tasks between wakes.
 
 At the start of each driver wake, follow [Provider bindings](../../axstack/references/t3-runtime.md#preflight-and-binding)
 for provider binding.
