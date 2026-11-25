@@ -31,20 +31,17 @@ Direct routes need no spec ceremony:
 - [axstack-perf](../skills/axstack-perf/SKILL.md) routes performance work to
   Debug, Improve, or Implement through the shared performance loop.
 - `axstack-research` answers one bounded source-backed question.
-- [axstack-work-chat](../skills/axstack-work-chat/SKILL.md) reads a supplied
-  transcript or an authorized Slack or Teams thread or message on request.
-  Explicit new work-chat requests, including supplied transcripts, route to
-  iosatellite under the existing intake rules. For a host-local path on another
-  host, request a scoped excerpt or a source readable on iosatellite. Private
-  file transfer requires explicit authorization.
-  An explicit time window limits thread reads to visible rows with a verified
-  parent. Live reads use iosatellite's dedicated sandboxed Chromium profile
-  and validate the existing operator-provisioned stdio command in
-  `client/opencode.json`. Claude and Codex invoke the same Bun reader directly.
-  The configuration file is required. The reader launches the command
-  without starting OpenCode or registering a browser MCP in either harness.
-  Teams redirects that leave the verified link hold for a scoped transcript.
-  Live Slack and Teams layouts and sign-in remain unverified.
+- [axstack-work-chat](../skills/axstack-work-chat/SKILL.md) reads Slack or Teams
+  channels, threads and messages on request. Live reads and posts require
+  iosatellite's attached `work_chat` Playwright MCP bound to the dedicated
+  Chromium profile. Explicit new reads, including supplied transcripts, follow
+  the existing iosatellite intake rules. For a path on another host, ask for a
+  scoped excerpt or an iosatellite-readable
+  source. The optional Bun reader handles transcripts, messages and bounded
+  threads. A new message or reply requires the user's current request naming
+  the target. Sol independently checks the draft, then the user sees the exact
+  text and target before the post is sent. Live Slack and Teams layouts and
+  sign-in remain unverified.
 - `axstack-scout` gathers cited codebase evidence for broad or unfamiliar
   questions using independent, read-only seats.
 - `axstack-correct` reports repeated mistakes and proposes stronger checks.
