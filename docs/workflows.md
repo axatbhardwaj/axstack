@@ -28,6 +28,12 @@ Direct routes need no spec ceremony:
   creation and maintenance through Implement.
   A single-behavior check uses an existing `verify-<app>` skill or UI verification
   delegation. Creation keeps Implement's scope identity requirements.
+- [axstack-test-fixing](../skills/axstack-test-fixing/SKILL.md) repairs
+  existing failing, flaky, or weak tests within the requested scope. It routes
+  suspected product regressions to Debug and delivers authorized test repairs
+  through Implement. If a test moves or is replaced, verify the applicable CI
+  gate still runs and fails on the protected regression. Audit-only requests
+  stay report-only.
 - [axstack-perf](../skills/axstack-perf/SKILL.md) routes performance work to
   Debug, Improve, or Implement through the shared performance loop.
 - `axstack-research` answers one bounded source-backed question.
