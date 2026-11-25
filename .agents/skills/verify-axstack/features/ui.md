@@ -44,6 +44,9 @@ nominal Pele chat sizing. With Chromium, it checks both layout engines in the
 pinned browser asset, standalone SVG XML, disjoint IDs, theme bindings and
 actual minimum label size. Missing Chromium skips the browser checks with a
 reason. Run this test alongside `explain-fidelity.test.js` for Mermaid changes.
+The stalled-browser fixture checks that the 60-second batch watchdog gives
+Chromium's 30-second virtual-time budget room for startup and shutdown, and
+that the watchdog cleans up the process group.
 These fixtures prove the local export path. T3 chat and final Publish captures
 remain separate observations.
 
