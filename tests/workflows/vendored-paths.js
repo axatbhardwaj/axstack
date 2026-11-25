@@ -2,6 +2,10 @@
 export const VENDORED_PATHS = [
   'skills/axstack/vendor/pele/pele.js',
   'skills/axstack/vendor/pele/LICENSE',
+  'skills/axstack/vendor/mermaid/mermaid.min.js',
+  'skills/axstack/vendor/mermaid/LICENSE',
+  'skills/axstack/vendor/mermaid/ELK-LICENSE',
+  'skills/axstack/vendor/mermaid/THIRD-PARTY-NOTICES',
   'skills/axstack-anatomy/kit/**',
   'skills/axstack-anatomy/scripts/**',
   'skills/axstack-anatomy/references/**',

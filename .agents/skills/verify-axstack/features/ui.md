@@ -39,6 +39,14 @@ and GitHub rendering remain driver-owned checks after a PR exists.
 
 ## Explain delivery
 
+`mermaid-check.test.js` checks the ELK default, exact fallback placement and
+nominal Pele chat sizing. With Chromium, it checks both layout engines in the
+pinned browser asset, standalone SVG XML, disjoint IDs, theme bindings and
+actual minimum label size. Missing Chromium skips the browser checks with a
+reason. Run this test alongside `explain-fidelity.test.js` for Mermaid changes.
+These fixtures prove the local export path. T3 chat and final Publish captures
+remain separate observations.
+
 Publish audience keeper: `publish-audience.test.js` checks private-only discovery
 and questions, enabled/complete and unshared status, one-slug/one-audience consent,
 earlier-version warnings, inference and revocation prohibitions, republish disclosure,

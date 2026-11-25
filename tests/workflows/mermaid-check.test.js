@@ -1,5 +1,6 @@
 import { afterAll, expect, test } from 'bun:test';
-import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { findChromium } from '../../skills/axstack/scripts/mermaid-export.js';
 
 const checker = `${import.meta.dir}/../../skills/axstack/scripts/mermaid-check.js`;
 const fixtures = `${import.meta.dir}/fixtures/mermaid`;
@@ -9,6 +10,7 @@ afterAll(() => rmSync(scratch, { recursive: true }));
 
 const flow = `---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 90
     rankSpacing: 110
@@ -31,6 +33,14 @@ sequenceDiagram
   accDescr: The author requests a review.
   A->>B: Review PR #263
 `;
+const elkHeader = '---\nconfig:\n  layout: elk\n---\n';
+const state = 'stateDiagram-v2\naccTitle: State\naccDescr: Starts.\n[*] --> Active: (planned)\n';
+const er = 'erDiagram\naccTitle: Orders\naccDescr: Orders contain items.\nORDER ||--o{ ITEM : "contains (unknown)"\n';
+const fallbackReason = 'target uses Mermaid 11 without the ELK plug-in';
+const withoutElk = (source) => source.replace('  layout: elk\n', '');
+const addFallback = (source) => source.replace(
+  /^(flowchart[^\n]*|stateDiagram-v2|erDiagram)$/m, `$1\n%% layout-fallback: ${fallbackReason}`,
+);
 const tier = flow.replace('  A["PR #263"] --> B[Review]:::accent', [
   '  subgraph Review [Review tier]',
   '    A[Driver] --> B[Reviewer]:::accent',
@@ -46,11 +56,11 @@ function cli(...args) {
   return { code: result.exitCode, out: result.stdout.toString(), err: result.stderr.toString() };
 }
 
-test('checks all nine flowchart views and reports the dense ELK overview limit', () => {
+test('checks all nine flowchart views and reports the dense overview limit', () => {
   const { code, out, err } = cli('--overview', `${fixtures}/ga-v10.md`);
   expect(code, err).toBe(0);
   expect(out.match(/block \d+.*flowchart/g)).toHaveLength(9);
-  expect(out).toMatch(/block 1.*dense ELK overview: needs zoom\/pan in chat; geometry not measured \(pinned pele ignores ELK\)/);
+  expect(out).toMatch(/block 1.*dense overview: needs zoom\/pan in chat/);
 });
 
 test('checks the guide examples with the overview policy', () => {
@@ -58,10 +68,14 @@ test('checks the guide examples with the overview policy', () => {
   expect(code, err).toBe(0);
 });
 
-async function check(name, source, ...args) {
+async function writeFixture(name, source) {
   const path = `${scratch}/${name}`;
   await Bun.write(path, source);
-  return cli(...args, path);
+  return path;
+}
+
+async function check(name, source, ...args) {
+  return cli(...args, await writeFixture(name, source));
 }
 
 test('checks Markdown fences and ignores a literal example inside a different fence', async () => {
@@ -75,17 +89,17 @@ test('checks Markdown fences and ignores a literal example inside a different fe
   expect(err).toBe('');
   expect(code).toBe(0);
   expect(out).toMatch(/block 1.*line 7.*flowchart/);
-  expect(out).toMatch(/block 2.*line 22.*sequenceDiagram/);
+  expect(out).toMatch(/block 2.*line 23.*sequenceDiagram/);
   expect(out).toContain(sha256(flow));
   expect(out).toContain(sha256(sequence));
 });
 
-test('accepts supported raw styles and title-only frontmatter on the other diagram types', async () => {
+test('accepts supported styles and frontmatter on every default diagram type', async () => {
   const examples = [
     ['flowchart', flow.replace('config:', 'title: Review\nconfig:')],
     ['sequence', sequence],
-    ['stateDiagram-v2', '---\ntitle: State\n---\nstateDiagram-v2\naccTitle: State\naccDescr: Starts.\n[*] --> Active: (planned)\n'],
-    ['erDiagram', 'erDiagram\naccTitle: Orders\naccDescr: Orders contain items.\nORDER ||--o{ ITEM : "contains (unknown)"\n'],
+    ['stateDiagram-v2', elkHeader.replace('config:', 'title: State\nconfig:') + state],
+    ['erDiagram', elkHeader + er],
     ['timeline', 'timeline\naccTitle: Dates\naccDescr: Release date.\n2026 : Release (planned)\n'],
   ];
   for (const [name, source] of examples) {
@@ -107,8 +121,8 @@ const breaches = [
   ['sequence-spacing', sequence.replace('messageMargin: 48', 'messageMargin: 40.5'), /messageMargin.*integer/],
   ['missing-spacing', flow.replace('    rankSpacing: 110\n', ''), /required.*rankSpacing|rankSpacing.*required/],
   ['unknown-config', flow.replace('    curve: step', '    padding: 90'), /unknown.*config.flowchart.padding/],
-  ['non-elk', flow.replace('  flowchart:', '  layout: dagre\n  flowchart:'), /config.layout.*elk/],
-  ['sequence-elk', sequence.replace('  sequence:', '  layout: elk\n  sequence:'), /config.layout.*flowchart/],
+  ['non-elk', flow.replace('layout: elk', 'layout: dagre'), /config.layout.*elk/],
+  ['sequence-elk', sequence.replace('  sequence:', '  layout: elk\n  sequence:'), /config.layout.*sequenceDiagram/],
   ['curve', flow.replace('curve: step', 'curve: cardinal'), /curve.*step.*linear.*basis/],
   ['one-line-frontmatter', flow.replace(/config:[\s\S]*?\n---/, 'config: {flowchart: {nodeSpacing: 90, rankSpacing: 110, curve: step}}\n---'), /frontmatter.*multiline|multiline.*frontmatter/],
   ['misplaced-title', flow.replace('    nodeSpacing: 90', 'title: Review\n    nodeSpacing: 90'), /frontmatter/],
@@ -164,7 +178,8 @@ const breaches = [
 
 for (const [name, source, rule] of breaches) {
   test(`fails with the named ${name} rule`, async () => {
-    const { code, err } = await check(`${name}.mmd`, source);
+    const input = /^(?:stateDiagram-v2|erDiagram)\b/.test(source) ? elkHeader + source : source;
+    const { code, err } = await check(`${name}.mmd`, input);
     expect(err).toMatch(rule);
     expect(code).toBe(1);
   });
@@ -250,7 +265,7 @@ test('keeps punctuation used by shapes, statement separators and sequence messag
 test('reports the Markdown source line on a parse failure', async () => {
   const source = ['# Review', '', '```mermaid', flow.trimEnd(), 'A[unclosed --> C', '```', ''].join('\n');
   const { code, err } = await check('parse.md', source);
-  expect(err).toMatch(/block 1 \(line 3\).*parse.*line 16/i);
+  expect(err).toMatch(/block 1 \(line 3\).*parse.*line 17/i);
   expect(code).toBe(1);
 });
 
@@ -277,8 +292,8 @@ test('requires a TB flowchart with a subgraph as the first overview block', asyn
   const candidates = [
     ['missing', '# No diagrams', /overview.*block 1/i],
     ['zoom-first', fenced(sequence) + fenced(tier), /overview.*flowchart TB/],
-    ['lr', fenced(tier.replace('flowchart TB', 'flowchart LR')), /overview.*flowchart TB/],
-    ['lr-elk', fenced(tier.replace('flowchart TB', 'flowchart LR').replace('config:', 'config:\n  layout: elk')), /overview.*flowchart TB/],
+    ['lr', fenced(addFallback(withoutElk(tier.replace('flowchart TB', 'flowchart LR')))), /overview.*flowchart TB/],
+    ['lr-elk', fenced(tier.replace('flowchart TB', 'flowchart LR')), /overview.*flowchart TB/],
     ['no-tier', fenced(flow), /overview.*subgraph/],
   ];
   for (const [name, source, rule] of candidates) {
@@ -290,7 +305,7 @@ test('requires a TB flowchart with a subgraph as the first overview block', asyn
 
 test('applies legibility to zoom-ins too', async () => {
   const zoom = `${flow.replace('flowchart TB', 'flowchart LR')}B --> C[Reporting service] --> D[Long downstream service] --> E[Another external service]\n`;
-  for (const [name, chart] of [['wide', zoom], ['wide-elk', zoom.replace('config:', 'config:\n  layout: elk')]]) {
+  for (const [name, chart] of [['wide-fallback', addFallback(withoutElk(zoom))], ['wide-elk', zoom]]) {
     const result = await check(`${name}-zoom.md`, fenced(tier) + fenced(chart), '--overview');
     expect(result.err).toMatch(/block 2.*12px at 860px.*restructure/i);
     expect(result.code).toBe(1);
@@ -342,8 +357,8 @@ test('rejects an override with the wrong bytes before import', async () => {
   expect(missing.code).toBe(3);
 });
 
-test('exports deterministic SVGs with scoped accessibility ids and a theme-bound accent', async () => {
-  const view = ['```mermaid', flow.trimEnd(), '```'].join('\n');
+test('exports deterministic Pele SVGs with scoped accessibility ids and a theme accent token', async () => {
+  const view = ['```mermaid', sequence.trimEnd(), '```'].join('\n');
   const input = `${view}\n\n${view}\n`;
   const dir = `${scratch}/svg`;
   const path = `${scratch}/repeat.md`;
@@ -354,8 +369,6 @@ test('exports deterministic SVGs with scoped accessibility ids and a theme-bound
   expect(names).toHaveLength(2);
   const svgs = await Promise.all(names.map((name) => Bun.file(`${dir}/${name}`).text()));
   const ids = svgs.flatMap((svg) => {
-    expect(svg).toContain('stroke:var(--_c)');
-    expect(svg).not.toMatch(/style="(?:[^"]*;)?stroke:#5b7bd5(?=[;"])/);
     expect(svg).toContain('var(--pele-accent,#5b7bd5)');
     expect(result.out).toContain(sha256(svg));
     const refs = [...svg.matchAll(/aria-(?:labelledby|describedby)="([^"]+)"/g)].map((match) => match[1]);
@@ -367,27 +380,363 @@ test('exports deterministic SVGs with scoped accessibility ids and a theme-bound
   expect(cli('--svg-out', dir, path)).toEqual(result);
 });
 
-test('exports teal accent strokes with the theme accent while preserving neutral strokes and labels', async () => {
-  const chart = tier.replace('#5b7bd5', '#14B8A6').replace('A[Driver]', 'A["Driver #14B8A6"]');
-  const source = `${chart}style A stroke:teal\nstyle Review stroke:#8a909b\n`;
-  const dir = `${scratch}/teal-svg`;
-  const result = await check('teal.mmd', source, '--svg-out', dir);
-  expect(result.code, result.err).toBe(0);
-  const [name] = readdirSync(dir);
-  const svg = await Bun.file(`${dir}/${name}`).text();
-  expect(svg.match(/stroke:var\(--_c\)/g)).toHaveLength(2);
-  expect(svg).not.toMatch(/stroke:(?:#14b8a6|teal)(?=[;"])/i);
-  expect(svg).toContain('stroke:#8a909b');
-  expect(svg).toContain('Driver #14B8A6');
-  expect(result.out).toContain(sha256(svg));
-});
-
 test('documents CLI switches and signals usage errors', () => {
   const { code, out } = cli('--help');
   expect(code).toBe(0);
-  for (const term of ['Usage:', '--expect', '--no-expect', '--svg-out', '--pele', '--overview', '.mmd', 'Exit']) {
+  for (const term of ['Usage:', '--expect', '--no-expect', '--svg-out', '--browser', '--browser-no-sandbox', '--width', '--pele', '--overview', '.mmd', 'Exit']) {
     expect(out).toContain(term);
   }
   expect(cli().code).toBe(2);
   expect(cli('--unknown').code).toBe(2);
+});
+
+for (const [type, source] of [['flowchart', withoutElk(flow)], ['stateDiagram-v2', state], ['erDiagram', er]]) {
+  test(`${type} requires ELK or one adjacent target fallback`, async () => {
+    const fallback = addFallback(source);
+    const controls = [
+      source,
+      fallback.replace(fallbackReason, '   '),
+      fallback.replace('accTitle:', `%% layout-fallback: ${fallbackReason}\naccTitle:`),
+      fallback.replace('\n%% layout-fallback:', '\n\n%% layout-fallback:'),
+      source.replace(/^(flowchart[^\n]*|stateDiagram-v2|erDiagram)$/m, `%% layout-fallback: ${fallbackReason}\n$1`),
+    ];
+    for (const chart of controls) {
+      const result = await check(`${type}-invalid.mmd`, chart);
+      expect(result.code, result.out).toBe(1);
+      expect(result.err).toMatch(/layout-fallback/);
+    }
+    const accepted = await check(`${type}-fallback.mmd`, fallback);
+    expect(accepted.code, accepted.err).toBe(0);
+    expect(accepted.out).toContain(fallbackReason);
+    const elkWithFallback = type === 'flowchart'
+      ? fallback.replace('config:', 'config:\n  layout: elk')
+      : elkHeader + fallback;
+    const contradictory = await check(`${type}-contradictory.mmd`, elkWithFallback);
+    expect(contradictory.code, contradictory.out).toBe(1);
+    expect(contradictory.err).toMatch(/layout-fallback/);
+  });
+}
+
+test('rejects fallback before frontmatter', async () => {
+  const result = await check('before-frontmatter.mmd', `%% layout-fallback: ${fallbackReason}\n${withoutElk(flow)}`);
+  expect(result.code).toBe(1);
+});
+
+test('applies the dense overview exception to a valid fallback', async () => {
+  const source = await Bun.file(`${fixtures}/ga-v10.md`).text();
+  const first = source.split('```')[1].replace(/^mermaid\n/, '');
+  const result = await check('dense-fallback.mmd', addFallback(withoutElk(first)), '--overview');
+  expect(result.code, result.err).toBe(0);
+  expect(result.out).toMatch(/dense overview.*zoom\/pan/);
+});
+
+test('holds ELK-applicable SVG export when the explicit browser is missing', async () => {
+  const dir = `${scratch}/no-browser`;
+  const result = await check('no-browser.mmd', flow, '--svg-out', dir, '--browser', `${scratch}/absent-browser`);
+  expect(result.code, result.err).toBe(3);
+  expect(result.err).toMatch(/Chromium.*(?:missing|unavailable)/);
+
+  const home = `${scratch}/unusable-browser-home`;
+  mkdirSync(`${home}/.t3/tools`, { recursive: true });
+  await Bun.write(`${home}/.t3/tools/chrome-headless-shell`, 'This file is not a browser executable.');
+  const automatic = Bun.spawnSync([process.execPath, '--no-env-file', checker,
+    '--svg-out', dir, `${scratch}/no-browser.mmd`], { env: { HOME: home, PATH: `${home}/absent-path` } });
+  expect(automatic.exitCode, automatic.stderr.toString()).toBe(3);
+  expect(automatic.stderr.toString()).toMatch(/Chromium unavailable/);
+});
+
+test('holds on a Chromium sandbox startup abort and forwards only an explicit sandbox opt-in', async () => {
+  const fake = `${scratch}/zygote-browser`;
+  await Bun.write(fake, `#!/bin/sh
+printf '%s\\n' "$@" > "$0.args"
+for arg do
+  if [ "$arg" = --no-sandbox ]; then
+    printf '%s\\n' '<html></html>'
+    printf '%s\\n' 'fixture stopped after receiving explicit opt-in' >&2
+    exit 42
+  fi
+done
+printf '%s\\n' 'FATAL:zygote_host_impl_linux.cc:207] Check failed: Permission denied (13)' 'content::ZygoteHostImpl::Init()' >&2
+# Model Chromium's abort status without signaling this fixture.
+exit 134
+`);
+  chmodSync(fake, 0o700);
+  const output = `${scratch}/zygote-svg`;
+  const args = ['--svg-out', output, '--browser', fake];
+  const blocked = await check('zygote.mmd', flow, ...args);
+  expect(blocked.code, blocked.err).toBe(3);
+  expect(blocked.err).toMatch(/Chromium sandbox startup failed \(134\)/);
+  expect(blocked.err).toContain('--browser-no-sandbox');
+  expect(await Bun.file(`${fake}.args`).text()).not.toContain('--no-sandbox');
+  expect(existsSync(output)).toBe(false);
+
+  const optIn = cli(...args, '--browser-no-sandbox', `${scratch}/zygote.mmd`);
+  expect(optIn.code, optIn.err).toBe(1);
+  expect(optIn.err).toContain('fixture stopped after receiving explicit opt-in');
+  expect((await Bun.file(`${fake}.args`).text()).split('\n')).toContain('--no-sandbox');
+  expect(existsSync(output)).toBe(false);
+
+  const late = `${scratch}/late-browser`;
+  await Bun.write(late, '#!/bin/sh\nprintf "%s\\n" "<html></html>"\nprintf "%s\\n" "No usable sandbox" >&2\nexit 1\n');
+  chmodSync(late, 0o700);
+  const lateFailure = cli('--svg-out', output, '--browser', late, `${scratch}/zygote.mmd`);
+  expect(lateFailure.code, lateFailure.err).toBe(1);
+  expect(lateFailure.err).toMatch(/Chromium export failed/);
+});
+
+test('retains root and fatal startup diagnostics through an arbitrarily long stack dump', async () => {
+  const fake = `${scratch}/root-browser`;
+  await Bun.write(fake, `#!/bin/sh
+printf '%s\\n' 'first startup line' '[ERROR:zygote_host_impl_linux.cc(101)] Running as root without --no-sandbox is not supported' '[FATAL:gpu_init.cc] Secondary startup diagnostic' >&2
+printf '%02200d\\n' 0 >&2
+printf '%s\\n' 'last startup line' >&2
+exit 1
+`);
+  chmodSync(fake, 0o700);
+  const output = `${scratch}/root-svg`;
+  const result = await check('root-browser.mmd', flow, '--svg-out', output, '--browser', fake);
+  expect(result.code, result.err).toBe(3);
+  expect(result.err).toMatch(/Chromium sandbox startup failed/);
+  expect(result.err).toContain('--browser-no-sandbox');
+  for (const diagnostic of ['first startup line', 'Running as root without --no-sandbox', 'Secondary startup diagnostic', 'last startup line']) {
+    expect(result.err).toContain(diagnostic);
+  }
+  expect(existsSync(output)).toBe(false);
+});
+
+test('holds on missing Chromium shared libraries and keeps sandbox guidance out of loader errors', async () => {
+  const fake = `${scratch}/aborting-browser`;
+  const diagnostic = 'error while loading shared libraries: libfixture.so: cannot open shared object file';
+  await Bun.write(fake, `#!/bin/sh
+printf '%s\\n' '${diagnostic}' >&2
+exit 127
+`);
+  chmodSync(fake, 0o700);
+  const output = `${scratch}/abort-svg`;
+  const args = ['--svg-out', output, '--browser', fake];
+  for (const flag of [[], ['--browser-no-sandbox']]) {
+    const result = await check('aborting-browser.mmd', flow, ...args, ...flag);
+    expect(result.code, result.err).toBe(3);
+    expect(result.err).toContain(diagnostic);
+    expect(result.err).toMatch(/check.*Chromium installation.*shared libraries/i);
+    expect(result.err).not.toContain('--browser-no-sandbox');
+    expect(existsSync(output)).toBe(false);
+  }
+});
+
+test('holds on a Chromium spawn failure with executable guidance', async () => {
+  const fake = `${scratch}/bad-interpreter-browser`;
+  await Bun.write(fake, `#!${scratch}/absent-interpreter\n`);
+  chmodSync(fake, 0o700);
+  const output = `${scratch}/launch-svg`;
+  const result = await check('bad-interpreter.mmd', flow, '--svg-out', output, '--browser', fake);
+  expect(result.code, result.err).toBe(3);
+  expect(result.err).toMatch(/Could not launch Chromium.*executable.*interpreter/);
+  expect(result.err).not.toContain('--browser-no-sandbox');
+  expect(existsSync(output)).toBe(false);
+});
+
+test('holds an endless Chromium render loop without sandbox advice and cleans up the process group', async () => {
+  const fake = `${scratch}/hung-browser`;
+  await Bun.write(fake, `#!/bin/sh
+trap '' TERM
+if [ "$1" = hold ]; then
+  while true; do sleep 1; done
+fi
+"$0" hold &
+printf '%s\\n' "$$" "$!" > "$0.pids"
+printf '%s\\n' 'entered the fixture render loop' >&2
+wait
+`);
+  chmodSync(fake, 0o700);
+  const source = `${scratch}/hung-browser.mmd`;
+  await Bun.write(source, flow);
+  const output = `${scratch}/hung-svg`;
+  const start = performance.now();
+  const checkerProc = Bun.spawn([process.execPath, '--no-env-file', checker, '--svg-out', output, '--browser', fake, source], {
+    stdout: 'ignore', stderr: 'pipe', timeout: 33_000, killSignal: 'SIGKILL',
+  });
+  const isLive = (pid) => {
+    try { return !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); }
+    catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+  };
+  try {
+    const code = await checkerProc.exited;
+    const stderr = await new Response(checkerProc.stderr).text();
+    const elapsed = Math.round(performance.now() - start);
+    expect(elapsed, `exit=${code} stderr=${stderr}`).toBeLessThan(32_500);
+    expect(code, stderr).toBe(3);
+    expect(stderr).toContain('Chromium did not finish (startup or render) within 30s');
+    expect(stderr).toContain('entered the fixture render loop');
+    expect(stderr).not.toContain('--browser-no-sandbox');
+    const pids = readFileSync(`${fake}.pids`, 'utf8').trim().split('\n').map(Number);
+    expect(pids).toHaveLength(2);
+    // Give the OS a short window to report the killed processes as gone or zombies.
+    for (let attempt = 0; attempt < 10 && pids.some(isLive); attempt++) await Bun.sleep(20);
+    expect(pids.filter(isLive)).toEqual([]);
+    expect(existsSync(output)).toBe(false);
+  } finally {
+    if (existsSync(`${fake}.pids`)) {
+      for (const pid of readFileSync(`${fake}.pids`, 'utf8').trim().split('\n').map(Number)) {
+        if (!Number.isInteger(pid) || pid <= 1 || !isLive(pid)) continue;
+        try {
+          if (readFileSync(`/proc/${pid}/cmdline`, 'utf8').split('\0').includes(fake)) process.kill(pid, 'SIGKILL');
+        } catch (error) { if (!['ENOENT', 'ESRCH'].includes(error.code)) console.error(error.message); }
+      }
+    }
+  }
+}, 36_000);
+
+const browser = findChromium();
+if (!browser) test.skip('Chromium SVG acceptance: chromium, google-chrome and T3 headless shell unavailable', () => {});
+const browserTest = test.skipIf(!browser);
+
+const checkerArgs = ['--browser', browser];
+const XML_VALIDATION_TIMEOUT_MS = 15_000;
+let checkedBrowserSandbox = false;
+
+function browserCli(...args) {
+  const result = cli(...checkerArgs, ...args);
+  if (checkedBrowserSandbox) return result;
+  checkedBrowserSandbox = true;
+  // Use the first actual export to check startup. Only retry a sandbox hold.
+  if (result.code !== 3 || !result.err.includes('Chromium sandbox startup failed')) return result;
+  expect(result.err).toContain('--browser-no-sandbox');
+  console.warn('Chromium sandbox startup held. Retrying the export with explicit --browser-no-sandbox.');
+  checkerArgs.push('--browser-no-sandbox');
+  return cli(...checkerArgs, ...args);
+}
+
+function browserTestTimeout(exportCount, validationMs = 0) {
+  // Budget each export's 30s hard limit, one sandbox retry when run alone,
+  // optional XML validation, and 15s of test-runner headroom.
+  return (exportCount + 1) * 30_000 + validationMs + 15_000;
+}
+
+browserTest('exports and XML-parses all nine GA SVGs offline with disjoint IDs and a dense scroller', async () => {
+  const dir = `${scratch}/ga-svg`;
+  const result = browserCli('--overview', '--svg-out', dir, `${fixtures}/ga-v10.md`);
+  expect(result.code, result.err).toBe(0);
+  expect(result.out.match(/Mermaid 12\.3\.0 ELK/g)).toHaveLength(9);
+  expect(result.out).toMatch(/block 1.*SVG.*zoom\/pan/i);
+  const files = readdirSync(dir).sort();
+  expect(files).toHaveLength(9);
+  const svgs = await Promise.all(files.map((file) => Bun.file(`${dir}/${file}`).text()));
+  for (const svg of svgs) {
+    expect(result.out).toContain(sha256(svg));
+    expect(svg).not.toMatch(/#0[1-6]a[1-6][\da-f]{2}\b/i);
+  }
+
+  const page = `${scratch}/validate.html`;
+  await Bun.write(`${scratch}/validate.js`, `
+    const svgs = ${JSON.stringify(svgs).replaceAll('<', '\\u003c')};
+    const ids = new Set();
+    for (const [index, svg] of svgs.entries()) {
+      const root = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement;
+      if (root.localName !== 'svg' || root.querySelector('parsererror')) throw new Error('invalid XML');
+      if (index === 0 && Number(root.getAttribute('width')) <= 860) throw new Error('overview lacks intrinsic width');
+      for (const element of [root, ...root.querySelectorAll('[id]')]) {
+        if (!element.id || ids.has(element.id)) throw new Error('duplicate or missing ID: ' + element.id);
+        ids.add(element.id);
+      }
+      for (const attr of ['aria-labelledby', 'aria-describedby']) {
+        if (!root.getElementById(root.getAttribute(attr))) throw new Error('broken accessibility reference');
+      }
+    }
+    document.body.dataset.valid = 'yes';
+  `);
+  await Bun.write(page, '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\'; connect-src \'none\'"><body><script src="validate.js"></script>');
+  const chromiumArgs = checkerArgs.includes('--browser-no-sandbox') ? ['--no-sandbox'] : [];
+  const profile = mkdtempSync('/tmp/axstack-mermaid-xml-');
+  try {
+    const validate = Bun.spawnSync([
+      browser, '--headless', ...chromiumArgs, '--disable-gpu', '--disable-background-networking', '--disable-component-update',
+      '--host-resolver-rules=MAP * ~NOTFOUND', '--no-first-run', '--disable-crash-reporter',
+      `--user-data-dir=${profile}/profile`, '--dump-dom', Bun.pathToFileURL(page).href,
+    ], {
+      env: { PATH: process.env.PATH, HOME: profile, TMPDIR: profile, XDG_CONFIG_HOME: profile, XDG_CACHE_HOME: profile },
+      timeout: XML_VALIDATION_TIMEOUT_MS,
+      killSignal: 'SIGKILL',
+    });
+    expect(validate.exitCode, validate.stderr.toString()).toBe(0);
+    expect(validate.stdout.toString()).toContain('data-valid="yes"');
+  } finally {
+    rmSync(profile, { recursive: true, force: true });
+  }
+}, browserTestTimeout(1, XML_VALIDATION_TIMEOUT_MS));
+
+browserTest('selects ELK geometry over Dagre in the same browser asset and keeps other types on Pele', async () => {
+  const branch = `${tier}    B --> C --> E\n    A --> D --> E\n`;
+  const input = fenced(branch) + fenced(addFallback(withoutElk(branch))) + fenced(branch)
+    + fenced(elkHeader + state) + fenced(elkHeader + er) + fenced(sequence);
+  const path = await writeFixture('engines.md', input);
+  const dir = `${scratch}/engines`;
+  const result = browserCli('--svg-out', dir, path);
+  expect(result.code, result.err).toBe(0);
+  expect(result.out).toMatch(/block 1.*Mermaid 12\.3\.0 ELK/);
+  expect(result.out).toMatch(/block 2.*Mermaid 12\.3\.0 Dagre/);
+  expect(result.out).toMatch(/block 4.*stateDiagram-v2.*Mermaid 12\.3\.0 ELK/);
+  expect(result.out).toMatch(/block 5.*erDiagram.*Mermaid 12\.3\.0 ELK/);
+  expect(result.out).toMatch(/block 6.*sequenceDiagram.*SVG renderer: Pele/);
+  const outputs = await Promise.all(readdirSync(dir).sort().map((file) => Bun.file(`${dir}/${file}`).text()));
+  const paths = (svg) => Array.from(svg.matchAll(/<path\b[^>]*?\sd="([^"]+)"/g), (match) => match[1]);
+  expect(paths(outputs[0]).length).toBeGreaterThan(0);
+  expect(paths(outputs[0])).not.toEqual(paths(outputs[1]));
+  expect(paths(outputs[0])).toEqual(paths(outputs[2]));
+  const ids = (svg) => [...svg.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
+  expect(ids(outputs[0]).filter((id) => ids(outputs[2]).includes(id))).toEqual([]);
+  expect(outputs[0]).toContain('stroke:var(--_c');
+  expect(outputs[0]).toContain('var(--pele-fg');
+  expect(outputs[0]).toContain('var(--pele-surface');
+  expect(browserCli('--svg-out', dir, path)).toEqual(result);
+}, browserTestTimeout(2));
+
+browserTest('rejects an ELK export whose actual labels fall below 12px at the target width', async () => {
+  const wide = flow.replace('flowchart TB', 'flowchart LR').replace('A["PR #263"] --> B[Review]:::accent',
+    'A[A] -->|"Intake to Review"| B[B] -->|"Review to Routing"| C[C] -->|"Route to Result"| D[D]');
+  const path = await writeFixture('wide-elk-export.mmd', wide);
+  const chat = cli(path);
+  expect(chat.code, chat.err).toBe(0);
+  const dir = `${scratch}/wide-elk`;
+  const atDefault = browserCli('--svg-out', dir, path);
+  expect(atDefault.code, atDefault.out).toBe(1);
+  expect(atDefault.err).toMatch(/ELK label size.*below 12px at 860px/);
+  expect(existsSync(dir)).toBe(false);
+  const wideFigure = browserCli('--svg-out', dir, '--width', '1250', path);
+  expect(wideFigure.code, wideFigure.err).toBe(0);
+  expect(wideFigure.out).toMatch(/minimum label at 1250px/);
+}, browserTestTimeout(2));
+
+browserTest('exports teal strokes with the theme accent while preserving neutral strokes and label text', async () => {
+  const chart = tier.replace('#5b7bd5', '#14B8A6').replace('A[Driver]', 'A["Driver #14B8A6"]');
+  const source = `${chart}style A stroke:teal\nstyle Review stroke:#8a909b\n`;
+  const path = await writeFixture('teal.mmd', source);
+  const dir = `${scratch}/teal-svg`;
+  const result = browserCli('--svg-out', dir, path);
+  expect(result.code, result.err).toBe(0);
+  const [name] = readdirSync(dir);
+  const svg = await Bun.file(`${dir}/${name}`).text();
+  expect(svg.match(/<rect[^>]*stroke:\s*var\(--_c/g)).toHaveLength(2);
+  expect(svg).not.toMatch(/stroke:\s*(?:#14b8a6|teal|rgb\(20, *184, *166\)|rgb\(0, *128, *128\))\s*(?=[;"}!])/i);
+  expect(svg).toMatch(/stroke:\s*#8a909b/);
+  expect(svg).toContain('Driver #14B8A6');
+  expect(result.out).toContain(sha256(svg));
+}, browserTestTimeout(1));
+
+test('holds SVG export on a changed bundle before Chromium can load it', async () => {
+  const isolated = `${scratch}/changed-bundle`;
+  const axstack = `${import.meta.dir}/../../skills/axstack`;
+  cpSync(`${axstack}/scripts`, `${isolated}/scripts`, { recursive: true });
+  cpSync(`${axstack}/assets`, `${isolated}/assets`, { recursive: true });
+  cpSync(`${axstack}/vendor/pele`, `${isolated}/vendor/pele`, { recursive: true });
+  mkdirSync(`${isolated}/vendor/mermaid`, { recursive: true });
+  const changed = `${isolated}/vendor/mermaid/mermaid.min.js`;
+  await Bun.write(changed, 'throw new Error("unverified bundle ran")');
+  const input = `${scratch}/changed-bundle.mmd`;
+  await Bun.write(input, flow);
+  const result = Bun.spawnSync([process.execPath, '--no-env-file', `${isolated}/scripts/mermaid-check.js`,
+    '--svg-out', `${scratch}/changed-svg`, input]);
+  expect(result.exitCode, result.stderr.toString()).toBe(3);
+  expect(result.stderr.toString()).toMatch(/Mermaid.*hash mismatch/);
+  expect(result.stderr.toString()).not.toContain('unverified bundle ran');
 });

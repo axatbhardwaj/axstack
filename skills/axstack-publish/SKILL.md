@@ -85,6 +85,11 @@ and [Visual QA](../axstack-explain/references/visual-qa.md) for checks and verif
 For diagrams, follow [Mermaid](../axstack-explain/references/mermaid.md).
 Never use a Mermaid or pele runtime in articles.
 Embed checker-rendered SVG from the reviewed Mermaid source.
+Use `config.layout: elk` by default for flowcharts, state and ER diagrams.
+Run the export label gate with `--width <px>` at the narrowest available figure
+width used for fitted SVGs, then check the actual labels at all four capture
+widths. Keep dense overviews at intrinsic width and record their zoom or pan
+path.
 Use the [figure scroller](../axstack-explain/references/inline-pages.md#embed-mermaid)
 and bind `--pele-*` to the article’s Neon tokens. Use ground for background,
 ink for foreground, muted for lines and borders, surface for fills, and

@@ -108,6 +108,8 @@
 
 - Docker is a prerequisite only for sandbox review execution on axat-vps;
   installation, check and other helpers work without Docker.
+- Chromium is a prerequisite for SVG export of ELK-capable Mermaid diagrams.
+  Mermaid chat checks run with Bun alone.
 
 - Target Bun >=1.3.14 JavaScript with no runtime package dependencies.
   Vendored payloads need provenance and their upstream license. Use only the

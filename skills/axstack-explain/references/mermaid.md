@@ -9,20 +9,32 @@ Include `accTitle` and `accDescr` in every Mermaid view. Name relationships
 and keep labels short. Never use theme init in Mermaid (`%%{init}%%` or
 `%%{initialize}%%`). Omit theme, themeVariables, themeCSS, look and font keys.
 Use multiline YAML with nested maps and scalar values. An optional top-level
-`title` can precede the config. Other types allow only a title.
+`title` can precede the config. Types without a listed config allow only a title.
+
+Set `config.layout` to `elk` by default for `flowchart`, `stateDiagram-v2`
+and `erDiagram`. Use the same default for explicitly requested
+`classDiagram`, `mindmap` and `requirementDiagram`.
+For a fallback, omit `layout` and put exactly one `%% layout-fallback:` comment
+with a non-empty reason immediately after the diagram header.
+Name the concrete target in the comment, for example
+`%% layout-fallback: target uses Mermaid 11 without the ELK plug-in`.
 
 - Flowchart config requires `nodeSpacing` and `rankSpacing` under `config.flowchart`,
   each an integer from 40 to 150. Optional `config.flowchart.curve` accepts
-  `step`, `linear`, or `basis`. Optional `config.layout` accepts `elk`.
+  `step`, `linear`, or `basis`.
 - Sequence config requires `actorMargin` and `messageMargin` under
   `config.sequence`, each an integer from 40 to 150.
 - Use only these keys. Omit single-line flow mappings such as `config: { ... }`.
 
-Flowchart spacing of 90/110 gives labels and step connectors room. Tenfold
-spacing shrinks labels at the same viewing width.
+Flowchart spacing of 90/110 gives labels and step connectors room in Pele.
+Tenfold spacing shrinks labels at the same viewing width.
+ELK ignores the flowchart spacing and curve keys.
 Split wide Mermaid diagrams into views.
 Keep estimated label size at least 12px at an 860px reading width
 (`16 * min(1, 860 / renderedWidth)`).
+The chat check uses a nominal 16px baseline, while edge labels render at 14px.
+For ELK export, require the smallest rendered label to reach 12px in the browser
+at the target width, except for the dense overview below.
 Restructure diagrams that fail legibility with TB, tiers, aggregated edges or a zoom-in.
 Never shrink labels to pass the legibility gate.
 Density warnings prompt a split: more than 9 nodes, 12 edges or 5 participants,
@@ -37,10 +49,11 @@ Split only when you keep the overview.
 Run the checker with `--overview`. Block 1 gets tier-size and short-label
 advisories in place of general node and edge prompts.
 
-For an overview with more than 25 edges, LR is also allowed. A dense overview
-can use `layout: elk` with LR or TB and omit tiered subgraphs. Check dense ELK
-overview labels at their natural size of 16px. Provide zoom or pan for reading
-a dense overview in chat. All other views keep the 12px gate at 860px.
+For an overview with more than 25 edges, LR is also allowed and tiered
+subgraphs are optional for LR or TB. For a dense overview with more than 25 edges,
+keep labels at natural size and provide zoom or pan. The chat estimate uses
+16px for this overview. Give exported SVGs an intrinsic-size scroller.
+All other chat views keep the 12px gate at 860px.
 
 Use neutral grey strokes (HSL saturation at most 0.15) and one optional
 accent hue per diagram. Keep accent stroke hues within 15° of their shared
@@ -84,6 +97,7 @@ text. Use `✱` for an asterisk in a flowchart label.
 ```mermaid
 ---
 config:
+  layout: elk
   flowchart:
     nodeSpacing: 90
     rankSpacing: 110
@@ -142,17 +156,31 @@ Diagram presence is required by default (`--expect`). Use `--no-expect` for
 optional Markdown diagrams, `--pele <path>` for another copy of the pinned
 bytes, and `--allow-type <type>` for an explicitly requested Pele type.
 Exit codes are 0 for pass, 1 for an input, contract or render failure, 2 for
-usage and 3 for a missing or invalid renderer. Exit 3 holds visual delivery
-under Explain's [Delivery](delivery.md). Export all views from one input for
-distinct SVG IDs.
+usage and 3 for a missing, invalid or blocked renderer. Exit 3 holds visual
+delivery under Explain's [Delivery](delivery.md). Export all views from one
+input for distinct SVG IDs. With `--svg-out`, Chromium runs the pinned standalone Mermaid
+bundle offline for ELK-capable types and Pele renders the other types. For a
+recorded layout fallback, Chromium uses Dagre. Use `--browser <path>` when
+Chromium is outside the usual locations. Use `--width <px>` to check a
+specific available figure width for the SVG label gate. The SVG check defaults
+to 860px.
+
+A Chromium sandbox startup failure holds SVG export with exit 3. Prefer a
+host with a working Chromium sandbox. For trusted local diagrams on a host
+that cannot start the sandbox, explicitly pass `--browser-no-sandbox` to
+disable Chromium's process isolation. The offline exporter still uses the
+hash-verified vendored bundle and a page CSP with `connect-src 'none'`, and
+blocks network resource loading. Chromium keeps its sandbox by default.
 
 ## Render proof
 
 A checker pass proves contract compliance and pinned-pele parse and size on
 the exact source bytes. Record the Pele version and per-block source SHA-256.
 Pinned Pele renders ELK input using its default layout, leaving ELK geometry
-unmeasured. T3 renders ELK layouts in chat. Real ELK measurement is tracked
-in [issue #714](https://github.com/axatbhardwaj/axstack/issues/714).
+unmeasured in the chat check. T3 chat accepts `layout: elk` and lays out diagrams
+with Pele. GitHub's Mermaid 12.3.0 viewer registers ELK, as seen in its bundle
+and a replay of the viewer. An issue-page render and mermaid.live remain
+unverified. See [issue #714](https://github.com/axatbhardwaj/axstack/issues/714).
 A checker pass never proves T3 or GitHub appearance.
 Save the posted Markdown and its SHA-256 with the review. For embeds, the
 reviewer matches embedded SVG bytes to the checker-printed SHA-256.

@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { mkdirSync } from 'node:fs';
+import { exportBrowserSvgs, MERMAID_VERSION, RendererUnavailable } from './mermaid-export.js';
 
 const PELE_VERSION = '1.13.0';
 const PELE_SHA256 = '37bea5005aa6d2dde929032ced5d2958cf642667cbc1fe675f9dfacf4ba15a51';
@@ -8,7 +9,7 @@ const TARGET_WIDTH = 860;
 const NATURAL_LABEL_SIZE = 16;
 const MIN_LABEL_SIZE = 12;
 const DENSE_OVERVIEW_EDGES = 25;
-const DENSE_ELK_NOTE = 'dense ELK overview: needs zoom/pan in chat; geometry not measured (pinned pele ignores ELK)';
+const DENSE_NOTE = 'dense overview: needs zoom/pan in chat';
 const NO_CLASSES = new Set(['sequenceDiagram', 'stateDiagram-v2', 'timeline']);
 const STATUS_WORD = /\b(?:planned|unknown|retiring|open|partial|deprecated|proposed)\b/i;
 
@@ -19,12 +20,19 @@ Check Mermaid source with pinned Pele ${PELE_VERSION}.
   --no-expect          Allow Markdown without Mermaid fences
   --overview           Require an overview flowchart as block 1 (tiered TB by default)
   --svg-out <dir>      Write checked SVGs and print source and SVG SHA-256 digests
+                       ELK-capable views spawn Chromium offline and clean up its temporary profile
+  --browser <path>    Specify Chromium for SVG export (otherwise auto-detected)
+  --browser-no-sandbox
+                       Explicitly disable Chromium's process sandbox for trusted local input
+                       The offline page still uses the verified bundle and CSP connect-src 'none'
+  --width <px>        Set the available SVG label-check width (default ${TARGET_WIDTH})
   --pele <path>        Use an alternate copy of the pinned renderer
   --allow-type <type>  Allow one additional type explicitly requested by the user
   --help               Show this help
-Exit codes: 0 pass, 1 input/contract/render failure, 2 usage, 3 renderer missing or invalid.`;
+Exit codes: 0 pass, 1 input/contract/render failure, 2 usage, 3 renderer unavailable before page output (including a deadline).`;
 
 const TYPES = new Set(['flowchart', 'sequenceDiagram', 'stateDiagram-v2', 'erDiagram', 'timeline']);
+const ELK_TYPES = new Set(['flowchart', 'stateDiagram-v2', 'erDiagram', 'classDiagram', 'mindmap', 'requirementDiagram']);
 const SPACING = new Map([
   ['flowchart', ['config.flowchart.nodeSpacing', 'config.flowchart.rankSpacing']],
   ['sequenceDiagram', ['config.sequence.actorMargin', 'config.sequence.messageMargin']],
@@ -35,19 +43,28 @@ const QUOTED = /"(?:[^"\\]|\\.)*"/g;
 const sha256 = (bytes) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex');
 
 function optionsFor(args) {
-  const options = { path: '', renderer: PELE_PATH, svgDir: '', extraType: '', expect: true, overview: false };
+  const options = {
+    path: '', renderer: PELE_PATH, svgDir: '', browser: '', browserNoSandbox: false,
+    width: TARGET_WIDTH, extraType: '', expect: true, overview: false,
+  };
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (arg === '--expect' || arg === '--no-expect') {
       options.expect = arg === '--expect';
     } else if (arg === '--overview') {
       options.overview = true;
-    } else if (arg === '--pele' || arg === '--svg-out' || arg === '--allow-type') {
+    } else if (arg === '--browser-no-sandbox') {
+      options.browserNoSandbox = true;
+    } else if (['--pele', '--svg-out', '--allow-type', '--browser', '--width'].includes(arg)) {
       const value = args[++index];
       if (!value || value.startsWith('--')) return undefined;
       if (arg === '--pele') options.renderer = value;
       else if (arg === '--svg-out') options.svgDir = value;
-      else options.extraType = value;
+      else if (arg === '--browser') options.browser = value;
+      else if (arg === '--width') {
+        if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) === 0) return undefined;
+        options.width = Number(value);
+      } else options.extraType = value;
     } else if (arg.startsWith('-') || options.path) {
       return undefined;
     } else {
@@ -185,7 +202,9 @@ function checkFrontmatter(lines, type) {
   const fields = frontmatterPaths(lines);
   const spacing = SPACING.get(type) ?? [];
   const node = type === 'flowchart' ? 'config.flowchart' : 'config.sequence';
-  const maps = spacing.length ? new Set(['config', node]) : new Set();
+  const maps = new Set();
+  if (spacing.length || ELK_TYPES.has(type)) maps.add('config');
+  if (spacing.length) maps.add(node);
   let elk = false;
   for (const [path, value] of fields) {
     if (maps.has(path)) {
@@ -195,7 +214,7 @@ function checkFrontmatter(lines, type) {
         throw new Error(`${path} must be an integer from 40 to 150`);
       }
     } else if (path === 'config.layout') {
-      if (type !== 'flowchart') throw new Error('config.layout is allowed only for flowchart');
+      if (!ELK_TYPES.has(type)) throw new Error(`config.layout is unsupported for ${type}`);
       if (!/^(elk|"elk"|'elk')$/.test(value ?? '')) throw new Error('config.layout must be elk');
       elk = true;
     } else if (path === 'config.flowchart.curve' && type === 'flowchart') {
@@ -271,6 +290,15 @@ function checkMetadataLabels(body) {
   }
 }
 
+function checkLayout(body, headerIndex, type, elk) {
+  const fallback = /^\s*%%\s*layout-fallback\s*:/i;
+  const markers = body.filter((line) => fallback.test(line));
+  if (markers.length === 0 && (elk || !ELK_TYPES.has(type))) return '';
+  const reason = body[headerIndex + 1]?.match(/^\s*%% layout-fallback: (.+)$/)?.[1].trim();
+  if (ELK_TYPES.has(type) && !elk && markers.length === 1 && reason) return reason;
+  throw new Error('layout rule: use config.layout: elk or omit layout and put exactly one %% layout-fallback: <reason> immediately after the diagram header');
+}
+
 function sourceRules(source, extraType) {
   const init = source.match(/%%\s*\{\s*(init|initialize)\b/i);
   if (init) throw new Error(`${init[1]} directive is forbidden`);
@@ -282,13 +310,14 @@ function sourceRules(source, extraType) {
   if (frontmatter && closing === -1) throw new Error('expected frontmatter with closing ---');
 
   const body = lines.slice(closing + 1);
-  const header = body.find((line) => line.trim() && !line.trimStart().startsWith('%%'));
-  const type = header?.trim().split(/[\s;]/)[0];
+  const headerIndex = body.findIndex((line) => line.trim() && !line.trimStart().startsWith('%%'));
+  const type = body[headerIndex]?.trim().split(/[\s;]/)[0];
   if (!TYPES.has(type) && (!type || type !== extraType)) {
     throw new Error(`unsupported diagram type: ${type ?? '(empty)'}`);
   }
 
   const elk = checkFrontmatter(frontmatter ? lines.slice(opening + 1, closing) : [], type);
+  const fallback = checkLayout(body, headerIndex, type, elk);
   const lintable = lintableBody(body);
   if (type === 'flowchart') checkMetadataLabels(lintable);
 
@@ -314,14 +343,14 @@ function sourceRules(source, extraType) {
     }
   }
   checkAccentHues([...accentStrokes.values()]);
-  return { type, elk, accentStrokes };
+  return { type, elk, fallback, accentStrokes };
 }
 
-function overviewWarnings(type, model, dense, denseElk) {
+function overviewWarnings(type, model, dense) {
   if (type !== 'flowchart' || (model.direction !== 'TB' && !(dense && model.direction === 'LR'))) {
     throw new Error('overview block 1 must be a flowchart TB unless a dense overview uses LR');
   }
-  if (!denseElk && !model.subgraphs.length) throw new Error('overview block 1 must have at least one subgraph');
+  if (!dense && !model.subgraphs.length) throw new Error('overview block 1 must have at least one subgraph');
 
   const warnings = [];
   const subgraphIds = new Set(model.subgraphs.map((subgraph) => subgraph.id));
@@ -377,7 +406,7 @@ function checkDashedStatus(type, model) {
   }
 }
 
-function checkModel(type, model, overview, dense, denseElk) {
+function checkModel(type, model, overview, dense) {
   for (const field of ['accTitle', 'accDescr']) {
     if (!model[field]?.trim()) throw new Error(`${field} is required`);
   }
@@ -385,7 +414,7 @@ function checkModel(type, model, overview, dense, denseElk) {
   if (type === 'timeline' && model.periods.length > 4 && model.direction !== 'TD') {
     throw new Error('use timeline TD for more than 4 periods');
   }
-  const warnings = overview ? overviewWarnings(type, model, dense, denseElk) : [];
+  const warnings = overview ? overviewWarnings(type, model, dense) : [];
   const counts = overview ? [] : [
     [model.nodes?.size ?? model.states?.size ?? model.entities?.size, 9, 'nodes'],
     [model.edges?.length ?? model.relations?.length ?? model.relationships?.length, 12, 'edges'],
@@ -500,24 +529,21 @@ async function main(args) {
     const number = index + 1;
     const where = `${options.path} block ${number} (line ${block.line})`;
     try {
-      const { type, elk, accentStrokes } = sourceRules(block.source, options.extraType);
+      const { type, elk, fallback, accentStrokes } = sourceRules(block.source, options.extraType);
       const model = parseDiagram(pele, block.source, type);
       const overview = options.overview && index === 0;
       const dense = overview && type === 'flowchart' && model.edges.length > DENSE_OVERVIEW_EDGES;
-      const denseElk = dense && elk;
-      const warnings = checkModel(type, model, overview, dense, denseElk);
+      const warnings = checkModel(type, model, overview, dense);
       const digest = sha256(block.source);
       const id = `mermaid-${number}-${digest.slice(0, 12)}`;
       const { svg, width } = pele.render(block.source, { idPrefix: id });
-      const labelSize = NATURAL_LABEL_SIZE * (denseElk ? 1 : Math.min(1, TARGET_WIDTH / width));
+      const labelSize = NATURAL_LABEL_SIZE * (dense ? 1 : Math.min(1, TARGET_WIDTH / width));
       if (labelSize < MIN_LABEL_SIZE) {
         throw new Error(`label size ${labelSize.toFixed(3)}px is below ${MIN_LABEL_SIZE}px at ${TARGET_WIDTH}px; restructure the view`);
       }
       for (const warning of warnings) console.warn(`${where}: warning: ${warning}`);
-      const measurement = denseElk
-        ? `${DENSE_ELK_NOTE}; natural-size labels ${labelSize}px`
-        : `${elk ? 'default layout ' : ''}${width}px`;
-      views.push({ where, type, measurement, digest, id, svg, accentStrokes });
+      const measurement = dense ? `${DENSE_NOTE}; natural-size labels ${labelSize}px` : `${width}px`;
+      views.push({ where, type, measurement, digest, id, svg, accentStrokes, source: block.source, elk, dense, fallback });
     } catch (error) {
       const location = error.line ? ` at line ${block.firstLine + error.line - 1}, column ${error.column}` : '';
       const message = error instanceof pele.PeleError ? `Pele parse/render failure${location}: ${error.message}` : error.message;
@@ -528,20 +554,38 @@ async function main(args) {
   if (failed) return 1;
 
   try {
+    const browserViews = options.svgDir ? views.filter(({ type }) => ELK_TYPES.has(type)) : [];
+    const browserSvgs = browserViews.length ? await exportBrowserSvgs(browserViews, options) : new Map();
+    for (const view of browserViews) {
+      const { minLabelPx } = browserSvgs.get(view.id);
+      const engine = view.elk ? 'ELK' : 'Dagre';
+      if (minLabelPx !== null && minLabelPx < MIN_LABEL_SIZE) {
+        throw new Error(`${view.where}: ${engine} label size ${minLabelPx.toFixed(3)}px is below ${MIN_LABEL_SIZE}px at ${view.dense ? 'intrinsic width' : `${options.width}px`}; restructure the view`);
+      }
+    }
     if (options.svgDir) mkdirSync(options.svgDir, { recursive: true });
-    for (const { where, type, measurement, digest, id, svg, accentStrokes } of views) {
+    for (const { where, type, measurement, digest, id, svg, accentStrokes, elk, dense, fallback } of views) {
       let svgProof = '';
       if (options.svgDir) {
         const path = `${options.svgDir}/${id}.svg`;
-        const output = embeddedSvg(svg, accentStrokes);
+        const rendered = browserSvgs.get(id);
+        const output = rendered?.svg ?? embeddedSvg(svg, accentStrokes);
+        const renderer = rendered ? `Mermaid ${MERMAID_VERSION} ${elk ? 'ELK' : 'Dagre'}` : `Pele ${PELE_VERSION}`;
+        let legibility = '';
+        if (rendered) {
+          const minimum = rendered.minLabelPx === null ? 'no visible labels' : `${rendered.minLabelPx.toFixed(2)}px minimum label`;
+          const labelWidth = dense ? 'intrinsic width (provide zoom/pan)' : `${options.width}px`;
+          legibility = `; ${minimum} at ${labelWidth}`;
+        }
         await Bun.write(path, output);
-        svgProof = `; SVG sha256=${sha256(output)} ${path}`;
+        svgProof = `; SVG renderer: ${renderer}${legibility}; SVG sha256=${sha256(output)} ${path}`;
       }
-      console.log(`${where}: ${type} ${measurement}; Pele ${PELE_VERSION}; source sha256=${digest}${svgProof}`);
+      const exception = fallback ? `; layout fallback: ${fallback}` : '';
+      console.log(`${where}: ${type} ${measurement}; Pele ${PELE_VERSION}; source sha256=${digest}${exception}${svgProof}`);
     }
   } catch (error) {
     console.error(`SVG output: ${error.message}`);
-    return 1;
+    return error instanceof RendererUnavailable ? 3 : 1;
   }
   return 0;
 }

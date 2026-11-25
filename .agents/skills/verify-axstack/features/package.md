@@ -34,6 +34,10 @@ for MEMBER in skills/axstack-align/SKILL.md \
   skills/axstack-brainstorm/SKILL.md \
   skills/axstack-brainstorm/references/arena.md bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   skills/axstack/scripts/hooks-check.js \
+  skills/axstack/scripts/mermaid-check.js skills/axstack/scripts/mermaid-export.js \
+  skills/axstack/assets/mermaid-export.js skills/axstack/vendor/mermaid/mermaid.min.js \
+  skills/axstack/vendor/mermaid/LICENSE skills/axstack/vendor/mermaid/ELK-LICENSE \
+  skills/axstack/vendor/mermaid/THIRD-PARTY-NOTICES skills/axstack/vendor/mermaid/PROVENANCE.md \
   skills/axstack/scripts/fleet-route.js skills/axstack/scripts/fleet-config.js \
   skills/axstack/scripts/fleet-facts.js skills/axstack/scripts/fleet-scope.js \
   skills/axstack/references/local-artifacts.md skills/axstack/references/fleet-route-schema.md \
@@ -71,8 +75,8 @@ for MEMBER in skills/axstack-align/SKILL.md \
   skills/axstack-work-chat/scripts/live.js skills/axstack-work-chat/scripts/mcp.js; do
   grep -Fq " $MEMBER" "$EVIDENCE/pack.log"
 done
-if grep -Eq '\.agents/|\.claude/|verify-axstack/' "$EVIDENCE/pack.log"; then
-  echo 'repository verification skill unexpectedly packaged' >&2
+if grep -Eq '\.agents/|\.claude/|verify-axstack/|tests/workflows/fixtures/mermaid/' "$EVIDENCE/pack.log"; then
+  echo 'repository verification files unexpectedly packaged' >&2
   exit 1
 fi
 ```

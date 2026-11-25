@@ -3,8 +3,8 @@ import { closeSync, openSync, realpathSync, writeFileSync, writeSync } from 'nod
 
 const drainGraceMs = 200;
 
-export function killGroup(proc) {
-  try { process.kill(-proc.pid, 'SIGKILL'); }
+export function killGroup(proc, signal = 'SIGKILL') {
+  try { process.kill(-proc.pid, signal); }
   catch (error) { if (error.code !== 'ESRCH') throw error; }
 }
 

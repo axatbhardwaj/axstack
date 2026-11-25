@@ -39,6 +39,7 @@ The driver never authors architecture diagrams.
 Return every repair to the same author.
 The author follows [Mermaid](mermaid.md) for every diagram view and the design
 references for the requested artifact format.
+Set `config.layout: elk` on the overview flowchart and on flowchart, state and ER zoom-ins by default.
 
 ## 3. Review the final artifact
 

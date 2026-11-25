@@ -86,6 +86,7 @@ Use a diagram whenever it can show the structure being explained.
 Use Mermaid for every Explain diagram unless the user explicitly requests a
 different drawing format.
 For diagrams, follow [Mermaid](references/mermaid.md).
+Use `config.layout: elk` by default for Mermaid flowcharts, state diagrams and ER diagrams.
 Quantitative charts that need true scales follow Neon's evidence-graphics rules.
 Anatomy figures follow the explicit-request path below.
 Follow [Fidelity](references/fidelity.md) for every visual.
