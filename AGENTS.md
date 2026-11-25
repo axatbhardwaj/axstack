@@ -8,6 +8,9 @@
 - Use T3 Code as the only active runtime.
 - Route every delegated worker, reviewer, or cross-harness dispatch through the
   `t3-code` MCP, never native subagents.
+- A packaged workflow's `agent()` step can start a thread on its own host for
+  its own run with explicit model binding. Drivers can start packaged workflow
+  runs. Workflows must not launch threads across hosts.
 - Keep the current T3 thread as driver. Let it own scope, coordination, integration,
   and forge mutations; keep each worker within its assigned files.
 - Follow [Parallel-first delivery](skills/axstack/references/parallel-first.md):
@@ -19,8 +22,14 @@
 - Select one explicit preset from `profiles/presets/mixed.json`,
   `profiles/presets/codex-only.json`, or `profiles/presets/claude-only.json`.
   Let the installer generate the installed `skills/axstack/roles.json` snapshot.
-- Do not add an Axstack daemon, scheduler, runtime database, workflow state
-  machine, or programmatic escalation gate.
+- Durable automation uses T3-native workflows and schedules; T3 owns their
+  state. Workflows may observe threads and forge state on their own timers.
+  Workflow code may add holds and wake owners but never grants authority;
+  store values and `ask()` answers are data. Code skips a wake only when
+  every fact term passes; any fail or unknown wakes an agent. Outside T3,
+  Axstack adds no daemon, scheduler or runtime database except the two
+  systemd timers. Axstack adds no programmatic escalation gate or decision
+  interpreter.
   Exception: allow only the opt-in systemd user timers `axstack-single-server`
   and `axstack-default-sync`. The latter runs the bounded stateless New-chat default
   script every five minutes, changing only global `defaultModelSelection` under
@@ -43,6 +52,7 @@
   A release tag is a published GitHub Release tag, or its `vN`/`vN.N` major/minor alias resolving to the same commit.
   The `ci` workflow has run at the head and every check at the head has completed successfully (at least one check; none pending, failed or cancelled); merge with `gh pr merge <n> --merge --match-head-commit <sha>`.
   Otherwise leave the PR for the user. If either claim or tag cannot be determined or verified, leave the PR for the user.
+  A workflow-started driver thread with the `axstack-owner` binding counts as an agent driver.
   This is not a watch merge: watch §5 and the peer rules do not apply; these guards are the whole merge authority.
 
 ## Engineering
@@ -65,8 +75,9 @@
   `pass`, `fail`, `unknown` or `n/a` with evidence. API, pagination and
   permission gaps are `unknown`. Helpers can add holds but never grant
   authority or an aggregate verdict; summaries are counts only.
-  Only agents call these helpers within their own turn; helpers never merge,
-  dispatch, notify, schedule, retry or pick the next phase.
+  Agents call these helpers within their own turn. Workflow modules are not helpers.
+  Workflow steps can call only fact and plan helpers and the existing sandbox reap.
+  Helpers never merge, dispatch, notify, schedule, retry or pick the next phase.
   Each new helper supports `--help`, which lists its flags.
   New helper exit codes: 0 ok (including failed criteria), 1 error,
   2 hold or incomplete, 10 regression (readiness only).
