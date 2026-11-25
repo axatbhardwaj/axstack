@@ -705,7 +705,13 @@ browserTest('rejects an ELK export whose actual labels fall below 12px at the ta
   const wideFigure = browserCli('--svg-out', dir, '--width', '1250', path);
   expect(wideFigure.code, wideFigure.err).toBe(0);
   expect(wideFigure.out).toMatch(/minimum label at 1250px/);
-}, browserTestTimeout(2));
+  const figures = `${scratch}/wide-figures`;
+  const withViewer = browserCli('--figure-out', figures, path);
+  expect(withViewer.code, withViewer.err).toBe(0);
+  expect(withViewer.out).toMatch(/minimum label at intrinsic width/);
+  const [filename] = readdirSync(figures);
+  expect(await Bun.file(`${figures}/${filename}`).text()).toContain('data-diagram-viewer');
+}, browserTestTimeout(3));
 
 browserTest('exports teal strokes with the theme accent while preserving neutral strokes and label text', async () => {
   const chart = tier.replace('#5b7bd5', '#14B8A6').replace('A[Driver]', 'A["Driver #14B8A6"]');
