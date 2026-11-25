@@ -5,7 +5,9 @@ export const MERMAID_VERSION = '12.3.0';
 const BUNDLE_SHA256 = '336df803d87a38b70a01e736e666c8f7601d2ce42f5e47c8fafe5d721074b9a3';
 const BUNDLE = `${import.meta.dir}/../vendor/mermaid/mermaid.min.js`;
 const BROWSER_SCRIPT = `${import.meta.dir}/../assets/mermaid-export.js`;
-const TIMEOUT_MS = 30_000;
+const VIRTUAL_TIME_BUDGET_MS = 30_000;
+// Allow cold startup, real rendering work and shutdown outside the page's virtual clock.
+const WALL_TIMEOUT_MS = 60_000;
 const TERMINATION_GRACE_MS = 200;
 const SANDBOX_STARTUP = /\b(?:ZygoteHostImpl::Init|zygote_host_impl_linux\.cc|no usable sandbox|(?:setuid|SUID) sandbox helper|running as root without --no-sandbox)\b/i;
 const PAGE = `<!doctype html>
@@ -94,8 +96,8 @@ async function capturePage(child) {
   try {
     /** @type {Promise<null>} */
     const deadline = new Promise((resolve) => {
-      // Reserve part of the 30 seconds for graceful process-group termination.
-      timer = setTimeout(() => resolve(null), TIMEOUT_MS - TERMINATION_GRACE_MS);
+      // Reserve time for graceful process-group termination.
+      timer = setTimeout(() => resolve(null), WALL_TIMEOUT_MS - TERMINATION_GRACE_MS);
     });
     const finished = await Promise.race([Promise.all([exited, ...drained]), deadline]);
     if (!finished && running) {
@@ -129,7 +131,7 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
     '--proxy-server=http://127.0.0.1:9',
     '--proxy-bypass-list=<-loopback>',
     `--user-data-dir=${scratch}/profile`,
-    `--virtual-time-budget=${TIMEOUT_MS}`,
+    `--virtual-time-budget=${VIRTUAL_TIME_BUDGET_MS}`,
     '--dump-dom',
     Bun.pathToFileURL(`${scratch}/export.html`).href,
   ];
@@ -156,7 +158,7 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
   const { dom, stderr, status, timingOut } = await capturePage(child);
   const hasPageOutput = Boolean(dom.trim());
   if (timingOut) {
-    const message = withDiagnostics(`Chromium did not finish (startup or render) within ${TIMEOUT_MS / 1_000}s.`, stderr);
+    const message = withDiagnostics(`Chromium did not finish (startup or render) within ${WALL_TIMEOUT_MS / 1_000}s.`, stderr);
     throw hasPageOutput ? new Error(message) : new RendererUnavailable(message);
   }
   const exit = child.signalCode ?? status;
