@@ -5,6 +5,7 @@ import { findChromium } from '../../skills/axstack/scripts/mermaid-export.js';
 const checker = `${import.meta.dir}/../../skills/axstack/scripts/mermaid-check.js`;
 const fixtures = `${import.meta.dir}/fixtures/mermaid`;
 const guide = `${import.meta.dir}/../../skills/axstack-explain/references/mermaid.md`;
+const CHROMIUM_EXPORT_TIMEOUT_MS = 60_000;
 const scratch = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/axstack-mermaid-test-`);
 afterAll(() => rmSync(scratch, { recursive: true }));
 
@@ -543,6 +544,11 @@ trap '' TERM
 if [ "$1" = hold ]; then
   while true; do sleep 1; done
 fi
+for arg do
+  case "$arg" in
+    --virtual-time-budget=*) printf '%s\\n' "$arg" >&2 ;;
+  esac
+done
 "$0" hold &
 printf '%s\\n' "$$" "$!" > "$0.pids"
 printf '%s\\n' 'entered the fixture render loop' >&2
@@ -554,7 +560,7 @@ wait
   const output = `${scratch}/hung-svg`;
   const start = performance.now();
   const checkerProc = Bun.spawn([process.execPath, '--no-env-file', checker, '--svg-out', output, '--browser', fake, source], {
-    stdout: 'ignore', stderr: 'pipe', timeout: 33_000, killSignal: 'SIGKILL',
+    stdout: 'ignore', stderr: 'pipe', timeout: CHROMIUM_EXPORT_TIMEOUT_MS + 3_000, killSignal: 'SIGKILL',
   });
   const isLive = (pid) => {
     try { return !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); }
@@ -564,9 +570,15 @@ wait
     const code = await checkerProc.exited;
     const stderr = await new Response(checkerProc.stderr).text();
     const elapsed = Math.round(performance.now() - start);
-    expect(elapsed, `exit=${code} stderr=${stderr}`).toBeLessThan(32_500);
+    expect(elapsed, `exit=${code} stderr=${stderr}`).toBeLessThan(CHROMIUM_EXPORT_TIMEOUT_MS + 2_500);
     expect(code, stderr).toBe(3);
-    expect(stderr).toContain('Chromium did not finish (startup or render) within 30s');
+    const wallTimeoutMs = Number(stderr.match(/Chromium did not finish \(startup or render\) within (\d+)s\./)?.[1]) * 1_000;
+    const virtualBudget = Number(stderr.match(/^--virtual-time-budget=(\d+)$/m)?.[1]);
+    expect(virtualBudget, stderr).toBeGreaterThan(0);
+    // Cold launches on CI took close to 30s before the Chromium sandbox check.
+    expect(wallTimeoutMs - virtualBudget, stderr).toBeGreaterThanOrEqual(30_000);
+    expect(wallTimeoutMs).toBe(CHROMIUM_EXPORT_TIMEOUT_MS);
+    expect(elapsed).toBeGreaterThanOrEqual(CHROMIUM_EXPORT_TIMEOUT_MS - 500);
     expect(stderr).toContain('entered the fixture render loop');
     expect(stderr).not.toContain('--browser-no-sandbox');
     const pids = readFileSync(`${fake}.pids`, 'utf8').trim().split('\n').map(Number);
@@ -585,7 +597,7 @@ wait
       }
     }
   }
-}, 36_000);
+}, CHROMIUM_EXPORT_TIMEOUT_MS + 6_000);
 
 const browser = findChromium();
 if (!browser) test.skip('Chromium SVG acceptance: chromium, google-chrome and T3 headless shell unavailable', () => {});
@@ -608,9 +620,9 @@ function browserCli(...args) {
 }
 
 function browserTestTimeout(exportCount, validationMs = 0) {
-  // Budget each export's 30s hard limit, one sandbox retry when run alone,
+  // Budget each export's wall timeout, one sandbox retry when run alone,
   // optional XML validation, and 15s of test-runner headroom.
-  return (exportCount + 1) * 30_000 + validationMs + 15_000;
+  return (exportCount + 1) * CHROMIUM_EXPORT_TIMEOUT_MS + validationMs + 15_000;
 }
 
 browserTest('exports and XML-parses all nine GA SVGs offline with disjoint IDs and a dense scroller', async () => {
