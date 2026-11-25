@@ -170,8 +170,8 @@ role.
 
 | Preset | Author | Ordered peer reviewers | Codex / Claude advisers | Auditor |
 | --- | --- | --- | --- | --- |
-| `mixed` | Sol high | Sol high; Opus medium | Astra high / Fable 5.2 high | Sonnet high + Sol high |
-| `codex-only` | Sol high | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |
+| `mixed` | Sol xhigh | Sol high; Opus medium | Astra high / Fable 5.2 high | Sonnet high + Sol high |
+| `codex-only` | Sol xhigh | Sol high; Luna xhigh | Astra high / unavailable | Luna xhigh + Sol high |
 | `claude-only` | Opus medium | Opus medium; Sonnet medium | unavailable / Fable 5.2 high | Sonnet medium (Sol absent) |
 
 In `mixed` and `claude-only`, `axstack-research-requirements`,
