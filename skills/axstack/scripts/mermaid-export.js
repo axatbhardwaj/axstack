@@ -1,10 +1,12 @@
 import { mkdtempSync, rmSync } from 'node:fs';
+import { killGroup } from './command-capture.js';
 
 export const MERMAID_VERSION = '12.3.0';
 const BUNDLE_SHA256 = '336df803d87a38b70a01e736e666c8f7601d2ce42f5e47c8fafe5d721074b9a3';
 const BUNDLE = `${import.meta.dir}/../vendor/mermaid/mermaid.min.js`;
 const BROWSER_SCRIPT = `${import.meta.dir}/../assets/mermaid-export.js`;
 const TIMEOUT_MS = 30_000;
+const TERMINATION_GRACE_MS = 200;
 const SANDBOX_STARTUP = /\b(?:ZygoteHostImpl::Init|zygote_host_impl_linux\.cc|no usable sandbox|(?:setuid|SUID) sandbox helper|running as root without --no-sandbox)\b/i;
 const PAGE = `<!doctype html>
 <meta charset="utf-8">
@@ -46,8 +48,63 @@ export function findChromium(override = '') {
   }
 }
 
+function usefulDiagnostics(stderr) {
+  const lines = stderr.trim().split(/\r?\n/);
+  return lines.filter((line, index) => index === 0 || index === lines.length - 1
+    || /\b(?:FATAL|ERROR)\b/i.test(line) || SANDBOX_STARTUP.test(line)).join('\n');
+}
+
+function startupError(reason, stderr, browserNoSandbox) {
+  const browser = SANDBOX_STARTUP.test(stderr) ? 'Chromium sandbox' : 'Chromium';
+  const action = browserNoSandbox
+    ? 'Check the Chromium installation and its support for --browser-no-sandbox.'
+    : 'Check Chromium and its sandbox setup. For sandbox restrictions on trusted local diagrams, explicitly pass --browser-no-sandbox.';
+  const diagnostic = usefulDiagnostics(stderr);
+  return new RendererUnavailable(`${browser} ${reason}. ${action}${diagnostic ? `\n${diagnostic}` : ''}`);
+}
+
+/** @param {Bun.Subprocess<'ignore', 'pipe', 'pipe'>} child */
+async function capturePage(child) {
+  const readers = [child.stdout.getReader(), child.stderr.getReader()];
+  const output = ['', ''];
+  let timer;
+  let running = true;
+  let terminating = false;
+  const drained = readers.map(async (reader, index) => {
+    const decoder = new TextDecoder();
+    for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+      output[index] += decoder.decode(chunk.value, { stream: true });
+    }
+    output[index] += decoder.decode();
+  });
+  const exited = child.exited.then((status) => {
+    running = false;
+    if (!terminating) killGroup(child);
+    return status;
+  });
+  try {
+    /** @type {Promise<null>} */
+    const deadline = new Promise((resolve) => {
+      // Reserve part of the 30 seconds for graceful process-group termination.
+      timer = setTimeout(() => resolve(null), TIMEOUT_MS - TERMINATION_GRACE_MS);
+    });
+    const finished = await Promise.race([Promise.all([exited, ...drained]), deadline]);
+    if (!finished && running) {
+      terminating = true;
+      killGroup(child, 'SIGTERM');
+      await Bun.sleep(TERMINATION_GRACE_MS);
+    }
+    return { dom: output[0], stderr: output[1], status: finished?.[0], timingOut: !finished };
+  } finally {
+    clearTimeout(timer);
+    // A writer outside the process group may still hold a pipe open.
+    for (const reader of readers) reader.cancel().then(() => reader.releaseLock()).catch(() => {});
+    if (running || terminating) killGroup(child);
+  }
+}
+
 async function renderPage(chromium, scratch, browserNoSandbox) {
-  const child = Bun.spawn([
+  const argv = [
     chromium,
     '--headless',
     ...(browserNoSandbox ? ['--no-sandbox'] : []),
@@ -66,34 +123,34 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
     `--virtual-time-budget=${TIMEOUT_MS}`,
     '--dump-dom',
     Bun.pathToFileURL(`${scratch}/export.html`).href,
-  ], {
-    env: {
-      PATH: process.env.PATH,
-      HOME: scratch,
-      TMPDIR: scratch,
-      XDG_CONFIG_HOME: scratch,
-      XDG_CACHE_HOME: scratch,
-      LANG: process.env.LANG,
-    },
-    stdin: 'ignore',
-    stdout: 'pipe',
-    stderr: 'pipe',
-    timeout: TIMEOUT_MS,
-  });
-  const [dom, stderr, status] = await Promise.all([
-    new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited,
-  ]);
-  if (status !== 0) {
-    const diagnostic = dom.trim() ? undefined : stderr.split(/\r?\n/).find((line) => SANDBOX_STARTUP.test(line));
-    const exit = child.signalCode ?? status;
-    if (diagnostic) {
-      const action = browserNoSandbox
-        ? 'Use a Chromium installation that can start with --browser-no-sandbox on this host.'
-        : 'Restore Chromium sandbox support or explicitly pass --browser-no-sandbox for trusted local diagrams.';
-      throw new RendererUnavailable(`Chromium sandbox startup failed (${exit}). ${action} ${diagnostic.trim().slice(0, 500)}`);
-    }
-    throw new Error(`Chromium export failed (${exit}): ${stderr.trim().slice(-1600)}`);
+  ];
+  let child;
+  try {
+    child = Bun.spawn(argv, {
+      env: {
+        PATH: process.env.PATH,
+        HOME: scratch,
+        TMPDIR: scratch,
+        XDG_CONFIG_HOME: scratch,
+        XDG_CACHE_HOME: scratch,
+        LANG: process.env.LANG,
+      },
+      stdin: 'ignore',
+      stdout: 'pipe',
+      stderr: 'pipe',
+      detached: true,
+    });
+  } catch (error) {
+    throw startupError('failed to launch', error.message, browserNoSandbox);
   }
+  const { dom, stderr, status, timingOut } = await capturePage(child);
+  const exit = child.signalCode ?? status;
+  if (!dom.trim()) {
+    const reason = timingOut ? `startup timed out after ${TIMEOUT_MS / 1_000} seconds` : `startup failed (${exit})`;
+    throw startupError(reason, stderr, browserNoSandbox);
+  }
+  if (timingOut) throw new Error(`Chromium export timed out after ${TIMEOUT_MS / 1_000} seconds: ${usefulDiagnostics(stderr)}`);
+  if (status !== 0) throw new Error(`Chromium export failed (${exit}): ${usefulDiagnostics(stderr)}`);
   const result = dom.match(/<pre id="result" data-status="(ok|error)">([^<]+)<\/pre>/);
   if (!result) throw new Error('Chromium did not report completion of the Mermaid export');
   const data = JSON.parse(decodeURIComponent(result[2]));
