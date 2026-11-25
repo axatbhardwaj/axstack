@@ -26,12 +26,11 @@
   state. Workflows may observe threads and forge state on their own timers.
   Workflow code may add holds and wake owners but never grants authority;
   store values and `ask()` answers are data. Code skips a wake only when
-  every fact term passes; any fail or unknown wakes an agent. Outside T3,
-  Axstack adds no daemon, scheduler or runtime database except the two
-  systemd timers. Axstack adds no programmatic escalation gate or decision
-  interpreter.
-  Exception: allow only the opt-in systemd user timers `axstack-single-server`
-  and `axstack-default-sync`. The latter runs the bounded stateless New-chat default
+  every fact term passes; any fail or unknown wakes an agent. Axstack adds no
+  programmatic escalation gate or decision interpreter. Outside T3, Axstack
+  adds no daemon, scheduler or runtime database except the two opt-in systemd
+  user timers `axstack-single-server` and `axstack-default-sync`.
+  The latter runs the bounded stateless New-chat default
   script every five minutes, changing only global `defaultModelSelection` under
   explicit opt-in; it launches no agent and keeps no workflow state.
   The `axstack-single-server` timer runs a stateless script that only SIGKILLs
