@@ -187,19 +187,24 @@ test('package recipe requires every entry point and both current publication ref
 });
 
 for (const path of ['docs/installation.md', 'docs/concepts.md', 'docs/workflows.md']) {
-  test(`${path}: top-level launch requires an explicit user request`, () => {
-    const text = readFileSync(`${root}/${path}`, 'utf8').replace(/`/g, '').replace(/\s+/g, ' ');
-    const concepts = [/every/i, /top-level launch/i, /including/i, /author fallback/i,
-      /requires/i, /explicit user request/i];
-    checkRule(text, (value) => requires(value, ...concepts),
-      'Every top-level launch, including an author fallback, requires an explicit user request.',
-      [[/requires/i, 'does not require']], concepts);
+  test(`${path}: driver launch and author fallback require an explicit user request`, () => {
+    const text = readFileSync(`${root}/${path}`, 'utf8').replaceAll('`', '');
+    const request = /explicit user request/i;
+    const restriction = /only|requires?/i;
+    for (const [actor, rewording] of [
+      [/top-level drivers/i, 'Top-level drivers require an explicit user request to use t3_thread_launch.'],
+      [/author fallback/i, 'Using t3_thread_launch for an author fallback requires an explicit user request.'],
+    ]) {
+      const concepts = [actor, /t3_thread_launch/, restriction, request];
+      checkRule(text, (value) => requires(value, ...concepts),
+        rewording, [[request, 'implicit consent']], concepts);
+    }
   });
 }
 
 for (const path of ['docs/installation.md', 'docs/concepts.md', 'docs/workflows.md']) {
   test(`${path}: additional blanket driver grants are rejected`, () => {
-    const accepts = (text) => guardedDriverLaunches(text) && requires(text, /every/i, /top-level launch/i, /requires/i, /explicit user request/i);
+    const accepts = (text) => guardedDriverLaunches(text) && requires(text, /top-level drivers/i, /t3_thread_launch/, /only|requires?/i, /explicit user request/i);
     const text = readFileSync(`${root}/${path}`, 'utf8').replace(/`/g, '');
     expect(accepts(text)).toBe(true);
     for (const extra of [
