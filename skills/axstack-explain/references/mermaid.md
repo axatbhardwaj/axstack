@@ -156,14 +156,21 @@ Diagram presence is required by default (`--expect`). Use `--no-expect` for
 optional Markdown diagrams, `--pele <path>` for another copy of the pinned
 bytes, and `--allow-type <type>` for an explicitly requested Pele type.
 Exit codes are 0 for pass, 1 for an input, contract or render failure, 2 for
-usage and 3 for a missing or invalid renderer. Exit 3 holds visual delivery
-under Explain's [Delivery](delivery.md). Export all views from one input for
-distinct SVG IDs. With `--svg-out`, Chromium runs the pinned standalone Mermaid
+usage and 3 for a missing, invalid or blocked renderer. Exit 3 holds visual
+delivery under Explain's [Delivery](delivery.md). Export all views from one
+input for distinct SVG IDs. With `--svg-out`, Chromium runs the pinned standalone Mermaid
 bundle offline for ELK-capable types and Pele renders the other types. For a
 recorded layout fallback, Chromium uses Dagre. Use `--browser <path>` when
 Chromium is outside the usual locations. Use `--width <px>` to check a
 specific available figure width for the SVG label gate. The SVG check defaults
 to 860px.
+
+A Chromium sandbox startup failure holds SVG export with exit 3. Prefer a
+host with a working Chromium sandbox. For trusted local diagrams on a host
+that cannot start the sandbox, explicitly pass `--browser-no-sandbox` to
+disable Chromium's process isolation. The offline exporter still uses the
+hash-verified vendored bundle and a page CSP with `connect-src 'none'`, and
+blocks network resource loading. Chromium keeps its sandbox by default.
 
 ## Render proof
 
