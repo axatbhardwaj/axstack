@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
-import { sentences, requires } from '../workflows/prose-contract.js';
+import { checkRule, sentences, requires } from '../workflows/prose-contract.js';
 import { makeTempRoot, runCli, writeFixtureBundle } from './helpers.js';
 import { hashContent } from '../../src/manifest.js';
 import {
@@ -166,6 +166,17 @@ for (const [name, accepts] of Object.entries(rules)) {
     }
   });
 }
+
+test('generated workflow delegation names the packaged step, local run and binding', () => {
+  const text = renderInstructionBlock().replaceAll('`', '');
+  const scope = [/packaged workflow/i, /agent\(\)/, /(?:start|launch) a thread/i,
+    /(?:its own|the same) host/i, /(?:its own|the current) run/i, /explicit model binding/i];
+  checkRule(text, (value) => requires(value, ...scope),
+    'With explicit model binding, a packaged workflow agent() step can launch a thread on the same host for the current run.',
+    [[scope[0], 'any workflow'], [scope[3], 'any host'], [scope[4], 'any run'], [scope[5], 'provider defaults']], scope);
+  checkRule(text, (value) => requires(value, /drivers?/i, /(?:start|launch)/i, /packaged workflow runs/i),
+    'Drivers can launch packaged workflow runs.', [[/packaged workflow runs/i, 'arbitrary workflow runs']]);
+});
 
 test('legacy routing detector excludes owned text and unrelated mentions', () => {
   const legacy = 'Route all reviewers and writers through Orca orchestration.';
