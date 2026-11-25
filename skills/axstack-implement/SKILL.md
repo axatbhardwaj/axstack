@@ -184,28 +184,26 @@ authorizes **F repairs**. The author never chooses those exceptions.
 Only when the scope identity carries a sketch, copy it into the author brief
 under the [design lens](../axstack/references/design-lens.md).
 
-Authors apply the gate in [Test value](../axstack/references/test-value.md)
-to every new or changed test. A test failing the gate is not added.
+Apply the gate in [Test value](../axstack/references/test-value.md) to every
+new or changed test. Reject tests that fail the gate.
 
 ### F-repair path
 
-For explicitly authorized F repairs, use [F proof](../axstack/references/test-value.md#f-proof):
-base-green, targeted removal/inversion-red with byte-for-byte restore, and
-equivalent-rewording-green. Never weaken or loosen an assertion.
+For explicitly authorized F repairs, use [F proof](../axstack/references/test-value.md#f-proof).
 
 ### Normal behavior path
 
 When that sketch exists, make the first red check target its `Usage` line.
-The structure-preserving path stays as is.
 If a repeated workaround or unnamed boundary conflicts with the sketch, the
 author stops and returns a sketch conflict. The driver reopens only the
 affected decision through Align under the existing material-revision rule.
 
-Choose a behavior from the accepted scope, including its failure behavior or a
-real integration boundary. Test it through an observable interface rather than
-restating source text or mirroring the intended implementation. Execute the
-check before changing production behavior and capture the expected behavioral
-failure. A missing-module error or unrelated setup failure is not red.
+In normal TDD, do not refactor existing tests as side work. Route scoped
+repairs to existing tests through `axstack-test-fixing`.
+
+Choose an accepted behavior, including a failure or real integration boundary.
+Run the check before changing production behavior and capture the intended
+failure. Missing modules and unrelated setup failures do not count as red.
 
 If no meaningful test-first check can be established, report why and hold
 dependent implementation for a scoped decision. Historical tests added after
