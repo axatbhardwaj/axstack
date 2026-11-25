@@ -10,6 +10,16 @@ follow-ups, coverage gaps, and private-read, posting and recovery limits.
 The existing fixture CLI continues to consume saved observations. No live
 chat, scheduling or cross-host execution is part of this drive.
 
+## Native T3 workflow policy
+
+After Launch and Doctor, run `bun run test tests/workflows/t3-workflow-policy.test.js
+tests/workflows/helper-rule.test.js tests/workflows/dependabot-driver.test.js
+tests/installer/instructions.test.js tests/installer/fleet-instructions.test.js`.
+The checks exercise state ownership, wake decisions, workflow authority, helper
+calls, the Dependabot owner binding, and the installed local dispatch rule.
+Removal and inversion controls reject policy regressions. Equivalent wording
+passes. Live workflow execution requires separate runtime evidence.
+
 ## Peer sandbox adoption
 
 After Launch and Doctor, run `bun run test tests/workflows/sandbox-adoption.test.js
