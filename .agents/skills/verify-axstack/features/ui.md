@@ -44,6 +44,11 @@ nominal Pele chat sizing. With Chromium, it checks both layout engines in the
 pinned browser asset, standalone SVG XML, disjoint IDs, theme bindings and
 actual minimum label size. Missing Chromium skips the browser checks with a
 reason. Run this test alongside `explain-fidelity.test.js` for Mermaid changes.
+The stalled-browser fixture checks that the wall watchdog gives Chromium's
+virtual-time budget 30 extra seconds for startup and shutdown, and that the
+watchdog cleans up the process group. A single view has 30 seconds of virtual
+time and a 60-second watchdog. The batch test checks per-view scaling, the
+120-second virtual cap and a single browser launch for SVG and figure output.
 Run `diagram-viewer.test.js` in the same targeted suite. It checks the
 figure export's static, dense and wide choices, exact SVG embedding, and the
 offline viewer assets and author instructions. With Chromium, it exercises

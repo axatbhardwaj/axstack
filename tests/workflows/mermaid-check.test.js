@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from 'bun:test';
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
-import { findChromium, mermaidExportTimeout } from '../../skills/axstack/scripts/mermaid-export.js';
+import { chromiumWallTimeout, findChromium, mermaidExportVirtualBudget } from '../../skills/axstack/scripts/mermaid-export.js';
 
 const checker = `${import.meta.dir}/../../skills/axstack/scripts/mermaid-check.js`;
 const fixtures = `${import.meta.dir}/fixtures/mermaid`;
@@ -556,7 +556,9 @@ const renders = jobs.map(({ id }, index) => ({
 console.log('<pre id="result" data-status="ok">' + encodeURIComponent(JSON.stringify(renders)) + '</pre>');
 `);
   chmodSync(fake, 0o700);
-  for (const [blockCount, budgetMs] of [[1, 30_000], [3, 42_000], [25, 120_000]]) {
+  for (const [blockCount, expectedBudgetMs] of [[1, 30_000], [3, 42_000], [25, 120_000]]) {
+    const budgetMs = mermaidExportVirtualBudget(blockCount);
+    expect(budgetMs).toBe(expectedBudgetMs);
     await Bun.write(launches, '');
     const raw = `${scratch}/batch-svg-${blockCount}`;
     const figures = `${scratch}/batch-figures-${blockCount}`;
@@ -580,6 +582,9 @@ console.log('<pre id="result" data-status="ok">' + encodeURIComponent(JSON.strin
   }
 });
 
+const hungViewCount = 2;
+const hungWallTimeoutMs = chromiumWallTimeout(mermaidExportVirtualBudget(hungViewCount));
+
 test('holds an endless multi-block Chromium render loop at its deadline and cleans up the process group', async () => {
   const fake = `${scratch}/hung-browser`;
   await Bun.write(fake, `#!/bin/sh
@@ -587,6 +592,11 @@ trap '' TERM
 if [ "$1" = hold ]; then
   while true; do sleep 1; done
 fi
+for arg do
+  case "$arg" in
+    --virtual-time-budget=*) printf '%s\\n' "$arg" >&2 ;;
+  esac
+done
 "$0" hold &
 printf '%s\\n' "$$" "$!" > "$0.pids"
 printf '%s\\n' 'entered the fixture render loop' >&2
@@ -594,11 +604,11 @@ wait
 `);
   chmodSync(fake, 0o700);
   const source = `${scratch}/hung-browser.md`;
-  await Bun.write(source, fenced(flow) + fenced(flow));
+  await Bun.write(source, fenced(flow).repeat(hungViewCount));
   const output = `${scratch}/hung-svg`;
   const start = performance.now();
   const checkerProc = Bun.spawn([process.execPath, '--no-env-file', checker, '--svg-out', output, '--browser', fake, source], {
-    stdout: 'ignore', stderr: 'pipe', timeout: 39_000, killSignal: 'SIGKILL',
+    stdout: 'ignore', stderr: 'pipe', timeout: hungWallTimeoutMs + 8_000, killSignal: 'SIGKILL',
   });
   const isLive = (pid) => {
     try { return !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); }
@@ -608,10 +618,14 @@ wait
     const code = await checkerProc.exited;
     const stderr = await new Response(checkerProc.stderr).text();
     const elapsed = Math.round(performance.now() - start);
-    expect(elapsed, `exit=${code} stderr=${stderr}`).toBeLessThan(38_500);
+    expect(elapsed, `exit=${code} stderr=${stderr}`).toBeLessThan(hungWallTimeoutMs + 6_000);
     expect(code, stderr).toBe(3);
-    expect(stderr).toContain('Chromium did not finish (startup or render) within 36s');
-    expect(elapsed).toBeGreaterThan(35_500);
+    const reportedWallMs = Number(stderr.match(/Chromium did not finish \(startup or render\) within (\d+)s\./)?.[1]) * 1_000;
+    const virtualBudgetMs = Number(stderr.match(/^--virtual-time-budget=(\d+)$/m)?.[1]);
+    expect(virtualBudgetMs, stderr).toBe(mermaidExportVirtualBudget(hungViewCount));
+    expect(reportedWallMs - virtualBudgetMs, stderr).toBeGreaterThanOrEqual(30_000);
+    expect(reportedWallMs).toBe(hungWallTimeoutMs);
+    expect(elapsed).toBeGreaterThanOrEqual(hungWallTimeoutMs - 500);
     expect(stderr).toContain('entered the fixture render loop');
     expect(stderr).not.toContain('--browser-no-sandbox');
     const pids = readFileSync(`${fake}.pids`, 'utf8').trim().split('\n').map(Number);
@@ -630,7 +644,7 @@ wait
       }
     }
   }
-}, 42_000);
+}, hungWallTimeoutMs + 12_000);
 
 const browser = findChromium();
 if (!browser) test.skip('Chromium SVG acceptance: chromium, google-chrome and T3 headless shell unavailable', () => {});
@@ -653,7 +667,7 @@ function browserCli(...args) {
 }
 
 function browserTestTimeout(blockCounts, validationMs = 0) {
-  const budgets = blockCounts.map(mermaidExportTimeout);
+  const budgets = blockCounts.map((count) => chromiumWallTimeout(mermaidExportVirtualBudget(count)));
   // Allow one sandbox retry, optional XML validation, and 15s of runner headroom.
   return budgets.reduce((total, budget) => total + budget, Math.max(...budgets) + validationMs + 15_000);
 }

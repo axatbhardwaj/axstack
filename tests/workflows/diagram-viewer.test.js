@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from 'bun:test';
 import { mkdtempSync, rmSync } from 'node:fs';
-import { dumpChromiumPage, findChromium } from '../../skills/axstack/scripts/mermaid-export.js';
+import { chromiumWallTimeout, dumpChromiumPage, findChromium } from '../../skills/axstack/scripts/mermaid-export.js';
 import { mermaidFigure } from '../../skills/axstack/scripts/mermaid-figure.js';
 import { driveChromiumInput } from './diagram-viewer-browser.js';
 import { checkRule, prohibits, requires } from './prose-contract.js';
@@ -163,7 +163,7 @@ test.skipIf(!browser)('Chromium verifies viewer zoom, wheel scope, literal Find 
   expect(output.match(/<pre id="result"[^>]*>[^<]*<\/pre>/)?.[0]).toContain('data-status="pass"');
   const fallback = await dumpChromiumPage(browser, fallbackPage, { browserNoSandbox });
   expect(fallback.match(/<pre id="result"[^>]*>[^<]*<\/pre>/)?.[0]).toContain('data-status="pass"');
-}, 130_000);
+}, 3 * chromiumWallTimeout() + 40_000);
 
 test.skipIf(!browser)('Chromium zoom keeps the diagram point under buttons, wheel and an emulated pinch', async () => {
   const script = await Bun.file(`${assets}/diagram-viewer.js`).text();
