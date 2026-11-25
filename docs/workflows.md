@@ -32,10 +32,11 @@ Direct routes need no spec ceremony:
   Debug, Improve, or Implement through the shared performance loop.
 - `axstack-research` answers one bounded source-backed question.
 - [axstack-work-chat](../skills/axstack-work-chat/SKILL.md) reads Slack or Teams
-  channels, threads and messages on request. Live reads use Playwright with
-  iosatellite's dedicated Chromium profile. Explicit new reads, including
-  supplied transcripts, follow the existing iosatellite intake rules. For a
-  path on another host, ask for a scoped excerpt or an iosatellite-readable
+  channels, threads and messages on request. Live reads and posts require
+  iosatellite's attached `work_chat` Playwright MCP bound to the dedicated
+  Chromium profile. Explicit new reads, including supplied transcripts, follow
+  the existing iosatellite intake rules. For a path on another host, ask for a
+  scoped excerpt or an iosatellite-readable
   source. The optional Bun reader handles transcripts, messages and bounded
   threads. A new message or reply requires the user's current request naming
   the target. Sol independently checks the draft, then the user sees the exact
