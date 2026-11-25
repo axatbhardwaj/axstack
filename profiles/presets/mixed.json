@@ -34,7 +34,7 @@
       "name": "Axstack author",
       "provider": "codex",
       "modeId": "full-access",
-      "thinkingOptionId": "high",
+      "thinkingOptionId": "xhigh",
       "notes": "Ordinary isolated package implementation, integration and owner-specific repairs. Multiple packages can feed one PR; one writer owns each candidate and the combined branch has one integrator. All writers use the same supported snapshotted author binding. Uses strict red-green-refactor and remains the exclusive writer for a candidate. Resolve the class from saved T3 capabilities at run start; rejection and unavailable settings hold without substitution.",
       "modelClass": "sol"
     },
