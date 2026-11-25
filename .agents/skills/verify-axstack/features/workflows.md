@@ -652,3 +652,20 @@ is owned/private (0700); normal verification uses [Launch](../SKILL.md#launch)
 and its state root. For CI-equivalent reproduction, unset TMPDIR only in the isolated
 child test process and run those five files, retaining its setup-failure/pass logs.
 Run that check and the full recipe on both matrix Bun versions when available.
+
+## Native T3 workflow packaging
+
+After Launch and Doctor, keep T3 on PATH if a disposable local server is
+available. The packed loader test writes only its temporary HOME and base.
+Run the CLI ownership, source/build, conformance and real-loader checks:
+
+```bash
+bun run test tests/installer/workflow-opt-in.test.js \
+  tests/installer/workflow-packed.test.js tests/workflows/native-bundle.test.js \
+  tests/workflows/native-conformance.test.js > "$EVIDENCE/native-workflows.log" 2>&1
+```
+
+Record the explicit loader skip if T3 is absent. The isolated local runs cover
+the workflow engine without provider credentials. Verify bound forge, provider,
+SSH, Executor, and disposable update fixtures separately using the approved
+private resources described in [workflow activation](../../../../docs/workflow-activation.md).
