@@ -28,9 +28,14 @@
     let fitted = false;
     let match;
 
-    function local({ clientX, clientY }) {
+    function localPoint(x, y) {
       const rect = frame.getBoundingClientRect();
-      return { x: clientX - rect.left - frame.clientLeft, y: clientY - rect.top - frame.clientTop };
+      return { x: x - rect.left - frame.clientLeft, y: y - rect.top - frame.clientTop };
+    }
+
+    function svgOrigin() {
+      const { left, top } = svg.getBoundingClientRect();
+      return localPoint(left, top);
     }
 
     function center() {
@@ -44,11 +49,11 @@
     }
 
     function zoom(next, from = center(), to = from) {
-      const old = local(svg.getBoundingClientRect());
+      const old = svgOrigin();
       const previous = scale;
       fitted = false;
       draw(clamp(next, Math.min(0.05, fitScale()), 4));
-      const current = local(svg.getBoundingClientRect());
+      const current = svgOrigin();
       const ratio = scale / previous;
       frame.scrollLeft += current.x + (from.x - old.x) * ratio - to.x;
       frame.scrollTop += current.y + (from.y - old.y) * ratio - to.y;
@@ -113,7 +118,7 @@
       if (!event.deltaY) return;
       event.preventDefault();
       const unit = [1, 16, frame.clientHeight][event.deltaMode] ?? 1;
-      zoom(scale * Math.exp(clamp(-event.deltaY * unit * 0.002, -1, 1)), local(event));
+      zoom(scale * Math.exp(clamp(-event.deltaY * unit * 0.002, -1, 1)), localPoint(event.clientX, event.clientY));
     }, { passive: false });
 
     const pointers = new Map();
@@ -131,13 +136,13 @@
       if (event.button !== 0 || pointers.size >= 2) return;
       frame.focus({ preventScroll: true });
       frame.setPointerCapture(event.pointerId);
-      pointers.set(event.pointerId, local(event));
+      pointers.set(event.pointerId, localPoint(event.clientX, event.clientY));
       figure.setAttribute('data-diagram-dragging', '');
     });
     frame.addEventListener('pointermove', (event) => {
       if (!pointers.has(event.pointerId)) return;
       const previous = gesture();
-      pointers.set(event.pointerId, local(event));
+      pointers.set(event.pointerId, localPoint(event.clientX, event.clientY));
       const next = gesture();
       if (pointers.size === 2) zoom(scale * next.distance / previous.distance, previous, next);
       else pan(next.x - previous.x, next.y - previous.y);
