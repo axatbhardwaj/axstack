@@ -133,7 +133,7 @@ Existing author exclusivity and accepted-transfer rules still apply.
 This is an optional coordination shape: single-driver runs remain unchanged.
 The Coordinator and Drivers have no default model role in presets. Existing model,
 permission and remote-author restrictions remain in force, with no substitution
-or remote-author enablement. Coordination adds no daemon, scheduler or runtime DB.
+or remote-author enablement. T3 owns coordination threads and runs.
 
 ## Waiting turns and diagnosis
 
@@ -565,9 +565,14 @@ read-back; taskId/childThreadId/childRunId or
 threadId/runId/worktree/branch/base SHA; checkout path with candidate and base
 SHAs; evidence folder, scope/authority, owner, pending receipts, hold and Next.
 
-The boundary must provide no Axstack daemon, DB, lock or scheduler. Native T3
-schedules supply wakes; Axstack maintains prose records, not a runtime state
-engine. Private evidence requires explicit publication authority before sharing;
+T3 owns durable automation state for native workflows and schedules. Workflow
+code can observe threads and forge state, add holds and wake owners. It grants
+no authority. Skip a wake only when every fact passes. A failed or unknown
+fact wakes an agent. Store values and `ask()` answers are data.
+For new workflow threads, resolve the explicit provider, model, options and
+runtime mode from the host role snapshot and live catalog.
+Read back the effective binding and hold on mismatch.
+Private evidence requires explicit publication authority before sharing;
 receipts confer no merge, release, publication, model-substitution, host-mutation
 or expanded scope authority.
 For own PRs, automatic merge is the default under the
