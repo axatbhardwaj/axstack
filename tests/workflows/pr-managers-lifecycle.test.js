@@ -40,7 +40,9 @@ test('manager contract uses bounded PR jobs and native recovery without a queue 
   expect(text).toMatch(/settlement[^.]*frees[^.]*slot|slot[^.]*freed[^.]*settled/i);
   expect(text).toMatch(/reconcile[^.]*workers[^.]*GitHub[^.]*compact (?:run )?record/i);
   expect(text).toMatch(/unknown ownership[^.]*only[^.]*affected PR|affected PR[^.]*unknown ownership/i);
+  expect(text).toMatch(/(?:no|not create)[^.]*cursor files[^.]*queue engine/i);
   expect(text).not.toMatch(/`cursor\.json`|`pending\.json`|decision token|precheck\.log/i);
+  expect(text).toMatch(/T3 owns[^.]*automation state[^.]*native workflows and schedules/i);
 });
 
 test('manager sessions reconcile before admission in the dedicated workspace', () => {
