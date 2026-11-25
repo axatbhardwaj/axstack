@@ -10,8 +10,9 @@ boundaries. Audits have no deletion quota or quality score.
 2. Choose expected results from the accepted contract or an independent source.
 3. Add a new test only for a plausible regression existing tests would miss.
    Prefer extending the owner test. Another layer needs a distinct risk.
-4. New tests must survive behavior-preserving refactors. If a check pins
+4. New tests and changed tests must survive behavior-preserving refactors. If a check pins
    implementation details, identify the independent contract they encode.
+   Without one, assert the outcome at the caller boundary.
 5. Verify CI executes the test body and record whether failure blocks merge.
    Check discovery, conditions and skips, then check merge requirements.
 
