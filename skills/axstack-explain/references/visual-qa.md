@@ -30,6 +30,8 @@ Chat Mermaid and anatomy keep their existing review.
 For Mermaid, follow [Mermaid](mermaid.md) for checker and host render proof.
 For embedded Mermaid SVG, check intrinsic size, label fit and colour in the page’s
 tested theme and widths. Keep horizontal scrolling inside the figure.
+For viewer figures in standalone HTML, apply the
+[viewer interaction checks](inline-pages.md#check-the-exact-bytes).
 Explicitly requested standalone HTML files keep their existing review and Visual QA.
 Interaction checks remain with `axstack-ui-verifier`; source-fidelity review is unchanged.
 
