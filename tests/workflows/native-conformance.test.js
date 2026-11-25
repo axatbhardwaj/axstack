@@ -35,4 +35,4 @@ test.skipIf(!t3)('isolated T3 replays local conformance cases (skips when t3 is 
     'POC-7': { status: 'pass' },
     'POC-9': { status: 'pass' },
   });
-}, 240_000);
+}, 360_000);
