@@ -461,6 +461,8 @@ Unknown ownership blocks only the affected PR; unknown liveness, approval or
 publication outcome preserves its hold. Recovery never replaces a live writer
 or takes over user work. Other unambiguous work can proceed.
 
-Use only native T3 schedules and orchestration. Add no daemon, shell precheck,
-watchdog script, custom scheduler, cursor or pending sidecar, runtime database,
-workflow state machine, programmatic decision interpreter, or programmatic escalation gate.
+T3 owns durable automation state for native workflows and schedules. Workflow
+steps can observe threads and forge state, add holds and wake owners. Store
+values and `ask()` answers are data. Skip a wake only when every fact passes.
+A failed or unknown fact wakes an agent. Workflow code grants no authority.
+Axstack adds no programmatic escalation gate or decision interpreter.
