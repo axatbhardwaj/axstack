@@ -5,7 +5,9 @@ export const MERMAID_VERSION = '12.3.0';
 const BUNDLE_SHA256 = '336df803d87a38b70a01e736e666c8f7601d2ce42f5e47c8fafe5d721074b9a3';
 const BUNDLE = `${import.meta.dir}/../vendor/mermaid/mermaid.min.js`;
 const BROWSER_SCRIPT = `${import.meta.dir}/../assets/mermaid-export.js`;
-const TIMEOUT_MS = 30_000;
+const PAGE_TIMEOUT_MS = 30_000;
+const ADDITIONAL_VIEW_TIMEOUT_MS = 6_000;
+const MAX_EXPORT_TIMEOUT_MS = 120_000;
 const TERMINATION_GRACE_MS = 200;
 const SANDBOX_STARTUP = /\b(?:ZygoteHostImpl::Init|zygote_host_impl_linux\.cc|no usable sandbox|(?:setuid|SUID) sandbox helper|running as root without --no-sandbox)\b/i;
 const PAGE = `<!doctype html>
@@ -19,6 +21,11 @@ const PAGE = `<!doctype html>
 `;
 
 export class RendererUnavailable extends Error {}
+
+export function mermaidExportTimeout(viewCount) {
+  // The first view shares its allowance with browser startup and bundle loading.
+  return Math.min(MAX_EXPORT_TIMEOUT_MS, PAGE_TIMEOUT_MS + Math.max(0, viewCount - 1) * ADDITIONAL_VIEW_TIMEOUT_MS);
+}
 
 async function verifiedBundle() {
   try {
@@ -72,8 +79,11 @@ function startupError(exit, stderr, browserNoSandbox) {
   return new RendererUnavailable(withDiagnostics(`Chromium exited without returning the export page (${exit}). ${action}`, stderr));
 }
 
-/** @param {Bun.Subprocess<'ignore', 'pipe', 'pipe'>} child */
-async function capturePage(child) {
+/**
+ * @param {Bun.Subprocess<'ignore', 'pipe', 'pipe'>} child
+ * @param {number} timeoutMs
+ */
+async function capturePage(child, timeoutMs) {
   const readers = [child.stdout.getReader(), child.stderr.getReader()];
   const output = ['', ''];
   let timer;
@@ -94,8 +104,8 @@ async function capturePage(child) {
   try {
     /** @type {Promise<null>} */
     const deadline = new Promise((resolve) => {
-      // Reserve part of the 30 seconds for graceful process-group termination.
-      timer = setTimeout(() => resolve(null), TIMEOUT_MS - TERMINATION_GRACE_MS);
+      // Reserve part of the deadline for graceful process-group termination.
+      timer = setTimeout(() => resolve(null), timeoutMs - TERMINATION_GRACE_MS);
     });
     const finished = await Promise.race([Promise.all([exited, ...drained]), deadline]);
     if (!finished && running) {
@@ -112,12 +122,12 @@ async function capturePage(child) {
   }
 }
 
-export async function dumpChromiumPage(chromium, page, { browserNoSandbox = false, scratch = '' } = {}) {
+export async function dumpChromiumPage(chromium, page, { browserNoSandbox = false, scratch = '', timeoutMs = PAGE_TIMEOUT_MS } = {}) {
   if (!scratch) {
     // Keep Chromium's SingletonSocket path short regardless of the caller's TMPDIR.
     const owned = mkdtempSync('/tmp/axstack-mermaid-page-');
     try {
-      return await dumpChromiumPage(chromium, page, { browserNoSandbox, scratch: owned });
+      return await dumpChromiumPage(chromium, page, { browserNoSandbox, scratch: owned, timeoutMs });
     } finally {
       rmSync(owned, { recursive: true, force: true });
     }
@@ -138,7 +148,7 @@ export async function dumpChromiumPage(chromium, page, { browserNoSandbox = fals
     '--proxy-server=http://127.0.0.1:9',
     '--proxy-bypass-list=<-loopback>',
     `--user-data-dir=${scratch}/profile`,
-    `--virtual-time-budget=${TIMEOUT_MS}`,
+    `--virtual-time-budget=${timeoutMs}`,
     '--dump-dom',
     Bun.pathToFileURL(page).href,
   ];
@@ -162,10 +172,10 @@ export async function dumpChromiumPage(chromium, page, { browserNoSandbox = fals
     const message = 'Could not launch Chromium. Check that the executable and its interpreter exist and can run, or select a working installation with --browser <path>.';
     throw new RendererUnavailable(withDiagnostics(message, error.message));
   }
-  const { dom, stderr, status, timingOut } = await capturePage(child);
+  const { dom, stderr, status, timingOut } = await capturePage(child, timeoutMs);
   const hasPageOutput = Boolean(dom.trim());
   if (timingOut) {
-    const message = withDiagnostics(`Chromium did not finish (startup or render) within ${TIMEOUT_MS / 1_000}s.`, stderr);
+    const message = withDiagnostics(`Chromium did not finish (startup or render) within ${timeoutMs / 1_000}s.`, stderr);
     throw hasPageOutput ? new Error(message) : new RendererUnavailable(message);
   }
   const exit = child.signalCode ?? status;
@@ -201,7 +211,9 @@ export async function exportBrowserSvgs(views, { browser, browserNoSandbox, widt
       Bun.write(`${scratch}/views.js`, `globalThis.mermaidExport = ${JSON.stringify({ jobs, width })};\n`),
       Bun.write(`${scratch}/mermaid.min.js`, bundle),
     ]);
-    const dom = await dumpChromiumPage(chromium, `${scratch}/export.html`, { browserNoSandbox, scratch });
+    const dom = await dumpChromiumPage(chromium, `${scratch}/export.html`, {
+      browserNoSandbox, scratch, timeoutMs: mermaidExportTimeout(jobs.length),
+    });
     const renders = readExport(dom);
     if (!Array.isArray(renders) || renders.length !== views.length
         || renders.some((render, index) => render.id !== views[index].id || typeof render.svg !== 'string'
