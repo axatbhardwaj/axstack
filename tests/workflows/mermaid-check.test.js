@@ -448,7 +448,6 @@ test('holds ELK-applicable SVG export when the explicit browser is missing', asy
 test('holds on a Chromium sandbox startup abort and forwards only an explicit sandbox opt-in', async () => {
   const fake = `${scratch}/zygote-browser`;
   await Bun.write(fake, `#!/bin/sh
-ulimit -c 0
 printf '%s\\n' "$@" > "$0.args"
 for arg do
   if [ "$arg" = --no-sandbox ]; then
@@ -458,14 +457,15 @@ for arg do
   fi
 done
 printf '%s\\n' 'FATAL:zygote_host_impl_linux.cc:207] Check failed: Permission denied (13)' 'content::ZygoteHostImpl::Init()' >&2
-kill -ABRT "$$"
+# Model Chromium's abort status without signaling this fixture.
+exit 134
 `);
   chmodSync(fake, 0o700);
   const output = `${scratch}/zygote-svg`;
   const args = ['--svg-out', output, '--browser', fake];
   const blocked = await check('zygote.mmd', flow, ...args);
   expect(blocked.code, blocked.err).toBe(3);
-  expect(blocked.err).toMatch(/Chromium sandbox startup failed/);
+  expect(blocked.err).toMatch(/Chromium sandbox startup failed \(134\)/);
   expect(blocked.err).toContain('--browser-no-sandbox');
   expect(await Bun.file(`${fake}.args`).text()).not.toContain('--no-sandbox');
   expect(existsSync(output)).toBe(false);
