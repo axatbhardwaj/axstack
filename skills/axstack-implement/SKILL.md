@@ -194,6 +194,7 @@ For explicitly authorized F repairs, use [F proof](../axstack/references/test-va
 ### Normal behavior path
 
 When that sketch exists, make the first red check target its `Usage` line.
+The structure-preserving path stays as is.
 If a repeated workaround or unnamed boundary conflicts with the sketch, the
 author stops and returns a sketch conflict. The driver reopens only the
 affected decision through Align under the existing material-revision rule.
