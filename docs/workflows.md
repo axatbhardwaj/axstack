@@ -38,8 +38,8 @@ Direct routes need no spec ceremony:
   path on another host, ask for a scoped excerpt or an iosatellite-readable
   source. The optional Bun reader handles transcripts, messages and bounded
   threads. A new message or reply requires the user's current request naming
-  the target, independent review of the draft, and user confirmation of the
-  exact text and target before posting. Live Slack and Teams layouts and
+  the target. Sol independently checks the draft, then the user sees the exact
+  text and target before the post is sent. Live Slack and Teams layouts and
   sign-in remain unverified.
 - `axstack-scout` gathers cited codebase evidence for broad or unfamiliar
   questions using independent, read-only seats.
