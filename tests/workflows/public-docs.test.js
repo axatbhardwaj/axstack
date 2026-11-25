@@ -186,25 +186,32 @@ test('package recipe requires every entry point and both current publication ref
   });
 });
 
+const otherLaunch = /(?:every other|all (?:other|remaining)) top-level launch(?:es)?\b/i;
+const userRequest = /explicit user request/i;
+const requiresRequest = /requires?|must have/i;
+const universalLaunch = [otherLaunch, /includ(?:es?|ing)/i, /author fallback/i, requiresRequest, userRequest];
+
 for (const path of ['docs/installation.md', 'docs/concepts.md', 'docs/workflows.md']) {
   test(`${path}: driver launch and author fallback require an explicit user request`, () => {
     const text = readFileSync(`${root}/${path}`, 'utf8').replaceAll('`', '');
-    const request = /explicit user request/i;
+    checkRule(text, (value) => requires(value, ...universalLaunch),
+      'All remaining top-level launches, including an author fallback, must have an explicit user request.',
+      [[otherLaunch, 'some top-level launches'], [userRequest, 'implicit consent']], universalLaunch);
     const restriction = /only|requires?/i;
     for (const [actor, rewording] of [
       [/top-level drivers/i, 'Top-level drivers require an explicit user request to use t3_thread_launch.'],
       [/author fallback/i, 'Using t3_thread_launch for an author fallback requires an explicit user request.'],
     ]) {
-      const concepts = [actor, /t3_thread_launch/, restriction, request];
+      const concepts = [actor, /t3_thread_launch/, restriction, userRequest];
       checkRule(text, (value) => requires(value, ...concepts),
-        rewording, [[request, 'implicit consent']], concepts);
+        rewording, [[userRequest, 'implicit consent']], concepts);
     }
   });
 }
 
 for (const path of ['docs/installation.md', 'docs/concepts.md', 'docs/workflows.md']) {
   test(`${path}: additional blanket driver grants are rejected`, () => {
-    const accepts = (text) => guardedDriverLaunches(text) && requires(text, /top-level drivers/i, /t3_thread_launch/, /only|requires?/i, /explicit user request/i);
+    const accepts = (text) => guardedDriverLaunches(text) && requires(text, ...universalLaunch);
     const text = readFileSync(`${root}/${path}`, 'utf8').replace(/`/g, '');
     expect(accepts(text)).toBe(true);
     for (const extra of [
