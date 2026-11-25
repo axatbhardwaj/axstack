@@ -2,9 +2,16 @@
 
 The current T3 thread drives execution. T3 Code is the only supported active
 runtime and owns worktrees, threads, runs, delegated tasks, messaging, and
-native schedules.
+native schedules. T3 owns durable automation state for native workflows
+and schedules. Workflow code can observe threads and forge state, add holds
+and wake owners. Store values and `ask()` answers are data. Skip a wake only
+when every fact passes. Failures and unknowns wake an agent. Workflow code
+grants no authority.
+Outside T3, Axstack adds no daemon, scheduler or runtime database beyond the
+[two opt-in systemd timers](host-operations.md#runtime-preflight-and-schedules).
+Axstack adds no programmatic escalation gate or decision interpreter.
 Axstack owns workflow policy, role data, evidence, and the private derived run
-record. It adds no daemon, scheduler, runtime database, or escalation engine.
+record.
 
 The bundled skills are self-contained. Retiring another skill does not claim
 Axstack implements that skill's specialist capability.
@@ -135,9 +142,9 @@ starts later for each repository the user names.
    repairs are eligible.
 2. Configure that repository's dedicated T3 project and lane thread under the
    [T3 runtime boundary](../skills/axstack/references/t3-runtime.md). Set and
-   read back its role binding, then use `schedule_task` with the packaged prompt
-   and activation values, `bindToCurrentThread:false`, and a stable
-   `clientRequestId`. Do not add a scheduler or cursor.
+   read back its role binding. The weekly audit uses `schedule_task` with the
+   packaged prompt, activation values, `bindToCurrentThread:false`, and a
+   stable `clientRequestId`.
 3. Missing authority holds activation. Each pass
    derives one boundary from test-audit PR history, skips open PRs, overlap with
    live T3 thread/run and worktree ownership, unsafe baselines or empty candidate sets,
@@ -250,11 +257,14 @@ All subagent, delegated-worker, reviewer, and cross-harness work uses T3
 orchestration through the `t3-code` MCP. Do not use harness-native subagent
 tools. Use async `delegate_task` for every role, including authors with
 `isolation:"worktree"` in their own SHA-pinned worktrees.
-Every top-level launch, including an author fallback, requires an explicit user request.
 Top-level drivers use `t3_thread_launch` only after an explicit user request.
 Preserve existing accepted authorization within its exact scope.
-Use `t3_thread_launch` as a rare author fallback only when
-worktree isolation is unavailable and record each use in the run record.
+A packaged workflow's `agent()` step can start a thread on its own host for
+its own run with explicit model binding. Drivers can start packaged workflow
+runs. Workflows must not launch threads across hosts.
+Use `t3_thread_launch` as a rare author fallback only when worktree isolation
+is unavailable and after an explicit user request, and record each use in the
+run record.
 Authored reviewers use native `isolation:"worktree"`, enter their own worktree, and verify
 its path differs from the driver's before checking out and verifying the exact
 candidate SHA and base there. Peer reviewers and investigators receive driver-made disposable detached
