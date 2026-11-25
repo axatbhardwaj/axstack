@@ -496,6 +496,7 @@ exit 1
   const output = `${scratch}/root-svg`;
   const result = await check('root-browser.mmd', flow, '--svg-out', output, '--browser', fake);
   expect(result.code, result.err).toBe(3);
+  expect(result.err).toMatch(/Chromium sandbox startup failed/);
   expect(result.err).toContain('--browser-no-sandbox');
   for (const diagnostic of ['first startup line', 'Running as root without --no-sandbox', 'Secondary startup diagnostic', 'last startup line']) {
     expect(result.err).toContain(diagnostic);
@@ -503,17 +504,39 @@ exit 1
   expect(existsSync(output)).toBe(false);
 });
 
-test('holds when Chromium exits unsuccessfully before any page output', async () => {
+test('holds on missing Chromium shared libraries and keeps sandbox guidance out of loader errors', async () => {
   const fake = `${scratch}/aborting-browser`;
-  await Bun.write(fake, '#!/bin/sh\nprintf "%s\\n" "startup failed to load a library" >&2\nexit 127\n');
+  const diagnostic = 'error while loading shared libraries: libfixture.so: cannot open shared object file';
+  await Bun.write(fake, `#!/bin/sh
+printf '%s\\n' '${diagnostic}' >&2
+exit 127
+`);
   chmodSync(fake, 0o700);
-  const result = await check('aborting-browser.mmd', flow, '--svg-out', `${scratch}/abort-svg`, '--browser', fake);
-  expect(result.code, result.err).toBe(3);
-  expect(result.err).toContain('startup failed to load a library');
-  expect(result.err).toContain('--browser-no-sandbox');
+  const output = `${scratch}/abort-svg`;
+  const args = ['--svg-out', output, '--browser', fake];
+  for (const flag of [[], ['--browser-no-sandbox']]) {
+    const result = await check('aborting-browser.mmd', flow, ...args, ...flag);
+    expect(result.code, result.err).toBe(3);
+    expect(result.err).toContain(diagnostic);
+    expect(result.err).toMatch(/check.*Chromium installation.*shared libraries/i);
+    expect(result.err).not.toContain('--browser-no-sandbox');
+    expect(existsSync(output)).toBe(false);
+  }
 });
 
-test('ends a hung Chromium process group even when its child keeps stdout open', async () => {
+test('holds on a Chromium spawn failure with executable guidance', async () => {
+  const fake = `${scratch}/bad-interpreter-browser`;
+  await Bun.write(fake, `#!${scratch}/absent-interpreter\n`);
+  chmodSync(fake, 0o700);
+  const output = `${scratch}/launch-svg`;
+  const result = await check('bad-interpreter.mmd', flow, '--svg-out', output, '--browser', fake);
+  expect(result.code, result.err).toBe(3);
+  expect(result.err).toMatch(/Could not launch Chromium.*executable.*interpreter/);
+  expect(result.err).not.toContain('--browser-no-sandbox');
+  expect(existsSync(output)).toBe(false);
+});
+
+test('holds an endless Chromium render loop without sandbox advice and cleans up the process group', async () => {
   const fake = `${scratch}/hung-browser`;
   await Bun.write(fake, `#!/bin/sh
 trap '' TERM
@@ -522,6 +545,7 @@ if [ "$1" = hold ]; then
 fi
 "$0" hold &
 printf '%s\\n' "$$" "$!" > "$0.pids"
+printf '%s\\n' 'entered the fixture render loop' >&2
 wait
 `);
   chmodSync(fake, 0o700);
@@ -542,7 +566,9 @@ wait
     const elapsed = Math.round(performance.now() - start);
     expect(elapsed, `exit=${code} stderr=${stderr}`).toBeLessThan(32_500);
     expect(code, stderr).toBe(3);
-    expect(stderr).toMatch(/Chromium.*timed out.*30/);
+    expect(stderr).toContain('Chromium did not finish (startup or render) within 30s');
+    expect(stderr).toContain('entered the fixture render loop');
+    expect(stderr).not.toContain('--browser-no-sandbox');
     const pids = readFileSync(`${fake}.pids`, 'utf8').trim().split('\n').map(Number);
     expect(pids).toHaveLength(2);
     // Give the OS a short window to report the killed processes as gone or zombies.
