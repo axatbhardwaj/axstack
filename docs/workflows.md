@@ -262,6 +262,7 @@ Preserve existing accepted authorization within its exact scope.
 A packaged workflow's `agent()` step can start a thread on its own host for
 its own run with explicit model binding. Drivers can start packaged workflow
 runs. Workflows must not launch threads across hosts.
+Every other top-level launch, including an author fallback, requires an explicit user request.
 Use `t3_thread_launch` as a rare author fallback only when worktree isolation
 is unavailable and after an explicit user request, and record each use in the
 run record.
