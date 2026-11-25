@@ -462,7 +462,12 @@ publication outcome preserves its hold. Recovery never replaces a live writer
 or takes over user work. Other unambiguous work can proceed.
 
 T3 owns durable automation state for native workflows and schedules. Workflow
-steps can observe threads and forge state, add holds and wake owners. Store
-values and `ask()` answers are data. Skip a wake only when every fact passes.
-A failed or unknown fact wakes an agent. Workflow code grants no authority.
+steps can observe threads and forge state, add holds and wake owners. Workflow
+code grants no authority. Treat store values and `ask()` answers as input data
+only. Skip a wake only when every fact term passes. A failed or unknown fact
+wakes an agent. For new workflow threads, read back the effective binding and
+hold on mismatch.
+Outside T3, Axstack adds no daemon, scheduler or runtime database except the
+two opt-in systemd user timers `axstack-single-server` and
+`axstack-default-sync`.
 Axstack adds no programmatic escalation gate or decision interpreter.
