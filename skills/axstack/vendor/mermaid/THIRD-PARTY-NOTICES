@@ -55,7 +55,7 @@ dayjs@1.11.21 — https://registry.npmjs.org/dayjs/-/dayjs-1.11.21.tgz
 dompurify@3.4.17 — https://registry.npmjs.org/dompurify/-/dompurify-3.4.17.tgz
 elkjs@0.12.0 — https://registry.npmjs.org/elkjs/-/elkjs-0.12.0.tgz
   Eclipse Public License 2.0. See ELK-LICENSE in this directory.
-  Corresponding source: https://github.com/kieler/elkjs/tree/v0.12.0
+  Corresponding source: https://github.com/kieler/elkjs/tree/ff5771d7165445c42c408bb8a090c8035272218c
   Eclipse ELK sources: https://github.com/eclipse-elk/elk
 es-toolkit@1.45.1 — https://registry.npmjs.org/es-toolkit/-/es-toolkit-1.45.1.tgz
 fastdom@1.0.12 — https://registry.npmjs.org/fastdom/-/fastdom-1.0.12.tgz
