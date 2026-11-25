@@ -41,7 +41,7 @@ export function findChromium(override = '') {
     return versions.sort((left, right) => right.localeCompare(left, 'en', { numeric: true }))
       .find((path) => Bun.which(path));
   } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
+    if (!['ENOENT', 'ENOTDIR'].includes(error.code)) throw error;
   }
 }
 
