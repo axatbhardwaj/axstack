@@ -127,7 +127,8 @@ async function questions(server) {
     if (mode === 'cli' || mode === 'moved') {
       for (let index = 0; index < 2; index++) signal(server, run.runId, 'open-thread', mode, { choice: 'open thread' });
     }
-    const result = (await server.waitFor(run.runId, 'completed')).result;
+    // T3 v0.1.12 wakes timed-out questions on a scheduler pass after their deadline.
+    const result = (await server.waitFor(run.runId, 'completed', mode === 'timeout' ? 45_000 : 15_000)).result;
     const answered = mode === 'cli' || mode === 'moved';
     check(result.holdCleared === false && result.stale === (mode === 'moved'), 'hold record was cleared or failed to mark a moved head');
     check(answered ? result.answer?.answeredBy === 't3 workflow signal' : result.answer === null, 'unexpected CLI answer attribution');
