@@ -8,7 +8,8 @@ test('skill catalog includes VOA and keeps handoff runtime-owned', () => {
   expect(skills).toEqual([
     'axstack-align', 'axstack-anatomy', 'axstack-audit', 'axstack-brainstorm', 'axstack-cleanup', 'axstack-correct', 'axstack-debug', 'axstack-explain', 'axstack-implement',
     'axstack-improve', 'axstack-perf', 'axstack-publish', 'axstack-research',
-    'axstack-review', 'axstack-scout', 'axstack-spec', 'axstack-tickets', 'axstack-verify', 'axstack-watch', 'axstack-work-chat', 'voa',
+    'axstack-review', 'axstack-scout', 'axstack-spec', 'axstack-test-fixing',
+    'axstack-tickets', 'axstack-verify', 'axstack-watch', 'axstack-work-chat', 'voa',
   ]);
   expect(existsSync(`${root}/axstack-handoff`)).toBe(false);
   expect(existsSync(`${root}/paseo-handoff`)).toBe(false);

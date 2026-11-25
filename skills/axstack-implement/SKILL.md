@@ -181,17 +181,21 @@ Use the normal behavior path unless the accepted improvement scope is
 explicitly marked **structure-preserving**, or the accepted scope explicitly
 authorizes **F repairs**. The author never chooses those exceptions.
 
+For a scoped existing-test repair, the driver names the evidence path in the
+[test-fixing handoff](../axstack-test-fixing/SKILL.md). Use the original
+failure for a reproducible test or harness defect, matched before/after trials
+for flakes, F proof for weak assertions, or deletion proof for consolidations
+and removals. Record that evidence in the TDD receipt.
+
 Only when the scope identity carries a sketch, copy it into the author brief
 under the [design lens](../axstack/references/design-lens.md).
 
-Authors apply the gate in [Test value](../axstack/references/test-value.md)
-to every new or changed test. A test failing the gate is not added.
+Apply the gate in [Test value](../axstack/references/test-value.md) to every
+new or changed test. Reject tests that fail the gate.
 
 ### F-repair path
 
-For explicitly authorized F repairs, use [F proof](../axstack/references/test-value.md#f-proof):
-base-green, targeted removal/inversion-red with byte-for-byte restore, and
-equivalent-rewording-green. Never weaken or loosen an assertion.
+For explicitly authorized F repairs, use [F proof](../axstack/references/test-value.md#f-proof).
 
 ### Normal behavior path
 
@@ -201,11 +205,12 @@ If a repeated workaround or unnamed boundary conflicts with the sketch, the
 author stops and returns a sketch conflict. The driver reopens only the
 affected decision through Align under the existing material-revision rule.
 
-Choose a behavior from the accepted scope, including its failure behavior or a
-real integration boundary. Test it through an observable interface rather than
-restating source text or mirroring the intended implementation. Execute the
-check before changing production behavior and capture the expected behavioral
-failure. A missing-module error or unrelated setup failure is not red.
+In normal TDD, do not refactor existing tests as side work. Route scoped
+repairs to existing tests through `axstack-test-fixing`.
+
+Choose an accepted behavior, including a failure or real integration boundary.
+Run the check before changing production behavior and capture the intended
+failure. Missing modules and unrelated setup failures do not count as red.
 
 If no meaningful test-first check can be established, report why and hold
 dependent implementation for a scoped decision. Historical tests added after
@@ -332,7 +337,7 @@ Owner: <profile + session ID + worktree>
 Scope: <approved spec + capability | small-change intent | maintenance snapshot>
 Delivery map: <record pointer; outcomes/accepted scope drivers; current milestone evidence; held launches>
 Shape: <total> lines vs base <sha>; bulk: <buckets>; theme: <one line>
-TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence | F-repair base-green/removal-inversion-red/rewording-green evidence>
+TDD: <normal red/green | structure-preserving old-green/same-check-new-green evidence | F-repair base-green/removal-inversion-red/rewording-green evidence | scoped repair original red/green, matched trials or deletion proof>
 Token limit: <staged-file size check command + advisories/errors and hooks-check result before each commit>
 Simplification: <applied | not-applicable> — evidence: <diff locations and checks>; retained complexity: <necessary complexity and why>
 Acceptance: <check-run receipt paths + identities mapped to criteria>
