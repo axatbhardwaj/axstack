@@ -1,5 +1,6 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { expect, test } from 'bun:test';
+import { checkRule, prohibits, requires as hasRule } from './prose-contract.js';
 
 
 // These check instruction contracts, not live agent compliance. Synonyms allow
@@ -24,6 +25,48 @@ test('authors gate all new and changed tests and reject failures', () => {
     /\btests?\b.*\b(?:fail\w*|reject\w*)\b.*\bgate\b.*\b(?:is|are|must be) not added\b/i.test(sentence)
     || /\b(?:reject|exclude)\b.*\btests?\b.*\b(?:fail\w*)\b.*\bgate\b/i.test(sentence),
   )).toBe(true);
+});
+
+const valuePolicy = readFileSync(`${import.meta.dir}/../../skills/axstack/references/test-value.md`, 'utf8');
+const implementPolicy = readFileSync(`${import.meta.dir}/../../skills/axstack-implement/SKILL.md`, 'utf8');
+const section = (policy, heading) => policy.split(`\n${heading}\n`)[1]?.split(/\n#+ /)[0] ?? '';
+const gate = section(valuePolicy, '## Authoring gate');
+const normal = section(implementPolicy, '### Normal behavior path');
+const repair = section(valuePolicy, '## F proof');
+
+for (const [name, policy, concepts, rewording, inversion] of [
+  ['new checks assert externally visible outcomes through a caller interface', gate,
+    [/assert|check/i, /observable|visible/i, /outcome|behavior/i, /caller|public/i, /boundary|interface/i],
+    'Check the behavior visible to callers through a public interface.', [/caller|public/gi, 'private']],
+  ['new assertions use independently specified expectations', gate,
+    [/choose|derive|specify/i, /expected results?|expectations?/i, /accepted contract|independent source/i],
+    'Specify expectations from an independent source.', [/accepted contract|independent source/i, 'implementation under test']],
+  ['new checks cover regressions missing from existing coverage', gate,
+    [/new|add/i, /only/i, /regression|failure/i, /existing|current/i, /miss\w*|absent from/i],
+    'Add a test only for a failure the current tests would miss.', [/miss\w*|absent from/i, 'already catch']],
+  ['new tests survive unrelated refactors', gate,
+    [/new test|checks?/i, /surviv\w*|keep\w*.*passing/i, /behavior.preserving|equivalent/i, /refactors?/i],
+    'Checks keep passing through equivalent refactors.', [/surviv\w*|keep\w*.*passing/i, 'break']],
+  ['CI executes the test body and blocking status is recorded', gate,
+    [/verify|confirm/i, /\bCI\b/, /executes?|runs?/i, /test body|assertions/i, /record|document/i, /block\w*|required/i],
+    'Confirm CI runs the assertions and document whether the check is required.', [/executes?|runs?/i, 'discovers']],
+  ['scoped repairs to existing tests use the repair skill', normal,
+    [/route|use|send/i, /scoped/i, /repairs?/i, /existing tests?/i, /axstack-test-fixing/],
+    'Use axstack-test-fixing for scoped repairs to existing tests.', [/route|use|send/i, 'Never use']],
+  ['code repair checks tolerate an equivalent refactor where applicable', repair,
+    [/where relevant|where applicable/i, /equivalent|behavior.preserving/i, /code/i, /refactor/i, /green|pass\w*/i],
+    'Where applicable, run the repaired check against a behavior-preserving code refactor and confirm it passes.', [/green|pass\w*/i, 'fails']],
+  ['repair preserves CI gating', repair,
+    [/preserve|retain|keep/i, /\bCI\b/, /gating|blocking/i],
+    'Retain CI blocking status for the repaired check.', [/preserve|retain|keep/i, 'Remove']],
+]) {
+  test(name, () => checkRule(policy, (text) => hasRule(text, ...concepts), rewording, [inversion]));
+}
+
+test('normal TDD excludes opportunistic refactors of existing tests', () => {
+  const exclusion = /\b(?:do not refactor|leave unchanged)\b/i;
+  checkRule(normal, (text) => prohibits(text, exclusion, /existing tests?/i, /normal TDD/i),
+    'In normal TDD, leave unchanged any existing tests.', [[exclusion, 'refactor']]);
 });
 
 test('reviewers assess every test hunk and inspect removal keepers without editing peer code', () => {
