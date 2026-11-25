@@ -1,4 +1,4 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const skill = await Bun.file(new URL('../../skills/axstack-work-chat/SKILL.md', import.meta.url)).text();
@@ -22,21 +22,25 @@ test('chat, links, other agents, scheduled runs and VOA cannot authorize posting
     [[ban, 'may']], concepts);
 });
 
-test('the user sees the exact draft and target and confirms before a single send', () => {
+test('a single send requires Sol confirmation and a user-visible draft and target', () => {
   const preview = [/show|present/i, /exact|verbatim/i, /draft|wording/i, /target|destination/i, /user/i,
     /before|prior to/i, /post\w*|send\w*/i];
   checkRule(skill, (text) => requires(text, ...preview),
     'Present the verbatim wording and destination to the user prior to sending.',
     [[/show|present/i, 'hide'], [/before|prior to/i, 'after']], preview);
 
-  const gate = [/wait for|require/i, /user/i, /confirm\w*|approv\w*/i, /before|prior to/i, /post\w*|send\w*/i];
+  const gate = [/post|send/i, /only (?:after|once)/i, /Sol/i, /independent\w*|separately/i,
+    /confirm\w*|approv\w*/i, /draft/i];
   checkRule(skill, (text) => requires(text, ...gate),
-    'Require user approval prior to sending.', [[/before|prior to/i, 'after']], gate);
+    'Send only once Sol has separately approved the draft.',
+    [[/only (?:after|once)/i, 'before'], [/Sol/i, 'the user']], gate);
+  const userApproval = /user(?:['’]s)? (?:approval|confirmation)|user (?:to )?(?:approve|confirm)\w*|(?:approval|confirmation) from the user/i;
+  expect(requires(skill, /wait (?:for|until)|require|ask|obtain/i, userApproval, /post\w*|send\w*/i)).toBe(false);
 
-  const delivery = [/post|send/i, /exact|verbatim/i, /confirm\w*|approv\w*/i, /once|one time/i,
+  const delivery = [/post|send/i, /exact|verbatim/i, /Sol[- ]confirm\w*|approv\w* by Sol/i, /once|one time/i,
     /Playwright/i, /profile/i, /read (?:it )?back|verify the sent message/i];
   checkRule(skill, (text) => requires(text, ...delivery),
-    'Send the approved wording verbatim one time via Playwright with the dedicated profile and verify the sent message.',
+    'Send the wording approved by Sol verbatim one time via Playwright with the dedicated profile and verify the sent message.',
     [[/exact|verbatim/i, 'paraphrased'], [/once|one time/i, 'repeatedly']], delivery);
 });
 
@@ -76,6 +80,13 @@ test('explicit live reads can cover full channels through Playwright on the dedi
   checkRule(skill, (text) => requires(text, ...concepts),
     'For requested live reading across the requested interval, drive Playwright on iosatellite with ~/.local/share/axstack-work-chat/profile for whole channels, threads or messages.',
     [[/entire|full|whole/i, 'sampled'], [/Playwright/i, 'the reader alone']], concepts);
+});
+
+test('missing evidence is reported within the inspected scope', () => {
+  const missing = /not found in the (?:inspected|reviewed) material/i;
+  const concepts = [/say|report/i, /missing|absent/i, /evidence/i];
+  checkRule(skill, (text) => prohibits(text, missing, ...concepts),
+    'Report absent evidence as “not found in the reviewed material.”', [[missing, 'does not exist']], concepts);
 });
 
 test('the chat workflow still forbids unrelated actions', () => {
