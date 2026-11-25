@@ -431,6 +431,14 @@ test('holds ELK-applicable SVG export when the explicit browser is missing', asy
   const result = await check('no-browser.mmd', flow, '--svg-out', dir, '--browser', `${scratch}/absent-browser`);
   expect(result.code, result.err).toBe(3);
   expect(result.err).toMatch(/Chromium.*(?:missing|unavailable)/);
+
+  const home = `${scratch}/unusable-browser-home`;
+  mkdirSync(`${home}/.t3/tools`, { recursive: true });
+  await Bun.write(`${home}/.t3/tools/chrome-headless-shell`, 'This file is not a browser executable.');
+  const automatic = Bun.spawnSync([process.execPath, '--no-env-file', checker,
+    '--svg-out', dir, `${scratch}/no-browser.mmd`], { env: { HOME: home, PATH: `${home}/absent-path` } });
+  expect(automatic.exitCode, automatic.stderr.toString()).toBe(3);
+  expect(automatic.stderr.toString()).toMatch(/Chromium unavailable/);
 });
 
 const browser = findChromium();
