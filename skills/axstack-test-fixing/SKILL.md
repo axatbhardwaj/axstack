@@ -1,9 +1,12 @@
 ---
 name: axstack-test-fixing
-description: Use axstack-test-fixing for scoped repairs to existing failing, flaky, or weak tests while preserving the behavior they protect.
+description: When an existing test is failing, flaky, or weak, use axstack-test-fixing for a scoped repair that preserves its contract.
 ---
 
 # Test Fixing
+
+Drivers follow [Ready work](../axstack/references/parallel-first.md#ready-work)
+at intake and dependency or completion transitions.
 
 Start at the named existing test and its observable contract. Use
 [Test value](../axstack/references/test-value.md) for assertion quality and
@@ -17,8 +20,8 @@ repair and deletion proof. Audit-only requests stay report-only.
 2. **Find the owner.** Inspect the test, fixtures and runner against the
    contract. Classify the cause as a product regression, test defect, or
    harness/CI fault. Use [Debug](../axstack-debug/SKILL.md) for unresolved
-   causes and suspected product regressions. Send confirmed product regressions
-   with their repro to [Implement](../axstack-implement/SKILL.md).
+   causes and suspected product regressions. Hand off confirmed product
+   regressions with their repro for scoped [Implement](../axstack-implement/SKILL.md) work.
 3. **Repair within scope.** Deliver authorized assertion, fixture, or harness
    repairs through Implement. Preserve the contract and every unique regression
    protection. Skips, retries, and looser assertions can hide the failure.
