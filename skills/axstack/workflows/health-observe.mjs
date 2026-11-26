@@ -25,6 +25,11 @@ function workflowRead(t3, base, command, ...args) {
   }
 }
 
+function canonicalScheduleTime(time) {
+  const date = new Date(time);
+  return Number.isFinite(date.getTime()) && date.toISOString() === time ? time : null;
+}
+
 function latestScheduleTimes(db, triggers) {
   const columns = db.query("PRAGMA index_xinfo('workflow_runs_key')").all().filter(({ key }) => key === 1);
   if (columns.map(({ name }) => name).join(',') !== 'workflow,idempotency_key') return {};
@@ -43,10 +48,9 @@ function latestScheduleTimes(db, triggers) {
     const row = latest.get(triggerId.slice(0, slash), `${prefix}:`, `${prefix};`);
     if (!row) times.set(triggerId, null);
     else {
-      const time = row.key.slice(prefix.length + 1);
-      const date = new Date(time);
       // T3's zero-padded UTC keys sort in scheduled-time order.
-      if (Number.isFinite(date.getTime()) && date.toISOString() === time) times.set(triggerId, time);
+      const time = canonicalScheduleTime(row.key.slice(prefix.length + 1));
+      if (time !== null) times.set(triggerId, time);
     }
   }
   return Object.fromEntries(times);
@@ -68,6 +72,8 @@ function readJournal(path) {
         parent_run_id AS parentRunId, status, started_at AS startedAt, ended_at AS endedAt,
         CASE WHEN idempotency_key GLOB 'trigger:*' AND json_valid(input_json)
           THEN json_extract(input_json, '$.scheduledAt') END AS scheduledAt,
+        (idempotency_key GLOB 'trigger:*' AND status = 'skipped' AND input_json IS NULL
+          AND parent_run_id IS NULL) AS clearedSkippedInput,
         CASE WHEN workflow = 'axstack-load-probe' AND json_valid(result_json)
           THEN json_extract(result_json, '$.workflow') END AS probeWorkflow,
         CASE WHEN workflow = 'axstack-load-probe' AND json_valid(result_json)
@@ -75,9 +81,14 @@ function readJournal(path) {
       FROM workflow_runs
       ORDER BY rowid DESC LIMIT ?
     `).all(JOURNAL_LIMIT + 1);
-    const runs = rows.slice(0, JOURNAL_LIMIT).filter(({ workflow, idempotencyKey }) =>
-      idempotencyKey?.startsWith('trigger:') ||
-      (workflow === 'axstack-load-probe' && idempotencyKey?.startsWith('axstack-watchdog-')));
+    const runs = rows.slice(0, JOURNAL_LIMIT)
+      .filter(({ workflow, idempotencyKey }) => idempotencyKey?.startsWith('trigger:') ||
+        (workflow === 'axstack-load-probe' && idempotencyKey?.startsWith('axstack-watchdog-')))
+      .map(({ clearedSkippedInput, ...run }) => {
+        // T3 clears skipped top-level input but retains the canonical UTC timestamp at the end of the key.
+        if (clearedSkippedInput) run.scheduledAt = canonicalScheduleTime(run.idempotencyKey.slice(-24));
+        return run;
+      });
     const complete = triggers.length <= JOURNAL_LIMIT && rows.length <= JOURNAL_LIMIT;
     const capturedTriggers = triggers.slice(0, JOURNAL_LIMIT);
     return { triggers: capturedTriggers, runs, complete,
