@@ -207,7 +207,7 @@ function worktreeInventory(output) {
 function receiptDecisions(receipt, scheduledAt) {
   const slot = Date.parse(scheduledAt);
   const captured = Date.parse(receipt?.capturedAt);
-  if (receipt?.version !== 1 || !Number.isFinite(slot) || !Number.isFinite(captured) || captured < slot || captured >= slot + 1800000 || !Array.isArray(receipt.decisions) || !Array.isArray(receipt.outstandingCleanupOwnedSnoozes))
+  if (receipt?.version !== 1 || !Number.isFinite(slot) || !Number.isFinite(captured) || captured < slot - 1800000 || captured > slot || !Array.isArray(receipt.decisions) || !Array.isArray(receipt.outstandingCleanupOwnedSnoozes))
     return null;
   const decisions = new Map;
   for (const row of receipt.decisions) {
