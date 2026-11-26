@@ -41,7 +41,7 @@ function requirePrivateBinding(path, packageRoot, base) {
   if (!path?.startsWith('/') || path !== realpathSync(path)) {
     throw new Error('binding must be an absolute canonical file path outside the repository');
   }
-  if ([packageRoot, base].some((root) => path === root || path.startsWith(root + '/'))) {
+  if ([realpathSync(packageRoot), base].some((root) => path === root || path.startsWith(root + '/'))) {
     throw new Error('binding must be outside the package and the T3 base');
   }
   for (let parent = dirname(path); parent !== '/'; parent = dirname(parent)) {
@@ -68,10 +68,10 @@ function readManifest(path) {
 
 function ownedFile(path, record) {
   const info = inspect(path);
-  if (!info && !record) return false;
+  if (!info) return false;
   if (!record) throw new Error('workflow destination is unowned');
-  if (!info?.isFile() || sha256(readFileSync(path)) !== record.digest) {
-    throw new Error('owned workflow file is missing or modified');
+  if (!info.isFile() || sha256(readFileSync(path)) !== record.digest) {
+    throw new Error('owned workflow file is modified');
   }
   return true;
 }
@@ -124,22 +124,29 @@ async function optIn({ base, directory, manifestPath, manifest, name, flags, pac
     throw new Error('a newer version is installed; remove it explicitly before rolling back');
   }
   const hadManifest = inspect(manifestPath) !== null;
-  const next = { version: manifest.version, workflows: { ...manifest.workflows, [identity]: { digest, binding, bindingDigest } } };
+  const ownership = record ?? { digest, binding, bindingDigest };
+  if (!record) {
+    // Record the binding before T3 can observe the bundle. A missing bundle
+    // can be restored using this same record after an interrupted deployment.
+    await saveManifest(manifestPath, {
+      version: manifest.version, workflows: { ...manifest.workflows, [identity]: ownership },
+    });
+  }
   let deployed = false;
-  await saveManifest(manifestPath, next);
   try {
     await deploy(target, bytes);
     deployed = true;
     await requireProbe(t3, base, name, version);
   } catch (error) {
-    if (deployed && ownedFile(target, next.workflows[identity])) {
-      // A failed readback may still have created a run. Preserve the definition
-      // and ownership if we cannot establish that the version is drained.
+    if (deployed) {
+      // Inventory can take time. Check the file after that read before unlinking.
       requireDrained(t3, base, name, version);
-      unlinkSync(target);
+      if (ownedFile(target, ownership)) unlinkSync(target);
     }
-    if (hadManifest) await saveManifest(manifestPath, manifest);
-    else unlinkSync(manifestPath);
+    if (!record) {
+      if (hadManifest) await saveManifest(manifestPath, manifest);
+      else unlinkSync(manifestPath);
+    }
     throw error;
   }
   return { identity, action: 'registered' };
@@ -148,22 +155,27 @@ async function optIn({ base, directory, manifestPath, manifest, name, flags, pac
 async function remove({ base, directory, manifestPath, manifest, name, version, t3 }) {
   const identity = name + '@' + version;
   const target = join(directory, name + '-v' + version + '.mjs');
-  if (!ownedFile(target, manifest.workflows[identity])) throw new Error('workflow is unowned');
+  const record = manifest.workflows[identity];
+  if (!record) throw new Error('workflow is unowned');
+  const present = ownedFile(target, record);
   requireDrained(t3, base, name, version);
-  // Stage outside T3's definition glob and check again before dropping ownership.
-  const staged = target + '.removing-' + crypto.randomUUID();
-  renameSync(target, staged);
+  // Stage an existing definition outside T3's glob. A missing file leaves only ownership to remove.
+  const staged = present ? target + '.removing-' + crypto.randomUUID() : null;
+  if (staged) renameSync(target, staged);
   try {
-    ownedFile(staged, manifest.workflows[identity]);
+    if (staged && !ownedFile(staged, record)) throw new Error('staged workflow disappeared during removal');
     requireDrained(t3, base, name, version);
+    if (inspect(target)) throw new Error('workflow file reappeared during removal; retry');
     delete manifest.workflows[identity];
     await saveManifest(manifestPath, manifest);
   } catch (error) {
-    linkSync(staged, target);
-    unlinkSync(staged);
+    if (staged && inspect(staged) && !inspect(target)) {
+      linkSync(staged, target);
+      unlinkSync(staged);
+    }
     throw error;
   }
-  unlinkSync(staged);
+  if (staged) unlinkSync(staged);
   return { identity, action: 'removed' };
 }
 
