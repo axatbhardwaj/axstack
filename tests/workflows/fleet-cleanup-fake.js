@@ -46,7 +46,7 @@ export async function fake(binary, dir) {
   }
   if (args.includes('config')) {
     if (scenario.filterGap) process.exit(1);
-    if (scenario.filter) process.stdout.write('filter.fixture.clean\0filter.fixture.process\0filter.fixture.required\0');
+    for (const key of scenario.configKeys ?? []) process.stdout.write(key + '\0');
     return;
   }
   if (args.includes('ls-files')) {
