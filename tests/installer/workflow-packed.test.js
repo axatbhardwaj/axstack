@@ -50,7 +50,42 @@ test.skipIf(!t3)('packed axstack stays dormant until opt-in and the real T3 load
     });
     writeFileSync(binding, '{"drifted":true}');
     const drift = server.start(workflow, 'packed-drift');
-    expect((await server.waitFor(drift.runId, 'paused')).detail).toContain('binding');
+    const paused = await server.waitFor(drift.runId, 'paused');
+    expect(paused.detail).toContain('binding');
+    const activeRuns = Object.fromEntries(['running', 'waiting', 'paused'].map((status) => [
+      status, server.command('workflow', 'list', '--status', status, '--json'),
+    ]));
+    const observation = {
+      at: new Date().toISOString(),
+      hosts: [{
+        host: 'fixture-node',
+        reachable: true,
+        manifest: JSON.parse(readFileSync(join(server.base, '.axstack-workflows.json'), 'utf8')),
+        conformance: JSON.parse(readFileSync(receipt, 'utf8')),
+        t3: {
+          serverVersion: server.version, cliVersion: server.version,
+          environment: readFileSync(join(server.base, 'userdata/environment-id'), 'utf8').trim(),
+        },
+        activeRuns,
+        shows: { [drift.runId]: server.command('workflow', 'show', drift.runId, '--json') },
+        policies: { 'axstack-load-probe@1': { kind: 'on-demand' } },
+      }],
+    };
+    const health = Bun.spawnSync([BUN_BIN, join(packageRoot, 'bin/axstack.js'), 'workflow', 'health', '--input', '-'], {
+      env: server.env, cwd: scratch, stdin: Buffer.from(JSON.stringify(observation)),
+    });
+    expect(health.exitCode).toBe(2); // Native workflow list omits loader diagnostics.
+    expect(JSON.parse(health.stdout.toString()).hosts[0]).toMatchObject({
+      checks: { conformance: { status: 'pass' }, inventory: { status: 'pass' }, loader: { status: 'unknown' } },
+      workflows: [{
+        name: workflow, version: 1, checks: {
+          definitionLoaded: { status: 'pass', evidence: { runId: drift.runId } },
+          pausedRuns: { status: 'fail', evidence: [{ runId: drift.runId }] },
+          invokedProgress: { status: 'fail' },
+        },
+      }],
+    });
+    expect(server.command('workflow', 'show', drift.runId, '--json').run).toEqual(paused);
     expect(() => cli('workflow', 'remove', '--name', workflow, '--version', '1', '--yes')).toThrow(/paused/);
     server.command('workflow', 'cancel', drift.runId, '--json');
     await server.waitFor(drift.runId, 'cancelled');
