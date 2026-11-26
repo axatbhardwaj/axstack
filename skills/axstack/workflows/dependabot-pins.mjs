@@ -17,24 +17,62 @@ function uses(document) {
   return actions;
 }
 
-export async function changedRefs(files, readWorkflow) {
-  const changed = [];
-  for (const { filename, previous_filename, status } of files) {
-    if (!['added', 'modified', 'renamed', 'removed'].includes(status)) return null;
-    // Workflow-local paths and ambiguous YAML are held open for the driver.
-    if (!/\.(yml|yaml)$/.test(filename)) return null;
-    const old = status === 'added' ? new Map() : uses(await readWorkflow(previous_filename ?? filename, 'base'));
-    const current = status === 'removed' ? new Map() : uses(await readWorkflow(filename, 'head'));
-    if (!old || !current) return null;
-    for (const [key, value] of current) {
-      if (old.has(key) && old.get(key) === value) continue;
-      const match = typeof value === 'string' &&
-        /^([\w.-]+\/[\w.-]+)(?:\/[\w./-]+)?@([\w.+-]+)$/.exec(value);
-      if (!match) return null;
-      changed.push({ action: match[1].toLowerCase(), ref: match[2] });
-    }
+const reference = /^([\w.-]+\/[\w.-]+)(?:\/[\w./-]+)?@([\w.+-]+)$/;
+const usesLine = /^(?<prefix>[ \t]*(?:-[ \t]+)?uses:[ \t]+)(?<quote>['"]?)(?<action>[\w.-]+\/[\w.-]+(?:\/[\w./-]+)?)@(?<ref>[\w.+-]+)\k<quote>(?<suffix>[ \t]*(?:#[^\r]*)?)(?<cr>\r?)$/;
+const versionComment = /^(?:[ \t]*|[ \t]+#[ \t]*v?\d+(?:\.\d+){0,2}(?:[-+][\w.-]+)?[ \t]*)$/;
+
+function textChanges(before, after) {
+  const previous = before.split('\n');
+  const current = after.split('\n');
+  if (previous.length !== current.length) return null;
+  const pairs = [];
+  for (const [index, line] of current.entries()) {
+    if (line === previous[index]) continue;
+    const from = usesLine.exec(previous[index])?.groups;
+    const to = usesLine.exec(line)?.groups;
+    if (!from || !to || from.prefix !== to.prefix || from.quote !== to.quote ||
+        from.action !== to.action || from.cr !== to.cr ||
+        (from.suffix !== to.suffix && !(versionComment.test(from.suffix) && versionComment.test(to.suffix)))) return null;
+    // A version comment can change with its ref, but cannot be the only update.
+    if (from.ref === to.ref) return null;
+    pairs.push(JSON.stringify([from.action + '@' + from.ref, to.action + '@' + to.ref]));
   }
-  return changed;
+  return pairs;
+}
+
+export async function changedRefs(files, readWorkflow, parseYaml) {
+  if (!files.length || files.some((file) => !/\.(yml|yaml)$/.test(file.filename))) {
+    return { versionBump: 'fail' };
+  }
+  const changes = [];
+  for (const { filename } of files) {
+    const [before, after] = await Promise.all([readWorkflow(filename, 'base'), readWorkflow(filename, 'head')]);
+    if (before === null || after === null) return { versionBump: 'unknown' };
+    const text = textChanges(before, after);
+    if (!text?.length) return { versionBump: 'fail' };
+
+    // Text alone cannot distinguish a step from a uses-like line inside a block scalar.
+    let old;
+    let current;
+    try {
+      old = uses(await parseYaml(before));
+      current = uses(await parseYaml(after));
+    } catch {
+      return { versionBump: 'unknown' };
+    }
+    if (!old || !current) return { versionBump: 'unknown' };
+    const parsed = [];
+    for (const [key, value] of current) {
+      const previous = old.get(key);
+      if (previous === value) continue;
+      const match = typeof value === 'string' && reference.exec(value);
+      if (!match) return { versionBump: 'unknown' };
+      parsed.push(JSON.stringify([previous, value]));
+      changes.push({ action: match[1].toLowerCase(), ref: match[2] });
+    }
+    if (JSON.stringify(text.sort()) !== JSON.stringify(parsed.sort())) return { versionBump: 'fail' };
+  }
+  return { versionBump: 'pass', changes };
 }
 
 function versionClaim(action, messages) {
