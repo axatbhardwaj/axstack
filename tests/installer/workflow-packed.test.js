@@ -44,30 +44,38 @@ test.skipIf(!t3)('packed axstack stays dormant until opt-in and the real T3 load
     expect(cli('workflow', 'opt-in', '--name', workflow, '--binding', binding, '--conformance', receipt, '--yes'))
       .toContain('axstack-load-probe@1');
     expect(readdirSync(server.workflows)).toEqual(['axstack-load-probe-v1.mjs']);
-    const run = server.start(workflow, 'packed-load');
+    const run = server.start(workflow, 'axstack-watchdog-packed-load');
     expect((await server.waitFor(run.runId, 'completed')).result).toEqual({
       workflow: 'axstack-load-probe@1', binding: 'pass',
+    });
+    const observe = (...args) => JSON.parse(cli('workflow', 'observe', '--base-dir', server.base, '--conformance', receipt, ...args));
+    const observed = observe();
+    expect(observed).toMatchObject({
+      t3: { serverVersion: server.version, cliVersion: server.version },
+      journal: { complete: true, triggers: [], runs: [expect.objectContaining({
+        runId: run.runId, probeWorkflow: workflow + '@1', binding: 'pass',
+      })] },
+      activeRuns: { running: [], waiting: [], paused: [] },
+    });
+    expect(observed.registry).toBeNull();
+    const issued = Bun.spawnSync([t3, 'auth', 'session', 'issue', '--base-dir', server.base, '--scope',
+      'orchestration:read', '--ttl', '5m', '--token-only'], { env: server.env, cwd: scratch });
+    expect(issued.exitCode).toBe(0);
+    const registryToken = join(server.root, 'readonly-session');
+    writeFileSync(registryToken, issued.stdout, { mode: 0o600 });
+    expect(observe('--registry-token-file', registryToken).registry).toMatchObject({
+      workflows: [expect.objectContaining({ name: workflow, version: 1 })],
+      definition: { problem: null },
     });
     writeFileSync(binding, '{"drifted":true}');
     const drift = server.start(workflow, 'packed-drift');
     const paused = await server.waitFor(drift.runId, 'paused');
     expect(paused.detail).toContain('binding');
-    const activeRuns = Object.fromEntries(['running', 'waiting', 'paused'].map((status) => [
-      status, server.command('workflow', 'list', '--status', status, '--json'),
-    ]));
     const observation = {
       at: new Date().toISOString(),
       hosts: [{
         host: 'fixture-node',
-        reachable: true,
-        manifest: JSON.parse(readFileSync(join(server.base, '.axstack-workflows.json'), 'utf8')),
-        conformance: JSON.parse(readFileSync(receipt, 'utf8')),
-        t3: {
-          serverVersion: server.version, cliVersion: server.version,
-          environment: readFileSync(join(server.base, 'userdata/environment-id'), 'utf8').trim(),
-        },
-        activeRuns,
-        shows: { [drift.runId]: server.command('workflow', 'show', drift.runId, '--json') },
+        ...observe(),
         policies: { 'axstack-load-probe@1': { kind: 'on-demand' } },
       }],
     };
