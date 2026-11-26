@@ -128,7 +128,11 @@ linuxTest.each([
   ['tarball-unavailable', { registry: { unavailable: 10 } }, 'tarball not fetchable'],
   ['unreachable', { hostState: { offline: true } }, 'iobook=host unreachable'],
   ['malformed-host', { hostState: { malformed: true } }, 'iobook=host evidence unknown'],
-  ['incomplete-receipt', { hostState: { malformedReceipt: 'absent' } }, 'iobook=host evidence unknown'],
+  ['incomplete-receipt', { hostState: { doneReceipt: { packageSkills: 'absent' } } }, 'iobook=host evidence unknown'],
+  ['receipt-default-sync-inactive', { hostState: { doneReceipt: { defaultActive: 'inactive' } } }, 'iobook=host evidence unknown'],
+  ['receipt-default-sync-disabled', { hostState: { doneReceipt: { defaultEnabled: 'disabled' } } }, 'iobook=host evidence unknown'],
+  ['receipt-single-server-inactive', { hostState: { doneReceipt: { singleActive: 'inactive' } } }, 'iobook=host evidence unknown'],
+  ['receipt-single-server-disabled', { hostState: { doneReceipt: { singleEnabled: 'disabled' } } }, 'iobook=host evidence unknown'],
   ['required-timer-unknown', { hostState: { timerUnknown: 'axstack-default-sync.timer' } }, 'iobook=host evidence unknown'],
   ['single-server-unknown', { hostState: { timerUnknown: 'axstack-single-server.timer' } }, 'iobook=host evidence unknown'],
   ['required-timer-disabled', { hostState: { disabled: true } }, 'iobook=required timer inactive or disabled'],
@@ -143,7 +147,7 @@ linuxTest.each([
   ['binding-moved-before-write', { host: 'axat-vps', registry: { changeBindingAt: 2 } }, 'axat-vps=private binding'],
 ])('hold replay %s has zero host writes and zero agent invocations', (label, options, reason) => {
   const actual = replay({ ...options, label });
-  expect(actual.hold).toContain(reason);
+  expect(actual.hold ?? 'workflow completed').toContain(reason);
   expect(actual.writes).toEqual([]);
   expect(actual.calls).toEqual([]);
 }, 30_000);
