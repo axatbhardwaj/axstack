@@ -77,16 +77,26 @@ export async function usingIsolatedT3({ t3, defaultLocation = false, beforeStart
     }
     throw new Error('isolated T3 server did not become ready');
   };
-  const command = (...args) => {
+  const commandArgs = (args) => {
     guard();
     const section = args[0] === 'workflow' && args[1] === 'store' ? 3 : 2;
-    const result = run(binary, env, project, [
-      ...args.slice(0, section), '--base-dir', base, ...args.slice(section),
-    ]);
+    return [...args.slice(0, section), '--base-dir', base, ...args.slice(section)];
+  };
+  const command = (...args) => {
+    const result = run(binary, env, project, commandArgs(args));
     return args.includes('--json') ? JSON.parse(result) : result;
   };
-  const start = (name, key, payload = null) =>
-    command('workflow', 'start', name, '--key', key, '--input', JSON.stringify(payload), '--json').run;
+  const startArgs = (name, key, payload) =>
+    ['workflow', 'start', name, '--key', key, '--input', JSON.stringify(payload), '--json'];
+  const start = (name, key, payload = null) => command(...startArgs(name, key, payload)).run;
+  const startAsync = async (name, key, payload = null) => {
+    const process = Bun.spawn([binary, ...commandArgs(startArgs(name, key, payload))], {
+      cwd: project, env, stdout: 'pipe', stderr: 'ignore', timeout: 15_000,
+    });
+    const [stdout, status] = await Promise.all([new Response(process.stdout).text(), process.exited]);
+    if (status !== 0) throw new Error('T3 workflow start failed');
+    return JSON.parse(stdout).run;
+  };
   const waitFor = async (runId, status, ms = 15000) => {
     const deadline = Date.now() + ms;
     let run;
@@ -106,7 +116,7 @@ export async function usingIsolatedT3({ t3, defaultLocation = false, beforeStart
     const settings = base + '/userdata/settings.json';
     writeFileSync(settings, '{"workflowsEnabled":true}', { mode: 0o600 });
     const session = {
-      root, home, base, workflows, project, env, command, start, waitFor, stop, t3,
+      root, home, base, workflows, project, env, command, start, startAsync, waitFor, stop, t3,
       restart: async (signal) => { await stop(signal); await startServer(); },
       version: run(t3, env, project, ['--version']).trim().replace(/^t3 v/, ''),
       setBinary: (path) => { binary = path; },
