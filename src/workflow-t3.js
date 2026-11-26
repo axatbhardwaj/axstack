@@ -6,6 +6,11 @@ export const WORKFLOW_T3_FLOOR = '0.1.12';
 export const CONFORMANCE_SUITE = 1;
 const TERMINAL = new Set(['completed', 'stopped', 'skipped', 'cancelled']);
 
+export function matchesWorkflowConformance(receipt, version, environment) {
+  return receipt?.version === version && receipt.suite === CONFORMANCE_SUITE &&
+    receipt.status === 'pass' && receipt.environment === environment;
+}
+
 export function workflowT3Version(t3) {
   const check = Bun.spawnSync([t3, '--version'], { timeout: 10_000 });
   const version = /^t3 v(\d+\.\d+\.\d+(?:-[\w.-]+)?)$/.exec(check.stdout.toString().trim())?.[1];
