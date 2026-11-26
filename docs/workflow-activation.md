@@ -59,6 +59,10 @@ live report seat against `axstack-auditor-sol` and reads back the effective
 thread binding using the same scoped token. Rotate the token at the same path
 before it expires.
 
+The report seat uses the installed role's `full-access` runtime mode. The
+narrower Codex modes in T3 0.1.12 use approval or auto-review policies. The
+report turn receives collected facts and runs as a tool-free reply.
+
 ```sh
 axstack workflow opt-in --name axstack-pr-triage --binding /absolute/private/pr-triage.json --conformance /absolute/private/receipt.json --yes
 axstack workflow observe --base-dir "$HOME/.t3" --conformance /absolute/private/receipt.json --registry-token-file /absolute/private/workflow-read.token
@@ -71,6 +75,10 @@ Keep the first three eligible nights as a report-only trial. For each, record
 the workflow run ID, coverage, effective binding and report thread or hold.
 Subsequent nights retain the same read-only report behaviour. T3 drops a daily
 slot missed by more than ten minutes.
+
+An actionable hold pauses the run and appears in workflow health. Inspect its
+reason with `t3 workflow show <run-id>`. Resume after restoring missing binding
+evidence, or cancel a failed report so the next slot can run.
 
 To deactivate, locate the exact runs with `t3 workflow list --json`, drain
 or cancel active runs, and run
