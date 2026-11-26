@@ -170,6 +170,14 @@ for (const [path, term, concepts, rewording, inversion] of policySurfaces) {
   });
 }
 
+test('fleet cleanup workflow agent follows the skill’s existing resource guards', () => {
+  const tie = /(?:the same|the existing|the skill's own)/i;
+  const concepts = [/agent/i, /(?:follows?|applies)/i, tie, /(?:per-resource guards|guards for each resource)/i];
+  checkRule(read('skills/axstack-cleanup/SKILL.md'), (text) => requires(text, ...concepts),
+    "The workflow agent applies the skill's own guards for each resource.",
+    [[tie, 'a separate set of']], concepts);
+});
+
 test('fleet cleanup preserves its force, bulk and runtime database guards', () => {
   const concepts = [/force removal/i, /bulk.clean/i, /edit.*runtime database/i];
   const denial = /(?:do not|never)/i;
