@@ -34,7 +34,7 @@ check. The manifest includes paths and digests and has mode 0600.
 
 ## Nightly PR triage
 
-Opt in on axat-vps with the current host conformance receipt. Record the
+Use the current conformance receipt for the opt-in host. Record the
 server timezone and confirm the native schedule inventory for the bound repo set.
 MIG-1 starts with no predecessor. Use one active triage schedule for the set.
 
@@ -81,8 +81,10 @@ use the [native schedule fallback](../skills/axstack/references/automations.md#n
 
 ## Roll forward or back
 
-Each bundle change requires a new version in both the source and the catalog.
-The following command rebuilds the shipped bytes from the workflow directory.
+Changing a shipped bundle requires a new version in the source and catalog.
+Rebuild from the workflow directory with the minimum supported Bun. Run
+`bun run test tests/workflows/native-bundle.test.js` with both CI Bun versions
+to check that each catalogued bundle rebuilds byte for byte.
 
 ```sh
 cd skills/axstack/workflows
