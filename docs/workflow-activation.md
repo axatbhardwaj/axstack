@@ -171,10 +171,15 @@ Use these keys with the host's observed absolute paths.
 | --- | --- |
 | `hosts` | Object keyed by `io`, `iobook`, `iobox`, `iosatellite` and `axat-vps`. Values are `xzat@io`, `iobook`, `xzat@iobox`, `xzat@iosatellite` and `local` respectively. |
 | `localHostname` | The VPS short hostname. |
-| `reinstallScript` and `reinstallDigest` | Canonical path to the existing owner-controlled reinstall script and SHA-256 of its exact bytes. The workflow reads the pinned bytes for each write. |
+| `reinstallScript` and `reinstallDigest` | Canonical path to the owner-controlled reinstall script and SHA-256 of its exact bytes. The four SSH hosts run this pinned script. |
 | `globalBun` | Absolute VPS Bun binary for the global install. |
 | `project`, `bun`, `t3`, `roles`, `registryTokenFile` | Absolute paths to the local T3 project, Bun, T3 CLI, installed role snapshot and read-scoped registry token file used to resolve and verify the failure agent. |
 | `pollSeconds` | Seconds between the six tarball checks. Use 10 on the VPS. |
+
+On the VPS, the shipped bundle runs `npm pack` locally, checks the tarball's
+SHA-512 against npm metadata, extracts it into the release directory, and
+updates the CLI shim. It runs each harness install with `CLAUDE_CONFIG_DIR`
+cleared and updates the global Bun package.
 
 Confirm required conformance cases POC-1, POC-3, POC-7 and the process boundary
 from POC-8 on the destination. Verify existing SSH host keys and working
