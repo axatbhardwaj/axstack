@@ -146,3 +146,23 @@ test('configured Git filters and fsmonitor are disabled for the status read', as
     'filter.fixture.clean=', 'filter.fixture.process=', 'filter.fixture.required=false',
   ]));
 }, 12_000);
+
+test('an accepted archive requires a settled thread and reads back archival', async () => {
+  const archive = operation.replace(/settle$/, 'archive');
+  const { result, agents } = await replay({ eligible: true, thread: { settled: true }, decision: { action: 'archive' } });
+  expect(result).toMatchObject({ decision: 'complete', items: [archive] });
+  expect(agents[1].options.brief).toContain(archive);
+}, 12_000);
+
+test('an unsettled archive request never reaches a cleanup agent', async () => {
+  const { result, agents } = await replay({ eligible: true, decision: { action: 'archive' } });
+  expect(result).toEqual({ decision: 'unknown', items: [], gaps: ['axat-vps/decision'] });
+  expect(agents.map(({ name }) => name)).toEqual(['report-gap']);
+}, 12_000);
+
+test('the shadow exposes host gaps without creating a diagnostic thread', async () => {
+  const { result, agents, claims } = await replay({ eligible: true, offline: true, shadow: true });
+  expect(result).toMatchObject({ decision: 'unknown', items: [], gaps: expect.arrayContaining(['iobox/host-unreachable']) });
+  expect(agents).toEqual([]);
+  expect(claims).toEqual({});
+}, 12_000);
