@@ -99,24 +99,32 @@ For `axstack-dependabot-merge`, use a private binding such as
   "roles": "/absolute/installed/skills/axstack/roles.json",
   "registryTokenFile": "/absolute/private/t3-reader-token",
   "bun": "/absolute/bin/bun",
-  "t3": "/absolute/bin/t3",
-  "reportOnlyTrial": true
+  "t3": "/absolute/bin/t3"
 }
 ```
 
 Use the canonical path of the registered T3 project, a separate worktree root
 owned by the T3 user with mode 0700, and a mode 0600 token file scoped to
-`orchestration:read`. The trial defaults to `true`. Keep the binding bytes
-stable so the same version retains its recorded digest.
+`orchestration:read`. The first three distinct eligible heads are report-only.
+Keep the binding bytes stable so the version retains its recorded digest.
 
 ```sh
 axstack workflow opt-in --name axstack-dependabot-merge --binding /absolute/private/dependabot-v1.json --conformance /absolute/private/receipt.json --yes
 ```
 
-An unresolved guard or owner readback pauses the run with a reason. The
-workflow health checker flags the paused run. Later slots skip processing while
-it remains paused. Inspect the failed step in T3. Resume it after correcting
-its input or cancel the run so the next slot can collect fresh evidence.
+An unresolved guard or owner readback pauses the run, including while CI is
+pending. Workflow health flags the paused run, and later slots skip processing
+until it clears. The exact-head check inventory includes earlier attempts, so
+a failed or pending attempt can continue holding after a rerun.
+
+Inspect the failed step in T3. Before a head is claimed, cancel the run to let
+a later tick collect fresh evidence. A cancellation after a claim retains that
+claim. A later tick encountering the same head pauses with the prior run ID.
+Handle that head through the on-demand path. Cancellation also retains any
+detached worktree until its ownership and settlement can be checked. In the
+bound worktree root, use the run ID and PR number from the hold to identify
+the checkout. Confirm no thread uses it and that it is clean before removing
+it with `git worktree remove` without force.
 
 ## Roll forward or back
 
