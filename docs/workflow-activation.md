@@ -5,6 +5,7 @@ upgrading, or uninstalling Axstack skills leaves T3 workflow activation alone.
 The workflow assets and conformance fixtures stay in the npm package during skill installation.
 The bundled `axstack-load-probe` has no triggers. Its only result is its own
 `name@version` and confirmation that the binding bytes match the opt-in digest.
+Use [native workflow health](workflow-health.md) to observe opted-in hosts.
 
 ## Activate on one host
 

@@ -1,16 +1,14 @@
 import { readFileSync } from 'node:fs';
-import { meetsFloor } from './capabilities.js';
+import { supportsWorkflowT3, WORKFLOW_T3_FLOOR } from '../skills/axstack/workflows/workflow-contract.mjs';
 import { join } from './posixpath.js';
 
-export const WORKFLOW_T3_FLOOR = '0.1.12';
-export const CONFORMANCE_SUITE = 1;
+export { CONFORMANCE_SUITE } from '../skills/axstack/workflows/workflow-contract.mjs';
 const TERMINAL = new Set(['completed', 'stopped', 'skipped', 'cancelled']);
 
 export function workflowT3Version(t3) {
   const check = Bun.spawnSync([t3, '--version'], { timeout: 10_000 });
   const version = /^t3 v(\d+\.\d+\.\d+(?:-[\w.-]+)?)$/.exec(check.stdout.toString().trim())?.[1];
-  if (check.exitCode !== 0 || !version || !meetsFloor(version, WORKFLOW_T3_FLOOR) ||
-      version.startsWith(WORKFLOW_T3_FLOOR + '-')) {
+  if (check.exitCode !== 0 || !supportsWorkflowT3(version)) {
     throw new Error(`workflow activation requires T3 >= ${WORKFLOW_T3_FLOOR}`);
   }
   return version;

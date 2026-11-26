@@ -44,13 +44,56 @@ test.skipIf(!t3)('packed axstack stays dormant until opt-in and the real T3 load
     expect(cli('workflow', 'opt-in', '--name', workflow, '--binding', binding, '--conformance', receipt, '--yes'))
       .toContain('axstack-load-probe@1');
     expect(readdirSync(server.workflows)).toEqual(['axstack-load-probe-v1.mjs']);
-    const run = server.start(workflow, 'packed-load');
+    const run = server.start(workflow, 'axstack-watchdog-packed-load');
     expect((await server.waitFor(run.runId, 'completed')).result).toEqual({
       workflow: 'axstack-load-probe@1', binding: 'pass',
     });
+    const observe = (...args) => JSON.parse(cli('workflow', 'observe', '--base-dir', server.base, '--conformance', receipt, ...args));
+    const observed = observe();
+    expect(observed).toMatchObject({
+      t3: { serverVersion: server.version, cliVersion: server.version },
+      journal: { complete: true, triggers: [], runs: [expect.objectContaining({
+        runId: run.runId, probeWorkflow: workflow + '@1', binding: 'pass',
+      })] },
+      activeRuns: { running: [], waiting: [], paused: [] },
+    });
+    expect(observed.registry).toBeNull();
+    const issued = Bun.spawnSync([t3, 'auth', 'session', 'issue', '--base-dir', server.base, '--scope',
+      'orchestration:read', '--ttl', '5m', '--token-only'], { env: server.env, cwd: scratch });
+    expect(issued.exitCode).toBe(0);
+    const registryToken = join(server.root, 'readonly-session');
+    writeFileSync(registryToken, issued.stdout, { mode: 0o600 });
+    expect(observe('--registry-token-file', registryToken).registry).toMatchObject({
+      workflows: [expect.objectContaining({ name: workflow, version: 1 })],
+      definition: { problem: null },
+    });
     writeFileSync(binding, '{"drifted":true}');
     const drift = server.start(workflow, 'packed-drift');
-    expect((await server.waitFor(drift.runId, 'paused')).detail).toContain('binding');
+    const paused = await server.waitFor(drift.runId, 'paused');
+    expect(paused.detail).toContain('binding');
+    const observation = {
+      at: new Date().toISOString(),
+      hosts: [{
+        host: 'fixture-node',
+        ...observe(),
+        policies: { 'axstack-load-probe@1': { kind: 'on-demand' } },
+      }],
+    };
+    const health = Bun.spawnSync([BUN_BIN, join(packageRoot, 'bin/axstack.js'), 'workflow', 'health', '--input', '-'], {
+      env: server.env, cwd: scratch, stdin: Buffer.from(JSON.stringify(observation)),
+    });
+    expect(health.exitCode).toBe(2); // Native workflow list omits loader diagnostics.
+    expect(JSON.parse(health.stdout.toString()).hosts[0]).toMatchObject({
+      checks: { conformance: { status: 'pass' }, inventory: { status: 'pass' }, loader: { status: 'unknown' } },
+      workflows: [{
+        name: workflow, version: 1, checks: {
+          definitionLoaded: { status: 'pass', evidence: { runId: drift.runId } },
+          pausedRuns: { status: 'fail', evidence: [{ runId: drift.runId }] },
+          invokedProgress: { status: 'fail' },
+        },
+      }],
+    });
+    expect(server.command('workflow', 'show', drift.runId, '--json').run).toEqual(paused);
     expect(() => cli('workflow', 'remove', '--name', workflow, '--version', '1', '--yes')).toThrow(/paused/);
     server.command('workflow', 'cancel', drift.runId, '--json');
     await server.waitFor(drift.runId, 'cancelled');
