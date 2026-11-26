@@ -104,6 +104,9 @@ test.each([
     { repo: 'four-normal/project', coverage: { status: 'pass' }, prs: [{ number: 16 }] },
     { repo: 'two/project', coverage: { status: 'unknown' }, prs: [] },
   ]],
+  ['partial', ['field-unknown/project'], [
+    { repo: 'field-unknown/project', coverage: { status: 'pass' }, prs: [{ number: 3, mergeable: 'UNKNOWN' }] },
+  ]],
 ])('scheduled %s night sends one report with reconciled forge facts', async (decision, repositories, expected) => {
   const { result, again, calls, rpcReads, scheduledAt } = await fixture(repositories, { repeat: true });
   expect(result).toEqual({ decision, scheduledAt, threadId, binding: 'pass' });
