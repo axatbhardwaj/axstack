@@ -3,7 +3,18 @@ import { changedRefs, isSha, pinFacts } from './dependabot-pins.mjs';
 
 export const repository = 'axatbhardwaj/axstack';
 const root = 'repos/' + repository;
-const terms = ['author', 'branch', 'paths', 'claims', 'releaseTags', 'pins', 'ci', 'checks', 'head'];
+const unknownReasons = {
+  author: 'PR author is unavailable',
+  branch: 'PR head branch is unavailable',
+  paths: 'changed paths could not be covered',
+  claims: 'a changed workflow or action version claim could not be established',
+  releaseTags: 'a claimed tag or published release could not be verified',
+  pins: 'a changed action pin could not be compared to a verified tag',
+  ci: 'the exact-head CI run inventory is incomplete',
+  checks: 'the exact-head check-run or commit-status inventory is incomplete',
+  head: 'the exact PR head or base could not be read back',
+};
+const terms = Object.keys(unknownReasons);
 export const numberId = (value) => Number.isSafeInteger(value) && value > 0;
 const inside = (value) => typeof value === 'string' && value.startsWith('.github/workflows/') &&
   value.split('/').every((part) => part && part !== '.' && part !== '..' && !/[\\\0]/.test(part));
@@ -105,8 +116,13 @@ export async function scanPulls(request, parseYaml = (source) => Bun.YAML.parse(
   };
   const listed = await githubPages(safeRequest, root + '/pulls', { state: 'open' }, null,
     (row) => numberId(row?.number) && isSha(row.head?.sha) && row.state === 'open' ? row.number : null);
-  if (!listed) return { discovery: 'unknown', pulls: [] };
+  if (!listed) return { discovery: 'unknown', reason: 'open pull request page coverage could not be proved', pulls: [] };
   const pulls = [];
-  for (const row of listed) pulls.push(await pullFacts(safeRequest, parseYaml, row));
+  for (const listedPull of listed) {
+    const candidate = await pullFacts(safeRequest, parseYaml, listedPull);
+    const reasons = Object.fromEntries(terms.filter((term) => candidate.facts[term] === 'unknown')
+      .map((term) => [term, unknownReasons[term]]));
+    pulls.push({ ...candidate, reasons });
+  }
   return { discovery: 'pass', pulls };
 }
