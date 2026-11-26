@@ -1,11 +1,13 @@
 import { expect, test } from 'bun:test';
 import { scanPulls } from '../../skills/axstack/workflows/dependabot-facts.mjs';
-import { fixture, head } from './dependabot-forge-fixture.js';
+import { fixture, head, nonBumps } from './dependabot-forge-fixture.js';
 
 const expected = {
   author: 'pass',
   branch: 'pass',
   paths: 'pass',
+  versionBump: 'pass',
+  commitAuthors: 'pass',
   claims: 'pass',
   releaseTags: 'pass',
   pins: 'pass',
@@ -30,6 +32,10 @@ for (const [label, inputs, term, status] of [
   ['branch outside the allowed prefix', { branch: 'dependabot/npm_and_yarn/test' }, 'branch', 'fail'],
   ['file outside workflows', { filename: 'README.md' }, 'paths', 'fail'],
   ['rename from outside workflows', { oldFilename: 'README.md' }, 'paths', 'fail'],
+  ['changed-files count disagrees with complete page', { changedFiles: 2 }, 'paths', 'unknown'],
+  ['pull readback names another base repository', { baseRepo: 'foreign/axstack' }, 'author', 'unknown'],
+  ['conflicting action version claims', { commit: 'Bump actions/checkout from 6 to 7.1.0' }, 'claims', 'unknown'],
+  ['unattributed commit', { commitAuthor: null }, 'commitAuthors', 'unknown'],
   ['wrong pin', { pin: 'b'.repeat(40) }, 'pins', 'fail'],
   ['tag without a published release', { releases: [] }, 'releaseTags', 'fail'],
   ['tag verification denied', { tagUnknown: true }, 'releaseTags', 'unknown'],
@@ -87,4 +93,16 @@ test('a release alias must resolve to the same commit as a published release', a
     }),
   );
   expect(invalid.pulls[0].facts.releaseTags).toBe('fail');
+});
+
+test.each(nonBumps)('facts reject $name', async ({ forge, term }) => {
+  const result = await scanPulls(fixture(forge));
+  expect(result.pulls[0].facts[term]).toBe('fail');
+});
+
+test('a changed uses line may update its trailing version comment', async () => {
+  const before = 'jobs:\n  lint:\n    steps:\n      - uses: actions/checkout@v6 # v6.0.0\n';
+  const after = before.replace('@v6 # v6.0.0', '@' + 'a'.repeat(40) + ' # v7.0.0');
+  const result = await scanPulls(fixture({ baseWorkflow: before, headWorkflow: after }));
+  expect(result.pulls[0].facts).toEqual(expected);
 });
