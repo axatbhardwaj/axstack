@@ -679,7 +679,7 @@ and sweep instruction contracts. Collector tests use a fixture CLI and SQLite
 databases to exercise read-only open, schema gaps, server replacement, bounded
 exports, and registry guards without a T3 binary. They also drive the collector
 and evaluator together for capped history, checking covered and unobserved
-slot windows. The packed T3 fixture invokes `workflow observe`
+slot windows and native skipped rows with cleared input. The packed T3 fixture invokes `workflow observe`
 with and without the scoped registry token, checks the native load-probe
 receipt, and feeds the collected paused run into `workflow health`.
 Live fleet collection, the installed watchdog schedule and its sweep handoff
