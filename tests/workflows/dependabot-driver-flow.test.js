@@ -14,7 +14,7 @@ const scenarios = [
   { name: 'a user returns after the driver settles', userOnEnd: true, acted: true, outcome: 'merged' },
 ];
 
-test('the workflow sends merge instructions after effective binding readback and cleans owned, settled evidence', () => {
+function replay(cases) {
   const scratch = makeTempRoot('axstack-dependabot-driver-flow-');
   mkdirSync(scratch + '/entries');
   for (const file of [
@@ -62,6 +62,12 @@ const gen = (f) => unit(async () => {
   return next.value;
 });
 const currentStore = new Map();
+class FailedStep extends Error {
+  constructor(step, cause) {
+    super(cause.message, { cause });
+    this.step = step;
+  }
+}
 globalThis.Schema = { Json: {}, String: {}, Boolean: {}, Number: {} };
 globalThis.Option = { isSome: (option) => option.value !== undefined,
   getOrElse: (option, fallback) => option.value === undefined ? fallback() : option.value };
@@ -71,7 +77,10 @@ globalThis.Effect = { gen, promise: unit, tryPromise: (work) => unit(async () =>
 globalThis.T3 = {
   workflow: (_name, options, body) => ({ options, body }),
   every: () => ({}), Tick: {}, runs: () => unit(() => []),
-  step: (_name, _options, work) => work,
+  stop: (reason) => unit(() => ({ disposition: 'stopped', reason })),
+  step: (name, _options, work) => unit(async () => {
+    try { return await work.run(); } catch (error) { throw new FailedStep(name, error); }
+  }),
   store: {
     transaction: (work) => work,
     entry: (key) => ({
@@ -87,7 +96,7 @@ globalThis.T3 = {
   }) },
 };
 const flow = (await import(${JSON.stringify(entry)})).default;
-const cases = ${JSON.stringify(scenarios)};
+const cases = ${JSON.stringify(cases)};
 for (const item of cases) {
   currentStore.clear();
   globalThis.caseData = item;
@@ -95,33 +104,41 @@ for (const item of cases) {
   globalThis.calls = [];
   globalThis.cleaned = 0;
   globalThis.ended = false;
-  const forge = fixture({ title: 'Bump actions/checkout from 6 to 7.0.0\\nUNTRUSTED FORGE TEXT' });
+  const forge = fixture({ title: 'Bump actions/checkout from 6 to 7.0.0\\nUNTRUSTED FORGE TEXT', ...item.forge });
   globalThis.github = (endpoint) => endpoint.endsWith('/pulls/1') && globalThis.prompts.length === 2
     ? { status:200, body: { number: 1, merged: !item.hold, head: {sha:item.hold ? ${JSON.stringify(head)} : '1'.repeat(40)},
       base:{repo:{full_name:'axatbhardwaj/axstack'}} } }
     : forge(endpoint);
   let disposition;
   let reason;
+  let failedStep;
   try {
     const result = await flow.body({}, { id: ${JSON.stringify(runId)} }).run();
-    disposition = result.pulls[0].disposition;
+    disposition = result.pulls?.[0]?.disposition ?? result.disposition ?? 'completed';
+    reason = result.reason;
     globalThis.ended = true;
     await flow.options.onEnd({}, { id:${JSON.stringify(runId)}, outcome:'completed' }).run();
   } catch (error) {
+    if (!(error instanceof FailedStep)) throw error;
     disposition = 'paused';
     reason = error.message;
+    failedStep = error.step;
   }
-  console.log(JSON.stringify({ disposition, reason, calls:globalThis.calls, cleaned:globalThis.cleaned }));
+  console.log(JSON.stringify({ disposition, reason, failedStep, calls:globalThis.calls, cleaned:globalThis.cleaned }));
 }
 `;
   const execution = Bun.spawnSync([process.execPath, '-e', script], { cwd: scratch });
   expect(execution.stderr.toString()).toBe('');
   expect(execution.exitCode).toBe(0);
-  const results = execution.stdout
+  return execution.stdout
     .toString()
     .trim()
     .split('\n')
     .map((row) => JSON.parse(row));
+}
+
+test('the workflow sends merge instructions after effective binding readback and cleans owned, settled evidence', () => {
+  const results = replay(scenarios);
   expect(results).toHaveLength(scenarios.length);
   for (const [index, scenario] of scenarios.entries()) {
     const result = results[index];
@@ -144,6 +161,24 @@ for (const item of cases) {
     }
     if (scenario.outcome === 'paused') expect(result.reason).toMatch(/owner/);
     expect(result.cleaned).toBe(scenario.outcome === 'merged' && !scenario.userOnEnd ? 1 : 0);
+  }
+});
+
+test.each([
+  { name: 'non-Dependabot author', forge: { author: 'octocat' }, disposition: 'outside-scope' },
+  { name: 'queued CI', forge: { runStatus: 'queued' }, disposition: 'paused', reason: /\bci fail\b/ },
+  { name: 'failed check', forge: { conclusion: 'failure' }, disposition: 'paused', reason: /\bchecks fail\b/ },
+  { name: 'discovery page gap', forge: { gap: true }, disposition: 'paused', reason: /page coverage/ },
+])('entry routes $name without any agent call', (scenario) => {
+  const results = replay([scenario]);
+  expect(results).toHaveLength(1);
+  const [result] = results;
+  expect(result.calls).toEqual([]);
+  expect(result.cleaned).toBe(0);
+  expect(result.disposition).toBe(scenario.disposition);
+  if (scenario.reason) {
+    expect(result.failedStep).toBe('discover');
+    expect(result.reason).toMatch(scenario.reason);
   }
 });
 
