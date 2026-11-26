@@ -7,6 +7,8 @@ const { workflow: define, agent, every, step, store } = T3;
 const base = decodeURIComponent(new URL('../', import.meta.url).pathname).replace(/\/$/, '');
 const trialCount = 'dependabot-merge:report-only-count';
 const runEvidence = (id) => store.entry('dependabot-merge:cleanup:' + id, Schema.Json);
+const cancelledEvidence = (id) => store.entry('dependabot-merge:cancelled:' + id, Schema.String);
+const cancellationReason = 'cancelled run retains its claim; inspect any detached worktree before manual cleanup';
 class Hold extends Error {}
 const effectStep = (name, work) => step(name, { returns: Schema.Json }, Effect.tryPromise({
   try: work,
@@ -21,24 +23,41 @@ async function requireBinding() {
 
 const outsideScope = (pull) => pull.facts.author === 'fail' || pull.facts.branch === 'fail';
 
-function reserve(runId, { number, head }, trial, ready = false) {
+function reserve(runId, { number, head }, ready = false) {
   const claim = store.entry(`${repository}#${number}@${head}`, Schema.Json);
   const counter = store.entry(trialCount, Schema.Number);
   return store.transaction(Effect.gen(function* () {
     const prior = yield* claim.get;
-    if (Option.isSome(prior)) return prior.value.runId === runId ? prior.value.disposition : 'duplicate';
-    if (trial) {
-      const count = Option.getOrElse(yield* counter.get, () => 0);
-      if (count < 3) {
-        yield* counter.set(count + 1);
-        yield* claim.set({ runId, disposition: 'report-only' });
-        return 'report-only';
-      }
+    if (Option.isSome(prior)) {
+      return prior.value.runId === runId ? { disposition: prior.value.disposition } :
+        { disposition: 'duplicate', owner: prior.value.runId };
     }
-    if (!ready) return 'needs-agent';
+    const count = Option.getOrElse(yield* counter.get, () => 0);
+    if (count < 3) {
+      yield* counter.set(count + 1);
+      yield* claim.set({ runId, disposition: 'report-only' });
+      return { disposition: 'report-only' };
+    }
+    if (!ready) return { disposition: 'needs-agent' };
     yield* claim.set({ runId, disposition: 'claimed' });
-    return 'claimed';
+    return { disposition: 'claimed' };
   }));
+}
+
+function checkDuplicate(label, owner) {
+  return Effect.gen(function* () {
+    const cancelled = yield* step(label + '-duplicate-status', { returns: Schema.Boolean }, Effect.gen(function* () {
+      if (Option.isSome(yield* cancelledEvidence(owner).get)) return true;
+      const runs = yield* T3.runs({ workflow });
+      return runs.some((priorRun) => priorRun.id === owner && priorRun.status === 'cancelled');
+    }));
+    if (cancelled) {
+      yield* effectStep(label + '-cancelled-claim', async () => {
+        throw new Hold(`${label}: prior ${cancellationReason} (run ${owner})`);
+      });
+    }
+    return { disposition: 'duplicate' };
+  });
 }
 
 function sameDriverMessages(view, prepare, merge) {
@@ -49,11 +68,12 @@ function sameDriverMessages(view, prepare, merge) {
   return input.length === (merge ? 2 : 1) && input[0] === prepare && (!merge || input[1] === merge);
 }
 
-function handleHead(trial, runId, pull) {
+function handleHead(runId, pull) {
   return Effect.gen(function* () {
     const label = `pr-${pull.number}`;
-    const position = yield* step(label + '-trial', { returns: Schema.String }, reserve(runId, pull, trial));
-    if (position === 'report-only' || position === 'duplicate') return { disposition: position };
+    const position = yield* step(label + '-trial', { returns: Schema.Json }, reserve(runId, pull));
+    if (position.disposition === 'duplicate') return yield* checkDuplicate(label, position.owner);
+    if (position.disposition === 'report-only') return position;
 
     const { project, ...expected } = yield* effectStep(label + '-owner-catalog', async () => {
       const config = await requireBinding();
@@ -61,8 +81,9 @@ function handleHead(trial, runId, pull) {
       if (!seat) throw new Hold('owner binding could not be resolved from installed roles and the live catalog');
       return { ...seat, project: config.project };
     });
-    const claimed = yield* step(label + '-claim', { returns: Schema.String }, reserve(runId, pull, trial, true));
-    if (claimed !== 'claimed') return { disposition: claimed };
+    const claimed = yield* step(label + '-claim', { returns: Schema.Json }, reserve(runId, pull, true));
+    if (claimed.disposition === 'duplicate') return yield* checkDuplicate(label, claimed.owner);
+    if (claimed.disposition !== 'claimed') return claimed;
     const worktree = yield* effectStep(label + '-worktree', async () => {
       const checkout = await prepareWorktree(await requireBinding(), runId, pull.number, pull.base);
       if (!checkout) throw new Hold('detached owner worktree could not be prepared at the observed base');
@@ -121,6 +142,10 @@ function handleHead(trial, runId, pull) {
 }
 
 const onEnd = (_tick, end) => Effect.gen(function* () {
+  if (end.outcome === 'cancelled') {
+    yield* cancelledEvidence(end.id).set(cancellationReason);
+    return;
+  }
   if (end.outcome !== 'completed') return;
   const evidence = Option.getOrElse(yield* runEvidence(end.id).get, () => ({}));
   for (const receipt of Object.values(evidence)) {
@@ -158,12 +183,12 @@ export default define(workflow, {
         throw new Hold(`PR #${pull.number} at ${pull.head} held. ${details.join(', ')}`);
       }
     }
-    return { ...found, trial: config.reportOnlyTrial !== false };
+    return found;
   });
   const pulls = [];
   for (const pull of observation.pulls) {
     const outcome = outsideScope(pull) ? { disposition: 'outside-scope' } :
-      yield* handleHead(observation.trial, id, pull);
+      yield* handleHead(id, pull);
     pulls.push({ number: pull.number, head: pull.head, facts: pull.facts, reasons: pull.reasons, ...outcome });
   }
   return { discovery: 'pass', pulls };
