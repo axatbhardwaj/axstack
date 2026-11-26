@@ -14,7 +14,7 @@ For nightly read-only PR reports, use the separate packaged
 
 ## Nightly PR-triage setup
 
-Use `axstack-pr-triage` on axat-vps at 02:00 host time. Opt in with a private
+Use `axstack-pr-triage` at 02:00 on the opt-in host. Use a private
 repository binding and current conformance receipt. The npm package's
 `docs/workflow-activation.md` gives the binding and deactivation commands.
 Record the first three eligible nights and their report receipts.
