@@ -47,7 +47,7 @@ export function receiptDecisions(receipt, scheduledAt) {
   const slot = Date.parse(scheduledAt);
   const captured = Date.parse(receipt?.capturedAt);
   if (receipt?.version !== 1 || !Number.isFinite(slot) || !Number.isFinite(captured) ||
-      captured < slot || captured >= slot + 1_800_000 ||
+      captured < slot - 1_800_000 || captured > slot ||
       !Array.isArray(receipt.decisions) || !Array.isArray(receipt.outstandingCleanupOwnedSnoozes)) return null;
   const decisions = new Map();
   for (const row of receipt.decisions) {
