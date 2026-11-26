@@ -2,11 +2,11 @@ import { existsSync, linkSync, lstatSync, mkdirSync, readFileSync, realpathSync,
 import { writeAtomic } from './installer.js';
 import { writeFileExclusive } from './manifest.js';
 import { dirname, join, resolve } from './posixpath.js';
-import { matchesWorkflowConformance, requireDrained, requireProbe, requireRunningT3Version, t3Environment, workflowT3Version } from './workflow-t3.js';
+import { matchesWorkflowConformance, validateWorkflowManifest } from '../skills/axstack/workflows/workflow-contract.mjs';
+import { requireDrained, requireProbe, requireRunningT3Version, t3Environment, workflowT3Version } from './workflow-t3.js';
 
 const MANIFEST = '.axstack-workflows.json';
 const NAME = /^[A-Za-z0-9_][\w.-]*$/;
-const DIGEST = /^[a-f0-9]{64}$/;
 
 function sha256(bytes) {
   return new Bun.CryptoHasher('sha256').update(bytes).digest('hex');
@@ -48,21 +48,6 @@ function requirePrivateBinding(path, packageRoot, base) {
     if (existsSync(join(parent, '.git'))) throw new Error('binding must be outside the repository');
   }
   return privateJson(path, 'binding').digest;
-}
-
-export function validateWorkflowManifest(json) {
-  if (json?.version !== 1 || !json.workflows || typeof json.workflows !== 'object' || Array.isArray(json.workflows)) {
-    throw new Error('workflow manifest has an unsupported format');
-  }
-  for (const [key, record] of Object.entries(json.workflows)) {
-    const [name, version] = key.split('@');
-    if (!NAME.test(name) || !/^[1-9]\d*$/.test(version) || key !== name + '@' + version ||
-        !DIGEST.test(record?.digest) || !DIGEST.test(record?.bindingDigest) ||
-        typeof record?.binding !== 'string' || !record.binding.startsWith('/')) {
-      throw new Error('workflow manifest has an invalid record');
-    }
-  }
-  return json;
 }
 
 function readManifest(path) {
