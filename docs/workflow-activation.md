@@ -115,6 +115,17 @@ repository. The credentials must allow PR reads and merges so GitHub can
 reach the expected head-pin refusal. Conformance also starts typed runs on
 both seats and sends wake test messages in an isolated owner thread.
 
+When an approved root-run Claude fixture requires its sandbox flag, add
+`"isolatedEnv": {"IS_SANDBOX": "1"}` at the top level of the private binding.
+Conformance accepts only that flag and value and passes it to the isolated T3
+server, including after restarts.
+
+If the host has an authenticated Executor listener bound to IPv4 loopback,
+set `linear.endpoint` to its explicit `http://127.0.0.1:<port>/mcp` URL and
+set `linear.loopback` to `true`. Use a private Executor client file whose URL
+matches that endpoint. Conformance reads the authorization header from that
+file and rejects redirects. Omit `linear.loopback` for HTTPS.
+
 Prepare the listed PR conditions and open the fresh fixture PR after the
 isolated `opened` watcher starts. Use a different installed version for the
 disposable update target. Conformance checks the CLI part of POC-5. Process
