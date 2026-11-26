@@ -1,14 +1,14 @@
 import { briefs, identity, version, workflow } from '../dependabot-brief.mjs';
 import { repository, scanPulls } from '../dependabot-facts.mjs';
 import { driverReadback, github, ownerBinding, parseYaml, verifiedBinding } from '../dependabot-runtime.mjs';
-import { cleanupWorktree, prepareWorktree } from '../dependabot-worktree.mjs';
+import { cleanupWorktree, prepareWorktree, retainedCheckout } from '../dependabot-worktree.mjs';
 
 const { workflow: define, agent, every, step, store } = T3;
 const base = decodeURIComponent(new URL('../', import.meta.url).pathname).replace(/\/$/, '');
 const trialCount = 'dependabot-merge:report-only-count';
 const runEvidence = (id) => store.entry('dependabot-merge:cleanup:' + id, Schema.Json);
 const cancelledEvidence = (id) => store.entry('dependabot-merge:cancelled:' + id, Schema.String);
-const cancellationReason = 'cancelled run retains its claim; inspect any detached worktree before manual cleanup';
+const cancellationReason = 'cancelled run retains its claim';
 class Hold extends Error {}
 const effectStep = (name, work) => step(name, { returns: Schema.Json }, Effect.tryPromise({
   try: work,
@@ -30,7 +30,7 @@ function reserve(runId, { number, head }, ready = false) {
     const prior = yield* claim.get;
     if (Option.isSome(prior)) {
       return prior.value.runId === runId ? { disposition: prior.value.disposition } :
-        { disposition: 'duplicate', owner: prior.value.runId };
+        { disposition: 'duplicate', owner: prior.value.runId, priorDisposition: prior.value.disposition };
     }
     const count = Option.getOrElse(yield* counter.get, () => 0);
     if (count < 3) {
@@ -44,7 +44,7 @@ function reserve(runId, { number, head }, ready = false) {
   }));
 }
 
-function checkDuplicate(label, owner) {
+function checkDuplicate(label, { owner, priorDisposition }, number) {
   return Effect.gen(function* () {
     const cancelled = yield* step(label + '-duplicate-status', { returns: Schema.Boolean }, Effect.gen(function* () {
       if (Option.isSome(yield* cancelledEvidence(owner).get)) return true;
@@ -53,7 +53,16 @@ function checkDuplicate(label, owner) {
     }));
     if (cancelled) {
       yield* effectStep(label + '-cancelled-claim', async () => {
-        throw new Hold(`${label}: prior ${cancellationReason} (run ${owner})`);
+        const reason = `${label}: prior ${cancellationReason} (run ${owner})`;
+        if (priorDisposition === 'report-only') throw new Hold(reason + '. The claim was report-only.');
+        const config = await binding();
+        const checkout = config ? await retainedCheckout(config, owner, number) : 'unknown';
+        const detail = {
+          present: 'Inspect the retained checkout directory before manual cleanup.',
+          absent: 'No retained checkout was found.',
+          unknown: 'The retained checkout status could not be verified.',
+        };
+        throw new Hold(reason + '. ' + detail[checkout]);
       });
     }
     return { disposition: 'duplicate' };
@@ -72,7 +81,7 @@ function handleHead(runId, pull) {
   return Effect.gen(function* () {
     const label = `pr-${pull.number}`;
     const position = yield* step(label + '-trial', { returns: Schema.Json }, reserve(runId, pull));
-    if (position.disposition === 'duplicate') return yield* checkDuplicate(label, position.owner);
+    if (position.disposition === 'duplicate') return yield* checkDuplicate(label, position, pull.number);
     if (position.disposition === 'report-only') return position;
 
     const { project, ...expected } = yield* effectStep(label + '-owner-catalog', async () => {
@@ -82,7 +91,7 @@ function handleHead(runId, pull) {
       return { ...seat, project: config.project };
     });
     const claimed = yield* step(label + '-claim', { returns: Schema.Json }, reserve(runId, pull, true));
-    if (claimed.disposition === 'duplicate') return yield* checkDuplicate(label, claimed.owner);
+    if (claimed.disposition === 'duplicate') return yield* checkDuplicate(label, claimed, pull.number);
     if (claimed.disposition !== 'claimed') return claimed;
     const worktree = yield* effectStep(label + '-worktree', async () => {
       const checkout = await prepareWorktree(await requireBinding(), runId, pull.number, pull.base);
