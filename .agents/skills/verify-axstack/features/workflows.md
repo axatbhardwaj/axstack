@@ -657,7 +657,8 @@ Run that check and the full recipe on both matrix Bun versions when available.
 
 After Launch and Doctor, keep T3 on PATH if a disposable local server is
 available. The packed loader test writes only its temporary HOME and base.
-Run the CLI ownership, source/build, conformance and real-loader checks:
+The following command checks CLI ownership, bundle reproducibility,
+conformance, and the real loader.
 
 ```bash
 bun run test tests/installer/workflow-opt-in.test.js \
