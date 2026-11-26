@@ -4,7 +4,7 @@ import { isSha } from './dependabot-pins.mjs';
 import { run, validId } from './dependabot-runtime.mjs';
 
 const git = (project, ...args) => run('git', ['-c', 'core.hooksPath=/dev/null', ...args], { cwd: project });
-const under = (path, root) => path === root || path.startsWith(root + '/');
+const under = (path, parent) => path === parent || path.startsWith(parent + '/');
 const origin = new Set([
   `https://github.com/${repository}`, `https://github.com/${repository}.git`,
   `git@github.com:${repository}.git`, `ssh://git@github.com/${repository}.git`,
@@ -12,13 +12,13 @@ const origin = new Set([
 
 async function ownedFolder(binding, runId, number) {
   if (!validId(runId) || !numberId(number)) return null;
-  const { project, worktreeRoot: root } = binding;
-  const info = await lstat(root);
+  const { project, worktreeRoot } = binding;
+  const info = await lstat(worktreeRoot);
   if (!info.isDirectory() || info.uid !== process.getuid() || (info.mode & 0o077) ||
-      root !== await realpath(root) || project !== await realpath(project) ||
-      under(root, project) || under(project, root) ||
+      worktreeRoot !== await realpath(worktreeRoot) || project !== await realpath(project) ||
+      under(worktreeRoot, project) || under(project, worktreeRoot) ||
       !origin.has((await git(project, 'remote', 'get-url', '--all', 'origin'))?.trim())) return null;
-  return `${root}/axstack-dependabot-${runId}-${number}`;
+  return `${worktreeRoot}/axstack-dependabot-${runId}-${number}`;
 }
 
 async function detached(project, worktree, sha) {
