@@ -29,9 +29,13 @@ just the needed columns of `workflow_triggers` and `workflow_runs` from
 `userdata/statev2.sqlite` through a read-only SQLite connection. T3 state
 databases can be tens of GB. The collector traverses the trigger primary-key
 index and the newest run rowids, reading at most 1,001 entries from each table.
-It filters for schedule and probe evidence after the run bound and marks
-coverage incomplete when either table exceeds 1,000 entries. T3 run detail is
-collected for up to 12 owned active runs per host.
+It filters for schedule and probe evidence after the run bound. When either
+table exceeds 1,000 entries, the collector also reads at most one newest
+schedule key per captured trigger using the `(workflow, idempotency_key)`
+index. This can establish that the most recent two-interval window has no
+slot even when the journal has more history. An unavailable index, or a key
+within the window without a matching exported run, leaves the slot unknown.
+T3 run detail is collected for up to 12 owned active runs per host.
 Supply a host-local private file containing an existing `orchestration:read`
 bearer for native loader diagnostics. The collector uses it only against the
 running T3 server's loopback origin and returns the `workflows.subscribe`
@@ -53,7 +57,7 @@ active step needs it.
 | `shows` | Native `t3 workflow show --base-dir <base> --json <run-id>` output keyed by each active run ID. If a run changes state during the read, collect it again at the next tick. |
 | `policies` | The host binding's trigger and timing facts keyed by exact name@version. See below. |
 | `agents` | Optional current native agent facts tied to the run and its active agent step. Supply runId, threadId, the step's environmentId and startedAt, status (healthy or wedged), and the evidence reference. |
-| `journal` | Read-only SQLite export with `triggers`, `runs`, and `complete`. The collector includes the schedule key, scheduled time and run start time. |
+| `journal` | Read-only SQLite export with `triggers`, `runs`, and `complete`. A capped journal can also include `latestScheduledAt`, keyed by native trigger ID. A null value represents an empty indexed key range. An absent key represents unavailable indexed evidence. |
 
 The registry gives the current registered versions, and an active retired
 run identifies a missing version. With no registry, an active run or a native
