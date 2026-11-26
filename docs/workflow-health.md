@@ -86,6 +86,9 @@ it has active runs. A native ask, sleep or wait counts as recorded progress.
 An invokable workflow without active runs needs no periodic tick. For an active
 agent step, bind current thread evidence to distinguish a wedge from work in
 progress. Preserve an unknown status when that evidence is unavailable.
+Bind `axstack-release-reinstall@1` as on-demand on axat-vps. The watchdog
+observes invoked runs. The release driver keeps its own bound one-shot check.
+See [release reinstall](host-operations.md#release-reinstall).
 
 Use `"kind": "scheduled"` with `intervalMs`, `firstDueAt`, and the exact native
 `triggerId` for a scheduled definition. Keep the historical activation time
