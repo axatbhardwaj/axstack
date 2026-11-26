@@ -57,7 +57,9 @@ export function dueSlot(policy, now, superseded) {
   if (Array.isArray(slots)) {
     for (const slot of slots) {
       const due = timestamp(slot?.scheduledAt);
-      if (!word(slot?.runId) || seen.has(slot.runId) || !Number.isFinite(due) || due < first || due > now) {
+      const started = slot && Object.hasOwn(slot, 'startedAt') ? timestamp(slot.startedAt) : due;
+      if (!word(slot?.runId) || seen.has(slot.runId) || !Number.isFinite(due) || due < first || due > now ||
+          !Number.isFinite(started) || started < due || started > now) {
         return term('unknown', 'invalid scheduled-run provenance');
       }
       seen.add(slot.runId);
@@ -66,10 +68,12 @@ export function dueSlot(policy, now, superseded) {
   }
   const cutoff = now - 2 * policy.intervalMs;
   if (latest && timestamp(latest.scheduledAt) >= cutoff) {
-    return term('pass', { runId: latest.runId, scheduledAt: latest.scheduledAt });
+    return term('pass', { runId: latest.runId, scheduledAt: latest.scheduledAt, ...latest.startedAt && { startedAt: latest.startedAt } });
   }
   if (first > cutoff) return term('n/a', { firstDueAt: policy.firstDueAt, reason: 'initial two-interval window' });
-  if (!Array.isArray(slots) || policy.slotsComplete !== true) return term('unknown', 'scheduled-run provenance is incomplete');
+  if (!Array.isArray(slots) || policy.slotsComplete !== true) {
+    return term('unknown', policy.triggerId ? 'T3 workflow_runs export is missing or incomplete' : 'scheduled-run provenance is incomplete');
+  }
   return term('fail', { cutoff: new Date(cutoff).toISOString(), lastDueAt: latest?.scheduledAt ?? null });
 }
 
