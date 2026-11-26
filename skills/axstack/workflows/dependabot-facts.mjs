@@ -17,7 +17,8 @@ async function ciFacts(request, head) {
     githubPages(request, `${root}/commits/${head}/check-runs`, { filter: 'all' }, 'check_runs', id),
     githubPages(request, `${root}/commits/${head}/statuses`, {}, null, id),
   ]);
-  const ci = runs && runs.every((run) => run.head_sha === head && run.name === 'ci') ? status(runs.length) : 'unknown';
+  const knownRuns = runs && runs.every((run) => run.head_sha === head && run.name === 'ci' && typeof run.status === 'string');
+  const ci = knownRuns ? status(runs.length && runs.every((run) => run.status === 'completed')) : 'unknown';
   const known = checks && statuses && checks.every((item) => item.head_sha === head &&
     typeof item.status === 'string' && (item.status !== 'completed' || typeof item.conclusion === 'string')) &&
     statuses.every((item) => typeof item.state === 'string');
