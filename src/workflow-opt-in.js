@@ -2,7 +2,7 @@ import { existsSync, linkSync, lstatSync, mkdirSync, readFileSync, realpathSync,
 import { writeAtomic } from './installer.js';
 import { writeFileExclusive } from './manifest.js';
 import { dirname, join, resolve } from './posixpath.js';
-import { CONFORMANCE_SUITE, requireDrained, requireProbe, requireRunningT3Version, t3Environment, workflowT3Version } from './workflow-t3.js';
+import { matchesWorkflowConformance, requireDrained, requireProbe, requireRunningT3Version, t3Environment, workflowT3Version } from './workflow-t3.js';
 
 const MANIFEST = '.axstack-workflows.json';
 const NAME = /^[A-Za-z0-9_][\w.-]*$/;
@@ -50,20 +50,24 @@ function requirePrivateBinding(path, packageRoot, base) {
   return privateJson(path, 'binding').digest;
 }
 
-function readManifest(path) {
-  if (!inspect(path)) return { version: 1, workflows: {} };
-  const { json } = privateJson(path, 'workflow manifest');
-  if (json.version !== 1 || !json.workflows || typeof json.workflows !== 'object' || Array.isArray(json.workflows)) {
+export function validateWorkflowManifest(json) {
+  if (json?.version !== 1 || !json.workflows || typeof json.workflows !== 'object' || Array.isArray(json.workflows)) {
     throw new Error('workflow manifest has an unsupported format');
   }
   for (const [key, record] of Object.entries(json.workflows)) {
     const [name, version] = key.split('@');
     if (!NAME.test(name) || !/^[1-9]\d*$/.test(version) || key !== name + '@' + version ||
-        !DIGEST.test(record?.digest) || !DIGEST.test(record?.bindingDigest) || !record?.binding?.startsWith('/')) {
+        !DIGEST.test(record?.digest) || !DIGEST.test(record?.bindingDigest) ||
+        typeof record?.binding !== 'string' || !record.binding.startsWith('/')) {
       throw new Error('workflow manifest has an invalid record');
     }
   }
   return json;
+}
+
+function readManifest(path) {
+  if (!inspect(path)) return { version: 1, workflows: {} };
+  return validateWorkflowManifest(privateJson(path, 'workflow manifest').json);
 }
 
 function ownedFile(path, record) {
@@ -99,8 +103,7 @@ async function optIn({ base, directory, manifestPath, manifest, name, flags, pac
   if (name !== 'axstack-load-probe' || !Number.isSafeInteger(version) || version < 1) throw new Error('workflow is outside the shipped catalog');
   const t3Version = workflowT3Version(t3);
   const conformance = privateJson(flags.conformance, 'conformance receipt').json;
-  if (conformance.version !== t3Version || conformance.suite !== CONFORMANCE_SUITE ||
-      conformance.status !== 'pass' || conformance.environment !== t3Environment(base)) {
+  if (!matchesWorkflowConformance(conformance, t3Version, t3Environment(base))) {
     throw new Error('conformance has no passing receipt for this T3 environment, version, and suite');
   }
   requireRunningT3Version(base, t3Version);
