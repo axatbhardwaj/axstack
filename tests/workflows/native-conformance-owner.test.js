@@ -5,7 +5,14 @@ import { runBoundCases } from '../../skills/axstack/workflows/conformance/bound.
 import { git } from '../../skills/axstack/workflows/conformance/provision.mjs';
 import { makeTempRoot } from '../installer/helpers.js';
 
-test.each(['v2', 'legacy'])('bound cases read agent options and archive the disposable owner through %s state', async (schema) => {
+test.each([
+  ['v2', null],
+  ['legacy', null],
+  ['invalid-json', 'V2 thread projection payload is invalid JSON'],
+  ['missing-model-selection', 'V2 thread projection payload has an invalid modelSelection'],
+  ['invalid-options', 'V2 thread projection payload has invalid modelSelection options'],
+  ['missing-payload-column', 'V2 thread projection columns could not be read'],
+])('bound cases report agent options and archive evidence for %s state', async (schema, driftDetail) => {
   const root = makeTempRoot('axstack-bound-owner-');
   const base = root + '/base';
   const project = root + '/project';
@@ -14,17 +21,33 @@ test.each(['v2', 'legacy'])('bound cases read agent options and archive the disp
   writeFileSync(root + '/gitconfig', '');
   const state = new Database(base + '/userdata/statev2.sqlite');
   const table = 'orchestration_v2_projection_threads';
-  const v2 = schema === 'v2';
+  const v2 = schema !== 'legacy';
+  const missingColumn = schema === 'missing-payload-column';
   if (v2) {
-    state.run(`CREATE TABLE ${table} (thread_id TEXT PRIMARY KEY, payload_json TEXT, archived_at TEXT)`);
+    const payloadColumn = missingColumn ? '' : 'payload_json TEXT, ';
+    state.run(`CREATE TABLE ${table} (thread_id TEXT PRIMARY KEY, ${payloadColumn}archived_at TEXT)`);
   }
   state.run('CREATE TABLE projection_threads (thread_id TEXT PRIMARY KEY, model_selection_json TEXT, archived_at TEXT)');
   const save = (id, modelSelection) => {
-    if (v2) state.run(`INSERT INTO ${table} VALUES (?, ?, NULL)`, [id, JSON.stringify({ modelSelection, archivedAt: null })]);
-    else state.run('INSERT INTO projection_threads VALUES (?, ?, NULL)', [id, JSON.stringify(modelSelection)]);
+    if (!v2) {
+      state.run('INSERT INTO projection_threads VALUES (?, ?, NULL)', [id, JSON.stringify(modelSelection)]);
+      return;
+    }
+    if (missingColumn) {
+      state.run(`INSERT INTO ${table} (thread_id) VALUES (?)`, [id]);
+      return;
+    }
+    const payloads = {
+      'invalid-json': '{private',
+      'missing-model-selection': '{"archivedAt":null}',
+      'invalid-options': JSON.stringify({ modelSelection: { ...modelSelection, options: { private: true } } }),
+    };
+    const payload = id !== 'owner' ? payloads[schema] : null;
+    state.run(`INSERT INTO ${table} VALUES (?, ?, NULL)`, [id, payload ?? JSON.stringify({ modelSelection, archivedAt: null })]);
   };
   const readArchive = (id) => {
     if (!v2) return state.query('SELECT archived_at FROM projection_threads WHERE thread_id = ?').get(id)?.archived_at;
+    if (missingColumn) return null;
     const row = state.query(`SELECT archived_at, payload_json FROM ${table} WHERE thread_id = ?`).get(id);
     return row?.archived_at && JSON.parse(row.payload_json).archivedAt === row.archived_at;
   };
@@ -103,11 +126,13 @@ test.each(['v2', 'legacy'])('bound cases read agent options and archive the disp
     git(server, 'init', '--quiet');
     git(server, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--allow-empty', '-qm', 'fixture');
     const report = await runBoundCases(server, { seats: { claude, codex } });
+    const agent = driftDetail ? { status: 'unknown', detail: driftDetail } : { status: 'pass' };
+    const owner = missingColumn ? agent : { status: 'pass' };
     expect(report).toMatchObject({
-      'POC-1': { status: 'pass' }, 'POC-3-agent': { status: 'pass' },
-      'POC-6': { status: 'pass' }, 'POC-8': { status: 'pass' },
+      'POC-1': agent, 'POC-3-agent': agent,
+      'POC-6': owner, 'POC-8': { status: 'pass' },
     });
-    expect(readArchive('owner')).toBeTruthy();
+    expect(Boolean(readArchive('owner'))).toBe(!missingColumn);
     expect(commitMoveChecked).toBe(true);
   } finally {
     state.close();
