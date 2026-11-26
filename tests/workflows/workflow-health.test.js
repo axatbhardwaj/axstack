@@ -141,11 +141,17 @@ test('uses native show steps for on-demand progress and tied agent evidence for 
 
 test('isolates unreachable, malformed list, and malformed ownership observations', () => {
   const offline = host({ reachable: false, runs: [], host: 'fixture-offline' });
+  offline.policies[`${tick}@1`].slots = [{ runId: 'cached-slot', scheduledAt: at(0, 30) }];
   const malformed = host({ runs: 'invalid JSON', host: 'fixture-invalid' });
   const invalidManifest = host({ manifest: { version: 7 }, host: 'fixture-manifest' });
   const { code, report } = evaluate(offline, malformed, invalidManifest, host());
   expect(code).toBe(2);
   expect(report.hosts[0].checks.inventory).toEqual(term('unknown'));
+  expect(report.hosts[0].checks.ownership).toEqual(term('unknown'));
+  expect(report.hosts[0].checks.conformance).toEqual(term('unknown'));
+  expect(report.hosts[0].checks.loader).toEqual(term('unknown'));
+  expect(report.hosts[0].holds).toEqual(['new-activations']);
+  expect(byWorkflow(report, tick).dueSlot).toEqual(term('unknown'));
   expect(byWorkflow(report, task).definitionLoaded).toEqual(term('unknown'));
   expect(report.hosts[1].workflows[0].checks.pausedRuns).toEqual(term('unknown'));
   expect(report.hosts[2].checks.ownership).toEqual(term('unknown'));
@@ -186,4 +192,40 @@ test('uses status-filtered native lists and keeps a capped inventory incomplete'
   expect(byWorkflow(capped.report, tick).staleRuns).toEqual(term('unknown'));
   const history = Array.from({ length: 500 }, (_, index) => run(task, `terminal-${index}`, 'completed', at(0, 2)));
   expect(evaluate(host({ runs: history })).report.hosts[0].checks.inventory).toEqual(term('unknown'));
+});
+
+test('binds the native trigger and journal slot to the expected workflow version', () => {
+  const triggerId = `${tick}/every:1800000`;
+  const policy = { kind: 'scheduled', intervalMs: duration, firstDueAt: at(3), triggerId };
+  const slot = { workflow: tick, version: 1, runId: 'native-slot', scheduledAt: at(1), startedAt: at(0, 59), parentRunId: null,
+    idempotencyKey: `trigger:${triggerId}:${at(1)}` };
+  const input = host({ registry: null });
+  input.policies[`${tick}@1`] = policy;
+  input.journal = { complete: true, triggers: [{ triggerId, nextAt: now }], runs: [slot] };
+  let checks = byWorkflow(evaluate(input).report, tick);
+  expect(checks.definitionLoaded).toMatchObject({ status: 'pass', evidence: { triggerId, runId: slot.runId } });
+  expect(checks.dueSlot).toMatchObject({ status: 'pass', evidence: { runId: slot.runId, startedAt: slot.startedAt } });
+  input.journal.runs = [{ ...slot, idempotencyKey: 'manual-invocation' }, { ...slot, runId: 'other-version', version: 2 }];
+  checks = byWorkflow(evaluate(input).report, tick);
+  expect(checks.definitionLoaded).toEqual(term('unknown'));
+  expect(checks.dueSlot).toEqual(term('fail'));
+  input.journal.complete = false;
+  expect(byWorkflow(evaluate(input).report, tick).dueSlot).toEqual(term('unknown'));
+  input.journal.runs = [{ ...slot, startedAt: at(1, 1) }];
+  expect(byWorkflow(evaluate(input).report, tick).dueSlot).toEqual(term('unknown'));
+});
+
+test('uses only a fresh, exact probe receipt for a triggerless workflow without registry evidence', () => {
+  const probe = 'axstack-load-probe';
+  const identity = `${probe}@1`;
+  const input = host({ registry: null, catalog: { [probe]: 1 },
+    manifest: { version: 1, workflows: { [identity]: record } }, policies: { [identity]: { kind: 'on-demand' } } });
+  const receipt = { workflow: probe, version: 1, runId: 'probe', startedAt: at(0, 1), endedAt: at(0, 1),
+    status: 'completed', idempotencyKey: 'axstack-watchdog-fixture', probeWorkflow: identity, binding: 'pass' };
+  input.journal = { complete: true, triggers: [], runs: [receipt] };
+  expect(byWorkflow(evaluate(input).report, probe).definitionLoaded).toMatchObject({ status: 'pass', evidence: { runId: 'probe' } });
+  for (const invalid of [{ version: 2 }, { binding: 'fail' }, { idempotencyKey: 'manual' }, { startedAt: at(2) }]) {
+    input.journal.runs = [{ ...receipt, ...invalid }];
+    expect(byWorkflow(evaluate(input).report, probe).definitionLoaded).toEqual(term('unknown'));
+  }
 });
