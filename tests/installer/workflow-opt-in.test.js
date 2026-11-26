@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { existsSync, mkdirSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { BUN_BIN, makeTempRoot, runCli } from './helpers.js';
 
@@ -46,14 +46,23 @@ else if (args[0] === 'workflow' && args.includes('--base-dir') &&
 } else process.exit(2);
 `, { mode: 0o700 });
   writeFileSync(receipt, JSON.stringify({ version: '0.1.12', suite: 1, environment: 'fixture-environment', status: 'pass' }), { mode: 0o600 });
-  const call = (args, expectFail = false) => runCli(cli, args, {
+  const call = (args, expectFail = false, entry = cli) => runCli(entry, args, {
     cwd: scratch, expectFail, env: { HOME: home, PATH: bin }, unset: ['T3CODE_HOME', 'T3CODE_WORKFLOWS'],
   }).out;
-  const optIn = (expectFail = false) => call([
-    'workflow', 'opt-in', '--name', workflow, '--binding', binding, '--conformance', receipt, '--yes',
-  ], expectFail);
+  const optIn = (expectFail = false, { bindingPath = binding, entry } = {}) => call([
+    'workflow', 'opt-in', '--name', workflow, '--binding', bindingPath, '--conformance', receipt, '--yes',
+  ], expectFail, entry);
   const remove = (expectFail = false) => call(['workflow', 'remove', '--name', workflow, '--version', '1', '--yes'], expectFail);
-  return { home, base, workflows, manifest, binding, receipt, call, optIn, remove, update };
+  return { scratch, home, base, workflows, manifest, binding, receipt, call, optIn, remove, update };
+}
+
+function fixtureEntry(scratch, { packageRoot = root, prelude = '' } = {}) {
+  const entry = join(scratch, 'workflow-cli.mjs');
+  writeFileSync(entry, `${prelude}
+const { workflowCli } = await import(${JSON.stringify(join(root, 'src/workflow-cli.js'))});
+await workflowCli(Bun.argv.slice(3), ${JSON.stringify(packageRoot)});
+`);
+  return entry;
 }
 
 test('ordinary install is idempotent and leaves the temp T3 home untouched', () => {
@@ -137,6 +146,13 @@ test('missing conformance resources produce a private hold receipt for this T3 e
   expect(optIn(true)).toContain('conformance');
 });
 
+test('a missing forge binding names merge-capable credentials scoped to the disposable repository', () => {
+  const { call, binding, receipt } = setup();
+  call(['workflow', 'conformance', '--binding', binding, '--out', receipt], true);
+  const { details } = JSON.parse(readFileSync(receipt, 'utf8'));
+  expect(details.missing.find((resource) => resource.includes('forge'))).toMatch(/merge-capable credentials.*disposable repository/i);
+});
+
 test('a mismatched running T3 server version holds opt-in', () => {
   const { optIn, base, workflows } = setup();
   writeFileSync(join(base, 'userdata/server-runtime.json'), '{"serverVersion":"0.1.11"}');
@@ -153,4 +169,103 @@ test('removal reads active status inventory and preserves concurrent edits', () 
   update({ editDuringInventory: target });
   expect(remove(true)).toContain('modified');
   expect(readFileSync(target, 'utf8')).toBe('// changed during inventory');
+});
+
+test('opt-in refuses a binding in a Git worktree', () => {
+  const { scratch, optIn, manifest } = setup();
+  const repository = join(scratch, 'repository');
+  mkdirSync(repository);
+  writeFileSync(join(repository, '.git'), 'gitdir: fixture-worktree-metadata');
+  const bindingPath = join(repository, 'private.json');
+  writeFileSync(bindingPath, '{}', { mode: 0o600 });
+  expect(optIn(true, { bindingPath })).toContain('binding must be outside the repository');
+  expect(existsSync(manifest)).toBe(false);
+});
+
+test.each([false, true])('opt-in rejects a binding in its package, including an aliased package root (%s)', (aliased) => {
+  const { scratch, optIn, manifest } = setup();
+  const packageRoot = join(scratch, 'package');
+  const packageAlias = join(scratch, 'package-alias');
+  mkdirSync(join(packageRoot, 'skills/axstack'), { recursive: true });
+  cpSync(join(root, 'skills/axstack/workflows'), join(packageRoot, 'skills/axstack/workflows'), { recursive: true });
+  symlinkSync(packageRoot, packageAlias);
+  const bindingPath = join(packageRoot, 'private.json');
+  writeFileSync(bindingPath, '{}', { mode: 0o600 });
+  const entry = fixtureEntry(scratch, { packageRoot: aliased ? packageAlias : packageRoot });
+  expect(optIn(true, { bindingPath, entry })).toContain('binding must be outside the package');
+  expect(existsSync(manifest)).toBe(false);
+});
+
+test.each(['binding', 'receipt', 'manifest'])('opt-in refuses a non-private %s', (kind) => {
+  const fixture = setup();
+  if (kind === 'manifest') fixture.optIn();
+  chmodSync(fixture[kind], 0o644);
+  expect(fixture.optIn(true)).toContain('must be a private regular file owned by the current user');
+});
+
+test.each(['binding', 'receipt', 'manifest'])('opt-in refuses a private %s owned by a different user', (kind) => {
+  const fixture = setup();
+  if (kind === 'manifest') fixture.optIn();
+  // Project a foreign owner on just this file so the test also runs without chown authority.
+  const entry = fixtureEntry(fixture.scratch, { prelude: `
+import fs from 'node:fs';
+import { mock } from 'bun:test';
+const lstat = fs.lstatSync;
+mock.module('node:fs', () => ({ ...fs, lstatSync(path, ...args) {
+  const info = lstat(path, ...args);
+  if (path === ${JSON.stringify(fixture[kind])}) info.uid = process.getuid() + 1;
+  return info;
+} }));
+` });
+  expect(fixture.optIn(true, { entry })).toContain('must be a private regular file owned by the current user');
+});
+
+test('opt-in repairs ownership persisted before an interrupted deployment', () => {
+  const { scratch, optIn, manifest, workflows, binding } = setup();
+  const target = join(workflows, name);
+  const entry = fixtureEntry(scratch, { prelude: `
+import fs from 'node:fs/promises';
+import { mock } from 'bun:test';
+const open = fs.open;
+mock.module('node:fs/promises', () => ({ ...fs, open(path, ...args) {
+  if (path.startsWith(${JSON.stringify(target + '.installing-')})) {
+    console.error('interrupted before bundle deployment');
+    process.exit(77);
+  }
+  return open(path, ...args);
+} }));
+` });
+  expect(optIn(true, { entry })).toContain('interrupted before bundle deployment');
+  expect(readdirSync(workflows)).toEqual([]);
+  const ownership = readFileSync(manifest, 'utf8');
+  expect(JSON.parse(ownership).workflows[workflow + '@1'].binding).toBe(binding);
+  // The interrupted process exited. Clear its empty lock as documented for operators.
+  rmdirSync(manifest + '.lock');
+  expect(optIn()).toContain('registered');
+  expect(readdirSync(workflows)).toEqual([name]);
+  expect(readFileSync(manifest, 'utf8')).toBe(ownership);
+});
+
+test('removal drops an absent bundle from the manifest after its runs drain', () => {
+  const { optIn, remove, workflows, manifest, update } = setup();
+  optIn();
+  unlinkSync(join(workflows, name));
+  update({ runs: [{ workflow, version: 1, status: 'waiting', runId: 'orphaned-run' }] });
+  expect(remove(true)).toContain('orphaned-run');
+  expect(JSON.parse(readFileSync(manifest, 'utf8')).workflows).toHaveProperty(workflow + '@1');
+  update();
+  expect(remove()).toContain('removed');
+  expect(JSON.parse(readFileSync(manifest, 'utf8')).workflows).toEqual({});
+  expect(readdirSync(workflows)).toEqual([]);
+});
+
+test('failed registration preserves a file edited during the rollback inventory', () => {
+  const { optIn, workflows, manifest, update } = setup();
+  const target = join(workflows, name);
+  update({ registered: 2, editDuringInventory: target });
+  const result = optIn(true);
+  expect(existsSync(target)).toBe(true);
+  expect(readFileSync(target, 'utf8')).toBe('// changed during inventory');
+  expect(result).toContain('modified');
+  expect(JSON.parse(readFileSync(manifest, 'utf8')).workflows).toHaveProperty(workflow + '@1');
 });
