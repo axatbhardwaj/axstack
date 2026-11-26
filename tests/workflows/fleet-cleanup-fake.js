@@ -23,7 +23,9 @@ export async function fake(binary, dir) {
   if (args.some((arg) => arg.includes("'thread' 'list'")) || args[1] === 'list') {
     const briefs = await Bun.file(dir + '/briefs').json();
     const cleaned = briefs.length === 2 && !scenario.missingReadback;
-    const threads = remote ? [] : row.map((thread) => cleaned ? { ...thread, settled: true } : thread);
+    const threads = remote ? [] : row.map((thread) => cleaned
+      ? { ...thread, settled: true, archived: briefs[1].includes('/archive') }
+      : thread);
     const list = { complete: true, includesDescendants: true, nextCursor: null, threads };
     const result = scenario.legacy ? threads :
       scenario.bare && !remote ? observed :
