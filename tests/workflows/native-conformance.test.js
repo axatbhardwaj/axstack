@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { existsSync, mkdirSync, symlinkSync } from 'node:fs';
+import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { makeTempRoot } from '../installer/helpers.js';
 
@@ -36,3 +36,27 @@ test.skipIf(!t3)('isolated T3 replays local conformance cases (skips when t3 is 
     'POC-9': { status: 'pass' },
   });
 }, 360_000);
+
+test.skipIf(!t3)('the real T3 loader accepts bound fixtures with object-shaped provider settings', async () => {
+  const { usingIsolatedT3 } = await import(runtime);
+  const { provision } = await import(join(runtime, '../provision.mjs'));
+  const fixture = (server, name, json) => {
+    const file = join(server.root, name);
+    writeFileSync(file, JSON.stringify(json), { mode: 0o600 });
+    return file;
+  };
+  await usingIsolatedT3({
+    t3,
+    beforeStart: (server, settings) => provision(server, settings, {
+      providers: { settings: fixture(server, 'provider-settings.json', { providerInstances: {} }), secrets: [] },
+      forge: { repo: 'fixture-org/disposable', absentRepo: 'fixture-org/absent', cases: {},
+        config: fixture(server, 'forge-config.json', {}) },
+      ssh: {},
+      linear: { clientFile: fixture(server, 'executor-client.json', { mcpServers: {} }),
+        endpoint: 'https://example.invalid/mcp', tool: 'linear_app.fixture.list_issues' },
+    }),
+  }, async (server) => {
+    const run = server.start('ax-conf-linear', 'missing-credential');
+    expect((await server.waitFor(run.runId, 'completed')).result).toEqual({ status: 'unknown' });
+  });
+}, 60_000);
