@@ -21,6 +21,32 @@ test('conformance rejects the default T3 base and its symlink aliases before an 
   expect(() => assertIsolatedBase(join(scratch, '.t3'), home)).not.toThrow();
 });
 
+test('the persistence replay rejects an aliased default base before starting either run', async () => {
+  const root = makeTempRoot('axstack-persistence-guard-');
+  const home = join(root, 'home');
+  const base = join(root, 'aliased-base');
+  const workflows = join(root, 'workflows');
+  const marker = join(root, 'command-started');
+  mkdirSync(join(home, '.t3'), { recursive: true });
+  mkdirSync(workflows);
+  symlinkSync(join(home, '.t3'), base);
+  const fixtureT3 = join(root, 't3');
+  writeFileSync(fixtureT3, `#!${process.execPath}
+await Bun.write(${JSON.stringify(marker)}, 'started');
+console.log(JSON.stringify({ run: { runId: 'fixture-run' } }));
+`, { mode: 0o700 });
+
+  const { assertIsolatedBase } = await import(runtime);
+  const { runLocalCases } = await import(join(runtime, '../local.mjs'));
+  const refuse = () => assertIsolatedBase(base, home);
+  const report = await runLocalCases({
+    root, base, workflows, t3: fixtureT3, env: {},
+    restart: async () => {}, stop: refuse, start: refuse, startAsync: async () => refuse(), waitFor: refuse,
+  });
+  expect(existsSync(marker)).toBe(false);
+  expect(report['POC-7']).toEqual({ status: 'fail', detail: 'refusing the default T3 base' });
+});
+
 const t3 = Bun.which('t3');
 test.skipIf(!t3)('isolated T3 replays local conformance cases (skips when t3 is absent from PATH)', async () => {
   const path = join(import.meta.dir, '../../skills/axstack/workflows/conformance/local.mjs');
