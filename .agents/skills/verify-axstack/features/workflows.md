@@ -665,6 +665,7 @@ bun run test tests/installer/workflow-opt-in.test.js \
   tests/installer/workflow-packed.test.js tests/workflows/native-bundle.test.js \
   tests/workflows/native-conformance.test.js \
   tests/workflows/workflow-health.test.js tests/workflows/workflow-health-prose.test.js \
+  tests/workflows/workflow-observe.test.js \
   > "$EVIDENCE/native-workflows.log" 2>&1
 ```
 
@@ -674,7 +675,9 @@ SSH, Executor, and disposable update fixtures separately using the approved
 private resources described in [workflow activation](../../../../docs/workflow-activation.md).
 
 The health tests exercise unreachable and journal evidence, and the watchdog
-and sweep instruction contracts. The packed T3 fixture invokes `workflow observe`
+and sweep instruction contracts. Collector tests use a fixture CLI and SQLite
+databases to exercise read-only open, schema gaps, server replacement, bounded
+exports, and registry guards without a T3 binary. The packed T3 fixture invokes `workflow observe`
 with and without the scoped registry token, checks the native load-probe
 receipt, and feeds the collected paused run into `workflow health`.
 Live fleet collection, the installed watchdog schedule and its sweep handoff
