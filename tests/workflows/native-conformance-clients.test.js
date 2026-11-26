@@ -242,6 +242,24 @@ test.each([
     expected: { status: 'pass', count: 0, hasNextPage: false, hasCursor: false, coverage: 'complete', failureCoverage: 'unknown' },
   },
   {
+    name: 'Linear MCP page without pagination metadata',
+    structured: true,
+    page: { issues: [{ id: 'fixture-issue' }] },
+    expected: { status: 'pass', count: 1, hasNextPage: null, hasCursor: false, coverage: 'unknown', failureCoverage: 'unknown' },
+  },
+  {
+    name: 'Linear MCP page with a cursor despite a terminal flag',
+    structured: true,
+    page: { issues: [], pageInfo: { hasNextPage: false, endCursor: 'fixture' } },
+    expected: { status: 'pass', count: 0, hasNextPage: false, hasCursor: true, coverage: 'unknown', failureCoverage: 'unknown' },
+  },
+  {
+    name: 'Linear MCP page exceeding the one-issue limit',
+    structured: true,
+    page: { issues: [{ id: 'fixture-first' }, { id: 'fixture-second' }], hasNextPage: false },
+    expected: { status: 'unknown' },
+  },
+  {
     name: 'unrecognized Linear MCP page',
     structured: true,
     page: { shape: { type: 'object' } },
