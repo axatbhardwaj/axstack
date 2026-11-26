@@ -631,6 +631,24 @@ async function prepareWorktree(binding, runId, number, sha) {
     return null;
   }
 }
+async function retainedCheckout(binding, runId, number) {
+  try {
+    const folder = await ownedFolder(binding, runId, number);
+    if (!folder)
+      return "unknown";
+    const checkout = folder + "/checkout";
+    const info = await lstat2(checkout).catch((error) => {
+      if (error.code !== "ENOENT")
+        throw error;
+      return null;
+    });
+    if (!info)
+      return "absent";
+    return info.isDirectory() && await realpath2(checkout) === checkout ? "present" : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
 async function cleanupWorktree(binding, { runId, number, base, worktree }) {
   try {
     const folder = await ownedFolder(binding, runId, number);
@@ -651,7 +669,7 @@ var base = decodeURIComponent(new URL("../", import.meta.url).pathname).replace(
 var trialCount = "dependabot-merge:report-only-count";
 var runEvidence = (id) => store.entry("dependabot-merge:cleanup:" + id, Schema.Json);
 var cancelledEvidence = (id) => store.entry("dependabot-merge:cancelled:" + id, Schema.String);
-var cancellationReason = "cancelled run retains its claim; inspect any detached worktree before manual cleanup";
+var cancellationReason = "cancelled run retains its claim";
 
 class Hold extends Error {
 }
@@ -673,7 +691,7 @@ function reserve(runId, { number, head }, ready = false) {
   return store.transaction(Effect.gen(function* () {
     const prior = yield* claim.get;
     if (Option.isSome(prior)) {
-      return prior.value.runId === runId ? { disposition: prior.value.disposition } : { disposition: "duplicate", owner: prior.value.runId };
+      return prior.value.runId === runId ? { disposition: prior.value.disposition } : { disposition: "duplicate", owner: prior.value.runId, priorDisposition: prior.value.disposition };
     }
     const count = Option.getOrElse(yield* counter.get, () => 0);
     if (count < 3) {
@@ -687,7 +705,7 @@ function reserve(runId, { number, head }, ready = false) {
     return { disposition: "claimed" };
   }));
 }
-function checkDuplicate(label, owner) {
+function checkDuplicate(label, { owner, priorDisposition }, number) {
   return Effect.gen(function* () {
     const cancelled = yield* step(label + "-duplicate-status", { returns: Schema.Boolean }, Effect.gen(function* () {
       if (Option.isSome(yield* cancelledEvidence(owner).get))
@@ -697,7 +715,17 @@ function checkDuplicate(label, owner) {
     }));
     if (cancelled) {
       yield* effectStep(label + "-cancelled-claim", async () => {
-        throw new Hold(`${label}: prior ${cancellationReason} (run ${owner})`);
+        const reason = `${label}: prior ${cancellationReason} (run ${owner})`;
+        if (priorDisposition === "report-only")
+          throw new Hold(reason + ". The claim was report-only.");
+        const config = await binding();
+        const checkout = config ? await retainedCheckout(config, owner, number) : "unknown";
+        const detail = {
+          present: "Inspect the retained checkout directory before manual cleanup.",
+          absent: "No retained checkout was found.",
+          unknown: "The retained checkout status could not be verified."
+        };
+        throw new Hold(reason + ". " + detail[checkout]);
       });
     }
     return { disposition: "duplicate" };
@@ -717,7 +745,7 @@ function handleHead(runId, pull) {
     const label = `pr-${pull.number}`;
     const position = yield* step(label + "-trial", { returns: Schema.Json }, reserve(runId, pull));
     if (position.disposition === "duplicate")
-      return yield* checkDuplicate(label, position.owner);
+      return yield* checkDuplicate(label, position, pull.number);
     if (position.disposition === "report-only")
       return position;
     const { project, ...expected } = yield* effectStep(label + "-owner-catalog", async () => {
@@ -729,7 +757,7 @@ function handleHead(runId, pull) {
     });
     const claimed = yield* step(label + "-claim", { returns: Schema.Json }, reserve(runId, pull, true));
     if (claimed.disposition === "duplicate")
-      return yield* checkDuplicate(label, claimed.owner);
+      return yield* checkDuplicate(label, claimed, pull.number);
     if (claimed.disposition !== "claimed")
       return claimed;
     const worktree = yield* effectStep(label + "-worktree", async () => {
