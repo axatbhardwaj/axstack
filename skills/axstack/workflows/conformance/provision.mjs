@@ -39,7 +39,7 @@ function privateBytes(path) {
 
 export function git(server, ...args) {
   const result = Bun.spawnSync(['git', '-C', server.project, ...args], {
-    env: { ...server.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' }, timeout: 15_000, stderr: 'pipe',
+    env: { ...server.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: `${server.root}/gitconfig` }, timeout: 15_000, stderr: 'pipe',
   });
   if (result.exitCode !== 0) throw new Error('conformance Git fixture command failed');
   return result.stdout.toString().trim();
@@ -59,6 +59,7 @@ export function provision(server, settings, binding) {
   mkdirSync(config, { recursive: true, mode: 0o700 });
   writeFileSync(config + '/hosts.yml', privateBytes(binding.forge.config), { mode: 0o600 });
   privateBytes(binding.linear.clientFile);
+  writeFileSync(`${server.root}/gitconfig`, '', { mode: 0o600 });
   git(server, 'init', '--quiet');
   git(server, '-c', 'user.name=Axstack Conformance', '-c', 'user.email=fixture@example.invalid',
     'commit', '--allow-empty', '-qm', 'Isolated conformance');
