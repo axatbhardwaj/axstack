@@ -697,3 +697,14 @@ trigger, drives an isolated due slot with incomplete binding, and checks that
 workflow health reports the resulting pause. It verifies deactivation through
 the live registry. The first three eligible nights on
 the opt-in host supply separate activation evidence.
+
+Fleet cleanup replays the real workflow entry with fake T3, SSH and Git.
+Run `bun run test tests/workflows/fleet-cleanup-{workflow,native}.test.js
+tests/workflows/native-bundle.test.js`. The replay checks five-host
+coverage, cleanup and report-only agent calls, operation claims, binding
+readback, native result readback and dirty or unpushed worktree guards.
+The disposable T3 test checks that a missing private binding pauses
+before creating an agent step. Read the recorded loader skip if T3 is
+unavailable. The captured 0.1.12 list and predecessor receipt exercise
+unknown coverage. Fresh, complete fleet coverage and an executed
+predecessor handoff require separate evidence.
