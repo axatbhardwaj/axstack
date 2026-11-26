@@ -7,6 +7,7 @@ import { nonBumps } from './dependabot-forge-fixture.js';
 const source = `${import.meta.dir}/../../skills/axstack/workflows`;
 const runId = 'f'.repeat(32);
 const head = 'a'.repeat(40);
+const cancelledReportRun = 'e'.repeat(32);
 const scenarios = [
   { name: 'matching binding and verified merged outcome', acted: true, outcome: 'merged' },
   { name: 'mismatched effective binding', mismatch: true, acted: false, outcome: 'paused' },
@@ -114,6 +115,11 @@ for (const [index, item] of cases.entries()) {
     if (!item.freshStore) currentStore.set('dependabot-merge:report-only-count', 3);
     runtimeRuns.length = 0;
     globalThis.checkouts.clear();
+  }
+  if (item.cancelledReport) {
+    const prior = ${JSON.stringify(cancelledReportRun)};
+    currentStore.set('axatbhardwaj/axstack#1@' + '1'.repeat(40), { runId: prior, disposition: 'report-only' });
+    runtimeRuns.push({ id: prior, status: 'cancelled' });
   }
   const id = item.continueSeries ? String(index).padStart(32, '0') : ${JSON.stringify(runId)};
   const currentRun = { id, status: 'running' };
@@ -266,15 +272,14 @@ test.each([
 });
 
 test('a cancelled report-only claim holds without checkout cleanup guidance', () => {
-  const [report, retry] = replay([{ freshStore: true, cancelAfter: true }, { continueSeries: true }]);
-  expect(report).toMatchObject({ disposition: 'report-only', calls: [] });
+  const [retry] = replay([{ cancelledReport: true }]);
   expect(retry).toMatchObject({
     disposition: 'paused',
     failedStep: 'pr-1-cancelled-claim',
     calls: [],
     checkoutReads: 0,
   });
-  expect(retry.reason).toContain(runId);
+  expect(retry.reason).toContain(cancelledReportRun);
   expect(retry.reason).toContain('report-only');
   expect(retry.reason).not.toMatch(/worktree|checkout|cleanup/);
 });
