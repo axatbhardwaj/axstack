@@ -33,6 +33,18 @@ test('eligible item claims one operation and runs in the verified owner thread',
   expect(claims[claim]).toBe(runId);
 }, 12_000);
 
+for (const [label, receiptTime] of [
+  ['one second before the tick', '2026-11-26T23:59:59.000Z'],
+  ['exactly one interval before the tick', '2026-11-26T23:30:00.000Z'],
+]) {
+  test(`a receipt captured ${label} keeps the item eligible`, async () => {
+    const { result, agents, claims } = await replay({ eligible: true, receiptTime });
+    expect(result).toMatchObject({ decision: 'complete', items: [operation], gaps: [] });
+    expect(agents.map(({ name }) => name)).toEqual(['prepare-owner', 'cleanup-owner']);
+    expect(claims[claim]).toBe(runId);
+  }, 12_000);
+}
+
 for (const [label, scenario, gap] of [
   ['unreachable host', { offline: true }, 'iobox/host-unreachable'],
   ['partial list', { partial: true }, 'axat-vps/thread-coverage'],
@@ -40,13 +52,17 @@ for (const [label, scenario, gap] of [
   ['missing descendants', { descendantGap: true }, 'axat-vps/thread-coverage'],
   ['missing project coverage', { projectGap: true }, 'iobook/project-coverage'],
   ['unreadable Git', { gitGap: true }, 'axat-vps/worktrees'],
-  ['stale receipt', { receiptTime: '2026-11-26T23:00:00.000Z' }, 'fleet/receipt'],
+  ['receipt older than one interval', { receiptTime: '2026-11-26T23:29:59.999Z' }, 'fleet/receipt'],
+  ['future-dated receipt', { receiptTime: '2026-11-27T00:00:00.001Z' }, 'fleet/receipt'],
   ['invalid predecessor format', { legacy: true }, 'fleet/receipt'],
   ['unfinished continuity', { snoozes: [{}] }, 'fleet/continuity'],
   ...['accepted', 'descendantsClear', 'ownership', 'preserved', 'protectionClear'].map((guard) =>
     ['unproved ' + guard, { decision: { guards: { [guard]: false } } }, 'axat-vps/decision']),
   ['unknown pending tasks', { thread: { pendingBackgroundTasks: null } }, 'axat-vps/thread-coverage'],
-  ['stale candidate revision', { decision: { updatedAt: '2026-11-26T23:59:59.000Z' } }, 'axat-vps/decision'],
+  ['stale candidate revision', {
+    receiptTime: '2026-11-26T23:59:59.000Z',
+    decision: { updatedAt: '2026-11-26T23:59:59.000Z' },
+  }, 'axat-vps/decision'],
   ['invalid thread identity', { thread: { threadId: 'mcp:private id' } }, 'axat-vps/thread-coverage'],
   ['missing claimed worktree', { worktree: '/fixture/missing' }, 'axat-vps/worktree-identity'],
   ['moved worktree head', { worktree: '/fixture/topic', movedHead: true }, 'axat-vps/worktree-identity'],
@@ -97,6 +113,11 @@ for (const [label, scenario, reason, expected] of [
   ['prior claim', { claim }, 'prior cleanup claim', []],
   ['unavailable catalog', { catalogGap: true }, 'owner binding', []],
   ['unavailable live catalog RPC', { rpcGap: true }, 'owner binding', []],
+  ['owner thread from a different project', { ownerProjectId: '71710000-0000-4000-8000-000000000002' },
+    'effective owner binding or transcript mismatched', ['prepare-owner']],
+  ['catalog change after owner preparation', { catalogChangeAt: 2 }, 'effective owner binding changed', ['prepare-owner']],
+  ['catalog change after cleanup turn', { catalogChangeAt: 3 },
+    'effective owner binding changed', ['prepare-owner', 'cleanup-owner']],
   ['effective binding mismatch', { readbackMismatch: true }, 'effective owner binding', ['prepare-owner']],
   ['user takeover', { takenOver: true }, 'effective owner binding', ['prepare-owner']],
   ['cleanup agent hold', { workHold: true }, 'cleanup owner held', ['prepare-owner', 'cleanup-owner']],
