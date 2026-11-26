@@ -257,6 +257,39 @@ When an ownership record exists and the bundle is absent, opt in again
 with the same binding to restore the bundle, or use `workflow remove`
 to clear the record after its runs drain.
 
+## Release reinstall binding
+
+On axat-vps, prepare a mode 0600 binding outside the repository and T3 base.
+Use these keys with the host's observed absolute paths.
+
+| Key | Value |
+| --- | --- |
+| `hosts` | Object keyed by `io`, `iobook`, `iobox`, `iosatellite` and `axat-vps`. Values are `xzat@io`, `iobook`, `xzat@iobox`, `xzat@iosatellite` and `local` respectively. |
+| `localHostname` | The VPS short hostname. |
+| `reinstallScript` and `reinstallDigest` | Canonical path to the owner-controlled reinstall script and SHA-256 of its exact bytes. The four SSH hosts run this pinned script. |
+| `globalBun` | Absolute VPS Bun binary for the global install. |
+| `project`, `bun`, `t3`, `roles`, `registryTokenFile` | Absolute paths to the local T3 project, Bun, T3 CLI, installed role snapshot and read-scoped registry token file used to resolve and verify the failure agent. |
+| `pollSeconds` | Seconds between the six tarball checks. Use 10 on the VPS. |
+
+On the VPS, the shipped bundle runs `npm pack` locally, checks the tarball's
+SHA-512 against npm metadata, extracts it into the release directory, and
+updates the CLI shim. It runs each harness install with `CLAUDE_CONFIG_DIR`
+cleared and updates the global Bun package.
+
+Confirm required conformance cases POC-1, POC-3, POC-7 and the process boundary
+from POC-8 on the destination. Verify existing SSH host keys and working
+noninteractive authentication without copying credentials. Opt in on the VPS.
+
+```sh
+axstack workflow opt-in --name axstack-release-reinstall --binding /absolute/private/release-reinstall.json --conformance /absolute/private/receipt.json --yes
+```
+
+Read back `axstack-release-reinstall@1` in the native registry. Use the
+on-demand watchdog policy and keep the binding and script bytes stable.
+The release driver starts and observes each authorized
+[reinstall](host-operations.md#release-reinstall). Use the documented version
+removal procedure after outstanding runs drain.
+
 ## Prepare the conformance binding
 
 Conformance uses a new private loopback T3 base and an isolated workflow

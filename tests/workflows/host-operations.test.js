@@ -31,3 +31,14 @@ test('host preview authority is limited to its unit and private route', () => {
     [[/\b(?:covers|includes) only/i, 'covers more than'], [/VPS/i, 'VPS, plus any host configuration it needs']], concepts);
   expect(doc).toContain('](workflows.md#automatic-merge-boundaries)');
 });
+
+test('an unreadable release run requires both a driver-thread hold and another check', () => {
+  const release = read('docs/host-operations.md').split('## Release reinstall')[1]?.split('\n### ')[0] ?? '';
+  const unreadable = /\b(?:unreadable|read fails|cannot be read)\b/i;
+  const hold = /\bhold\b/i;
+  const rearm = /\b(?:re-arm|rearm|schedule the next check)\b/i;
+  const concepts = [unreadable, /\bunknown\b/i, /\bdriver thread\b/i, hold, rearm];
+  checkRule(release, (text) => requires(text, ...concepts),
+    'When the run cannot be read, record one unknown hold in the driver thread and schedule the next check.',
+    [[hold, 'skip the hold']], concepts);
+});

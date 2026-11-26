@@ -665,6 +665,7 @@ bun run test tests/installer/workflow-opt-in.test.js \
   tests/installer/workflow-packed.test.js tests/workflows/native-bundle.test.js \
   tests/workflows/native-conformance*.test.js \
   tests/workflows/pr-triage-{collect,nightly,workflow}.test.js \
+  tests/workflows/release-reinstall-{native,decision}.test.js \
   tests/workflows/workflow-health.test.js tests/workflows/workflow-health-prose.test.js \
   tests/workflows/workflow-observe.test.js \
   > "$EVIDENCE/native-workflows.log" 2>&1
@@ -708,3 +709,7 @@ before creating an agent step. Read the recorded loader skip if T3 is
 unavailable. The captured 0.1.12 list and predecessor receipt exercise
 unknown coverage. Fresh, complete fleet coverage and an executed
 predecessor handoff require separate evidence.
+
+Release reinstall uses fake npm, SSH, systemctl and installers with an isolated
+T3 base. Keep actual host credentials and the private installer outside the
+fixtures. Save the five receipts, paused holds and lost-write readback evidence.
