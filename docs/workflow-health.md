@@ -26,9 +26,12 @@ axstack workflow observe --base-dir "$T3_BASE" --conformance "$T3_RECEIPT" \
 
 The collector uses T3 `workflow list` and `show` to read active runs. It reads
 just the needed columns of `workflow_triggers` and `workflow_runs` from
-`userdata/statev2.sqlite` through a read-only SQLite connection. The latest 1,000
-journal entries are exported, with incomplete coverage marked if the cap is
-exceeded. T3 run detail is collected for up to 12 owned active runs per host.
+`userdata/statev2.sqlite` through a read-only SQLite connection. T3 state
+databases can be tens of GB. The collector traverses the trigger primary-key
+index and the newest run rowids, reading at most 1,001 entries from each table.
+It filters for schedule and probe evidence after the run bound and marks
+coverage incomplete when either table exceeds 1,000 entries. T3 run detail is
+collected for up to 12 owned active runs per host.
 Supply a host-local private file containing an existing `orchestration:read`
 bearer for native loader diagnostics. The collector uses it only against the
 running T3 server's loopback origin and returns the `workflows.subscribe`
