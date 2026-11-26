@@ -47,6 +47,10 @@ separately authorized recovery schedule. Agent/delegate messages do not activate
    current-cycle In Progress, In Review and Todo issues, blocked items and new
    comments. Access failure is a coverage gap, never permission to change items.
 4. Read the previous VOA report in this thread; otherwise use 24 hours.
+5. For periodic sweeps, run `axstack workflow health --input -` with
+   read-only observations for the bound opt-in hosts. Read the latest watchdog
+   report in its bound T3 thread. Carry forward missing or outdated evidence
+   as unknown.
 
 Use `axstack-work-chat` as a read-only context source only when the user
 explicitly requests scoped Slack or Teams evidence. Keep routine and scheduled
@@ -85,6 +89,8 @@ Scan-fast, one screen. Lead with time (IST), counts and coverage.
 4. **Done since last report:** confirmed merges and closed tickets.
 5. **Fleet:** unreachable hosts, pagination/activity gaps, failed/stuck threads,
    and scoped cleanup suggestions. Never silently omit iosatellite.
+6. **Workflow health:** Report per host paused or stale workflow runs and
+   definition load problems. Include outstanding watchdog holds and gaps.
 
 Report deltas plus continuing blockers. Use `VOA: all clear.` only with complete
 coverage and no changes or blockers; otherwise name partial coverage. Preserve

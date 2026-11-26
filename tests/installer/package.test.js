@@ -180,13 +180,16 @@ function fullCycle(pkgDir, neutral, label, preset) {
   const sentinel = join(neutral, `${label}-sentinel.txt`);
   writeFileSync(sentinel, 'unrelated\n');
 
-  const rels = skillAssets(pkgDir);
+  const allAssets = skillAssets(pkgDir);
+  const packageOnly = allAssets.filter((path) => path.startsWith('axstack/workflows/'));
+  const rels = allAssets.filter((path) => !packageOnly.includes(path));
   if (label.startsWith('root-')) expect(rels).toContain('axstack-publish/SKILL.md');
   expect(rels.length).toBeGreaterThan(0);
   expect(rels.filter((r) => r.endsWith('SKILL.md')).length).toBeGreaterThan(0);
 
   const installed = runPacked(['install', '--preset', preset, '--bundle', pkgDir, '--skills-dir', skillsDir]);
   expect(installed.ok).toBe(true);
+  for (const rel of packageOnly) expect(existsSync(join(skillsDir, rel))).toBe(false);
   const bundledRoles = roleRecords(pkgDir, preset);
   expect(bundledRoles.length).toBeGreaterThan(0);
   for (const rel of rels) {
