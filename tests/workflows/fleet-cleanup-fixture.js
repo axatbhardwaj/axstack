@@ -66,7 +66,10 @@ export async function replay(scenario = {}) {
     websocket: {
       message(ws, message) {
         const { tag, requestId, id } = JSON.parse(message);
-        if (scenario.rpcGap && tag === 'server.getConfig') return ws.close();
+        if (scenario.rpcGap && tag === 'server.getConfig') {
+          ws.send(JSON.stringify({ _tag: 'Exit', requestId: requestId ?? id, exit: { _tag: 'Failure' } }));
+          return;
+        }
         const result = tag === 'server.getConfig'
           ? { providers: scenario.catalogGap ? [] : catalog }
           : { thread: { id: ownerThread, runtimeMode: 'full-access', modelSelection: scenario.readbackMismatch
