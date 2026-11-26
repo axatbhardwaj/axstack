@@ -1,5 +1,6 @@
 // Isolated Executor read ported from POC-10. Emit coverage metadata only.
 import { readFileSync } from 'node:fs';
+import { validLinearEndpoint } from '../linear-endpoint.mjs';
 
 const root = process.env.AXSTACK_CONFORMANCE_ROOT;
 const { linear } = JSON.parse(readFileSync(root + '/client-binding.json', 'utf8'));
@@ -12,7 +13,7 @@ async function probe() {
       Authorization: client?.headers?.Authorization ?? client?.headers?.authorization,
       'Content-Type': 'application/json', Accept: 'application/json, text/event-stream',
     };
-    if (!headers.Authorization || client.url !== linear.endpoint || !/^https:\/\//.test(client.url)) {
+    if (!headers.Authorization || client.url !== linear.endpoint || !validLinearEndpoint(linear)) {
       return { status: 'unknown' };
     }
     async function call(method, params, id) {
