@@ -17,7 +17,7 @@ export function missingResources(binding) {
       !safePath(forge.config) || !positiveNumber(forge.opened?.existing) || !positiveNumber(forge.opened?.fresh) ||
       forge.opened.existing === forge.opened.fresh ||
       !['missingChecks', 'failedJob', 'failingStatus', 'retarget', 'lateReview'].every((name) =>
-        positiveNumber(forge.cases?.[name]?.number))) missing.push('disposable forge cases and read credentials');
+        positiveNumber(forge.cases?.[name]?.number))) missing.push('disposable forge cases and merge-capable credentials scoped to the disposable repository');
   const ssh = binding.ssh;
   if (!/^(?:[\w.-]+@)?[A-Za-z0-9][\w.-]*$/.test(ssh?.host ?? '') || !safePath(ssh.identity) ||
       !safePath(ssh.knownHosts)) missing.push('SSH read fixture');
