@@ -93,8 +93,8 @@ stable. On T3 0.1.12 an interval trigger has the form
 `<workflow>/every:<milliseconds>`. Nightly triage uses
 `axstack-pr-triage/daily:02:00:all`. Set `firstDueAt` to the first eligible
 02:00 in the server's timezone as an ISO UTC timestamp and use
-`"intervalMs": 86400000` on a fixed-offset host. The trigger ID carries no
-version. The evaluator
+`"intervalMs": 86400000` when the opt-in host uses a fixed UTC offset. The
+trigger ID carries no version. The evaluator
 matches the journal's workflow, version, `trigger:<triggerId>:<scheduledAt>`
 key, and start time at or after the scheduled time.
 An offline fixture may instead supply explicit `slots` and leave out the
