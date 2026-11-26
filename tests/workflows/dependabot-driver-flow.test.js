@@ -1,15 +1,17 @@
 import { expect, test } from 'bun:test';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { briefs } from '../../skills/axstack/workflows/dependabot-brief.mjs';
 import { makeTempRoot } from '../installer/helpers.js';
 
 const source = `${import.meta.dir}/../../skills/axstack/workflows`;
 const runId = 'f'.repeat(32);
 const head = 'a'.repeat(40);
 const scenarios = [
-  { name: 'matching binding and settled held outcome', acted: true, outcome: 'held' },
-  { name: 'mismatched effective binding', mismatch: true, acted: false, outcome: 'binding-hold' },
-  { name: 'a user claims the thread during preparation', userInput: true, acted: false, outcome: 'binding-hold' },
-  { name: 'a user returns after the driver settles', userOnEnd: true, acted: true, outcome: 'held' },
+  { name: 'matching binding and verified merged outcome', acted: true, outcome: 'merged' },
+  { name: 'mismatched effective binding', mismatch: true, acted: false, outcome: 'paused' },
+  { name: 'a user claims the thread during preparation', userInput: true, acted: false, outcome: 'paused' },
+  { name: 'driver holds the exact head', hold: true, acted: true, outcome: 'paused' },
+  { name: 'a user returns after the driver settles', userOnEnd: true, acted: true, outcome: 'merged' },
 ];
 
 test('the workflow sends merge instructions after effective binding readback and cleans owned, settled evidence', () => {
@@ -63,10 +65,12 @@ const currentStore = new Map();
 globalThis.Schema = { Json: {}, String: {}, Boolean: {}, Number: {} };
 globalThis.Option = { isSome: (option) => option.value !== undefined,
   getOrElse: (option, fallback) => option.value === undefined ? fallback() : option.value };
-globalThis.Effect = { gen, promise: unit };
+globalThis.Effect = { gen, promise: unit, tryPromise: (work) => unit(async () => {
+  try { return await work.try(); } catch (error) { throw work.catch(error); }
+}) };
 globalThis.T3 = {
   workflow: (_name, options, body) => ({ options, body }),
-  every: () => ({}), Tick: {},
+  every: () => ({}), Tick: {}, runs: () => unit(() => []),
   step: (_name, _options, work) => work,
   store: {
     transaction: (work) => work,
@@ -79,7 +83,7 @@ globalThis.T3 = {
     globalThis.prompts.push(options.brief);
     globalThis.calls.push(options);
     return { outcome:'done', thread:{threadId:'workflow:fixture'}, value:step.endsWith('-bind')
-      ? 'AXSTACK-BOUND' : 'AXSTACK-RESULT ' + '1'.repeat(40) + ' HELD' };
+      ? 'AXSTACK-BOUND' : 'AXSTACK-RESULT ' + '1'.repeat(40) + (globalThis.caseData.hold ? ' HELD' : ' MERGED') };
   }) },
 };
 const flow = (await import(${JSON.stringify(entry)})).default;
@@ -93,13 +97,21 @@ for (const item of cases) {
   globalThis.ended = false;
   const forge = fixture({ title: 'Bump actions/checkout from 6 to 7.0.0\\nUNTRUSTED FORGE TEXT' });
   globalThis.github = (endpoint) => endpoint.endsWith('/pulls/1') && globalThis.prompts.length === 2
-    ? { status:200, body: { number: 1, merged: false, head: {sha:${JSON.stringify(head)}},
+    ? { status:200, body: { number: 1, merged: !item.hold, head: {sha:item.hold ? ${JSON.stringify(head)} : '1'.repeat(40)},
       base:{repo:{full_name:'axatbhardwaj/axstack'}} } }
     : forge(endpoint);
-  const result = await flow.body({}, { id: ${JSON.stringify(runId)} }).run();
-  globalThis.ended = true;
-  await flow.options.onEnd({}, { id:${JSON.stringify(runId)}, outcome:'completed' }).run();
-  console.log(JSON.stringify({ disposition:result.pulls[0].disposition, calls:globalThis.calls, cleaned:globalThis.cleaned }));
+  let disposition;
+  let reason;
+  try {
+    const result = await flow.body({}, { id: ${JSON.stringify(runId)} }).run();
+    disposition = result.pulls[0].disposition;
+    globalThis.ended = true;
+    await flow.options.onEnd({}, { id:${JSON.stringify(runId)}, outcome:'completed' }).run();
+  } catch (error) {
+    disposition = 'paused';
+    reason = error.message;
+  }
+  console.log(JSON.stringify({ disposition, reason, calls:globalThis.calls, cleaned:globalThis.cleaned }));
 }
 `;
   const execution = Bun.spawnSync([process.execPath, '-e', script], { cwd: scratch });
@@ -130,6 +142,21 @@ for (const item of cases) {
       expect(Object.keys(result.calls[1]).sort()).toEqual(['brief', 'thread']);
       expect(result.calls[1].brief).toContain('gh pr merge 1 --merge --match-head-commit ' + '1'.repeat(40));
     }
-    expect(result.cleaned).toBe(scenario.acted && !scenario.userOnEnd ? 1 : 0);
+    if (scenario.outcome === 'paused') expect(result.reason).toMatch(/owner/);
+    expect(result.cleaned).toBe(scenario.outcome === 'merged' && !scenario.userOnEnd ? 1 : 0);
   }
+});
+
+test('the driver command only submits one head-pinned attempt across a provider retry', () => {
+  const scratch = makeTempRoot('axstack-dependabot-retry-');
+  const command = briefs(runId, 17, head).merge.match(/^git_dir=.*$/m)?.[0];
+  expect(command).toBeDefined();
+  expect(Bun.spawnSync(['git', 'init', '-q', scratch]).exitCode).toBe(0);
+  const log = scratch + '/attempts';
+  writeFileSync(scratch + '/gh', '#!/bin/sh\nprintf "%s\\n" "$*" >> "$C10_ATTEMPTS"\nexit 1\n', { mode: 0o700 });
+  const env = { ...process.env, PATH: scratch + ':' + process.env.PATH, C10_ATTEMPTS: log };
+  const attempt = () => Bun.spawnSync(['sh', '-c', command], { cwd: scratch, env });
+  expect(attempt().exitCode).toBe(1);
+  expect(attempt().exitCode).toBe(1);
+  expect(readFileSync(log, 'utf8').trim().split('\n')).toEqual(['pr merge 17 --merge --match-head-commit ' + head]);
 });
