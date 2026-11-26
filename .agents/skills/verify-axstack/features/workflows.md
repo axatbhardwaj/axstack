@@ -677,7 +677,9 @@ private resources described in [workflow activation](../../../../docs/workflow-a
 The health tests exercise unreachable and journal evidence, and the watchdog
 and sweep instruction contracts. Collector tests use a fixture CLI and SQLite
 databases to exercise read-only open, schema gaps, server replacement, bounded
-exports, and registry guards without a T3 binary. The packed T3 fixture invokes `workflow observe`
+exports, and registry guards without a T3 binary. They also drive the collector
+and evaluator together for capped history, checking covered and unobserved
+slot windows. The packed T3 fixture invokes `workflow observe`
 with and without the scoped registry token, checks the native load-probe
 receipt, and feeds the collected paused run into `workflow health`.
 Live fleet collection, the installed watchdog schedule and its sweep handoff
