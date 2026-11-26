@@ -67,5 +67,6 @@ Record release and host-install authority with the driver, then follow the
 [release procedure](../skills/axstack/references/autopilot.md#release-and-install-when-applicable).
 It binds the version commit, tag-triggered publication and registry verification
 to evidence. See [merge boundaries](workflows.md#automatic-merge-boundaries)
-for approval gates and [host operations](host-operations.md) for authorized reinstall checks.
+for approval gates and [release reinstall](host-operations.md#release-reinstall)
+for the driver check, manual fallback and rollback.
 A local test result does not establish registry publication or host installation.
