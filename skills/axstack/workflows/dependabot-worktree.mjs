@@ -63,6 +63,22 @@ export async function prepareWorktree(binding, runId, number, sha) {
   }
 }
 
+export async function retainedCheckout(binding, runId, number) {
+  try {
+    const folder = await ownedFolder(binding, runId, number);
+    if (!folder) return 'unknown';
+    const checkout = folder + '/checkout';
+    const info = await lstat(checkout).catch((error) => {
+      if (error.code !== 'ENOENT') throw error;
+      return null;
+    });
+    if (!info) return 'absent';
+    return info.isDirectory() && await realpath(checkout) === checkout ? 'present' : 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 export async function cleanupWorktree(binding, { runId, number, base, worktree }) {
   try {
     const folder = await ownedFolder(binding, runId, number);
