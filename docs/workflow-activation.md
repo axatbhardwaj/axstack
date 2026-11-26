@@ -33,8 +33,8 @@ check. The manifest includes paths and digests and has mode 0600.
 
 ## Roll forward or back
 
-Update the source version and catalog entry whenever a bundle changes. Build
-the exact shipped bytes from the workflow directory with Bun:
+Each bundle change requires a new version in both the source and the catalog.
+The following command rebuilds the shipped bytes from the workflow directory.
 
 ```sh
 cd skills/axstack/workflows
@@ -47,8 +47,8 @@ the newest version and keeps previous runs attached to their version.
 
 Drain or cancel active runs in T3 before removing the older definition.
 Review the run with `t3 workflow show <run-id>` and explicitly cancel it if
-appropriate with `t3 workflow cancel <run-id>`. Then remove the selected
-owned version:
+appropriate with `t3 workflow cancel <run-id>`. The following command removes
+the selected owned version.
 
 ```sh
 axstack workflow remove --name axstack-load-probe --version 1 --yes
@@ -63,8 +63,8 @@ before resolving the lock and checking the reported file against the manifest.
 
 Conformance uses a new private loopback T3 base and an isolated workflow
 directory on every run. It deletes that scratch state on exit. Long-lived
-credentials and the T3 settings never belong in the package. Use actual
-values for the placeholders in the following private binding:
+credentials and T3 settings belong in private host files. Replace the
+placeholders in this private binding with that host's values.
 
 ```json
 {
