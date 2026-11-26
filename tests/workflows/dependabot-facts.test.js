@@ -37,6 +37,7 @@ for (const [label, inputs, term, status] of [
   ['detour through a dot path', { filename: '.github/workflows/../README.yml' }, 'paths', 'fail'],
   ['missing action version claim', { title: 'Maintenance' }, 'claims', 'unknown'],
   ['ci absent on the selected head', { runs: [] }, 'ci', 'fail'],
+  ['ci queued before its jobs are visible', { runStatus: 'queued' }, 'ci', 'fail'],
   ['ci from another head', { runHead: 'e'.repeat(40) }, 'ci', 'unknown'],
   ['no checks at the head', { checks: [], statuses: [] }, 'checks', 'fail'],
   ['pending check', { checkStatus: 'in_progress' }, 'checks', 'fail'],
