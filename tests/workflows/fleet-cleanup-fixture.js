@@ -58,6 +58,10 @@ export async function replay(scenario = {}) {
     outstandingCleanupOwnedSnoozes: scenario.snoozes ?? [],
     decisions: scenario.eligible ? [decision, ...(scenario.second ? [{ ...decision, threadId: secondThreadId }] : [])] : [],
   };
+  let catalogReads = 0;
+  const updatedCatalog = catalog.map((provider) => ({
+    ...provider, models: provider.models.map((entry) => ({ ...entry, slug: 'gpt-6.3-sol' })),
+  }));
   const socket = Bun.serve({
     hostname: '127.0.0.1', port: 0, fetch(request, server) {
       if (server.upgrade(request)) return;
@@ -70,10 +74,15 @@ export async function replay(scenario = {}) {
           ws.send(JSON.stringify({ _tag: 'Exit', requestId: requestId ?? id, exit: { _tag: 'Failure' } }));
           return;
         }
-        const result = tag === 'server.getConfig'
-          ? { providers: scenario.catalogGap ? [] : catalog }
-          : { thread: { id: ownerThread, runtimeMode: 'full-access', modelSelection: scenario.readbackMismatch
+        let result;
+        if (tag === 'server.getConfig') {
+          catalogReads++;
+          const observedCatalog = catalogReads >= (scenario.catalogChangeAt ?? Infinity) ? updatedCatalog : catalog;
+          result = { providers: scenario.catalogGap ? [] : observedCatalog };
+        } else {
+          result = { thread: { id: ownerThread, runtimeMode: 'full-access', modelSelection: scenario.readbackMismatch
             ? { ...model, options: [] } : model } };
+        }
         ws.send(JSON.stringify({ _tag: 'Chunk', requestId: requestId ?? id, values: [result] }));
       },
     },
