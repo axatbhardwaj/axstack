@@ -2,6 +2,7 @@ import { expect, test } from 'bun:test';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { briefs } from '../../skills/axstack/workflows/dependabot-brief.mjs';
 import { makeTempRoot } from '../installer/helpers.js';
+import { nonBumps } from './dependabot-forge-fixture.js';
 
 const source = `${import.meta.dir}/../../skills/axstack/workflows`;
 const runId = 'f'.repeat(32);
@@ -38,7 +39,7 @@ export async function cleanupWorktree() { globalThis.cleaned++; return true }
     `
 export const validId = (id) => /^[a-f0-9]{32}$/.test(id)
 export const parseYaml = (_bun, source) => Bun.YAML.parse(source)
-export const verifiedBinding = () => ({project:'/repo',reportOnlyTrial:false})
+export const verifiedBinding = () => ({project:'/repo',...globalThis.caseData.binding})
 export const ownerBinding = () => ({model:{instanceId:'codex',model:'gpt-6.2-sol',options:[{id:'reasoningEffort',value:'high'}]},runtimeMode:'full-access'})
 export const github = (...args) => globalThis.github(...args)
 export function driverReadback() {
@@ -62,6 +63,7 @@ const gen = (f) => unit(async () => {
   return next.value;
 });
 const currentStore = new Map();
+const runtimeRuns = [];
 class FailedStep extends Error {
   constructor(step, cause) {
     super(cause.message, { cause });
@@ -76,7 +78,7 @@ globalThis.Effect = { gen, promise: unit, tryPromise: (work) => unit(async () =>
 }) };
 globalThis.T3 = {
   workflow: (_name, options, body) => ({ options, body }),
-  every: () => ({}), Tick: {}, runs: () => unit(() => []),
+  every: () => ({}), Tick: {}, runs: () => unit(() => runtimeRuns.filter((run) => !globalThis.caseData.hideCancelled || run.status !== 'cancelled')),
   stop: (reason) => unit(() => ({ disposition: 'stopped', reason })),
   step: (name, _options, work) => unit(async () => {
     try { return await work.run(); } catch (error) { throw new FailedStep(name, error); }
@@ -92,39 +94,58 @@ globalThis.T3 = {
     globalThis.prompts.push(options.brief);
     globalThis.calls.push(options);
     return { outcome:'done', thread:{threadId:'workflow:fixture'}, value:step.endsWith('-bind')
-      ? 'AXSTACK-BOUND' : 'AXSTACK-RESULT ' + '1'.repeat(40) + (globalThis.caseData.hold ? ' HELD' : ' MERGED') };
+      ? (globalThis.caseData.marker ?? 'AXSTACK-BOUND') : 'AXSTACK-RESULT ' + globalThis.selectedHead + (globalThis.caseData.hold ? ' HELD' : ' MERGED') };
   }) },
 };
 const flow = (await import(${JSON.stringify(entry)})).default;
 const cases = ${JSON.stringify(cases)};
-for (const item of cases) {
-  currentStore.clear();
+for (const [index, item] of cases.entries()) {
+  if (!item.continueSeries) {
+    currentStore.clear();
+    if (!item.freshStore) currentStore.set('dependabot-merge:report-only-count', 3);
+    runtimeRuns.length = 0;
+  }
+  const id = item.continueSeries ? String(index).padStart(32, '0') : ${JSON.stringify(runId)};
+  const currentRun = { id, status: 'running' };
+  runtimeRuns.push(currentRun);
+  globalThis.selectedHead = item.forge?.headIndex ? String(item.forge.headIndex + 5).repeat(40) : '1'.repeat(40);
   globalThis.caseData = item;
   globalThis.prompts = [];
   globalThis.calls = [];
   globalThis.cleaned = 0;
   globalThis.ended = false;
   const forge = fixture({ title: 'Bump actions/checkout from 6 to 7.0.0\\nUNTRUSTED FORGE TEXT', ...item.forge });
-  globalThis.github = (endpoint) => endpoint.endsWith('/pulls/1') && globalThis.prompts.length === 2
-    ? { status:200, body: { number: 1, merged: !item.hold, head: {sha:item.hold ? ${JSON.stringify(head)} : '1'.repeat(40)},
+  const requests = [];
+  globalThis.github = (endpoint) => {
+    requests.push(endpoint);
+    return endpoint.endsWith('/pulls/1') && globalThis.prompts.length === 2
+    ? { status:200, body: { number: 1, merged: item.forgeMerged ?? !item.hold, head: {sha:item.forgeHead ?? globalThis.selectedHead},
       base:{repo:{full_name:'axatbhardwaj/axstack'}} } }
     : forge(endpoint);
+  };
   let disposition;
   let reason;
   let failedStep;
   try {
-    const result = await flow.body({}, { id: ${JSON.stringify(runId)} }).run();
+    const result = await flow.body({}, { id }).run();
     disposition = result.pulls?.[0]?.disposition ?? result.disposition ?? 'completed';
     reason = result.reason;
+    currentRun.status = disposition === 'stopped' ? 'stopped' : 'completed';
     globalThis.ended = true;
-    await flow.options.onEnd({}, { id:${JSON.stringify(runId)}, outcome:'completed' }).run();
+    await flow.options.onEnd({}, { id, outcome: currentRun.status }).run();
   } catch (error) {
     if (!(error instanceof FailedStep)) throw error;
     disposition = 'paused';
     reason = error.message;
     failedStep = error.step;
+    currentRun.status = 'paused';
   }
-  console.log(JSON.stringify({ disposition, reason, failedStep, calls:globalThis.calls, cleaned:globalThis.cleaned }));
+  if (item.cancelAfter) {
+    currentRun.status = 'cancelled';
+    if (item.finishCancellation !== false) await flow.options.onEnd({}, { id, outcome:'cancelled' }).run();
+  }
+  console.log(JSON.stringify({ disposition, reason, failedStep, requests, calls:globalThis.calls, cleaned:globalThis.cleaned }));
+
 }
 `;
   const execution = Bun.spawnSync([process.execPath, '-e', script], { cwd: scratch });
@@ -169,6 +190,12 @@ test.each([
   { name: 'queued CI', forge: { runStatus: 'queued' }, disposition: 'paused', reason: /\bci fail\b/ },
   { name: 'failed check', forge: { conclusion: 'failure' }, disposition: 'paused', reason: /\bchecks fail\b/ },
   { name: 'discovery page gap', forge: { gap: true }, disposition: 'paused', reason: /page coverage/ },
+  ...nonBumps.map(({ name, forge, term }) => ({
+    name,
+    forge,
+    disposition: 'paused',
+    reason: new RegExp(term + ' fail'),
+  })),
 ])('entry routes $name without any agent call', (scenario) => {
   const results = replay([scenario]);
   expect(results).toHaveLength(1);
@@ -180,6 +207,67 @@ test.each([
     expect(result.failedStep).toBe('discover');
     expect(result.reason).toMatch(scenario.reason);
   }
+});
+
+test('the first three distinct heads are report-only without T3 and a duplicate does not count', () => {
+  const outcomes = replay([
+    { freshStore: true },
+    { continueSeries: true },
+    { continueSeries: true, forge: { headIndex: 1 } },
+    { continueSeries: true, forge: { headIndex: 2 } },
+    { continueSeries: true, forge: { headIndex: 3 } },
+  ]);
+  expect(outcomes.map(({ disposition, calls }) => [disposition, calls.length])).toEqual([
+    ['report-only', 0],
+    ['duplicate', 0],
+    ['report-only', 0],
+    ['report-only', 0],
+    ['merged', 2],
+  ]);
+});
+
+test('a legacy private flag cannot opt out of the report-only trial', () => {
+  const [result] = replay([{ freshStore: true, binding: { reportOnlyTrial: false } }]);
+  expect(result).toMatchObject({ disposition: 'report-only', calls: [] });
+});
+
+test('a second tick stops before reading the forge while a prior tick is paused', () => {
+  const [prior, next] = replay([{ forge: { gap: true } }, { continueSeries: true }]);
+  expect(prior).toMatchObject({ disposition: 'paused', failedStep: 'discover' });
+  expect(next).toMatchObject({ disposition: 'stopped', reason: 'an earlier slot is paused', calls: [], requests: [] });
+});
+
+test.each([
+  ['from run history', false, false],
+  ['from retained evidence after history is unavailable', true, true],
+])('a cancelled owner claim holds %s and retains its workspace', (_label, finishCancellation, hideCancelled) => {
+  const [cancelled, retry] = replay([
+    { hold: true, cancelAfter: true, finishCancellation },
+    { continueSeries: true, hideCancelled },
+  ]);
+  expect(cancelled).toMatchObject({ disposition: 'paused', cleaned: 0 });
+  expect(cancelled.calls).toHaveLength(2);
+  expect(retry).toMatchObject({ disposition: 'paused', failedStep: 'pr-1-cancelled-claim', calls: [], cleaned: 0 });
+  expect(retry.reason).toContain(runId);
+  expect(retry.reason).toMatch(/cancelled/);
+  expect(retry.reason).toMatch(/worktree/);
+});
+
+test('the preparation marker is required even when binding readback matches', () => {
+  const [result] = replay([{ marker: 'READY' }]);
+  expect(result).toMatchObject({ disposition: 'paused', failedStep: 'pr-1-binding-readback', cleaned: 0 });
+  expect(result.reason).toMatch(/binding marker/);
+  expect(result.calls).toHaveLength(1);
+});
+
+test.each([
+  ['unmerged', { forgeMerged: false }],
+  ['merged at another head', { forgeHead: head }],
+])('a claimed merge that the forge reports as %s pauses before cleanup', (_label, scenario) => {
+  const [result] = replay([scenario]);
+  expect(result).toMatchObject({ disposition: 'paused', failedStep: 'pr-1-driver-readback', cleaned: 0 });
+  expect(result.reason).toMatch(/driver outcome could not be verified/);
+  expect(result.calls).toHaveLength(2);
 });
 
 test('the driver command only submits one head-pinned attempt across a provider retry', () => {
