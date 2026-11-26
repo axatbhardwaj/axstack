@@ -84,5 +84,9 @@ test.skipIf(!t3)('the real T3 loader accepts bound fixtures with object-shaped p
   }, async (server) => {
     const run = server.start('ax-conf-linear', 'missing-credential');
     expect((await server.waitFor(run.runId, 'completed')).result).toEqual({ status: 'unknown' });
+    const wake = server.start('ax-conf-wake', 'refused-cli-wake', {
+      key: 'refused-cli-wake', route: 'cli', thread: crypto.randomUUID(),
+    });
+    expect((await server.waitFor(wake.runId, 'completed', 25_000)).result).toEqual({ exit: 1, delivery: null });
   });
 }, 60_000);
