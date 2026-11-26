@@ -42,7 +42,9 @@ export function fixture(input = {}) {
       conclusion: input.conclusion ?? 'success',
     },
   ];
-  const runs = input.runs ?? [{ id: 1, name: 'ci', head_sha: input.runHead ?? selected }];
+  const runs = input.runs ?? [
+    { id: 1, name: 'ci', head_sha: input.runHead ?? selected, status: input.runStatus ?? 'completed' },
+  ];
   const statuses = input.statuses ?? [];
   return async (endpoint) => {
     const [route, query] = endpoint.split('?');
