@@ -61,7 +61,7 @@ function slotOwner(scheduledAt, runs, now) {
 function triageFacts(repos, report) {
   const rows = Array.isArray(report?.repositories) ? report.repositories : [];
   const repositories = repos.map((repo) => {
-    const matches = rows.filter((row) => row?.repo === repo);
+    const matches = rows.filter((candidate) => candidate?.repo === repo);
     const row = matches[0];
     return matches.length === 1 && Array.isArray(row.prs) && ["pass", "unknown"].includes(row.coverage?.status) ? row : { repo, coverage: { status: "unknown", reason: "collector observation unavailable" }, prs: [] };
   });
