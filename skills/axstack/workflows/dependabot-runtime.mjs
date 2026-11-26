@@ -55,8 +55,7 @@ export async function verifiedBinding(base, identity) {
     const binding = json(bytes);
     if (bindingMatches(record.bindingDigest, digest) && binding &&
         ['project', 'worktreeRoot', 'roles', 'registryTokenFile', 'bun', 't3'].every((key) =>
-          typeof binding[key] === 'string' && binding[key].startsWith('/')) &&
-        (binding.reportOnlyTrial === undefined || typeof binding.reportOnlyTrial === 'boolean')) return binding;
+          typeof binding[key] === 'string' && binding[key].startsWith('/'))) return binding;
   } catch {
     // Keep host paths and the contents of private files out of run reports.
   }
