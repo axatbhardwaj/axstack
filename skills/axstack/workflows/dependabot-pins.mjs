@@ -1,0 +1,163 @@
+import { githubObject, githubPages } from './dependabot-pages.mjs';
+
+export const isSha = (value) => typeof value === 'string' && /^[a-f0-9]{40}$/.test(value);
+
+
+function uses(document) {
+  const actions = new Map();
+  const put = (key, entry) => {
+    if (entry && Object.hasOwn(entry, 'uses')) actions.set(key, entry.uses);
+  };
+  if (!document || typeof document !== 'object' || !document.jobs || typeof document.jobs !== 'object') return null;
+  for (const [name, job] of Object.entries(document.jobs)) {
+    if (!job || typeof job !== 'object' || (job.steps !== undefined && !Array.isArray(job.steps))) return null;
+    put(JSON.stringify([name]), job);
+    job.steps?.forEach((step, index) => put(JSON.stringify([name, index]), step));
+  }
+  return actions;
+}
+
+const reference = /^([\w.-]+\/[\w.-]+)(?:\/[\w./-]+)?@([\w.+-]+)$/;
+const usesLine = /^(?<prefix>[ \t]*(?:-[ \t]+)?uses:[ \t]+)(?<quote>['"]?)(?<action>[\w.-]+\/[\w.-]+(?:\/[\w./-]+)?)@(?<ref>[\w.+-]+)\k<quote>(?<suffix>[ \t]*(?:#[^\r]*)?)(?<cr>\r?)$/;
+const versionComment = /^(?:[ \t]*|[ \t]+#[ \t]*v?\d+(?:\.\d+){0,2}(?:[-+][\w.-]+)?[ \t]*)$/;
+
+function textChanges(before, after) {
+  const previous = before.split('\n');
+  const current = after.split('\n');
+  if (previous.length !== current.length) return null;
+  const pairs = [];
+  for (const [index, line] of current.entries()) {
+    if (line === previous[index]) continue;
+    const from = usesLine.exec(previous[index])?.groups;
+    const to = usesLine.exec(line)?.groups;
+    if (!from || !to || from.prefix !== to.prefix || from.quote !== to.quote ||
+        from.action !== to.action || from.cr !== to.cr ||
+        (from.suffix !== to.suffix && !(versionComment.test(from.suffix) && versionComment.test(to.suffix)))) return null;
+    // A version comment can change with its ref, but cannot be the only update.
+    if (from.ref === to.ref) return null;
+    pairs.push(JSON.stringify([from.action + '@' + from.ref, to.action + '@' + to.ref]));
+  }
+  return pairs;
+}
+
+export async function changedRefs(files, readWorkflow, parseYaml) {
+  if (!files.length || files.some((file) => !/\.(yml|yaml)$/.test(file.filename))) {
+    return { versionBump: 'fail' };
+  }
+  const changes = [];
+  for (const { filename } of files) {
+    const [before, after] = await Promise.all([readWorkflow(filename, 'base'), readWorkflow(filename, 'head')]);
+    if (before === null || after === null) return { versionBump: 'unknown' };
+    const text = textChanges(before, after);
+    if (!text?.length) return { versionBump: 'fail' };
+
+    // Text alone cannot distinguish a step from a uses-like line inside a block scalar.
+    let old;
+    let current;
+    try {
+      old = uses(await parseYaml(before));
+      current = uses(await parseYaml(after));
+    } catch {
+      return { versionBump: 'unknown' };
+    }
+    if (!old || !current) return { versionBump: 'unknown' };
+    const parsed = [];
+    for (const [key, value] of current) {
+      const previous = old.get(key);
+      if (previous === value) continue;
+      const match = typeof value === 'string' && reference.exec(value);
+      if (!match) return { versionBump: 'unknown' };
+      parsed.push(JSON.stringify([previous, value]));
+      changes.push({ action: match[1].toLowerCase(), ref: match[2] });
+    }
+    if (JSON.stringify(text.sort()) !== JSON.stringify(parsed.sort())) return { versionBump: 'fail' };
+  }
+  return { versionBump: 'pass', changes };
+}
+
+function versionClaim(action, messages) {
+  const escaped = action.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const named = '(?:\\[' + escaped + '\\]\\(https://github\\.com/' + escaped +
+    '(?:/[^)\\s]*)?\\)|[`*]*' + escaped + '[`*]*)';
+  const version = '[`*]*(v?\\d+(?:\\.\\d+){0,2}(?:[-+][\\w.-]+)?)';
+  const sentence = new RegExp('(?:^|\\b(?:bump|bumps|update|updates)\\s+)' + named +
+    '\\s+from\\s+[^\\n]{1,100}?\\s+to\\s+' + version + '(?=\\.?($|[^\\w.-]))', 'gim');
+  const table = new RegExp('^\\s*\\|?\\s*' + named + '\\s*\\|[^|\\n]+\\|\\s*' +
+    version + '[`*]*\\s*(?:\\||$)', 'gim');
+  const claims = new Set();
+  for (const message of messages) {
+    for (const pattern of [sentence, table]) {
+      for (const match of message.matchAll(pattern)) claims.add(match[1].replace(/^v/i, ''));
+    }
+  }
+  return claims.size === 1 ? [...claims][0] : null;
+}
+
+async function resolveTag(request, repo, tag) {
+  const ref = await githubObject(request, `${repo}/git/ref/tags/${encodeURIComponent(tag)}`);
+  if (ref?.ref !== 'refs/tags/' + tag) return null;
+  let target = ref.object;
+  for (let depth = 0; depth < 5 && isSha(target?.sha); depth++) {
+    if (target.type === 'commit') return target.sha;
+    if (target.type !== 'tag') return null;
+    target = (await githubObject(request, `${repo}/git/tags/${target.sha}`))?.object;
+  }
+  return null;
+}
+
+async function releaseTag(request, repo, releases, tag) {
+  const alias = /^v\d+(?:\.\d+)?$/.test(tag);
+  const published = releases.some((entry) => entry.tag_name === tag);
+  const candidates = alias && !published ? releases.filter((entry) => entry.tag_name.startsWith(tag + '.') &&
+    /^v\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(entry.tag_name)) : [];
+  if (!published && !candidates.length) return { status: 'fail' };
+  const sha = await resolveTag(request, repo, tag);
+  if (!sha) return { status: 'unknown' };
+  if (published) return { status: 'pass', sha };
+  let unresolved = false;
+  for (const entry of candidates) {
+    const target = await resolveTag(request, repo, entry.tag_name);
+    if (target === sha) return { status: 'pass', sha };
+    if (!target) unresolved = true;
+  }
+  return { status: unresolved ? 'unknown' : 'fail' };
+}
+
+const combine = (values) => values.includes('fail') ? 'fail' : values.includes('unknown') ? 'unknown' : 'pass';
+
+export async function pinFacts(request, changes, messages) {
+  const claims = [];
+  const tags = [];
+  const pins = [];
+  const cache = new Map();
+  for (const { action, ref } of changes) {
+    const claim = versionClaim(action, messages);
+    claims.push(claim === null ? 'unknown' : 'pass');
+    if (!claim) {
+      tags.push('unknown');
+      pins.push('unknown');
+      continue;
+    }
+    const repo = 'repos/' + action;
+    if (!cache.has(repo)) cache.set(repo, githubPages(request, repo + '/releases', {}, null,
+      (release) => typeof release?.tag_name === 'string' && typeof release.draft === 'boolean' &&
+        (release.draft || Number.isFinite(Date.parse(release.published_at))) ? release.tag_name : null));
+    const releases = (await cache.get(repo))?.filter((item) => !item.draft);
+    if (!releases) {
+      tags.push('unknown');
+      pins.push('unknown');
+      continue;
+    }
+    const names = [claim, 'v' + claim].filter((name) =>
+      releases.some((entry) => entry.tag_name === name) || /^v\d+(?:\.\d+)?$/.test(name));
+    const results = await Promise.all(names.map((name) => releaseTag(request, repo, releases, name)));
+    const valid = results.filter(({ status }) => status === 'pass');
+    const sha = valid[0]?.sha;
+    const claimed = results.some(({ status }) => status === 'unknown') || valid.some((item) => item.sha !== sha)
+      ? 'unknown' : sha ? 'pass' : 'fail';
+    const actual = isSha(ref) ? { status: 'pass', sha: ref } : await releaseTag(request, repo, releases, ref);
+    tags.push(combine([claimed, actual.status]));
+    pins.push(claimed === 'pass' && actual.status === 'pass' ? (actual.sha === sha ? 'pass' : 'fail') : 'unknown');
+  }
+  return { claims: combine(claims), releaseTags: combine(tags), pins: combine(pins) };
+}

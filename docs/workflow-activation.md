@@ -87,6 +87,45 @@ Repeat the observation to verify that the registry no longer lists the version
 and check that it has no active runs. If a report is needed after deactivation,
 use the [native schedule fallback](../skills/axstack/references/automations.md#native-schedule-fallback).
 
+## Scheduled binding example
+
+For `axstack-dependabot-merge`, use a private binding such as
+`/absolute/private/dependabot-v1.json`.
+
+```json
+{
+  "project": "/absolute/canonical/t3-project",
+  "worktreeRoot": "/absolute/private/worktrees",
+  "roles": "/absolute/installed/skills/axstack/roles.json",
+  "registryTokenFile": "/absolute/private/t3-reader-token",
+  "bun": "/absolute/bin/bun",
+  "t3": "/absolute/bin/t3"
+}
+```
+
+Use the canonical path of the registered T3 project, a separate worktree root
+owned by the T3 user with mode 0700, and a mode 0600 token file scoped to
+`orchestration:read`. The first three distinct eligible heads are report-only.
+Keep the binding bytes stable so the version retains its recorded digest.
+
+```sh
+axstack workflow opt-in --name axstack-dependabot-merge --binding /absolute/private/dependabot-v1.json --conformance /absolute/private/receipt.json --yes
+```
+
+An unresolved guard or owner readback pauses the run, including while CI is
+pending. Workflow health flags the paused run, and later slots skip processing
+until it clears. The exact-head check inventory includes earlier attempts, so
+a failed or pending attempt can continue holding after a rerun.
+
+Inspect the failed step in T3. Before a head is claimed, cancel the run to let
+a later tick collect fresh evidence. A cancellation after a claim retains that
+claim. A later tick encountering the same head pauses with the prior run ID.
+Handle that head through the on-demand path. The hold identifies report-only
+claims and reports whether a prior owner checkout is present, absent, or
+unverified. If a checkout remains, use the run ID and PR number to find it in
+the bound worktree root. Confirm no thread uses it and that it is clean before
+removing it with `git worktree remove` without force.
+
 ## Roll forward or back
 
 Changing a shipped bundle requires a new version in the source and catalog.

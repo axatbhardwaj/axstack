@@ -28,7 +28,7 @@ test('each catalogued workflow ships one entry that matches a fresh Bun build an
     const loaded = Bun.spawnSync([process.execPath, '-e', `
       const type = new Proxy({}, { get: () => () => ({}) });
       Object.assign(globalThis, {
-        T3: { daily: () => ({}),
+        T3: { daily: () => ({}), every: () => ({}),
           workflow: (name, options, body) => ({ name, options, hasBody: typeof body === 'function' }) },
         Effect: type, Schema: type, Option: type, Duration: type, Schedule: type,
       });
