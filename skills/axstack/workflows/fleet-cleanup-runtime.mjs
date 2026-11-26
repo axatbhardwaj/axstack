@@ -48,13 +48,12 @@ const sshFlags = ['-T', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5', '-o', '
 
 function readHost(config, host, program, args) {
   if (host === localHost) return run(config[program], args, { cwd: '/' });
-  const home = '/home/xzat';
   const binary = program === 'git' ? '/usr/bin/git' : config.hosts[host].t3;
   // OpenSSH passes a command string to the remote shell. Quote every word
   // even though bound paths and candidate IDs have their own validation.
   const quote = (word) => "'" + word.replaceAll("'", "'\\''") + "'";
   const command = [binary, ...args].map(quote).join(' ');
-  return run(config.ssh, [...sshFlags, 'xzat@' + host, '/usr/bin/env -i HOME=' + home + ' PATH=/usr/bin:/bin ' + command],
+  return run(config.ssh, [...sshFlags, 'xzat@' + host, '/usr/bin/env -i HOME="$HOME" PATH=/usr/bin:/bin ' + command],
     { cwd: '/' });
 }
 
