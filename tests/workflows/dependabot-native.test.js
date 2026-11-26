@@ -39,9 +39,11 @@ test.skipIf(!t3)(
           writeFileSync(
             server.base + '/.axstack-workflows.json',
             JSON.stringify({
+              version: 1,
               workflows: {
                 [name + '@1']: {
                   binding: path,
+                  digest: new Bun.CryptoHasher('sha256').update(bundle).digest('hex'),
                   bindingDigest: new Bun.CryptoHasher('sha256').update(binding).digest('hex'),
                 },
               },
@@ -82,9 +84,48 @@ console.log('\\n' + JSON.stringify(data.body));
         headIndex = 2;
         await replay(4, 'report-only');
         headIndex = 3;
-        await replay(5, 'binding-hold');
+        writeFileSync(server.root + '/head-index', String(headIndex));
+        const started = server.start(name, 'binding-hold', runId(5));
+        const held = await server.waitFor(started.runId, 'paused');
+        const policy = {
+          kind: 'scheduled',
+          intervalMs: 1_800_000,
+          firstDueAt: held.startedAt,
+          triggerId: name + '/every:1800000',
+        };
+        const observation = server.root + '/health.json';
+        writeFileSync(
+          observation,
+          JSON.stringify({
+            at: new Date().toISOString(),
+            hosts: [
+              {
+                host: 'fixture',
+                reachable: true,
+                policies: { [name + '@1']: policy },
+                manifest: JSON.parse(readFileSync(server.base + '/.axstack-workflows.json', 'utf8')),
+                registry: { workflows: [{ name, version: 1 }] },
+                activeRuns: { running: [], waiting: [], paused: [{ ...held, runId: started.runId }] },
+              },
+            ],
+          }),
+        );
+        const health = Bun.spawnSync([
+          process.execPath,
+          root + '/bin/axstack.js',
+          'workflow',
+          'health',
+          '--input',
+          observation,
+        ]);
+        expect(held.detail).toContain('owner binding');
+        expect(health.exitCode).toBe(2);
+        expect(JSON.parse(health.stdout.toString()).hosts[0].workflows[0].checks.pausedRuns).toMatchObject({
+          status: 'fail',
+          evidence: [{ runId: started.runId }],
+        });
       },
     );
   },
-  50_000,
+  70_000,
 );
