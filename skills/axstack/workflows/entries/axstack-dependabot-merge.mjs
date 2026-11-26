@@ -102,7 +102,8 @@ const onEnd = (_tick, end) => Effect.gen(function* () {
     const removed = yield* Effect.promise(async () => {
       const config = await binding();
       if (!config || receipt.runId !== end.id) return false;
-      const observed = await driverReadback(base, config, receipt.expected, receipt.worktree, receipt.threadId);
+      const observed = await driverReadback(base, config,
+        receipt.expected, receipt.worktree, receipt.threadId, { exclusive: true });
       const prompt = briefs(end.id, receipt.number, receipt.head);
       return sameDriverMessages(observed, prompt.prepare, prompt.merge) && cleanupWorktree(config, receipt);
     });
