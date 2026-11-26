@@ -6,8 +6,9 @@ const BUNDLE_SHA256 = '336df803d87a38b70a01e736e666c8f7601d2ce42f5e47c8fafe5d721
 const BUNDLE = `${import.meta.dir}/../vendor/mermaid/mermaid.min.js`;
 const BROWSER_SCRIPT = `${import.meta.dir}/../assets/mermaid-export.js`;
 const VIRTUAL_TIME_BUDGET_MS = 30_000;
-// Allow cold startup, real rendering work and shutdown outside the page's virtual clock.
-const WALL_TIMEOUT_MS = 60_000;
+const ADDITIONAL_VIEW_BUDGET_MS = 6_000;
+const MAX_VIRTUAL_TIME_BUDGET_MS = 120_000;
+const WALL_HEADROOM_MS = 30_000;
 const TERMINATION_GRACE_MS = 200;
 const SANDBOX_STARTUP = /\b(?:ZygoteHostImpl::Init|zygote_host_impl_linux\.cc|no usable sandbox|(?:setuid|SUID) sandbox helper|running as root without --no-sandbox)\b/i;
 const PAGE = `<!doctype html>
@@ -21,6 +22,15 @@ const PAGE = `<!doctype html>
 `;
 
 export class RendererUnavailable extends Error {}
+
+export function mermaidExportVirtualBudget(viewCount) {
+  return Math.min(MAX_VIRTUAL_TIME_BUDGET_MS, VIRTUAL_TIME_BUDGET_MS + Math.max(0, viewCount - 1) * ADDITIONAL_VIEW_BUDGET_MS);
+}
+
+export function chromiumWallTimeout(virtualBudgetMs = VIRTUAL_TIME_BUDGET_MS) {
+  // Cold startup and shutdown run outside the page's virtual clock.
+  return virtualBudgetMs + WALL_HEADROOM_MS;
+}
 
 async function verifiedBundle() {
   try {
@@ -74,8 +84,11 @@ function startupError(exit, stderr, browserNoSandbox) {
   return new RendererUnavailable(withDiagnostics(`Chromium exited without returning the export page (${exit}). ${action}`, stderr));
 }
 
-/** @param {Bun.Subprocess<'ignore', 'pipe', 'pipe'>} child */
-async function capturePage(child) {
+/**
+ * @param {Bun.Subprocess<'ignore', 'pipe', 'pipe'>} child
+ * @param {number} wallTimeoutMs
+ */
+async function capturePage(child, wallTimeoutMs) {
   const readers = [child.stdout.getReader(), child.stderr.getReader()];
   const output = ['', ''];
   let timer;
@@ -96,8 +109,8 @@ async function capturePage(child) {
   try {
     /** @type {Promise<null>} */
     const deadline = new Promise((resolve) => {
-      // Reserve time for graceful process-group termination.
-      timer = setTimeout(() => resolve(null), WALL_TIMEOUT_MS - TERMINATION_GRACE_MS);
+      // Reserve part of the deadline for graceful process-group termination.
+      timer = setTimeout(() => resolve(null), wallTimeoutMs - TERMINATION_GRACE_MS);
     });
     const finished = await Promise.race([Promise.all([exited, ...drained]), deadline]);
     if (!finished && running) {
@@ -114,7 +127,17 @@ async function capturePage(child) {
   }
 }
 
-async function renderPage(chromium, scratch, browserNoSandbox) {
+export async function dumpChromiumPage(chromium, page, { browserNoSandbox = false, scratch = '', virtualBudgetMs = VIRTUAL_TIME_BUDGET_MS } = {}) {
+  if (!scratch) {
+    // Keep Chromium's SingletonSocket path short regardless of the caller's TMPDIR.
+    const owned = mkdtempSync('/tmp/axstack-mermaid-page-');
+    try {
+      return await dumpChromiumPage(chromium, page, { browserNoSandbox, scratch: owned, virtualBudgetMs });
+    } finally {
+      rmSync(owned, { recursive: true, force: true });
+    }
+  }
+  const wallTimeoutMs = chromiumWallTimeout(virtualBudgetMs);
   const argv = [
     chromium,
     '--headless',
@@ -131,9 +154,9 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
     '--proxy-server=http://127.0.0.1:9',
     '--proxy-bypass-list=<-loopback>',
     `--user-data-dir=${scratch}/profile`,
-    `--virtual-time-budget=${VIRTUAL_TIME_BUDGET_MS}`,
+    `--virtual-time-budget=${virtualBudgetMs}`,
     '--dump-dom',
-    Bun.pathToFileURL(`${scratch}/export.html`).href,
+    Bun.pathToFileURL(page).href,
   ];
   let child;
   try {
@@ -155,15 +178,19 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
     const message = 'Could not launch Chromium. Check that the executable and its interpreter exist and can run, or select a working installation with --browser <path>.';
     throw new RendererUnavailable(withDiagnostics(message, error.message));
   }
-  const { dom, stderr, status, timingOut } = await capturePage(child);
+  const { dom, stderr, status, timingOut } = await capturePage(child, wallTimeoutMs);
   const hasPageOutput = Boolean(dom.trim());
   if (timingOut) {
-    const message = withDiagnostics(`Chromium did not finish (startup or render) within ${WALL_TIMEOUT_MS / 1_000}s.`, stderr);
+    const message = withDiagnostics(`Chromium did not finish (startup or render) within ${wallTimeoutMs / 1_000}s.`, stderr);
     throw hasPageOutput ? new Error(message) : new RendererUnavailable(message);
   }
   const exit = child.signalCode ?? status;
   if (!hasPageOutput) throw startupError(exit, stderr, browserNoSandbox);
   if (status !== 0) throw new Error(`Chromium export failed (${exit}): ${usefulDiagnostics(stderr)}`);
+  return dom;
+}
+
+function readExport(dom) {
   const result = dom.match(/<pre id="result" data-status="(ok|error)">([^<]+)<\/pre>/);
   if (!result) throw new Error('Chromium did not report completion of the Mermaid export');
   const data = JSON.parse(decodeURIComponent(result[2]));
@@ -171,7 +198,7 @@ async function renderPage(chromium, scratch, browserNoSandbox) {
   return data;
 }
 
-export async function exportBrowserSvgs(views, { browser, browserNoSandbox, width }) {
+export async function exportBrowserSvgs(views, { browser, browserNoSandbox, width, figureExport = false }) {
   const bundle = await verifiedBundle();
   const chromium = findChromium(browser);
   if (!chromium) {
@@ -181,8 +208,8 @@ export async function exportBrowserSvgs(views, { browser, browserNoSandbox, widt
   // the caller's TMPDIR is nested inside a long worktree path.
   const scratch = mkdtempSync('/tmp/axstack-mermaid-');
   try {
-    const jobs = views.map(({ id, source, dense, elk, accentStrokes }) => ({
-      id, source, dense, layout: elk ? 'elk' : 'dagre', accents: [...accentStrokes.keys()],
+    const jobs = views.map(({ id, source, dense, overEdgeLimit, elk, accentStrokes }) => ({
+      id, source, dense: dense || (figureExport && overEdgeLimit), figureExport, layout: elk ? 'elk' : 'dagre', accents: [...accentStrokes.keys()],
     }));
     await Promise.all([
       Bun.write(`${scratch}/export.html`, PAGE),
@@ -190,9 +217,13 @@ export async function exportBrowserSvgs(views, { browser, browserNoSandbox, widt
       Bun.write(`${scratch}/views.js`, `globalThis.mermaidExport = ${JSON.stringify({ jobs, width })};\n`),
       Bun.write(`${scratch}/mermaid.min.js`, bundle),
     ]);
-    const renders = await renderPage(chromium, scratch, browserNoSandbox);
+    const dom = await dumpChromiumPage(chromium, `${scratch}/export.html`, {
+      browserNoSandbox, scratch, virtualBudgetMs: mermaidExportVirtualBudget(jobs.length),
+    });
+    const renders = readExport(dom);
     if (!Array.isArray(renders) || renders.length !== views.length
         || renders.some((render, index) => render.id !== views[index].id || typeof render.svg !== 'string'
+          || typeof render.naturalSize !== 'boolean'
           || !(render.minLabelPx === null || Number.isFinite(render.minLabelPx)))) {
       throw new Error('Chromium returned incomplete Mermaid SVG results');
     }

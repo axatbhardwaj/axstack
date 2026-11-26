@@ -34,7 +34,8 @@ Keep estimated label size at least 12px at an 860px reading width
 (`16 * min(1, 860 / renderedWidth)`).
 The chat check uses a nominal 16px baseline, while edge labels render at 14px.
 For ELK export, require the smallest rendered label to reach 12px in the browser
-at the target width, except for the dense overview below.
+at the target width, except for the dense overview below and HTML viewers
+that keep labels at intrinsic size.
 Restructure diagrams that fail legibility with TB, tiers, aggregated edges or a zoom-in.
 Never shrink labels to pass the legibility gate.
 Density warnings prompt a split: more than 9 nodes, 12 edges or 5 participants,
@@ -186,6 +187,31 @@ Save the posted Markdown and its SHA-256 with the review. For embeds, the
 reviewer matches embedded SVG bytes to the checker-printed SHA-256.
 Record `T3 render: unobserved` unless an actual inline render is observed.
 Claim GitHub or docs fidelity only after a fixture render on that host.
+
+## HTML figures
+
+Use the figure export to build inline T3 pages, standalone HTML and Publish articles.
+
+```sh
+bun ../axstack/scripts/mermaid-check.js --overview --width 860 --figure-out ./figures review.md
+```
+
+Set `--width` to the available content column in CSS pixels. Omit `--overview`
+if the input has no system overview. In block order, insert each reported
+`mermaid-<block>-<source-prefix>.html` snippet where the diagram belongs.
+The exporter emits viewer markup when a diagram has more than 25 edges or
+its intrinsic width exceeds the column. Smaller diagrams are static figures.
+The 12px browser label floor uses intrinsic width for viewer figures.
+Raw SVG export is also available with `--svg-out`.
+
+Inline [diagram-viewer.css](../assets/diagram-viewer.css) once in a `<style>`
+element and use the [figure theme mapping](inline-pages.md#embed-mermaid).
+When a snippet has `data-diagram-viewer`, inline
+[diagram-viewer.js](../assets/diagram-viewer.js) once in a `<script>` element
+after the figures. Keep the snippets and SVG bytes intact for review.
+The script enhances each viewer in place. The scroll frame and Fit checkbox
+work before enhancement. Keep the exact-byte page scan and interactive
+browser verification.
 
 ## Embeds
 

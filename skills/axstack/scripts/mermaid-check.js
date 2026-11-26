@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { mkdirSync } from 'node:fs';
+import { mermaidFigure } from './mermaid-figure.js';
 import { exportBrowserSvgs, MERMAID_VERSION, RendererUnavailable } from './mermaid-export.js';
 
 const PELE_VERSION = '1.13.0';
@@ -8,7 +9,7 @@ const PELE_PATH = `${import.meta.dir}/../vendor/pele/pele.js`;
 const TARGET_WIDTH = 860;
 const NATURAL_LABEL_SIZE = 16;
 const MIN_LABEL_SIZE = 12;
-const DENSE_OVERVIEW_EDGES = 25;
+const DENSE_EDGES = 25;
 const DENSE_NOTE = 'dense overview: needs zoom/pan in chat';
 const NO_CLASSES = new Set(['sequenceDiagram', 'stateDiagram-v2', 'timeline']);
 const STATUS_WORD = /\b(?:planned|unknown|retiring|open|partial|deprecated|proposed)\b/i;
@@ -21,11 +22,12 @@ Check Mermaid source with pinned Pele ${PELE_VERSION}.
   --overview           Require an overview flowchart as block 1 (tiered TB by default)
   --svg-out <dir>      Write checked SVGs and print source and SVG SHA-256 digests
                        ELK-capable views spawn Chromium offline and clean up its temporary profile
+  --figure-out <dir>   Write embeddable HTML figures with a viewer above 25 edges or the available width
   --browser <path>    Specify Chromium for SVG export (otherwise auto-detected)
   --browser-no-sandbox
                        Explicitly disable Chromium's process sandbox for trusted local input
                        The offline page still uses the verified bundle and CSP connect-src 'none'
-  --width <px>        Set the available SVG label-check width (default ${TARGET_WIDTH})
+  --width <px>        Set the available figure width and SVG label-check width (default ${TARGET_WIDTH})
   --pele <path>        Use an alternate copy of the pinned renderer
   --allow-type <type>  Allow one additional type explicitly requested by the user
   --help               Show this help
@@ -44,7 +46,7 @@ const sha256 = (bytes) => new Bun.CryptoHasher('sha256').update(bytes).digest('h
 
 function optionsFor(args) {
   const options = {
-    path: '', renderer: PELE_PATH, svgDir: '', browser: '', browserNoSandbox: false,
+    path: '', renderer: PELE_PATH, svgDir: '', figureDir: '', browser: '', browserNoSandbox: false,
     width: TARGET_WIDTH, extraType: '', expect: true, overview: false,
   };
   for (let index = 0; index < args.length; index++) {
@@ -55,11 +57,12 @@ function optionsFor(args) {
       options.overview = true;
     } else if (arg === '--browser-no-sandbox') {
       options.browserNoSandbox = true;
-    } else if (['--pele', '--svg-out', '--allow-type', '--browser', '--width'].includes(arg)) {
+    } else if (['--pele', '--svg-out', '--figure-out', '--allow-type', '--browser', '--width'].includes(arg)) {
       const value = args[++index];
       if (!value || value.startsWith('--')) return undefined;
       if (arg === '--pele') options.renderer = value;
       else if (arg === '--svg-out') options.svgDir = value;
+      else if (arg === '--figure-out') options.figureDir = value;
       else if (arg === '--browser') options.browser = value;
       else if (arg === '--width') {
         if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) === 0) return undefined;
@@ -480,6 +483,11 @@ function checkModel(type, model, overview, dense) {
   return warnings;
 }
 
+function edgeCount(model) {
+  return model.edges?.length ?? model.relations?.length ?? model.relationships?.length
+    ?? model.messages?.filter(({ from, to, placement }) => from && to && placement === undefined).length ?? 0;
+}
+
 function embeddedSvg(svg, accentStrokes) {
   if (!accentStrokes.size) return svg;
   // Rewrite only declared accent strokes. Keep neutral strokes, theme fallbacks and label text.
@@ -523,6 +531,8 @@ async function main(args) {
     return 3;
   }
 
+  const figureExport = Boolean(options.figureDir);
+  const exporting = figureExport || Boolean(options.svgDir);
   let failed = false;
   const views = [];
   for (const [index, block] of blocks.entries()) {
@@ -532,18 +542,19 @@ async function main(args) {
       const { type, elk, fallback, accentStrokes } = sourceRules(block.source, options.extraType);
       const model = parseDiagram(pele, block.source, type);
       const overview = options.overview && index === 0;
-      const dense = overview && type === 'flowchart' && model.edges.length > DENSE_OVERVIEW_EDGES;
+      const overEdgeLimit = edgeCount(model) > DENSE_EDGES;
+      const dense = overview && type === 'flowchart' && overEdgeLimit;
       const warnings = checkModel(type, model, overview, dense);
       const digest = sha256(block.source);
       const id = `mermaid-${number}-${digest.slice(0, 12)}`;
       const { svg, width } = pele.render(block.source, { idPrefix: id });
       const labelSize = NATURAL_LABEL_SIZE * (dense ? 1 : Math.min(1, TARGET_WIDTH / width));
-      if (labelSize < MIN_LABEL_SIZE) {
+      if (!figureExport && labelSize < MIN_LABEL_SIZE) {
         throw new Error(`label size ${labelSize.toFixed(3)}px is below ${MIN_LABEL_SIZE}px at ${TARGET_WIDTH}px; restructure the view`);
       }
       for (const warning of warnings) console.warn(`${where}: warning: ${warning}`);
       const measurement = dense ? `${DENSE_NOTE}; natural-size labels ${labelSize}px` : `${width}px`;
-      views.push({ where, type, measurement, digest, id, svg, accentStrokes, source: block.source, elk, dense, fallback });
+      views.push({ where, type, measurement, digest, id, svg, width, accentStrokes, source: block.source, elk, dense, overEdgeLimit, fallback });
     } catch (error) {
       const location = error.line ? ` at line ${block.firstLine + error.line - 1}, column ${error.column}` : '';
       const message = error instanceof pele.PeleError ? `Pele parse/render failure${location}: ${error.message}` : error.message;
@@ -554,31 +565,42 @@ async function main(args) {
   if (failed) return 1;
 
   try {
-    const browserViews = options.svgDir ? views.filter(({ type }) => ELK_TYPES.has(type)) : [];
-    const browserSvgs = browserViews.length ? await exportBrowserSvgs(browserViews, options) : new Map();
+    const browserViews = exporting ? views.filter(({ type }) => ELK_TYPES.has(type)) : [];
+    const browserSvgs = browserViews.length ? await exportBrowserSvgs(browserViews, { ...options, figureExport }) : new Map();
     for (const view of browserViews) {
-      const { minLabelPx } = browserSvgs.get(view.id);
+      const { minLabelPx, naturalSize } = browserSvgs.get(view.id);
       const engine = view.elk ? 'ELK' : 'Dagre';
       if (minLabelPx !== null && minLabelPx < MIN_LABEL_SIZE) {
-        throw new Error(`${view.where}: ${engine} label size ${minLabelPx.toFixed(3)}px is below ${MIN_LABEL_SIZE}px at ${view.dense ? 'intrinsic width' : `${options.width}px`}; restructure the view`);
+        throw new Error(`${view.where}: ${engine} label size ${minLabelPx.toFixed(3)}px is below ${MIN_LABEL_SIZE}px at ${naturalSize ? 'intrinsic width' : `${options.width}px`}; restructure the view`);
       }
     }
     if (options.svgDir) mkdirSync(options.svgDir, { recursive: true });
-    for (const { where, type, measurement, digest, id, svg, accentStrokes, elk, dense, fallback } of views) {
+    if (options.figureDir) mkdirSync(options.figureDir, { recursive: true });
+    for (const { where, type, measurement, digest, id, svg, width, accentStrokes, elk, dense, overEdgeLimit, fallback } of views) {
       let svgProof = '';
-      if (options.svgDir) {
-        const path = `${options.svgDir}/${id}.svg`;
+      if (exporting) {
         const rendered = browserSvgs.get(id);
         const output = rendered?.svg ?? embeddedSvg(svg, accentStrokes);
+        const viewer = figureExport && (rendered?.naturalSize ?? (overEdgeLimit || width > options.width));
         const renderer = rendered ? `Mermaid ${MERMAID_VERSION} ${elk ? 'ELK' : 'Dagre'}` : `Pele ${PELE_VERSION}`;
         let legibility = '';
         if (rendered) {
           const minimum = rendered.minLabelPx === null ? 'no visible labels' : `${rendered.minLabelPx.toFixed(2)}px minimum label`;
-          const labelWidth = dense ? 'intrinsic width (provide zoom/pan)' : `${options.width}px`;
+          const labelWidth = dense || viewer ? 'intrinsic width (provide zoom/pan)' : `${options.width}px`;
           legibility = `; ${minimum} at ${labelWidth}`;
         }
-        await Bun.write(path, output);
-        svgProof = `; SVG renderer: ${renderer}${legibility}; SVG sha256=${sha256(output)} ${path}`;
+        svgProof = `; SVG renderer: ${renderer}${legibility}; SVG sha256=${sha256(output)}`;
+        if (options.svgDir) {
+          const path = `${options.svgDir}/${id}.svg`;
+          await Bun.write(path, output);
+          svgProof += ` ${path}`;
+        }
+        if (options.figureDir) {
+          const path = `${options.figureDir}/${id}.html`;
+          const figure = mermaidFigure({ id, svg: output, viewer });
+          await Bun.write(path, figure);
+          svgProof += `; ${viewer ? 'diagram viewer' : 'static figure'} sha256=${sha256(figure)} ${path}`;
+        }
       }
       const exception = fallback ? `; layout fallback: ${fallback}` : '';
       console.log(`${where}: ${type} ${measurement}; Pele ${PELE_VERSION}; source sha256=${digest}${exception}${svgProof}`);

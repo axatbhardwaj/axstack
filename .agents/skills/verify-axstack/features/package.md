@@ -35,6 +35,8 @@ for MEMBER in skills/axstack-align/SKILL.md \
   skills/axstack-brainstorm/references/arena.md bin/axstack.js skills/axstack/scripts/dispatch-plan.js \
   skills/axstack/scripts/hooks-check.js \
   skills/axstack/scripts/mermaid-check.js skills/axstack/scripts/mermaid-export.js \
+  skills/axstack/scripts/mermaid-figure.js skills/axstack-explain/assets/diagram-viewer.css \
+  skills/axstack-explain/assets/diagram-viewer.js \
   skills/axstack/assets/mermaid-export.js skills/axstack/vendor/mermaid/mermaid.min.js \
   skills/axstack/vendor/mermaid/LICENSE skills/axstack/vendor/mermaid/ELK-LICENSE \
   skills/axstack/vendor/mermaid/THIRD-PARTY-NOTICES skills/axstack/vendor/mermaid/PROVENANCE.md \

@@ -1,11 +1,10 @@
 import { afterAll, expect, test } from 'bun:test';
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
-import { findChromium } from '../../skills/axstack/scripts/mermaid-export.js';
+import { chromiumWallTimeout, findChromium, mermaidExportVirtualBudget } from '../../skills/axstack/scripts/mermaid-export.js';
 
 const checker = `${import.meta.dir}/../../skills/axstack/scripts/mermaid-check.js`;
 const fixtures = `${import.meta.dir}/fixtures/mermaid`;
 const guide = `${import.meta.dir}/../../skills/axstack-explain/references/mermaid.md`;
-const CHROMIUM_EXPORT_TIMEOUT_MS = 60_000;
 const scratch = mkdtempSync(`${process.env.TMPDIR ?? '/tmp'}/axstack-mermaid-test-`);
 afterAll(() => rmSync(scratch, { recursive: true }));
 
@@ -537,7 +536,56 @@ test('holds on a Chromium spawn failure with executable guidance', async () => {
   expect(existsSync(output)).toBe(false);
 });
 
-test('holds an endless Chromium render loop without sandbox advice and cleans up the process group', async () => {
+test('shares one Chromium capture for raw SVGs and viewer figures with a bounded per-block budget', async () => {
+  const fake = `${scratch}/batch-browser`;
+  const launches = `${fake}.jsonl`;
+  await Bun.write(fake, `#!${process.execPath}
+import { appendFileSync } from 'node:fs';
+const args = process.argv.slice(2);
+const page = new URL(args.at(-1));
+const source = await Bun.file(new URL('views.js', page)).text();
+const { jobs } = JSON.parse(source.trim().slice('globalThis.mermaidExport = '.length, -1));
+appendFileSync(${JSON.stringify(launches)}, JSON.stringify({
+  dump: args.includes('--dump-dom'),
+  budget: args.find((arg) => arg.startsWith('--virtual-time-budget=')),
+  jobs: jobs.map(({ id, figureExport }) => ({ id, figureExport })),
+}) + '\\n');
+const renders = jobs.map(({ id }, index) => ({
+  id, svg: '<svg id="' + id + '"></svg>', naturalSize: index === 0, minLabelPx: 16,
+}));
+console.log('<pre id="result" data-status="ok">' + encodeURIComponent(JSON.stringify(renders)) + '</pre>');
+`);
+  chmodSync(fake, 0o700);
+  for (const [blockCount, expectedBudgetMs] of [[1, 30_000], [3, 42_000], [25, 120_000]]) {
+    const budgetMs = mermaidExportVirtualBudget(blockCount);
+    expect(budgetMs).toBe(expectedBudgetMs);
+    await Bun.write(launches, '');
+    const raw = `${scratch}/batch-svg-${blockCount}`;
+    const figures = `${scratch}/batch-figures-${blockCount}`;
+    const input = fenced(flow).repeat(blockCount) + fenced(sequence);
+    const result = await check(`batch-${blockCount}.md`, input,
+      '--svg-out', raw, '--figure-out', figures, '--browser', fake);
+    expect(result.code, result.err).toBe(0);
+    const calls = (await Bun.file(launches).text()).trim().split('\n').map((line) => JSON.parse(line));
+    expect(calls).toHaveLength(1);
+    expect(calls[0].dump).toBe(true);
+    expect(calls[0].jobs).toHaveLength(blockCount);
+    expect(calls[0].jobs.every(({ figureExport }) => figureExport)).toBe(true);
+    expect(readdirSync(raw)).toHaveLength(blockCount + 1);
+    expect(readdirSync(figures)).toHaveLength(blockCount + 1);
+    const [{ id }] = calls[0].jobs;
+    const svg = await Bun.file(`${raw}/${id}.svg`).text();
+    const figure = await Bun.file(`${figures}/${id}.html`).text();
+    expect(figure).toContain(svg);
+    expect(figure).toContain('data-diagram-viewer');
+    expect(calls[0].budget).toBe(`--virtual-time-budget=${budgetMs}`);
+  }
+});
+
+const hungViewCount = 2;
+const hungWallTimeoutMs = chromiumWallTimeout(mermaidExportVirtualBudget(hungViewCount));
+
+test('holds an endless multi-block Chromium render loop at its deadline and cleans up the process group', async () => {
   const fake = `${scratch}/hung-browser`;
   await Bun.write(fake, `#!/bin/sh
 trap '' TERM
@@ -555,12 +603,12 @@ printf '%s\\n' 'entered the fixture render loop' >&2
 wait
 `);
   chmodSync(fake, 0o700);
-  const source = `${scratch}/hung-browser.mmd`;
-  await Bun.write(source, flow);
+  const source = `${scratch}/hung-browser.md`;
+  await Bun.write(source, fenced(flow).repeat(hungViewCount));
   const output = `${scratch}/hung-svg`;
   const start = performance.now();
   const checkerProc = Bun.spawn([process.execPath, '--no-env-file', checker, '--svg-out', output, '--browser', fake, source], {
-    stdout: 'ignore', stderr: 'pipe', timeout: CHROMIUM_EXPORT_TIMEOUT_MS + 3_000, killSignal: 'SIGKILL',
+    stdout: 'ignore', stderr: 'pipe', timeout: hungWallTimeoutMs + 8_000, killSignal: 'SIGKILL',
   });
   const isLive = (pid) => {
     try { return !/^State:\s+Z/m.test(readFileSync(`/proc/${pid}/status`, 'utf8')); }
@@ -570,15 +618,14 @@ wait
     const code = await checkerProc.exited;
     const stderr = await new Response(checkerProc.stderr).text();
     const elapsed = Math.round(performance.now() - start);
-    expect(elapsed, `exit=${code} stderr=${stderr}`).toBeLessThan(CHROMIUM_EXPORT_TIMEOUT_MS + 2_500);
+    expect(elapsed, `exit=${code} stderr=${stderr}`).toBeLessThan(hungWallTimeoutMs + 6_000);
     expect(code, stderr).toBe(3);
-    const wallTimeoutMs = Number(stderr.match(/Chromium did not finish \(startup or render\) within (\d+)s\./)?.[1]) * 1_000;
-    const virtualBudget = Number(stderr.match(/^--virtual-time-budget=(\d+)$/m)?.[1]);
-    expect(virtualBudget, stderr).toBeGreaterThan(0);
-    // Cold launches on CI took close to 30s before the Chromium sandbox check.
-    expect(wallTimeoutMs - virtualBudget, stderr).toBeGreaterThanOrEqual(30_000);
-    expect(wallTimeoutMs).toBe(CHROMIUM_EXPORT_TIMEOUT_MS);
-    expect(elapsed).toBeGreaterThanOrEqual(CHROMIUM_EXPORT_TIMEOUT_MS - 500);
+    const reportedWallMs = Number(stderr.match(/Chromium did not finish \(startup or render\) within (\d+)s\./)?.[1]) * 1_000;
+    const virtualBudgetMs = Number(stderr.match(/^--virtual-time-budget=(\d+)$/m)?.[1]);
+    expect(virtualBudgetMs, stderr).toBe(mermaidExportVirtualBudget(hungViewCount));
+    expect(reportedWallMs - virtualBudgetMs, stderr).toBeGreaterThanOrEqual(30_000);
+    expect(reportedWallMs).toBe(hungWallTimeoutMs);
+    expect(elapsed).toBeGreaterThanOrEqual(hungWallTimeoutMs - 500);
     expect(stderr).toContain('entered the fixture render loop');
     expect(stderr).not.toContain('--browser-no-sandbox');
     const pids = readFileSync(`${fake}.pids`, 'utf8').trim().split('\n').map(Number);
@@ -597,7 +644,7 @@ wait
       }
     }
   }
-}, CHROMIUM_EXPORT_TIMEOUT_MS + 6_000);
+}, hungWallTimeoutMs + 12_000);
 
 const browser = findChromium();
 if (!browser) test.skip('Chromium SVG acceptance: chromium, google-chrome and T3 headless shell unavailable', () => {});
@@ -619,10 +666,10 @@ function browserCli(...args) {
   return cli(...checkerArgs, ...args);
 }
 
-function browserTestTimeout(exportCount, validationMs = 0) {
-  // Budget each export's wall timeout, one sandbox retry when run alone,
-  // optional XML validation, and 15s of test-runner headroom.
-  return (exportCount + 1) * CHROMIUM_EXPORT_TIMEOUT_MS + validationMs + 15_000;
+function browserTestTimeout(blockCounts, validationMs = 0) {
+  const budgets = blockCounts.map((count) => chromiumWallTimeout(mermaidExportVirtualBudget(count)));
+  // Allow one sandbox retry, optional XML validation, and 15s of runner headroom.
+  return budgets.reduce((total, budget) => total + budget, Math.max(...budgets) + validationMs + 15_000);
 }
 
 browserTest('exports and XML-parses all nine GA SVGs offline with disjoint IDs and a dense scroller', async () => {
@@ -675,7 +722,7 @@ browserTest('exports and XML-parses all nine GA SVGs offline with disjoint IDs a
   } finally {
     rmSync(profile, { recursive: true, force: true });
   }
-}, browserTestTimeout(1, XML_VALIDATION_TIMEOUT_MS));
+}, browserTestTimeout([9], XML_VALIDATION_TIMEOUT_MS));
 
 browserTest('selects ELK geometry over Dagre in the same browser asset and keeps other types on Pele', async () => {
   const branch = `${tier}    B --> C --> E\n    A --> D --> E\n`;
@@ -701,7 +748,7 @@ browserTest('selects ELK geometry over Dagre in the same browser asset and keeps
   expect(outputs[0]).toContain('var(--pele-fg');
   expect(outputs[0]).toContain('var(--pele-surface');
   expect(browserCli('--svg-out', dir, path)).toEqual(result);
-}, browserTestTimeout(2));
+}, browserTestTimeout([5, 5]));
 
 browserTest('rejects an ELK export whose actual labels fall below 12px at the target width', async () => {
   const wide = flow.replace('flowchart TB', 'flowchart LR').replace('A["PR #263"] --> B[Review]:::accent',
@@ -717,7 +764,13 @@ browserTest('rejects an ELK export whose actual labels fall below 12px at the ta
   const wideFigure = browserCli('--svg-out', dir, '--width', '1250', path);
   expect(wideFigure.code, wideFigure.err).toBe(0);
   expect(wideFigure.out).toMatch(/minimum label at 1250px/);
-}, browserTestTimeout(2));
+  const figures = `${scratch}/wide-figures`;
+  const withViewer = browserCli('--figure-out', figures, path);
+  expect(withViewer.code, withViewer.err).toBe(0);
+  expect(withViewer.out).toMatch(/minimum label at intrinsic width/);
+  const [filename] = readdirSync(figures);
+  expect(await Bun.file(`${figures}/${filename}`).text()).toContain('data-diagram-viewer');
+}, browserTestTimeout([1, 1, 1]));
 
 browserTest('exports teal strokes with the theme accent while preserving neutral strokes and label text', async () => {
   const chart = tier.replace('#5b7bd5', '#14B8A6').replace('A[Driver]', 'A["Driver #14B8A6"]');
@@ -733,7 +786,7 @@ browserTest('exports teal strokes with the theme accent while preserving neutral
   expect(svg).toMatch(/stroke:\s*#8a909b/);
   expect(svg).toContain('Driver #14B8A6');
   expect(result.out).toContain(sha256(svg));
-}, browserTestTimeout(1));
+}, browserTestTimeout([1]));
 
 test('holds SVG export on a changed bundle before Chromium can load it', async () => {
   const isolated = `${scratch}/changed-bundle`;
