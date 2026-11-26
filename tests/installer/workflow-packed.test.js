@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { Database } from 'bun:sqlite';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from '../../src/posixpath.js';
 import { BUN_BIN, makeTempRoot } from './helpers.js';
@@ -67,6 +68,45 @@ test.skipIf(!t3)('packed axstack stays dormant until opt-in and the real T3 load
       workflows: [expect.objectContaining({ name: workflow, version: 1 })],
       definition: { problem: null },
     });
+    const triage = 'axstack-pr-triage';
+    const triageBinding = join(server.root, 'triage.json');
+    writeFileSync(triageBinding, JSON.stringify({ registryTokenFile: registryToken }), { mode: 0o600 });
+    const activate = (name) => cli('workflow', 'opt-in', '--name', name, '--binding', triageBinding,
+      '--conformance', receipt, '--yes');
+    expect(() => activate('not-in-the-catalog')).toThrow(/outside the shipped catalog/);
+    expect(activate(triage)).toContain('axstack-pr-triage@1 registered');
+    expect(activate(triage)).toContain('unchanged');
+    const scheduled = observe('--registry-token-file', registryToken);
+    expect(scheduled.registry.workflows).toContainEqual(expect.objectContaining({ name: triage, version: 1 }));
+    expect(scheduled.journal.triggers).toContainEqual(expect.objectContaining({ triggerId: `${triage}/daily:02:00:all` }));
+    const triageRuns = () => server.command('workflow', 'list', '--json').filter(({ workflow }) => workflow === triage);
+    expect(triageRuns()).toEqual([]);
+    // Replay a due slot through the exact bundle and real scheduler in the isolated base.
+    await server.stop();
+    const due = new Date(Date.now() - 5000).toISOString();
+    const db = new Database(join(server.base, 'userdata/statev2.sqlite'));
+    try {
+      expect(db.query('UPDATE workflow_triggers SET next_at = ? WHERE trigger_id = ?')
+        .run(due, `${triage}/daily:02:00:all`).changes).toBe(1);
+    } finally {
+      db.close();
+    }
+    await server.restart();
+    const deadline = Date.now() + 10_000;
+    let runs = triageRuns();
+    while (!runs.length && Date.now() < deadline) {
+      await Bun.sleep(100);
+      runs = triageRuns();
+    }
+    expect(runs).toHaveLength(1);
+    const stopped = await server.waitFor(runs[0].runId, 'stopped');
+    expect(stopped.detail).toContain('private binding is missing, invalid, or changed');
+    expect(server.command('workflow', 'show', stopped.runId, '--json').steps.map((step) => step.name))
+      .toEqual(['claim-slot', 'collect-facts']);
+    expect(cli('workflow', 'remove', '--name', triage, '--version', '1', '--yes')).toContain('removed');
+    const unloaded = observe('--registry-token-file', registryToken);
+    expect(unloaded.registry.workflows.some(({ name }) => name === triage)).toBe(false);
+    expect(unloaded.activeRuns).toEqual({ running: [], waiting: [], paused: [] });
     writeFileSync(binding, '{"drifted":true}');
     const drift = server.start(workflow, 'packed-drift');
     const paused = await server.waitFor(drift.runId, 'paused');
