@@ -256,19 +256,32 @@ once and reconciles its run and host receipts.
 - **Running or waiting** — re-arm the one-shot check.
 - **Paused** — keep one hold in the driver thread listing outstanding hosts
   from the journal. Re-arm the check and update that hold as the evidence changes.
-- **Unreadable** — record unknown and re-arm. Use the named five-host scope
-  to reconcile any receipts already saved.
+- **Unreadable** — record one unknown hold in the driver thread and re-arm
+  the check. Use the named five-host scope to reconcile saved receipts.
+  Update or clear the hold according to the observed state when reads recover.
 - **Completed with five receipts** — close the check. Record version, packaged
   skills, both timers' active and enabled states, and VPS global Bun package.
 - **Any other terminal result** — record one hold with outstanding hosts and
   end the check. To rerun, use the same version payload with a fresh key such
   as `vX.Y.Z-2`. Starting with the same key returns the existing run.
 
-After repairing a paused host, resume the same run. It reads the host back
-before any further install. A lost write reply retains the host claim across
-releases. Reconcile the original host process and state under recorded authority.
-The original run can finish when it reads a complete receipt. If the claim
-persists after cancellation, reconcile it before starting another writer.
+Resume a paused run after restoring access or repairing the host. For a failed
+install, resume performs readback only. To retry the install, start a run with
+the same version payload and a fresh key. A lost write reply retains the host
+lease across releases. The original run can finish when it reads a complete
+receipt.
+
+If a lease persists after cancellation, read back the host's installed version
+and package state under recorded authority. Confirm the original installer has
+exited and that the lease still names the cancelled run. Before retrying the
+same version, delete its matching release claim with
+`t3 workflow store delete release-reinstall:release:<version>:<host>`.
+Release the host with `t3 workflow store delete release-reinstall:host:<host>`.
+
+If npm latest advances mid-run, the final check pauses the superseded release
+even with all five receipts. Record those receipts from the journal and cancel
+the superseded run.
+
 A failure agent reports a proven install or verification failure in its T3
 thread when the configured local seat can be resolved. The release driver
 keeps the one-shot check and owns all recovery decisions.
