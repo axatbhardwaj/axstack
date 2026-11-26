@@ -23,7 +23,13 @@ function run(t3, env, cwd, args) {
   return command.stdout.toString();
 }
 
-export async function usingIsolatedT3({ t3, defaultLocation = false, beforeStart }, work) {
+export function validIsolatedEnv(env) {
+  return env === undefined || (env !== null && typeof env === 'object' && !Array.isArray(env) &&
+    Object.entries(env).every(([name, value]) => name === 'IS_SANDBOX' && value === '1'));
+}
+
+export async function usingIsolatedT3({ t3, defaultLocation = false, beforeStart, isolatedEnv }, work) {
+  if (!validIsolatedEnv(isolatedEnv)) throw new Error('unsupported isolated environment binding');
   const originalHome = Bun.env.HOME;
   const temp = realpathSync(Bun.env.TMPDIR || '/tmp');
   const resolvedHome = realpathSync(originalHome);
@@ -63,7 +69,7 @@ export async function usingIsolatedT3({ t3, defaultLocation = false, beforeStart
     port = listener.port;
     await listener.stop(true);
     child = Bun.spawn([binary, 'serve', '--base-dir', base, '--host', '127.0.0.1', '--port', String(port), '--no-browser', project], {
-      env, cwd: project, stdout: 'ignore', stderr: 'ignore',
+      env: { ...env, ...isolatedEnv }, cwd: project, stdout: 'ignore', stderr: 'ignore',
     });
     const deadline = Date.now() + 12_000;
     while (child.exitCode === null && Date.now() < deadline) {
