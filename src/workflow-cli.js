@@ -1,5 +1,3 @@
-import { manageWorkflow } from './workflow-opt-in.js';
-
 const HELP = `Usage:
   axstack workflow opt-in --name <workflow> --binding <private.json> --conformance <receipt.json> --yes
   axstack workflow remove --name <workflow> --version <version> --yes
@@ -68,6 +66,7 @@ export async function workflowCli(args, packageRoot) {
     const { runConformance } = await import('./workflow-conformance.js');
     await runConformance({ home, packageRoot, flags });
   } else {
+    const { manageWorkflow } = await import('./workflow-opt-in.js');
     const result = await manageWorkflow({ action, flags, home, packageRoot });
     console.log(`${result.identity} ${result.action}`);
   }
