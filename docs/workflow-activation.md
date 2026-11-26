@@ -120,11 +120,11 @@ a failed or pending attempt can continue holding after a rerun.
 Inspect the failed step in T3. Before a head is claimed, cancel the run to let
 a later tick collect fresh evidence. A cancellation after a claim retains that
 claim. A later tick encountering the same head pauses with the prior run ID.
-Handle that head through the on-demand path. Cancellation also retains any
-detached worktree until its ownership and settlement can be checked. In the
-bound worktree root, use the run ID and PR number from the hold to identify
-the checkout. Confirm no thread uses it and that it is clean before removing
-it with `git worktree remove` without force.
+Handle that head through the on-demand path. The hold identifies report-only
+claims and reports whether a prior owner checkout is present, absent, or
+unverified. If a checkout remains, use the run ID and PR number to find it in
+the bound worktree root. Confirm no thread uses it and that it is clean before
+removing it with `git worktree remove` without force.
 
 ## Roll forward or back
 
