@@ -663,10 +663,18 @@ recovery, version-pinned bundle bytes, guarded conformance, and the real loader.
 ```bash
 bun run test tests/installer/workflow-opt-in.test.js \
   tests/installer/workflow-packed.test.js tests/workflows/native-bundle.test.js \
-  tests/workflows/native-conformance.test.js > "$EVIDENCE/native-workflows.log" 2>&1
+  tests/workflows/native-conformance.test.js \
+  tests/workflows/workflow-health.test.js tests/workflows/workflow-health-prose.test.js \
+  > "$EVIDENCE/native-workflows.log" 2>&1
 ```
 
 Record the explicit loader skip if T3 is absent. The isolated local runs cover
 the workflow engine without provider credentials. Verify bound forge, provider,
 SSH, Executor, and disposable update fixtures separately using the approved
 private resources described in [workflow activation](../../../../docs/workflow-activation.md).
+
+The health tests drive the packaged CLI with read-only native run observations
+and exercise the watchdog and sweep instruction contracts. The real loader
+fixture feeds paused run and version evidence into the packaged command.
+Live fleet collection, the installed watchdog schedule and its sweep handoff
+require the explicit bindings in [workflow health](../../../../docs/workflow-health.md).
