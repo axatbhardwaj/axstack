@@ -41,8 +41,9 @@ cd skills/axstack/workflows
 bun build entries/axstack-load-probe.mjs --target=node --format=esm > bundles/axstack-load-probe-v1.mjs
 ```
 
-Use the new version in the output filename. Opting in to a newer package
-adds a versioned definition beside the older one. T3 starts new runs on
+Use the new version in the output filename. Append its SHA-256 under
+`name@version` in `bundle-digests.json` to pin the shipped bytes. Opting in to a newer package adds a versioned
+definition beside the older one. T3 starts new runs on
 the newest version and keeps previous runs attached to their version.
 
 Drain or cancel active runs in T3 before removing the older definition.
@@ -57,7 +58,10 @@ axstack workflow remove --name axstack-load-probe --version 1 --yes
 Remove the newer version to roll back while its predecessor is still installed.
 Axstack refuses files without a matching ownership record and files whose bytes
 have changed. If a process stops mid-operation, confirm that it has exited
-before resolving the lock and checking the reported file against the manifest.
+before removing its empty `~/.t3/.axstack-workflows.json.lock` directory.
+When an ownership record exists and the bundle is absent, opt in again
+with the same binding to restore the bundle, or use `workflow remove`
+to clear the record after its runs drain.
 
 ## Prepare the conformance binding
 
@@ -104,10 +108,13 @@ placeholders in this private binding with that host's values.
 }
 ```
 
-Use approved provider fixtures and a disposable scratch repository. Conformance
-starts typed runs on both seats, submits wake test messages in an isolated
-owner thread, and only uses the forge fixture for reads and one negative
-head-pin test. Prepare the listed PR conditions and open the fresh fixture PR
-after the isolated `opened` watcher starts. Use a different installed version
-for the disposable update target. Conformance checks the CLI part of POC-5.
-Process coverage remains unknown when the CLI omits inventory.
+Use approved provider fixtures and a disposable scratch repository. Point
+`forge.config` at a private GitHub CLI config with credentials scoped to that
+repository. The credentials must allow PR reads and merges so GitHub can
+reach the expected head-pin refusal. Conformance also starts typed runs on
+both seats and sends wake test messages in an isolated owner thread.
+
+Prepare the listed PR conditions and open the fresh fixture PR after the
+isolated `opened` watcher starts. Use a different installed version for the
+disposable update target. Conformance checks the CLI part of POC-5. Process
+coverage remains unknown when the CLI omits inventory.
