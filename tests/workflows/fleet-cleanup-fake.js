@@ -11,7 +11,8 @@ export async function fake(binary, dir) {
     const briefs = await Bun.file(dir + '/briefs').json();
     console.log(JSON.stringify({
       thread: {
-        threadId: ownerThread, projectId, createdBy: 'system', creationSource: 'server', status: 'completed',
+        threadId: ownerThread, projectId: scenario.ownerProjectId ?? projectId,
+        createdBy: 'system', creationSource: 'server', status: 'completed',
         archived: false, pinned: false, worktreePath: null, providerInstanceId: 'codex', model: 'gpt-6.2-sol',
         runtimeMode: 'full-access',
       },
