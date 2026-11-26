@@ -157,7 +157,7 @@ starts later for each repository the user names.
 Use the packaged [nightly prompt](../skills/axstack/references/pr-triage-nightly.md)
 and [setup guidance](../skills/axstack/references/automations.md#nightly-pr-triage-setup).
 Use [workflow activation](workflow-activation.md#nightly-pr-triage) to opt in
-to `axstack-pr-triage` on axat-vps at 02:00 host time. Record the host
+to `axstack-pr-triage` at 02:00 on the opt-in host. Record the host
 timezone and repository binding, and confirm a single active triage schedule
 for the set. The setup guidance describes the unbound native schedule fallback.
 Each pass reports all own open PRs in its own T3 thread, with forge state or
