@@ -236,3 +236,63 @@ notify. Verify delivery under the host's notification authority.
 
 Disable with `systemctl --user disable --now axstack-single-server.timer` and
 stop any active one-shot with `systemctl --user stop axstack-single-server.service`.
+
+## Release reinstall
+
+After publication, use the on-demand `axstack-release-reinstall` workflow on
+axat-vps when the [private binding and opt-in](workflow-activation.md#release-reinstall-binding)
+are verified. Record release and host-mutation authority before starting the run.
+Verify npm reports the expected version. The workflow polls the tarball before
+opening any host install.
+
+```sh
+t3 workflow start axstack-release-reinstall --key vX.Y.Z --input '{"version":"vX.Y.Z"}' --json
+```
+
+Record the run ID. Keep a native one-shot check bound to the release driver and
+due in about 30 minutes. Each wake reads `t3 workflow show <run-id> --json`
+once and reconciles its run and host receipts.
+
+- **Running or waiting** — re-arm the one-shot check.
+- **Paused** — keep one hold in the driver thread listing outstanding hosts
+  from the journal. Re-arm the check and update that hold as the evidence changes.
+- **Unreadable** — record unknown and re-arm. Use the named five-host scope
+  to reconcile any receipts already saved.
+- **Completed with five receipts** — close the check. Record version, packaged
+  skills, both timers' active and enabled states, and VPS global Bun package.
+- **Any other terminal result** — record one hold with outstanding hosts and
+  end the check. To rerun, use the same version payload with a fresh key such
+  as `vX.Y.Z-2`. Starting with the same key returns the existing run.
+
+After repairing a paused host, resume the same run. It reads the host back
+before any further install. A lost write reply retains the host claim across
+releases. Reconcile the original host process and state under recorded authority.
+The original run can finish when it reads a complete receipt. If the claim
+persists after cancellation, reconcile it before starting another writer.
+A failure agent reports a proven install or verification failure in its T3
+thread when the configured local seat can be resolved. The release driver
+keeps the one-shot check and owns all recovery decisions.
+
+### Manual reinstall and rollback
+
+The authorized release driver can perform the existing reinstall manually when
+the workflow is dormant or after reconciling its active host claims and processes.
+Use the private reviewed reinstall script over SSH for `xzat@io`, `iobook`,
+`xzat@iobox`, and `xzat@iosatellite`. Pipe its bytes to
+`bash -s -- X.Y.Z` on each host. Its npm pack and SHA-512 check precede
+extraction to `~/.local/share/axstack/releases/X.Y.Z/package`, the CLI shim
+update, and the Claude and Codex installs. Run the OpenCode install on io with
+`bash -lc '~/.local/bin/axstack install --preset mixed --harness opencode --no-claude-settings --yes'`.
+
+On the VPS, stage the same verified package layout locally and run each Claude,
+Codex, and OpenCode install with `env -u CLAUDE_CONFIG_DIR`. Pass
+`--no-claude-settings` to OpenCode and update the
+global CLI with `/root/.bun/bin/bun add -g axstack@X.Y.Z`. This directs the
+Claude install to its regular home when the shadow settings are symlinked.
+
+Verify the shim version, package skills and both timer states on each host.
+Record observed default-sync service drop-ins and confirm the pool drop-in
+separately. Record iosatellite provisioning and closed-lid verification separately.
+Under recorded rollback authority, drain or cancel the workflow, reconcile
+outstanding host actions, then restore the explicitly chosen earlier release
+through the manual installer and verify those same receipts.
