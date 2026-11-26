@@ -1,4 +1,5 @@
 {
+  "axstack-dependabot-merge": { "version": 1, "registration": "registry" },
   "axstack-load-probe": { "version": 1, "registration": "probe" },
   "axstack-pr-triage": { "version": 1, "registration": "registry" }
 }
