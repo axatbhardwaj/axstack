@@ -139,6 +139,14 @@ export const nonBumps = [
     term: 'versionBump',
   },
   {
+    name: 'pin plus trailing permissions deletion',
+    forge: {
+      baseWorkflow: workflow('v6') + 'permissions:\n  contents: read\n',
+      headWorkflow: workflow(release).trimEnd(),
+    },
+    term: 'versionBump',
+  },
+  {
     name: 'pin plus comment-only edit',
     forge: { headWorkflow: '# changed comment\n' + workflow(release) },
     term: 'versionBump',
