@@ -54,9 +54,26 @@ const endpoint = args.at(-1);
 const repo = endpoint.split('/')[2];
 if (repo === 'absent' || (repo === 'gap' && endpoint.includes('page=2'))) process.exit(1);
 if (endpoint.includes('/pulls?')) {
-  const second = endpoint.includes('page=2');
-  const link = second ? '' : 'Link: <https://api.github.com/repositories/42/pulls?state=open&per_page=100&page=2>; rel="next"\\n';
-  console.log('HTTP/2.0 200 OK\\n' + link + '\\n' + JSON.stringify([{ number: second ? 2 : 1 }]));
+  const page = Number(endpoint.match(/[?&]page=(\\d+)/)?.[1] ?? 1);
+  let next = page === 1 ? 2 : null;
+  let body = JSON.stringify([{ number: page }]);
+  let status = '200 OK';
+  switch (repo) {
+    case 'skipped-page': if (page === 1) next = 3; break;
+    case 'empty-page':
+      if (page === 2) {
+        body = '[]';
+        next = 3;
+      }
+      break;
+    case 'bad-status': status = '502 Bad Gateway'; break;
+    case 'page-cap': next = page + 1; break;
+    case 'object-body': body = '{"number":1}'; break;
+    case 'truncated-body': body = '[{"number":1'; break;
+  }
+  let link = next === null ? '' : 'Link: <https://api.github.com/repositories/42/pulls?state=open&per_page=100&page=' + next + '>; rel="next"\\n';
+  if (repo === 'missing-next-url' && page === 1) link = 'Link: rel="next"\\n';
+  console.log('HTTP/2.0 ' + status + '\\n' + link + '\\n' + body);
 } else if (endpoint.endsWith('/pulls/1')) {
   console.log(JSON.stringify({ state: 'open', head: { sha: 'abc' }, base: { ref: 'main' } }));
 } else if (endpoint.endsWith('/pulls/2')) {
@@ -83,6 +100,31 @@ test('gh without --slurp observes both pages and keeps a failed later page unkno
     discovery: {
       'fixture/visible': { coverage: 'complete', count: 2 },
       'fixture/gap': { coverage: 'unknown', page: 2 },
+    },
+  });
+});
+
+test.each([
+  ['skipped-page', 1, 'invalid GitHub API next page'],
+  ['missing-next-url', 1, 'invalid GitHub API next page'],
+  ['empty-page', 2, 'missing or invalid GitHub API page'],
+  ['bad-status', 1, 'missing or invalid GitHub API page'],
+  ['page-cap', 21, 'GitHub API page limit reached'],
+  ['object-body', 1, 'missing or invalid GitHub API page'],
+  ['truncated-body', 1, 'missing or invalid GitHub API page'],
+])('forge returns unknown coverage and JSON evidence for %s', async (scenario, page, reason) => {
+  const root = makeTempRoot('axstack-forge-incomplete-');
+  fakeGh(root);
+  const repo = 'fixture/' + scenario;
+  const result = await runFixture(root, 'clients.mjs', 'forge', {
+    runtime: { project: root },
+    forge: { repo, absentRepo: 'fixture/visible', cases: {} },
+  });
+  expect(result).toMatchObject({
+    visible: false, combined: 'unknown',
+    discovery: {
+      [repo]: { coverage: 'unknown', page, reason },
+      'fixture/visible': { coverage: 'complete', count: 2 },
     },
   });
 });
@@ -117,6 +159,15 @@ test('a refused CLI wake returns a JSON receipt for a missing owner', async () =
   expect(result).toEqual({ exit: 1, delivery: null });
 });
 
+function executorBinding(root, port) {
+  const endpoint = `http://127.0.0.1:${port}/mcp`;
+  const clientFile = root + '/client.json';
+  writeFileSync(clientFile, JSON.stringify({
+    mcpServers: { executor: { url: endpoint, headers: { authorization: 'Bearer fixture-key' } } },
+  }), { mode: 0o600 });
+  return { endpoint, clientFile, tool: 'linear_app.fixture.list_issues' };
+}
+
 test('Executor sends its bounded read only to the explicitly bound loopback URL', async () => {
   const root = makeTempRoot('axstack-linear-loopback-');
   const seen = [];
@@ -142,17 +193,36 @@ test('Executor sends its bounded read only to the explicitly bound loopback URL'
     },
   });
   try {
-    const endpoint = `http://127.0.0.1:${listener.port}/mcp`;
-    const clientFile = root + '/client.json';
-    writeFileSync(clientFile, JSON.stringify({
-      mcpServers: { executor: { url: endpoint, headers: { authorization: 'Bearer fixture-key' } } },
-    }), { mode: 0o600 });
-    const linear = { endpoint, clientFile, tool: 'linear_app.fixture.list_issues' };
+    const linear = executorBinding(root, listener.port);
     expect(await runFixture(root, 'linear.mjs', 'default', { linear })).toEqual({ status: 'unknown' });
     expect(seen).toEqual([]);
     expect(await runFixture(root, 'linear.mjs', 'default', { linear: { ...linear, loopback: true } }))
       .toEqual({ status: 'pass', coverage: 'unknown', failureCoverage: 'unknown' });
     expect(seen).toEqual(['initialize', 'notifications/initialized', 'tools/call']);
+  } finally {
+    await listener.stop(true);
+  }
+});
+
+test('Executor reports unknown and makes no request to a 307 redirect target', async () => {
+  const root = makeTempRoot('axstack-linear-redirect-');
+  const seen = [];
+  const listener = Bun.serve({
+    hostname: '127.0.0.1',
+    port: 0,
+    fetch(request) {
+      const path = new URL(request.url).pathname;
+      seen.push(path);
+      if (path === '/mcp' && request.headers.get('authorization') === 'Bearer fixture-key') {
+        return new Response(null, { status: 307, headers: { Location: '/redirected' } });
+      }
+      return new Response(null, { status: 400 });
+    },
+  });
+  try {
+    const linear = { ...executorBinding(root, listener.port), loopback: true };
+    expect(await runFixture(root, 'linear.mjs', 'default', { linear })).toEqual({ status: 'unknown' });
+    expect(seen).toEqual(['/mcp']);
   } finally {
     await listener.stop(true);
   }
