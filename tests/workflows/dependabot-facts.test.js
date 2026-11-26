@@ -52,11 +52,18 @@ for (const [label, inputs, term, status] of [
     expect(result.discovery).toBe('pass');
     expect(result.pulls).toHaveLength(1);
     expect(result.pulls[0].facts[term]).toBe(status);
+    for (const [name, state] of Object.entries(result.pulls[0].facts)) {
+      if (state === 'unknown') expect(result.pulls[0].reasons?.[name]).toEqual(expect.any(String));
+    }
   });
 }
 
 test('a page gap discards partial discovery', async () => {
-  expect(await scanPulls(fixture({ gap: true }))).toMatchObject({ discovery: 'unknown', pulls: [] });
+  expect(await scanPulls(fixture({ gap: true }))).toMatchObject({
+    discovery: 'unknown',
+    reason: expect.any(String),
+    pulls: [],
+  });
 });
 
 test('the grouped update table supplies the claim for the named action', async () => {
