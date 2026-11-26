@@ -1,11 +1,14 @@
 # Native workflow watchdog
 
-Run this observation-only check every 30 minutes in the bound watchdog thread.
+Run this check every 30 minutes in the bound watchdog thread.
+The check is observation-only except for starting the packaged
+`axstack-load-probe` under the binding's recorded authority.
 Keep this native T3 schedule after every workflow migration, including
 the sweep cutover.
 
-Use the private binding's opt-in host list and read-only SSH commands.
-Run `axstack workflow observe` via the bound SSH command for each listed host.
+Use the private binding's opt-in host list and SSH commands.
+Run `axstack workflow observe` via the bound read-only SSH command for each
+listed host.
 Pass the collector JSON and a zoned observation time to
 `axstack workflow health --input -` using the input recipe bound by the schedule.
 Keep unreachable or incomplete hosts visible as unknown.
