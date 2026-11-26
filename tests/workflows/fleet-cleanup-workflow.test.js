@@ -38,7 +38,11 @@ for (const [label, receiptTime] of [
   ['exactly one interval before the tick', '2026-11-26T23:30:00.000Z'],
 ]) {
   test(`a receipt captured ${label} keeps the item eligible`, async () => {
-    const { result, agents, claims } = await replay({ eligible: true, receiptTime });
+    const { result, agents, claims } = await replay({
+      eligible: true, receiptTime,
+      thread: { updatedAt: receiptTime },
+      decision: { updatedAt: receiptTime },
+    });
     expect(result).toMatchObject({ decision: 'complete', items: [operation], gaps: [] });
     expect(agents.map(({ name }) => name)).toEqual(['prepare-owner', 'cleanup-owner']);
     expect(claims[claim]).toBe(runId);
@@ -61,7 +65,8 @@ for (const [label, scenario, gap] of [
   ['unknown pending tasks', { thread: { pendingBackgroundTasks: null } }, 'axat-vps/thread-coverage'],
   ['stale candidate revision', {
     receiptTime: '2026-11-26T23:59:59.000Z',
-    decision: { updatedAt: '2026-11-26T23:59:59.000Z' },
+    thread: { updatedAt: '2026-11-26T23:59:59.500Z' },
+    decision: { updatedAt: '2026-11-26T23:59:58.000Z' },
   }, 'axat-vps/decision'],
   ['invalid thread identity', { thread: { threadId: 'mcp:private id' } }, 'axat-vps/thread-coverage'],
   ['missing claimed worktree', { worktree: '/fixture/missing' }, 'axat-vps/worktree-identity'],
