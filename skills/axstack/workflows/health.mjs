@@ -1,8 +1,7 @@
-import { meetsFloor } from '../../../src/capabilities.js';
-import { validateWorkflowManifest } from '../../../src/workflow-opt-in.js';
-import { CONFORMANCE_SUITE, matchesWorkflowConformance, WORKFLOW_T3_FLOOR } from '../../../src/workflow-t3.js';
 import catalog from './catalog.json';
+import { journalPolicy, journalRegistration } from './health-journal.mjs';
 import { dueSlot, object, runChecks, runInventory, term, timestamp, word } from './health-runs.mjs';
+import { CONFORMANCE_SUITE, matchesWorkflowConformance, supportsWorkflowT3, validateWorkflowManifest } from './workflow-contract.mjs';
 
 function manifestEntries(manifest) {
   try {
@@ -24,7 +23,7 @@ function registryIndex(snapshot) {
   return registered;
 }
 
-function definitionCheck(registered, identity, runs, reachable) {
+function definitionCheck(registered, identity, runs, fallback, reachable) {
   if (registered) return registered.has(identity)
     ? term('pass', 'exact version present in native registry')
     : term('fail', 'exact version absent from native registry');
@@ -32,11 +31,11 @@ function definitionCheck(registered, identity, runs, reachable) {
   if (retired) return term('fail', { runId: retired.runId, reason: 'native run version is retired' });
   const current = runs?.find((run) => run.endedAt === null && run.retired === false);
   if (current) return term('pass', { runId: current.runId, reason: 'active native run is registered' });
-  return term('unknown', reachable ? 'current registry evidence unavailable' : 'host unreachable');
+  return fallback ?? term('unknown', reachable ? 'native registry and exact-version trigger or load-probe evidence unavailable' : 'host unreachable');
 }
 
 function loaderCheck(problem, reachable) {
-  if (!reachable || !(problem === null || word(problem))) return term('unknown', 'native loader diagnostics unavailable');
+  if (!reachable || !(problem === null || word(problem))) return term('unknown', 'native workflow registry loader diagnostics unavailable');
   return problem === null ? term('pass', 'native loader reports no problems') : term('fail', problem);
 }
 
@@ -47,7 +46,7 @@ function conformanceCheck(t3, receipt, reachable) {
     return term('unknown', 'current T3 versions or environment unavailable');
   }
   const version = t3.serverVersion;
-  if (version !== t3.cliVersion || !meetsFloor(version, WORKFLOW_T3_FLOOR) || version.startsWith(WORKFLOW_T3_FLOOR + '-')) {
+  if (version !== t3.cliVersion || !supportsWorkflowT3(version)) {
     return term('fail', { version, cliVersion: t3.cliVersion, reason: 'T3 CLI and server must agree at the workflow version floor' });
   }
   if (!object(receipt) || !semver(receipt.version) || !word(receipt.environment) ||
@@ -65,16 +64,19 @@ function conformanceCheck(t3, receipt, reachable) {
 function workflowHealth(host, identity, inventory, registered, now, localCatalog) {
   const [name, rawVersion] = identity.split('@');
   const version = Number(rawVersion);
-  const policy = object(host.policies) && Object.hasOwn(host.policies, identity) ? host.policies[identity] : null;
+  const binding = object(host.policies) && Object.hasOwn(host.policies, identity) ? host.policies[identity] : null;
+  const policy = journalPolicy(binding, host.journal, name, version);
   const known = object(localCatalog) && Object.hasOwn(localCatalog, name) && Number.isSafeInteger(localCatalog[name]);
   const exactRuns = inventory.runs?.filter((run) => run.workflow === name && run.version === version);
   const superseded = registered && [...registered].some((key) => key.startsWith(name + '@') && Number(key.split('@')[1]) > version);
+  const slot = host.reachable === true ? dueSlot(policy, now, superseded) : term('unknown', 'host unreachable');
+  const fallback = journalRegistration(host, name, version, policy, slot, now);
   return { name, version, checks: {
     catalog: known && localCatalog[name] >= version
       ? term('pass', { catalogVersion: localCatalog[name] })
       : term('unknown', 'owned version absent from supplied catalog'),
-    definitionLoaded: definitionCheck(registered, identity, exactRuns, host.reachable === true),
-    dueSlot: host.reachable === true ? dueSlot(policy, now, superseded) : term('unknown', 'host unreachable'),
+    definitionLoaded: definitionCheck(registered, identity, exactRuns, fallback, host.reachable === true),
+    dueSlot: slot,
     ...runChecks(exactRuns, inventory.complete, host, policy, now),
   } };
 }
@@ -91,7 +93,8 @@ function hostHealth(host, now) {
     host: host.host,
     source: word(host.evidence) ? host.evidence : null,
     checks: {
-      ownership: identities ? term('pass', { owned: identities.length }) : term('unknown', 'manifest unavailable or unreadable'),
+      ownership: reachable && identities ? term('pass', { owned: identities.length })
+        : term('unknown', reachable ? 'manifest unavailable or unreadable' : 'host unreachable'),
       inventory: inventory.complete.running && inventory.complete.waiting && inventory.complete.paused
         ? term('pass', { runs: inventory.runs.length })
         : term('unknown', reachable ? 'T3 active run inventory is incomplete' : 'host unreachable'),
