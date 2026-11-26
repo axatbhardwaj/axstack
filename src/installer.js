@@ -373,7 +373,9 @@ async function walkSkills(dir, skillsRoot, out) {
     } else if (lst.isFile()) {
       const rel = relative(skillsRoot, abs);
       assertSafeRel(rel);
-      out.push({ rel, abs });
+      // Workflow definitions and conformance ship with npm. Only the separate
+      // workflow CLI operates on T3's workflow directory.
+      if (!rel.startsWith('axstack/workflows/')) out.push({ rel, abs });
     }
   }
 }

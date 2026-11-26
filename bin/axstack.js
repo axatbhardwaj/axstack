@@ -15,6 +15,7 @@ import {
 import { BUN_FLOOR, checkCapabilities, meetsFloor, runRealCheck } from '../src/capabilities.js';
 import { findLegacyRoutingLines } from '../src/instructions.js';
 import { harnessLocations } from '../src/locations.js';
+import { workflowCli } from '../src/workflow-cli.js';
 
 // import.meta.dir is already a filesystem path (no URL conversion, so
 // spaces/percent/hash characters survive verbatim).
@@ -45,6 +46,7 @@ Usage:
   axstack install --preset <mixed|codex-only|claude-only> --bundle <dir> --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
   axstack check [--bundle <dir>] [--instructions <file>] [--skills-dir <dir>|--harness <name>]
   axstack uninstall --skills-dir <dir> [--instructions <file>] [--claude-settings <file>|--no-claude-settings] [--harness <name>] [--force] [--yes]
+  axstack workflow --help
   axstack --help | --version
 
 Commands:
@@ -264,6 +266,10 @@ async function main() {
   if (!checkRuntimeFloor()) return;
   let parsed;
   try {
+    if (Bun.argv[2] === 'workflow') {
+      await workflowCli(Bun.argv.slice(3), PACKAGE_ROOT);
+      return;
+    }
     parsed = parseArgs(Bun.argv.slice(2));
   } catch (err) {
     console.error(`axstack: ${err.message}`);
