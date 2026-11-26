@@ -7,6 +7,8 @@ const unknownReasons = {
   author: 'PR author is unavailable',
   branch: 'PR head branch is unavailable',
   paths: 'changed paths could not be covered',
+  versionBump: 'workflow content could not be verified as an action version bump',
+  commitAuthors: 'the author of every exact-head PR commit could not be verified',
   claims: 'a changed workflow or action version claim could not be established',
   releaseTags: 'a claimed tag or published release could not be verified',
   pins: 'a changed action pin could not be compared to a verified tag',
@@ -42,10 +44,10 @@ async function ciFacts(request, head) {
 async function workflowFiles(request, parseYaml, pr, files) {
   const base = pr.base?.sha;
   const head = pr.head.sha;
-  if (!isSha(base)) return null;
+  if (!isSha(base)) return { versionBump: 'unknown' };
   const comparison = await githubObject(request, `${root}/compare/${base}...${head}`);
   const ancestor = comparison?.merge_base_commit?.sha;
-  if (!isSha(ancestor)) return null;
+  if (!isSha(ancestor)) return { versionBump: 'unknown' };
   return changedRefs(files, async (file, side) => {
     const path = file.split('/').map(encodeURIComponent).join('/');
     const content = await githubObject(request, `${root}/contents/${path}?ref=${side === 'base' ? ancestor : head}`);
@@ -54,11 +56,11 @@ async function workflowFiles(request, parseYaml, pr, files) {
         (side === 'head' && content.sha !== expected) || typeof content.content !== 'string') return null;
     try {
       const bytes = Uint8Array.from(atob(content.content.replace(/\s/g, '')), (char) => char.charCodeAt(0));
-      return await parseYaml(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+      return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     } catch {
       return null;
     }
-  });
+  }, parseYaml);
 }
 
 async function pullFacts(request, parseYaml, listed) {
@@ -76,7 +78,7 @@ async function pullFacts(request, parseYaml, listed) {
   if ([facts.author, facts.branch, facts.head].some((term) => term !== 'pass')) return result;
 
   const files = await githubPages(request, endpoint + '/files', {}, null, (row) => row?.filename);
-  if (files?.length && files.length === pr.changed_files) {
+  if (files && files.length === pr.changed_files) {
     const hasCompleteNames = files.every((row) => typeof row.filename === 'string' && typeof row.status === 'string' &&
       (row.status !== 'renamed' || typeof row.previous_filename === 'string'));
     if (hasCompleteNames) {
@@ -87,11 +89,20 @@ async function pullFacts(request, parseYaml, listed) {
   if (facts.paths !== 'pass') return result;
 
   const commits = await githubPages(request, endpoint + '/commits', {}, null, (row) => isSha(row?.sha) ? row.sha : null);
-  const changed = await workflowFiles(request, parseYaml, pr, files);
-  if (changed && commits?.length && commits.length === pr.commits && commits.at(-1).sha === head &&
+  const coveredCommits = commits?.length && commits.length === pr.commits && commits.at(-1).sha === head;
+  if (coveredCommits) {
+    const authors = commits.map((row) => row.author?.login);
+    if (authors.some((login) => typeof login === 'string' && login !== 'dependabot[bot]')) facts.commitAuthors = 'fail';
+    else if (authors.every((login) => login === 'dependabot[bot]')) facts.commitAuthors = 'pass';
+  }
+  const { versionBump, changes } = files.every((file) => file.status === 'modified')
+    ? await workflowFiles(request, parseYaml, pr, files)
+    : { versionBump: 'fail' };
+  facts.versionBump = versionBump;
+  if (versionBump === 'pass' && coveredCommits && facts.commitAuthors === 'pass' &&
       commits.every((row) => typeof row.commit?.message === 'string') && typeof pr.title === 'string' &&
       (pr.body === null || typeof pr.body === 'string')) {
-    Object.assign(facts, await pinFacts(request, changed, [pr.title, pr.body ?? '', ...commits.map((row) => row.commit.message)]));
+    Object.assign(facts, await pinFacts(request, changes, [pr.title, pr.body ?? '', ...commits.map((row) => row.commit.message)]));
   }
   Object.assign(facts, await ciFacts(request, head));
   const current = await githubObject(request, endpoint);
