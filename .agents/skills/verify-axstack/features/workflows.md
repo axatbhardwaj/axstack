@@ -694,5 +694,5 @@ shipped collector and one simulated report agent. The replay checks the wake
 marker, catalog binding, effective binding readback, slot claim, and holds.
 The packed fixture confirms registry-only opt-in, reads back the exact daily
 trigger, drives an isolated due slot with incomplete binding, then verifies
-deactivation through the live registry. The first three eligible axat-vps
-nights supply separate activation evidence.
+deactivation through the live registry. The first three eligible nights on
+the opt-in host supply separate activation evidence.
