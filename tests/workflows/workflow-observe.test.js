@@ -7,7 +7,11 @@ const cli = `${import.meta.dir}/../../bin/axstack.js`;
 const date = '2026-01-01T12:00:00Z';
 const loopback = 'http://127.0.0.1:1234';
 const triggers = 'CREATE TABLE workflow_triggers(trigger_id TEXT PRIMARY KEY, next_at TEXT)';
-const runs = 'CREATE TABLE workflow_runs(run_id TEXT PRIMARY KEY, workflow TEXT, version INTEGER, idempotency_key TEXT, status TEXT, started_at TEXT, ended_at TEXT, input_json TEXT, result_json TEXT, parent_run_id TEXT)';
+const runs = `
+  CREATE TABLE workflow_runs(run_id TEXT PRIMARY KEY, workflow TEXT, version INTEGER, idempotency_key TEXT,
+    status TEXT, started_at TEXT, ended_at TEXT, input_json TEXT, result_json TEXT, parent_run_id TEXT);
+  CREATE UNIQUE INDEX workflow_runs_key ON workflow_runs(workflow, idempotency_key);
+`;
 
 function fixture(origin = loopback) {
   const root = makeTempRoot('axstack-observe-');
@@ -18,7 +22,8 @@ function fixture(origin = loopback) {
   const token = `${root}/fixture-registry`;
   const socket = `${root}/socket-called`;
   for (const dir of [base, userdata, `${root}/bin`, `${root}/home`]) mkdirSync(dir, { mode: 0o700 });
-  writeFileSync(runtime, JSON.stringify({ pid: 123, startedAt: date, serverVersion: '0.1.12', origin }));
+  const runtimeRecord = { pid: 123, startedAt: date, serverVersion: '0.1.12', origin };
+  writeFileSync(runtime, JSON.stringify(runtimeRecord));
   writeFileSync(`${userdata}/environment-id`, 'fixture-environment');
   writeFileSync(`${root}/receipt.json`, '{}');
   writeFileSync(token, 'mock-registry-value', { mode: 0o600 });
@@ -26,8 +31,8 @@ function fixture(origin = loopback) {
 set -eu
 case "$*" in
   --version)
-    if [ "$FIXTURE_CHANGE_RUNTIME" = 1 ]; then
-      printf '%s\n' '{"pid":124,"startedAt":"2026-01-01T12:00:01Z","serverVersion":"0.1.12"}' > "$FIXTURE_RUNTIME"
+    if [ -n "$FIXTURE_CHANGE_RUNTIME" ]; then
+      printf '%s\n' "$FIXTURE_CHANGE_RUNTIME" > "$FIXTURE_RUNTIME"
     fi
     printf '%s\n' 't3 v0.1.12'
     ;;
@@ -61,10 +66,10 @@ globalThis.WebSocket = class extends EventTarget {
   close() {}
 };
 `);
-  return { root, base, runtime, dbPath, token, socket, preload };
+  return { root, base, runtime, runtimeRecord, dbPath, token, socket, preload };
 }
 
-function observe(files, { registry = false, changeRuntime = false, wrongOwner = false } = {}) {
+function observe(files, { registry = false, changeRuntime, wrongOwner = false } = {}) {
   const args = [
     ...(registry ? ['--preload', files.preload] : []), cli, 'workflow', 'observe',
     '--base-dir', files.base, '--conformance', `${files.root}/receipt.json`,
@@ -74,7 +79,7 @@ function observe(files, { registry = false, changeRuntime = false, wrongOwner = 
     env: {
       PATH: `${files.root}/bin`, HOME: `${files.root}/home`, TMPDIR: files.root,
       FIXTURE_RUNTIME: files.runtime, FIXTURE_SOCKET: files.socket,
-      FIXTURE_CHANGE_RUNTIME: changeRuntime ? '1' : '0',
+      FIXTURE_CHANGE_RUNTIME: changeRuntime ? JSON.stringify({ ...files.runtimeRecord, ...changeRuntime }) : '',
       FIXTURE_WRONG_OWNER: wrongOwner ? '1' : '0',
     },
     timeout: 10_000, stderr: 'pipe',
@@ -87,7 +92,8 @@ function snapshot(dbPath) {
   return ['', '-wal', '-shm'].map((suffix) => {
     const path = dbPath + suffix;
     if (!existsSync(path)) return null;
-    return { hash: Bun.hash(readFileSync(path)), mtime: statSync(path).mtimeMs };
+    const { size, mtimeMs } = statSync(path);
+    return { hash: Bun.hash(readFileSync(path)), size, mtime: mtimeMs };
   });
 }
 
@@ -110,23 +116,41 @@ test('observe leaves an existing database unchanged without creating side files'
   expect(snapshot(files.dbPath)).toEqual(before);
 });
 
-test('observe leaves the database and live WAL bytes and timestamps unchanged', () => {
+test('observe preserves live WAL data while a separate writer holds the locks', async () => {
   const files = fixture();
-  const writer = new Database(files.dbPath);
+  const writer = Bun.spawn([process.execPath, '-e', `
+    import { Database } from 'bun:sqlite';
+    const db = new Database(${JSON.stringify(files.dbPath)});
+    db.exec('PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0;');
+    db.exec(${JSON.stringify(triggers)});
+    db.exec(${JSON.stringify(runs)});
+    const insert = db.query('INSERT INTO workflow_triggers VALUES (?, ?)');
+    insert.run('fixture-probe/every:60000', ${JSON.stringify(date)});
+    console.log('ready');
+    await Bun.stdin.text();
+    insert.run('fixture-after/every:60000', ${JSON.stringify(date)});
+    if (db.query('PRAGMA integrity_check').get().integrity_check !== 'ok') process.exitCode = 1;
+    db.close();
+  `], { stdin: 'pipe', stdout: 'pipe', env: { HOME: `${files.root}/home`, TMPDIR: files.root } });
   try {
-    writer.exec('PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0;');
-    writer.exec(triggers);
-    writer.exec(runs);
-    writer.query('INSERT INTO workflow_triggers VALUES (?, ?)').run('fixture-probe/every:60000', date);
+    const stdout = writer.stdout.getReader();
+    const ready = await stdout.read();
+    stdout.releaseLock();
+    expect(new TextDecoder().decode(ready.value)).toBe('ready\n');
     const before = snapshot(files.dbPath);
     expect(before.every(Boolean)).toBe(true);
     expect(observe(files).journal).toMatchObject({ triggers: [{ nextAt: date }], complete: true });
     const after = snapshot(files.dbPath);
     expect(after.slice(0, 2)).toEqual(before.slice(0, 2));
-    // SQLite uses the existing SHM file for WAL reader coordination.
-    expect(after[2]).not.toBeNull();
+    // The reader may publish its WAL read mark in the existing SHM mapping.
+    expect(after[2]?.size).toBe(before[2].size);
+    writer.stdin.end();
+    expect(await writer.exited).toBe(0);
   } finally {
-    writer.close();
+    if (writer.exitCode === null) {
+      writer.kill();
+      await writer.exited;
+    }
   }
 });
 
@@ -141,10 +165,14 @@ test.each([
   expect(observe(files)).toMatchObject({ t3: { serverVersion: '0.1.12' }, journal: null });
 });
 
-test('observe drops native observations if the server changes during collection', () => {
+test.each([
+  ['pid', { pid: 124 }],
+  ['startedAt', { startedAt: '2026-01-01T12:00:01Z' }],
+  ['serverVersion', { serverVersion: '0.1.13' }],
+])('observe drops native observations on a server %s change during collection', (_, changeRuntime) => {
   const files = fixture();
   expect(observe(files).t3).toMatchObject({ startedAt: date });
-  const drifted = observe(files, { changeRuntime: true });
+  const drifted = observe(files, { changeRuntime });
   for (const field of ['t3', 'registry', 'journal', 'activeRuns', 'shows']) expect(drifted).not.toHaveProperty(field);
 });
 
@@ -198,4 +226,49 @@ test.each(['mode', 'owner'])('observe refuses registry access with invalid token
   const candidate = restriction === 'mode' ? { ...files, token: `${files.token}-public` } : files;
   expect(observe(candidate, { registry: true, wrongOwner: restriction === 'owner' }).registry).toBeNull();
   expect(existsSync(files.socket)).toBe(false);
+});
+
+test.each([
+  ['old slot and old history', '2026-01-01T09:00:00.000Z', '2026-01-01T10:00:00Z', true, 'fail'],
+  ['slot at the unobserved cutoff', '2026-01-01T11:00:00.000Z', '2026-01-01T11:45:00Z', true, 'unknown'],
+  ['no run for the trigger', null, '2026-01-01T10:00:00Z', true, 'fail'],
+  ['old history and a missing native index', '2026-01-01T09:00:00.000Z', '2026-01-01T10:00:00Z', false, 'unknown'],
+])('health evaluates a capped journal with %s', (_, scheduledAt, manualAt, indexed, status) => {
+  const files = fixture();
+  const db = new Database(files.dbPath);
+  db.exec(triggers);
+  db.exec(runs);
+  if (!indexed) db.exec('DROP INDEX workflow_runs_key');
+  const workflow = 'fixture-probe';
+  const identity = `${workflow}@1`;
+  const triggerId = `${workflow}/every:1800000`;
+  db.query('INSERT INTO workflow_triggers VALUES (?, ?)').run(triggerId, date);
+  const insert = db.query('INSERT INTO workflow_runs VALUES (?, ?, 1, ?, ?, ?, ?, ?, NULL, NULL)');
+  db.transaction(() => {
+    if (scheduledAt) insert.run('last-slot', workflow, `trigger:${triggerId}:${scheduledAt}`, 'completed',
+      scheduledAt, scheduledAt, JSON.stringify({ scheduledAt }));
+    const manualRuns = scheduledAt ? 1000 : 1001;
+    for (let index = 0; index < manualRuns; index++) {
+      insert.run(`manual-${index}`, 'fixture-other', `manual-${index}`, 'completed', manualAt, manualAt, null);
+    }
+  })();
+  db.close();
+
+  const observed = observe(files);
+  expect(observed.journal).toMatchObject({ complete: false, runs: [] });
+  const record = { digest: 'a'.repeat(64), bindingDigest: 'b'.repeat(64), binding: `${files.root}/binding.json` };
+  const result = Bun.spawnSync([process.execPath, cli, 'workflow', 'health', '--input', '-'], {
+    env: { HOME: `${files.root}/home`, TMPDIR: files.root },
+    stdin: Buffer.from(JSON.stringify({ at: date, hosts: [{
+      ...observed, host: 'fixture-host',
+      manifest: { version: 1, workflows: { [identity]: record } }, catalog: { [workflow]: 1 },
+      policies: { [identity]: { kind: 'scheduled', firstDueAt: '2026-01-01T08:00:00Z', intervalMs: 1_800_000, triggerId } },
+    }] })),
+    stderr: 'pipe',
+  });
+  expect(result.exitCode, result.stderr.toString()).toBe(2); // The fixture has no registry or conformance receipt.
+  const { hosts } = JSON.parse(result.stdout.toString());
+  const dueSlot = hosts[0].workflows[0].checks.dueSlot;
+  expect(dueSlot).toMatchObject({ status });
+  if (status === 'fail') expect(dueSlot.evidence.latestIndexedSlot).toBe(scheduledAt);
 });
