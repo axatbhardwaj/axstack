@@ -90,7 +90,11 @@ progress. Preserve an unknown status when that evidence is unavailable.
 Use `"kind": "scheduled"` with `intervalMs`, `firstDueAt`, and the exact native
 `triggerId` for a scheduled definition. Keep the historical activation time
 stable. On T3 0.1.12 an interval trigger has the form
-`<workflow>/every:<milliseconds>`. Nightly triage uses
+`<workflow>/every:<milliseconds>`. For fleet cleanup on axat-vps, bind
+`axstack-fleet-cleanup@1` with `intervalMs` set to `1800000` and
+`triggerId` set to `axstack-fleet-cleanup/every:1800000`. Set `firstDueAt`
+from the first due slot observed after authorized cutover.
+Nightly triage uses
 `axstack-pr-triage/daily:02:00:all`. Set `firstDueAt` to the first eligible
 02:00 in the server's timezone as an ISO UTC timestamp and use
 `"intervalMs": 86400000` when the opt-in host uses a fixed UTC offset. The
