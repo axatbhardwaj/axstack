@@ -1,6 +1,6 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { checkRule, prohibits, requires } from './prose-contract.js';
+import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 
 const read = (path) => Bun.file(new URL(`../../skills/${path}`, import.meta.url));
 const watchdogPath = read('axstack/workflows/watchdog-prompt.md');
@@ -22,6 +22,26 @@ test('the watchdog is read-only and never grants authority or clears holds', asy
     checkRule(prompt, (text) => prohibits(text, denial, action), rewording,
       [[denial, 'Always']], [action]);
   }
+});
+
+test('the watchdog permits only the packaged probe start under recorded binding authority', async () => {
+  const prompt = await watchdogPath.text();
+  const scope = [
+    /\b(?:observation.only|read.only)\b/i,
+    /\b(?:except|(?:only|one|sole) exception)\b/i,
+    /\b(?:start|launch)\w*\b/i,
+    /\b(?:packaged|bundled)\b/i,
+    /\baxstack-load-probe\b/i,
+    /\bbinding\b/i, /\b(?:recorded|documented) (?:authority|authorization)\b/i,
+  ];
+  checkRule(prompt, (text) => requires(text, ...scope),
+    'The read-only watchdog makes one exception for launching the bundled axstack-load-probe under documented authorization in the binding.',
+    [[scope[4], 'workflow runs'], [scope[6], 'runtime discretion']], scope);
+  const broadGrant = /\b(?:can|permitted to|allowed to)\s+(?:start|launch)\s+(?:(?:any|other|all)\s+)?(?:workflow(?:s| runs?)?|runs?)\b/i;
+  const rejectsBroadGrant = (text) => !sentences(text).some((sentence) =>
+    requires(sentence.replace(/\bmay\b/gi, 'can'), broadGrant));
+  expect(rejectsBroadGrant(prompt)).toBe(true);
+  expect(rejectsBroadGrant(`${prompt} The watchdog may start workflows.`)).toBe(false);
 });
 
 test('the sweep reports workflow health per host and reads the latest watchdog report', () => {
