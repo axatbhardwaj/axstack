@@ -3,7 +3,7 @@ import { writeAtomic } from './installer.js';
 import { writeFileExclusive } from './manifest.js';
 import { dirname, join, resolve } from './posixpath.js';
 import { matchesWorkflowConformance, validateWorkflowManifest } from '../skills/axstack/workflows/workflow-contract.mjs';
-import { requireDrained, requireProbe, requireRunningT3Version, t3Environment, workflowT3Version } from './workflow-t3.js';
+import { requireDrained, requireProbe, requireRegistration, requireRunningT3Version, t3Environment, workflowT3Version } from './workflow-t3.js';
 
 const MANIFEST = '.axstack-workflows.json';
 const NAME = /^[A-Za-z0-9_][\w.-]*$/;
@@ -47,7 +47,7 @@ function requirePrivateBinding(path, packageRoot, base) {
   for (let parent = dirname(path); parent !== '/'; parent = dirname(parent)) {
     if (existsSync(join(parent, '.git'))) throw new Error('binding must be outside the repository');
   }
-  return privateJson(path, 'binding').digest;
+  return privateJson(path, 'binding');
 }
 
 function readManifest(path) {
@@ -83,9 +83,10 @@ async function saveManifest(path, manifest) {
 async function optIn({ base, directory, manifestPath, manifest, name, flags, packageRoot, t3 }) {
   const built = join(packageRoot, 'skills/axstack/workflows');
   const catalog = await Bun.file(join(built, 'catalog.json')).json();
-  const version = Object.hasOwn(catalog, name) ? catalog[name] : null;
-  // Only this triggerless workflow has a body safe to start as registration readback.
-  if (name !== 'axstack-load-probe' || !Number.isSafeInteger(version) || version < 1) throw new Error('workflow is outside the shipped catalog');
+  const { version, registration } = Object.hasOwn(catalog, name) ? catalog[name] : {};
+  if (!Number.isSafeInteger(version) || version < 1 || !['probe', 'registry'].includes(registration)) {
+    throw new Error('workflow is outside the shipped catalog');
+  }
   const t3Version = workflowT3Version(t3);
   const conformance = privateJson(flags.conformance, 'conformance receipt').json;
   if (!matchesWorkflowConformance(conformance, t3Version, t3Environment(base))) {
@@ -93,7 +94,9 @@ async function optIn({ base, directory, manifestPath, manifest, name, flags, pac
   }
   requireRunningT3Version(base, t3Version);
   const binding = flags.binding;
-  const bindingDigest = requirePrivateBinding(binding, packageRoot, base);
+  const { json: bindingConfig, digest: bindingDigest } = requirePrivateBinding(binding, packageRoot, base);
+  const readRegistration = registration === 'probe' ? () => requireProbe(t3, base, name, version)
+    : () => requireRegistration(base, name, version, bindingConfig.registryTokenFile);
   const identity = name + '@' + version;
   const bytes = readFileSync(join(built, 'bundles', name + '-v' + version + '.mjs'));
   const digest = sha256(bytes);
@@ -105,7 +108,7 @@ async function optIn({ base, directory, manifestPath, manifest, name, flags, pac
     throw new Error('binding differs from the recorded opt-in');
   }
   if (present) {
-    await requireProbe(t3, base, name, version);
+    await readRegistration();
     return { identity, action: 'unchanged' };
   }
   if (Object.keys(manifest.workflows).some((key) => key.startsWith(name + '@') && Number(key.split('@')[1]) > version)) {
@@ -124,7 +127,7 @@ async function optIn({ base, directory, manifestPath, manifest, name, flags, pac
   try {
     await deploy(target, bytes);
     deployed = true;
-    await requireProbe(t3, base, name, version);
+    await readRegistration();
   } catch (error) {
     if (deployed) {
       // Inventory can take time. Check the file after that read before unlinking.
