@@ -113,6 +113,11 @@ stable so the same version retains its recorded digest.
 axstack workflow opt-in --name axstack-dependabot-merge --binding /absolute/private/dependabot-v1.json --conformance /absolute/private/receipt.json --yes
 ```
 
+An unresolved guard or owner readback pauses the run with a reason. The
+workflow health checker flags the paused run. Later slots skip processing while
+it remains paused. Inspect the failed step in T3. Resume it after correcting
+its input or cancel the run so the next slot can collect fresh evidence.
+
 ## Roll forward or back
 
 Changing a shipped bundle requires a new version in the source and catalog.
