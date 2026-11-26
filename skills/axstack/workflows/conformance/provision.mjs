@@ -1,4 +1,6 @@
 import { chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { validIsolatedEnv } from './isolated.mjs';
+import { validLinearEndpoint } from './linear-endpoint.mjs';
 
 const fixtures = new URL('./fixtures/', import.meta.url);
 const repoName = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
@@ -9,6 +11,7 @@ const positiveNumber = (value) => Number.isSafeInteger(value) && value > 0;
 
 export function missingResources(binding) {
   const missing = [];
+  if (!validIsolatedEnv(binding.isolatedEnv)) missing.push('isolated environment');
   if (!safePath(binding.providers?.settings) || !Array.isArray(binding.providers.secrets) ||
       !binding.providers.secrets.every((secret) => safePath(secret.source) && /^[\w.-]+\.bin$/.test(secret.name)) ||
       !seat(binding.seats?.claude) || !seat(binding.seats?.codex)) missing.push('provider seats and isolated secret slots');
@@ -22,7 +25,7 @@ export function missingResources(binding) {
   if (!/^(?:[\w.-]+@)?[A-Za-z0-9][\w.-]*$/.test(ssh?.host ?? '') || !safePath(ssh.identity) ||
       !safePath(ssh.knownHosts)) missing.push('SSH read fixture');
   const linear = binding.linear;
-  if (!safePath(linear?.clientFile) || !/^https:\/\//.test(linear.endpoint ?? '') ||
+  if (!safePath(linear?.clientFile) || !validLinearEndpoint(linear) ||
       !/^linear_app\.[\w.]+\.list_issues$/.test(linear.tool ?? '')) missing.push('Executor Linear read fixture');
   if (!updateVersion.test(binding.update?.version) ||
       !['stable', 'nightly', 'preview'].includes(binding.update.channel)) missing.push('disposable update target');
@@ -70,6 +73,7 @@ export function provision(server, settings, binding) {
   for (const fixture of ['clients.mjs', 'linear.mjs']) {
     copyFileSync(new URL(fixture, fixtures), server.workflows + '/' + fixture);
   }
+  copyFileSync(new URL('./linear-endpoint.mjs', import.meta.url), server.root + '/linear-endpoint.mjs');
   writeFileSync(server.root + '/client-binding.json', JSON.stringify({
     forge: { repo: binding.forge.repo, absentRepo: binding.forge.absentRepo, cases: binding.forge.cases },
     ssh: binding.ssh, linear: binding.linear,
