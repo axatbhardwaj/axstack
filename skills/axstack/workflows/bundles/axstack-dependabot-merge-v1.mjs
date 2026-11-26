@@ -411,7 +411,7 @@ try {
 } finally { db.close() }`;
 var identifier = /^[A-Za-z0-9_-]+$/;
 var validId = (value) => typeof value === "string" && identifier.test(value);
-async function driverReadback(base, binding, expected, worktree, threadId) {
+async function driverReadback(base, binding, expected, worktree, threadId, { exclusive = false } = {}) {
   if (typeof threadId !== "string" || !/^[A-Za-z0-9:_-]{1,160}$/.test(threadId))
     return null;
   const [view, selection] = await Promise.all([
@@ -422,8 +422,16 @@ async function driverReadback(base, binding, expected, worktree, threadId) {
   const thread = observed?.thread;
   const model = json(selection);
   const desired = expected.model;
-  if (thread?.status !== "completed" || thread.archived !== false || thread.worktreePath !== worktree || thread.providerInstanceId !== desired.instanceId || thread.model !== desired.model || thread.runtimeMode !== expected.runtimeMode || model?.instanceId !== desired.instanceId || model.model !== desired.model || !Array.isArray(model.options) || model.options.length !== desired.options.length || !desired.options.every((option) => model.options.some((item) => item.id === option.id && item.value === option.value)))
+  if (thread?.threadId !== threadId || thread.status !== "completed" || thread.archived !== false || thread.pinned !== false || thread.createdBy !== "system" || thread.creationSource !== "server" || thread.worktreePath !== worktree || thread.providerInstanceId !== desired.instanceId || thread.model !== desired.model || thread.runtimeMode !== expected.runtimeMode || model?.instanceId !== desired.instanceId || model.model !== desired.model || !Array.isArray(model.options) || model.options.length !== desired.options.length || !desired.options.every((option) => model.options.some((item) => item.id === option.id && item.value === option.value)))
     return null;
+  if (exclusive) {
+    const threads = json(await run(binding.t3, ["thread", "list", "--base-dir", base, "--project", binding.project, "--json"]));
+    if (!Array.isArray(threads))
+      return null;
+    const attached = threads.filter((item) => item?.worktreePath === worktree);
+    if (attached.length !== 1 || attached[0].threadId !== threadId)
+      return null;
+  }
   return observed;
 }
 
@@ -630,7 +638,7 @@ var onEnd = (_tick, end) => Effect.gen(function* () {
       const config = await binding();
       if (!config || receipt.runId !== end.id)
         return false;
-      const observed = await driverReadback(base, config, receipt.expected, receipt.worktree, receipt.threadId);
+      const observed = await driverReadback(base, config, receipt.expected, receipt.worktree, receipt.threadId, { exclusive: true });
       const prompt = briefs(end.id, receipt.number, receipt.head);
       return sameDriverMessages(observed, prompt.prepare, prompt.merge) && cleanupWorktree(config, receipt);
     });
