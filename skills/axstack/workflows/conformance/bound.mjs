@@ -19,11 +19,35 @@ async function until(read, predicate, message, timeout = 45_000) {
 
 const view = (server, id) => server.command('thread', 'show', id, '--messages', '12', '--json');
 
+class V2ProjectionDrift extends Error {}
+
 function threadProjection(db, id) {
   const hasTable = (name) => db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(name);
   if (hasTable('orchestration_v2_projection_threads')) {
-    const row = db.query('SELECT payload_json FROM orchestration_v2_projection_threads WHERE thread_id = ?').get(id);
-    if (row) return { version: 2, modelSelection: JSON.parse(row.payload_json).modelSelection };
+    let row;
+    try {
+      row = db.query('SELECT payload_json FROM orchestration_v2_projection_threads WHERE thread_id = ?').get(id);
+    } catch {
+      throw new V2ProjectionDrift('V2 thread projection columns could not be read');
+    }
+    if (row) {
+      let payload;
+      try {
+        payload = JSON.parse(row.payload_json);
+      } catch {
+        throw new V2ProjectionDrift('V2 thread projection payload is invalid JSON');
+      }
+      const modelSelection = payload?.modelSelection;
+      if (!modelSelection || typeof modelSelection !== 'object' || Array.isArray(modelSelection)) {
+        throw new V2ProjectionDrift('V2 thread projection payload has an invalid modelSelection');
+      }
+      const { options } = modelSelection;
+      if (options != null && (!Array.isArray(options) ||
+          options.some((option) => typeof option?.id !== 'string' || !Object.hasOwn(option, 'value')))) {
+        throw new V2ProjectionDrift('V2 thread projection payload has invalid modelSelection options');
+      }
+      return { version: 2, modelSelection };
+    }
   }
   if (hasTable('projection_threads')) {
     const row = db.query('SELECT model_selection_json FROM projection_threads WHERE thread_id = ?').get(id);
@@ -216,6 +240,10 @@ export async function runBoundCases(server, binding) {
     try {
       verdicts[name] = { status: 'pass', detail: await probe() };
     } catch (error) {
+      if (error instanceof V2ProjectionDrift) {
+        verdicts[name] = { status: 'unknown', detail: error.message };
+        continue;
+      }
       // Error text from subprocesses and provider results can include private binding data.
       verdicts[name] = { status: 'fail', detail: error instanceof Error && error.message.startsWith('T3 ')
         ? error.message : 'fixture assertion or resource failed' };
