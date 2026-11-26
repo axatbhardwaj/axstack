@@ -107,8 +107,11 @@ if (name === 'npm' || name === 'curl') {
   const apply = parameters.includes('apply');
   if (name === 'ssh') {
     if (fixture.offline || (fixture.hasWritten && fixture.unknownAfter)) process.exit(255);
-    if (fixture.malformedReceipt) {
-      console.log('AXSTACK done 1.2.3 1.2.3 ' + fixture.malformedReceipt + ' active enabled active enabled present n/a');
+    if (fixture.doneReceipt) {
+      const { packageSkills = 'present', defaultActive = 'active', defaultEnabled = 'enabled',
+        singleActive = 'active', singleEnabled = 'enabled' } = fixture.doneReceipt;
+      console.log(['AXSTACK done 1.2.3 1.2.3', packageSkills, defaultActive, defaultEnabled,
+        singleActive, singleEnabled, 'present n/a'].join(' '));
       process.exit();
     }
     if (fixture.malformed) {
