@@ -693,6 +693,7 @@ Nightly triage replays quiet, normal, and partial forge coverage through the
 shipped collector and one simulated report agent. The replay checks the wake
 marker, catalog binding, effective binding readback, slot claim, and holds.
 The packed fixture confirms registry-only opt-in, reads back the exact daily
-trigger, drives an isolated due slot with incomplete binding, then verifies
-deactivation through the live registry. The first three eligible nights on
+trigger, drives an isolated due slot with incomplete binding, and checks that
+workflow health reports the resulting pause. It verifies deactivation through
+the live registry. The first three eligible nights on
 the opt-in host supply separate activation evidence.
