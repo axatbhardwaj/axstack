@@ -124,6 +124,38 @@ console.log('\\n' + JSON.stringify(data.body));
           status: 'fail',
           evidence: [{ runId: started.runId }],
         });
+        const later = server.start(name, 'later-slot', runId(6));
+        const stopped = await server.waitFor(later.runId, 'stopped');
+        expect(stopped.detail).toBe('an earlier slot is paused');
+        const laterSteps = server.command('workflow', 'show', later.runId, '--json').steps;
+        expect(laterSteps.map((step) => step.name)).toContain('active-slot');
+        expect(laterSteps.map((step) => step.name)).not.toContain('discover');
+
+        // Seed the prior owner claim in the isolated store. The fourth head
+        // paused before creating a worktree because no provider seat is bound.
+        const claim = 'axatbhardwaj/axstack#1@' + '8'.repeat(40);
+        server.command(
+          'workflow',
+          'store',
+          'set',
+          claim,
+          JSON.stringify({ runId: started.runId, disposition: 'claimed' }),
+        );
+        server.command('workflow', 'cancel', started.runId, '--json');
+        await server.waitFor(started.runId, 'cancelled');
+
+        const retry = server.start(name, 'after-cancel', runId(7));
+        const heldAgain = await server.waitFor(retry.runId, 'paused');
+        expect(heldAgain.detail).toContain(started.runId);
+        expect(heldAgain.detail).toContain('inspect any detached worktree');
+        const cancellation = server.command(
+          'workflow',
+          'store',
+          'list',
+          'dependabot-merge:cancelled:' + started.runId,
+          '--json',
+        );
+        expect(JSON.stringify(cancellation)).toContain('cancelled run retains its claim');
       },
     );
   },
