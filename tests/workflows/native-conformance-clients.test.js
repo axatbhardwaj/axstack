@@ -197,7 +197,7 @@ test('Executor sends its bounded read only to the explicitly bound loopback URL'
     expect(await runFixture(root, 'linear.mjs', 'default', { linear })).toEqual({ status: 'unknown' });
     expect(seen).toEqual([]);
     expect(await runFixture(root, 'linear.mjs', 'default', { linear: { ...linear, loopback: true } }))
-      .toEqual({ status: 'pass', coverage: 'unknown', failureCoverage: 'unknown' });
+      .toEqual({ status: 'pass', count: 1, hasNextPage: true, hasCursor: true, coverage: 'unknown', failureCoverage: 'unknown' });
     expect(seen).toEqual(['initialize', 'notifications/initialized', 'tools/call']);
   } finally {
     await listener.stop(true);
@@ -223,6 +223,67 @@ test('Executor reports unknown and makes no request to a 307 redirect target', a
     const linear = { ...executorBinding(root, listener.port), loopback: true };
     expect(await runFixture(root, 'linear.mjs', 'default', { linear })).toEqual({ status: 'unknown' });
     expect(seen).toEqual(['/mcp']);
+  } finally {
+    await listener.stop(true);
+  }
+});
+
+test.each([
+  {
+    name: 'structured Executor result with a paginated Linear MCP page',
+    structured: true,
+    page: { issues: [{ id: 'fixture-issue', updatedAt: '2026-01-01T00:00:00Z' }], hasNextPage: true, cursor: 'fixture' },
+    expected: { status: 'pass', count: 1, hasNextPage: true, hasCursor: true, coverage: 'unknown', failureCoverage: 'unknown' },
+  },
+  {
+    name: 'text Executor result with a terminal Linear MCP page',
+    structured: false,
+    page: { issues: [], pageInfo: { hasNextPage: false, endCursor: null } },
+    expected: { status: 'pass', count: 0, hasNextPage: false, hasCursor: false, coverage: 'complete', failureCoverage: 'unknown' },
+  },
+  {
+    name: 'unrecognized Linear MCP page',
+    structured: true,
+    page: { shape: { type: 'object' } },
+    expected: { status: 'unknown' },
+  },
+])('Executor decodes $name', async ({ structured, page, expected }) => {
+  const root = makeTempRoot('axstack-linear-mcp-');
+  const requests = [];
+  const evaluated = [];
+  const listener = Bun.serve({
+    hostname: '127.0.0.1',
+    port: 0,
+    async fetch(request) {
+      if (request.headers.get('authorization') !== 'Bearer fixture-key') return new Response(null, { status: 401 });
+      const { method, id, params } = await request.json();
+      if (method === 'initialize') return Response.json({ id, result: { protocolVersion: '2025-03-26' } });
+      if (method === 'notifications/initialized') return new Response(null, { status: 202 });
+      if (method !== 'tools/call' || params.name !== 'execute') return new Response(null, { status: 400 });
+      const tools = { linear_app: { fixture: { list_issues: (args) => {
+        requests.push(args);
+        return { ok: true, data: { _meta: {}, content: [{ type: 'text', text: JSON.stringify(page) }] } };
+      } } } };
+      // Execute the fixture's code with only the synthetic Linear tool.
+      const AsyncFunction = (async () => {}).constructor;
+      const result = await new AsyncFunction('tools', params.arguments.code)(tools);
+      evaluated.push(result);
+      return Response.json({ id, result: {
+        isError: false,
+        content: [{ type: 'text', text: JSON.stringify(result) }],
+        ...(structured ? { structuredContent: { status: 'success', result, toolName: 'execute', logs: [] } } : {}),
+      } });
+    },
+  });
+  try {
+    const linear = { ...executorBinding(root, listener.port), loopback: true };
+    const result = await runFixture(root, 'linear.mjs', 'default', { linear });
+    expect(requests).toEqual([{ limit: 1, fields: ['id', 'updatedAt'] }]);
+    if (expected.status === 'pass') {
+      const { count, hasNextPage, hasCursor } = expected;
+      expect(evaluated).toEqual([{ ok: true, count, hasNextPage, hasCursor }]);
+    }
+    expect(result).toEqual(expected);
   } finally {
     await listener.stop(true);
   }
