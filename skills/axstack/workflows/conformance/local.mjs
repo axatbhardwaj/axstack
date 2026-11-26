@@ -140,16 +140,7 @@ async function questions(server) {
 }
 
 async function persistence(server) {
-  const start = (value) => Bun.spawn([
-    server.t3, 'workflow', 'start', '--base-dir', server.base, '--key', value, '--input', JSON.stringify(value),
-    '--json', 'ax-conf-store',
-  ], { env: server.env, stderr: 'pipe' });
-  const pair = ['alpha', 'beta'].map(start);
-  const runs = await Promise.all(pair.map(async (process) => {
-    const report = await new Response(process.stdout).json();
-    check(await process.exited === 0, 'concurrent start failed');
-    return report.run;
-  }));
+  const runs = await Promise.all(['alpha', 'beta'].map((value) => server.startAsync('ax-conf-store', value, value)));
   const results = await Promise.all(runs.map(({ runId }) => server.waitFor(runId, 'completed')));
   const owner = results.find(({ result }) => result.acquired)?.result.owner;
   check(owner && results.filter(({ result }) => result.acquired).length === 1 &&
