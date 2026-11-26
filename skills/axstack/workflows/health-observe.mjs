@@ -30,21 +30,32 @@ function readJournal(path) {
   try {
     db = new Database(path, { readonly: true });
     db.exec('BEGIN');
-    const triggers = db.query('SELECT trigger_id AS triggerId, next_at AS nextAt FROM workflow_triggers').all();
+    const triggers = db.query(`
+      SELECT trigger_id AS triggerId, next_at AS nextAt FROM workflow_triggers
+      ORDER BY trigger_id LIMIT ?
+    `).all(JOURNAL_LIMIT + 1);
+    // Bound the source reads before filtering. A limit after WHERE and ORDER BY
+    // can still scan or sort the entire journal when matching runs are sparse.
     const rows = db.query(`
       SELECT run_id AS runId, workflow, version, idempotency_key AS idempotencyKey,
         parent_run_id AS parentRunId, status, started_at AS startedAt, ended_at AS endedAt,
-        CASE WHEN json_valid(input_json) THEN json_extract(input_json, '$.scheduledAt') END AS scheduledAt,
+        CASE WHEN idempotency_key GLOB 'trigger:*' AND json_valid(input_json)
+          THEN json_extract(input_json, '$.scheduledAt') END AS scheduledAt,
         CASE WHEN workflow = 'axstack-load-probe' AND json_valid(result_json)
           THEN json_extract(result_json, '$.workflow') END AS probeWorkflow,
         CASE WHEN workflow = 'axstack-load-probe' AND json_valid(result_json)
           THEN json_extract(result_json, '$.binding') END AS binding
       FROM workflow_runs
-      WHERE idempotency_key GLOB 'trigger:*'
-        OR (workflow = 'axstack-load-probe' AND idempotency_key GLOB 'axstack-watchdog-*')
-      ORDER BY started_at DESC, run_id ASC LIMIT ?
+      ORDER BY rowid DESC LIMIT ?
     `).all(JOURNAL_LIMIT + 1);
-    return { triggers, runs: rows.slice(0, JOURNAL_LIMIT), complete: rows.length <= JOURNAL_LIMIT };
+    const runs = rows.slice(0, JOURNAL_LIMIT).filter(({ workflow, idempotencyKey }) =>
+      idempotencyKey?.startsWith('trigger:') ||
+      (workflow === 'axstack-load-probe' && idempotencyKey?.startsWith('axstack-watchdog-')));
+    return {
+      triggers: triggers.slice(0, JOURNAL_LIMIT),
+      runs,
+      complete: triggers.length <= JOURNAL_LIMIT && rows.length <= JOURNAL_LIMIT,
+    };
   } catch {
     return null;
   } finally {
