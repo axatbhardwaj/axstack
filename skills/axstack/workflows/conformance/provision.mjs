@@ -47,9 +47,11 @@ export function git(server, ...args) {
 
 export function provision(server, settings, binding) {
   const provider = JSON.parse(privateBytes(binding.providers.settings).toString());
-  if (!Array.isArray(provider.providerInstances)) throw new Error('isolated provider settings are missing instances');
-  writeFileSync(settings, JSON.stringify({ workflowsEnabled: true, providerInstances: provider.providerInstances,
-    defaultRuntimeMode: 'full-access' }), { mode: 0o600 });
+  const instances = provider.providerInstances;
+  if (!instances || typeof instances !== 'object' || Array.isArray(instances)) {
+    throw new Error('isolated provider settings require a providerInstances object');
+  }
+  writeFileSync(settings, JSON.stringify({ workflowsEnabled: true, providerInstances: instances }), { mode: 0o600 });
   const secrets = server.base + '/userdata/secrets';
   mkdirSync(secrets, { mode: 0o700 });
   for (const { source, name } of binding.providers.secrets) {
