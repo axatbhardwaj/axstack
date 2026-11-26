@@ -19,7 +19,8 @@ export function journalPolicy(policy, journal, name, version) {
       scheduledAt: run.parentRunId === null && run.idempotencyKey === prefix + run.scheduledAt ? run.scheduledAt : null,
       startedAt: run.startedAt ?? null,
     }));
-  return { ...policy, slots, slotsComplete: journal.complete === true };
+  return { ...policy, slots, slotsComplete: journal.complete === true,
+    latestIndexedSlot: journal.latestScheduledAt?.[triggerId] };
 }
 
 export function journalRegistration(host, name, version, policy, slot, now) {
