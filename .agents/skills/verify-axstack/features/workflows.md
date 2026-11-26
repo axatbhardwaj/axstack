@@ -673,8 +673,9 @@ the workflow engine without provider credentials. Verify bound forge, provider,
 SSH, Executor, and disposable update fixtures separately using the approved
 private resources described in [workflow activation](../../../../docs/workflow-activation.md).
 
-The health tests drive the packaged CLI with read-only native run observations
-and exercise the watchdog and sweep instruction contracts. The real loader
-fixture feeds paused run and version evidence into the packaged command.
+The health tests exercise unreachable and journal evidence, and the watchdog
+and sweep instruction contracts. The packed T3 fixture invokes `workflow observe`
+with and without the scoped registry token, checks the native load-probe
+receipt, and feeds the collected paused run into `workflow health`.
 Live fleet collection, the installed watchdog schedule and its sweep handoff
 require the explicit bindings in [workflow health](../../../../docs/workflow-health.md).
