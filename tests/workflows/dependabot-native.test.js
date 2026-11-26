@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { usingIsolatedT3 } from '../../skills/axstack/workflows/conformance/isolated.mjs';
 import { makeTempRoot } from '../installer/helpers.js';
 
@@ -27,6 +27,10 @@ test.skipIf(!t3)(
         beforeStart(server) {
           writeFileSync(server.workflows + '/' + file, bundle);
           const path = server.root + '/binding.json';
+          mkdirSync(server.root + '/worktrees', { mode: 0o700 });
+          const git = (...args) => Bun.spawnSync(['git', ...args], { cwd: server.project, env: server.env });
+          expect(git('init', '-q').exitCode).toBe(0);
+          expect(git('remote', 'add', 'origin', 'https://github.com/axatbhardwaj/axstack.git').exitCode).toBe(0);
           const binding = JSON.stringify({
             project: server.project,
             worktreeRoot: server.root + '/worktrees',
@@ -147,7 +151,7 @@ console.log('\\n' + JSON.stringify(data.body));
         const retry = server.start(name, 'after-cancel', runId(7));
         const heldAgain = await server.waitFor(retry.runId, 'paused');
         expect(heldAgain.detail).toContain(started.runId);
-        expect(heldAgain.detail).toContain('inspect any detached worktree');
+        expect(heldAgain.detail).toContain('No retained checkout was found');
         const cancellation = server.command(
           'workflow',
           'store',
