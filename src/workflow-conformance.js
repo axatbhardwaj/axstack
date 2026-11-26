@@ -42,7 +42,7 @@ export async function runConformance({ home, packageRoot, flags }) {
   } else {
     try {
       receipt.details = await usingIsolatedT3({
-        t3, beforeStart: (server, settings) => provision(server, settings, binding),
+        t3, isolatedEnv: binding.isolatedEnv, beforeStart: (server, settings) => provision(server, settings, binding),
       }, async (server) => ({
         ...await runLocalCases(server),
         ...await runBoundCases(server, binding),

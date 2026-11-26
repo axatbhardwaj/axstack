@@ -1,3 +1,4 @@
 {
-  "axstack-load-probe": 1
+  "axstack-load-probe": { "version": 1, "registration": "probe" },
+  "axstack-pr-triage": { "version": 1, "registration": "registry" }
 }

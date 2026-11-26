@@ -1,5 +1,9 @@
 export const WORKFLOW_T3_FLOOR = '0.1.12';
 export const CONFORMANCE_SUITE = 1;
+
+export function workflowVersions(catalog) {
+  return Object.fromEntries(Object.entries(catalog).map(([name, { version }]) => [name, version]));
+}
 const NAME = /^[A-Za-z0-9_][\w.-]*$/;
 const DIGEST = /^[a-f0-9]{64}$/;
 const VERSION = /^(\d+)\.(\d+)\.(\d+)(?:-[\w.-]+)?$/;

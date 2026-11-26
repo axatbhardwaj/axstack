@@ -160,6 +160,34 @@ test('a mismatched running T3 server version holds opt-in', () => {
   expect(existsSync(join(workflows, name))).toBe(false);
 });
 
+test('registry readback rejects a different registered version of the workflow', async () => {
+  const { requireRegistration } = await import('../../src/workflow-t3.js');
+  const { base, scratch } = setup();
+  const tokenPath = join(scratch, 'registry.token');
+  writeFileSync(tokenPath, 'fixture-token', { mode: 0o600 });
+  const server = Bun.serve({
+    hostname: '127.0.0.1', port: 0,
+    fetch(request, listener) {
+      if (request.headers.get('authorization') === 'Bearer fixture-token' && listener.upgrade(request)) return;
+      return new Response(null, { status: 403 });
+    },
+    websocket: {
+      message(socket, raw) {
+        const request = JSON.parse(raw);
+        socket.send(JSON.stringify({ _tag: 'Chunk', requestId: request.id,
+          values: [{ workflows: [{ name: 'fixture-scheduled', version: 1 }] }] }));
+      },
+    },
+  });
+  try {
+    writeFileSync(join(base, 'userdata/server-runtime.json'), JSON.stringify({ origin: String(server.url) }));
+    await requireRegistration(base, 'fixture-scheduled', 1, tokenPath);
+    await expect(requireRegistration(base, 'fixture-scheduled', 2, tokenPath)).rejects.toThrow(/did not confirm fixture-scheduled@2/);
+  } finally {
+    await server.stop(true);
+  }
+}, 10_000);
+
 test('removal reads active status inventory and preserves concurrent edits', () => {
   const { optIn, remove, workflows, update } = setup();
   optIn();

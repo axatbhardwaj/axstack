@@ -14,8 +14,16 @@ For nightly read-only PR reports, use the separate packaged
 
 ## Nightly PR-triage setup
 
+Use `axstack-pr-triage` at 02:00 on the opt-in host. Use a private
+repository binding and current conformance receipt. The npm package's
+`docs/workflow-activation.md` gives the binding and deactivation commands.
+Record the first three eligible nights and their report receipts.
+
+### Native schedule fallback
+
 Follow the weekly test-audit pattern for an unbound native schedule.
 Before creating a schedule, read existing schedules with `list_scheduled_tasks`.
+Verify the workflow is inactive before enabling this fallback.
 Reuse the existing triage schedule for the recorded repository set.
 Never create a duplicate triage schedule.
 Use one native T3 `schedule_task`, unbound, nightly at 02:00 host time, with

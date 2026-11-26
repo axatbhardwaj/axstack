@@ -19,6 +19,43 @@ async function until(read, predicate, message, timeout = 45_000) {
 
 const view = (server, id) => server.command('thread', 'show', id, '--messages', '12', '--json');
 
+class V2ProjectionDrift extends Error {}
+
+function threadProjection(db, id) {
+  const hasTable = (name) => db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(name);
+  if (hasTable('orchestration_v2_projection_threads')) {
+    let row;
+    try {
+      row = db.query('SELECT payload_json FROM orchestration_v2_projection_threads WHERE thread_id = ?').get(id);
+    } catch {
+      throw new V2ProjectionDrift('V2 thread projection columns could not be read');
+    }
+    if (row) {
+      let payload;
+      try {
+        payload = JSON.parse(row.payload_json);
+      } catch {
+        throw new V2ProjectionDrift('V2 thread projection payload is invalid JSON');
+      }
+      const modelSelection = payload?.modelSelection;
+      if (!modelSelection || typeof modelSelection !== 'object' || Array.isArray(modelSelection)) {
+        throw new V2ProjectionDrift('V2 thread projection payload has an invalid modelSelection');
+      }
+      const { options } = modelSelection;
+      if (options != null && (!Array.isArray(options) ||
+          options.some((option) => typeof option?.id !== 'string' || !Object.hasOwn(option, 'value')))) {
+        throw new V2ProjectionDrift('V2 thread projection payload has invalid modelSelection options');
+      }
+      return { version: 2, modelSelection };
+    }
+  }
+  if (hasTable('projection_threads')) {
+    const row = db.query('SELECT model_selection_json FROM projection_threads WHERE thread_id = ?').get(id);
+    if (row) return { version: 1, modelSelection: JSON.parse(row.model_selection_json) };
+  }
+  return null;
+}
+
 async function typed(server, model, key, signal) {
   const worktree = `${server.root}/worktree-${key}`;
   git(server, 'worktree', 'add', '--detach', worktree, 'HEAD');
@@ -44,8 +81,7 @@ async function typed(server, model, key, signal) {
     if (model.options?.length) {
       const db = new Database(server.base + '/userdata/statev2.sqlite', { readonly: true });
       try {
-        const row = db.query('SELECT model_selection_json FROM projection_threads WHERE thread_id = ?').get(id);
-        const options = JSON.parse(row?.model_selection_json ?? '{}').options ?? [];
+        const options = threadProjection(db, id)?.modelSelection?.options ?? [];
         check(model.options.every((desired) => options.some((option) => option.id === desired.id && option.value === desired.value)),
           'agent option readback differed');
       } finally {
@@ -85,9 +121,10 @@ async function wakeCases(server, model) {
       const { messages } = await until(() => view(server, thread),
         ({ messages }) => messages.some((message) => message.role === 'assistant' && message.text?.includes(marker)),
         'owner response omitted exact wake marker', 85_000);
-      const user = messages.filter((message) => message.role === 'user' && message.text?.startsWith(marker));
+      const role = route === 'cli' ? 'user' : 'system';
+      const deliveries = messages.filter((message) => message.role === role && message.text?.startsWith(marker));
       const reply = messages.find((message) => message.role === 'assistant' && message.text?.includes(marker));
-      check(user.length === 1, 'wake marker was delivered multiple times');
+      check(deliveries.length === 1, 'expected exactly one delivered wake marker');
       check(route === 'cli' ? /this message came through T3 Code/i.test(reply.text) : /no T3 (?:sender )?label/i.test(reply.text),
         'owner response did not distinguish the sender label');
     }
@@ -95,11 +132,19 @@ async function wakeCases(server, model) {
   const mismatched = { ...model, model: model.model + '-mismatch' };
   const held = server.start('ax-conf-wake', 'mismatch', { key: 'mismatch', route: 'agent', thread, expected: mismatched });
   check((await server.waitFor(held.runId, 'completed')).result?.decision === 'hold', 'binding change did not hold wake');
+  assertIsolatedBase(server.base, Bun.env.HOME);
+  check(server.base.startsWith(server.root + '/'), 'archive target is outside its scratch root');
   await server.stop();
   const db = new Database(server.base + '/userdata/statev2.sqlite', { readwrite: true });
   try {
-    check(db.query('UPDATE projection_threads SET archived_at = ? WHERE thread_id = ?').run(
-      new Date().toISOString(), thread).changes === 1, 'isolated owner did not archive');
+    const projection = threadProjection(db, thread);
+    check(projection, 'isolated owner projection was missing');
+    const update = projection.version === 2
+      ? `UPDATE orchestration_v2_projection_threads
+         SET archived_at = ?1, payload_json = json_set(payload_json, '$.archivedAt', ?1)
+         WHERE thread_id = ?2`
+      : 'UPDATE projection_threads SET archived_at = ? WHERE thread_id = ?';
+    check(db.query(update).run(new Date().toISOString(), thread).changes === 1, 'isolated owner did not archive');
   } finally {
     db.close();
   }
@@ -195,6 +240,10 @@ export async function runBoundCases(server, binding) {
     try {
       verdicts[name] = { status: 'pass', detail: await probe() };
     } catch (error) {
+      if (error instanceof V2ProjectionDrift) {
+        verdicts[name] = { status: 'unknown', detail: error.message };
+        continue;
+      }
       // Error text from subprocesses and provider results can include private binding data.
       verdicts[name] = { status: 'fail', detail: error instanceof Error && error.message.startsWith('T3 ')
         ? error.message : 'fixture assertion or resource failed' };

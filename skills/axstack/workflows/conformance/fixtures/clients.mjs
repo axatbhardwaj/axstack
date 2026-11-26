@@ -1,5 +1,5 @@
 // These definitions run only on the suite's isolated T3 server.
-import { execFileSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const { workflow, agent, step, runs, pullRequests, PullRequest } = T3;
@@ -7,18 +7,29 @@ const root = process.env.AXSTACK_CONFORMANCE_ROOT;
 const binding = JSON.parse(readFileSync(root + '/client-binding.json', 'utf8'));
 const runtime = binding.runtime;
 const t3 = (args) => run([runtime.t3, ...args.slice(0, 2), '--base-dir', runtime.base, ...args.slice(2)]);
-const json = (receipt) => receipt.exit === 0 ? JSON.parse(receipt.out) : null;
-
-function run([bin, ...args]) {
-  const started = performance.now();
+function json(receipt) {
+  if (receipt.exit !== 0) return null;
   try {
-    const out = execFileSync(bin, args, { cwd: runtime.project, timeout: 15_000, encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 512 * 1024 }).trim();
-    return { exit: 0, out, ms: Math.round(performance.now() - started) };
-  } catch (error) {
-    return { exit: error.status ?? null, ms: Math.round(performance.now() - started),
-      refused: /head branch was modified|head sha.*(?:match|changed)/i.test(String(error.stderr ?? '')) };
+    return JSON.parse(receipt.out);
+  } catch {
+    return null;
   }
+}
+
+function run([bin, ...args], maxBuffer = 512 * 1024) {
+  const started = performance.now();
+  // The T3 CLI calls back into this server, which must stay responsive.
+  return new Promise((resolve) => {
+    const child = execFile(bin, args, { cwd: runtime.project, timeout: 15_000, encoding: 'utf8', maxBuffer },
+      (error, stdout, stderr) => {
+        const ms = Math.round(performance.now() - started);
+        resolve(error ? {
+          exit: typeof error.code === 'number' ? error.code : null, ms,
+          refused: /head branch was modified|head sha.*(?:match|changed)/i.test(stderr),
+        } : { exit: 0, out: stdout.trim(), ms });
+      });
+    child.stdin?.end();
+  });
 }
 
 const name = 'ax-conf-wake';
@@ -47,7 +58,7 @@ export const wake = workflow(name, {
     // The runtime may omit key from run listings; the caller supplies a unique prefix.
     const matches = selected.length ? selected : yield* runs({ workflow: name, keyPrefix: key });
     if (matches.length !== 1) throw new Error('expected one conformance run');
-    const focus = expected ? json(t3(['thread', 'show', thread, '--messages', '1', '--json']))?.thread : null;
+    const focus = expected ? json(yield* Effect.promise(() => t3(['thread', 'show', thread, '--messages', '1', '--json'])))?.thread : null;
     if (expected && (focus?.providerInstanceId !== expected.instanceId || focus?.model !== expected.model)) {
       return { decision: 'hold' };
     }
@@ -56,20 +67,45 @@ export const wake = workflow(name, {
   }));
   if (receipt.decision === 'hold') return receipt;
   if (route === 'agent') return yield* agent.try('agent-wake', { thread: { threadId: thread }, brief: receipt.text });
-  return yield* step('cli-wake', { returns: Schema.Json }, Effect.sync(() => {
-    const command = t3(['thread', 'send', thread, receipt.text, '--json']);
-    return { exit: command.exit, delivery: json(command)?.delivery };
+  return yield* step('cli-wake', { returns: Schema.Json }, Effect.promise(async () => {
+    const command = await t3(['thread', 'send', thread, receipt.text, '--json']);
+    return { exit: command.exit, delivery: json(command)?.delivery ?? null };
   }));
 }));
 
-function paginated(endpoint) {
-  const result = run(['gh', 'api', '--paginate', '--slurp', endpoint]);
-  const pages = json(result);
-  return Array.isArray(pages) && pages.every(Array.isArray) ? pages.flat() : null;
+async function paginated(endpoint) {
+  const items = [];
+  const limit = 20;
+  for (let page = 1; page <= limit; page++) {
+    const receipt = await run(['gh', 'api', '--include', endpoint + '&page=' + page], 4 * 1024 * 1024);
+    if (receipt.exit !== 0) return { coverage: 'unknown', page, reason: 'GitHub CLI request failed' };
+    const separator = /\r?\n\r?\n/.exec(receipt.out);
+    const headers = separator ? receipt.out.slice(0, separator.index) : '';
+    const rows = separator ? json({ exit: 0, out: receipt.out.slice(separator.index + separator[0].length) }) : null;
+    if (!/^HTTP\/\d(?:\.\d)? 200\b/.test(headers) || !Array.isArray(rows) || (page > 1 && !rows.length)) {
+      return { coverage: 'unknown', page, reason: 'missing or invalid GitHub API page' };
+    }
+    items.push(...rows);
+    const links = headers.split(/\r?\n/).filter((line) => /^link:/i.test(line)).join(',');
+    if (!/\brel="next"/i.test(links)) return { coverage: 'complete', items };
+    const next = links.match(/<([^>]+)>;\s*rel="next"/i)?.[1];
+    const nextPage = next && URL.canParse(next) ? new URL(next).searchParams.get('page') : null;
+    if (nextPage !== String(page + 1)) return { coverage: 'unknown', page, reason: 'invalid GitHub API next page' };
+  }
+  return { coverage: 'unknown', page: limit + 1, reason: 'GitHub API page limit reached' };
 }
 
-function snapshot(repo, number) {
-  return json(run(['gh', 'api', `repos/${repo}/pulls/${number}`]));
+async function snapshot(repo, number) {
+  return json(await run(['gh', 'api', `repos/${repo}/pulls/${number}`]));
+}
+
+function completeList(response, key) {
+  const items = response?.[key];
+  return Array.isArray(items) && response.total_count === items.length ? items : null;
+}
+
+function discovery(receipt) {
+  return receipt.coverage === 'complete' ? { coverage: receipt.coverage, count: receipt.items.length } : receipt;
 }
 
 if (binding.forge?.repo) {
@@ -81,46 +117,69 @@ if (binding.forge?.repo) {
 export { opened };
 
 export const forge = workflow('ax-conf-forge', { version: 1, payload: Schema.Null }, () =>
-  step('forge-facts', { returns: Schema.Json }, Effect.sync(() => {
+  step('forge-facts', { returns: Schema.Json }, Effect.promise(async () => {
     const { repo, absentRepo, cases } = binding.forge;
     const pulls = (name) => paginated(`repos/${name}/pulls?state=open&per_page=100`);
-    const visible = pulls(repo);
-    const missing = pulls(absentRepo);
+    const observed = await pulls(repo);
+    const absent = await pulls(absentRepo);
     const facts = {};
     for (const [scenario, expected] of Object.entries(cases)) {
-      const pr = snapshot(repo, expected.number);
+      const pr = await snapshot(repo, expected.number);
       if (!pr || pr.state !== 'open') {
-        facts[scenario] = null;
+        facts[scenario] = { unknown: ['pull'] };
         continue;
       }
-      const endpoint = `repos/${repo}/commits/${pr.head.sha}`;
-      const checks = json(run(['gh', 'api', `${endpoint}/check-runs?per_page=100`]));
-      const statuses = json(run(['gh', 'api', `${endpoint}/status?per_page=100`]));
-      const comments = paginated(`repos/${repo}/pulls/${expected.number}/comments?per_page=100`);
-      facts[scenario] = {
-        base: pr.base.ref, head: pr.head.sha, status: statuses?.state,
-        checks: checks?.total_count === checks?.check_runs?.length ? checks?.check_runs : null,
-        statuses: statuses?.total_count === statuses?.statuses?.length ? statuses?.statuses : null,
-        lateReview: comments?.some((comment) => Date.parse(comment.created_at) > Date.parse(expected.greenAt)),
+      const head = typeof pr.head?.sha === 'string' && pr.head.sha ? pr.head.sha : null;
+      const base = typeof pr.base?.ref === 'string' && pr.base.ref ? pr.base.ref : null;
+      const unknown = [];
+      if (head === null) unknown.push('head');
+      if (base === null) unknown.push('base');
+      if (unknown.length) {
+        facts[scenario] = { head, base, unknown };
+        continue;
+      }
+      const endpoint = `repos/${repo}/commits/${head}`;
+      const checks = json(await run(['gh', 'api', `${endpoint}/check-runs?per_page=100`]));
+      const statuses = json(await run(['gh', 'api', `${endpoint}/status?per_page=100`]));
+      const factsForPull = {
+        base, head, status: typeof statuses?.state === 'string' ? statuses.state : 'unknown',
+        checks: completeList(checks, 'check_runs'), statuses: completeList(statuses, 'statuses'), lateReview: null, unknown,
       };
+      if (factsForPull.status === 'unknown') unknown.push('status');
+      if (factsForPull.checks === null) unknown.push('checks');
+      if (factsForPull.statuses === null) unknown.push('statuses');
+      if (scenario === 'lateReview') {
+        const greenAt = Date.parse(expected.greenAt);
+        const comments = await paginated(`repos/${repo}/pulls/${expected.number}/comments?per_page=100`);
+        const dates = comments.items?.map((comment) => Date.parse(comment?.created_at));
+        if (Number.isFinite(greenAt) && dates?.every(Number.isFinite)) {
+          factsForPull.lateReview = dates.some((createdAt) => createdAt > greenAt);
+        } else {
+          unknown.push('lateReview');
+        }
+      }
+      facts[scenario] = factsForPull;
     }
-    return { visible: visible !== null, missing: missing === null, combined: visible && missing ? 'complete' : 'unknown', facts };
+    const visible = observed.coverage === 'complete';
+    const missing = absent.coverage === 'unknown';
+    return { visible, missing, combined: visible && !missing ? 'complete' : 'unknown',
+      discovery: { [repo]: discovery(observed), [absentRepo]: discovery(absent) }, facts };
   })));
 
 export const processes = workflow('ax-conf-processes', { version: 1, payload: Schema.Null }, () =>
-  step('processes-and-facts', { returns: Schema.Json }, Effect.sync(() => {
+  step('processes-and-facts', { returns: Schema.Json }, Effect.promise(async () => {
     const thread = readFileSync(root + '/owner-id', 'utf8');
     const { ssh, forge } = binding;
     const projects = [runtime.project, root + '/other-project'];
     const timed = {
-      gh: run(['gh', 'api', `repos/${forge.repo}`]),
-      git: run(['git', 'worktree', 'list', '--porcelain']),
-      ssh: run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5', '-o', 'StrictHostKeyChecking=yes',
+      gh: await run(['gh', 'api', `repos/${forge.repo}`]),
+      git: await run(['git', 'worktree', 'list', '--porcelain']),
+      ssh: await run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5', '-o', 'StrictHostKeyChecking=yes',
         '-o', 'UpdateHostKeys=no', '-i', ssh.identity, '-o', 'UserKnownHostsFile=' + ssh.knownHosts, '--', ssh.host, 'hostname']),
-      helper: run([runtime.bun, root + '/process-helper.mjs', root + '/owner-id']),
-      threadShow: t3(['thread', 'show', thread, '--messages', '1', '--json']),
+      helper: await run([runtime.bun, root + '/process-helper.mjs', root + '/owner-id']),
+      threadShow: await t3(['thread', 'show', thread, '--messages', '1', '--json']),
     };
-    const inventory = projects.map((project) => t3(['thread', 'list', '--project', project, '--json']));
+    const inventory = await Promise.all(projects.map((project) => t3(['thread', 'list', '--project', project, '--json'])));
     return {
       exits: Object.fromEntries(Object.entries(timed).map(([key, value]) => [key, value.exit])),
       ms: [...Object.values(timed), ...inventory].map((value) => value.ms),
@@ -129,17 +188,17 @@ export const processes = workflow('ax-conf-processes', { version: 1, payload: Sc
   })));
 
 export const pin = workflow('ax-conf-pin', { version: 1, payload: Schema.Null }, () =>
-  step('head-pin-refusal', { returns: Schema.Json }, Effect.sync(() => {
+  step('head-pin-refusal', { returns: Schema.Json }, Effect.promise(async () => {
     const { repo, cases } = binding.forge;
     const number = cases.failingStatus.number;
-    const before = snapshot(repo, number);
+    const before = await snapshot(repo, number);
     if (!before || before.state !== 'open' || before.merged || !/^[a-f0-9]{40}$/.test(before.head?.sha)) {
       return { refused: false };
     }
     const sentinel = Array.from(crypto.getRandomValues(new Uint8Array(20)),
       (byte) => byte.toString(16).padStart(2, '0')).join('');
     if (sentinel === before.head.sha) return { refused: false };
-    const attempt = run(['gh', 'pr', 'merge', String(number), '--repo', repo, '--merge', '--match-head-commit', sentinel]);
-    const after = snapshot(repo, number);
-    return { refused: attempt.exit !== 0 && attempt.refused && after?.state === 'open' && after.head.sha === before.head.sha };
+    const attempt = await run(['gh', 'pr', 'merge', String(number), '--repo', repo, '--merge', '--match-head-commit', sentinel]);
+    const after = await snapshot(repo, number);
+    return { refused: attempt.exit !== 0 && attempt.refused && after?.state === 'open' && after.head?.sha === before.head.sha };
   })));

@@ -61,7 +61,10 @@ if (argv.includes('user')) {
         [inventory(1), inventory(99, 'peer'), ...[2, 3, 4, 5, 6].map((number) => inventory(number))];
       reply({ nameWithOwner: repo, pullRequests: { ...connection(list, cursor ? null : 'one-next'), totalCount: 13 } });
     } else {
-      const list = { 'three/project': [inventory(15)], 'four/project': [inventory(16)] }[repo] ?? [];
+      const list = {
+        'three/project': [inventory(15)], 'four/project': [inventory(16)], 'four-normal/project': [inventory(16)],
+        'field-unknown/project': [inventory(3)],
+      }[repo] ?? [];
       const next = repo === 'four/project' ? 'partial-next' : null;
       reply({ nameWithOwner: repo, pullRequests: { ...connection(list, next), totalCount: list.length + Number(Boolean(next)) } });
     }
