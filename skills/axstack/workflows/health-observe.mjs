@@ -25,6 +25,33 @@ function workflowRead(t3, base, command, ...args) {
   }
 }
 
+function latestScheduleTimes(db, triggers) {
+  const columns = db.query("PRAGMA index_xinfo('workflow_runs_key')").all().filter(({ key }) => key === 1);
+  if (columns.map(({ name }) => name).join(',') !== 'workflow,idempotency_key') return {};
+  if (columns.some(({ coll }) => coll !== 'BINARY')) return {};
+  const latest = db.query(`
+    SELECT idempotency_key AS key FROM workflow_runs INDEXED BY workflow_runs_key
+    WHERE workflow COLLATE BINARY = ?
+      AND idempotency_key COLLATE BINARY >= ? AND idempotency_key COLLATE BINARY < ?
+    ORDER BY idempotency_key COLLATE BINARY DESC LIMIT 1
+  `);
+  const times = new Map();
+  for (const { triggerId } of triggers) {
+    const slash = triggerId.indexOf('/');
+    if (slash <= 0) continue;
+    const prefix = `trigger:${triggerId}`;
+    const row = latest.get(triggerId.slice(0, slash), `${prefix}:`, `${prefix};`);
+    if (!row) times.set(triggerId, null);
+    else {
+      const time = row.key.slice(prefix.length + 1);
+      const date = new Date(time);
+      // T3's zero-padded UTC keys sort in scheduled-time order.
+      if (Number.isFinite(date.getTime()) && date.toISOString() === time) times.set(triggerId, time);
+    }
+  }
+  return Object.fromEntries(times);
+}
+
 function readJournal(path) {
   let db;
   try {
@@ -51,11 +78,10 @@ function readJournal(path) {
     const runs = rows.slice(0, JOURNAL_LIMIT).filter(({ workflow, idempotencyKey }) =>
       idempotencyKey?.startsWith('trigger:') ||
       (workflow === 'axstack-load-probe' && idempotencyKey?.startsWith('axstack-watchdog-')));
-    return {
-      triggers: triggers.slice(0, JOURNAL_LIMIT),
-      runs,
-      complete: triggers.length <= JOURNAL_LIMIT && rows.length <= JOURNAL_LIMIT,
-    };
+    const complete = triggers.length <= JOURNAL_LIMIT && rows.length <= JOURNAL_LIMIT;
+    const capturedTriggers = triggers.slice(0, JOURNAL_LIMIT);
+    return { triggers: capturedTriggers, runs, complete,
+      ...!complete && { latestScheduledAt: latestScheduleTimes(db, capturedTriggers) } };
   } catch {
     return null;
   } finally {
