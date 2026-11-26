@@ -16,7 +16,10 @@ async function evaluate(generator) {
 
 const effect = (run) => ({ *[Symbol.iterator]() { return yield run; }, run });
 
-async function fixture(repositories, { options = ['high'], effective = selection, age = 0, drift = false, repeat = false } = {}) {
+async function fixture(repositories, {
+  options = ['high'], effective = selection, age = 0, drift = false, repeat = false,
+  report = { outcome: 'done', value: 'Fixture report.', thread: { threadId } },
+} = {}) {
   const root = makeTempRoot('axstack-triage-workflow-');
   const base = `${root}/base`;
   const work = `${base}/workflows`;
@@ -31,7 +34,10 @@ async function fixture(repositories, { options = ['high'], effective = selection
   const roles = JSON.parse(await Bun.file(`${skill}/../../profiles/presets/mixed.json`).text());
   writeFileSync(`${skills}/roles.json`, JSON.stringify({ version: 1, roles: roles.roles }));
   writeFileSync(`${root}/gh`, `#!/bin/sh\nexec '${process.execPath}' --no-env-file '${import.meta.dir}/pr-triage-forge-fixture.js' "$@"\n`, { mode: 0o700 });
-  writeFileSync(`${root}/bun`, `#!/bin/sh\nPATH='${root}':"$PATH" TRIAGE_TEST_TRACE='${root}/forge.jsonl' exec '${process.execPath}' "$@"\n`, { mode: 0o700 });
+  writeFileSync(`${root}/bun`, `#!/bin/sh
+printf '%s:%s\\n' "\${AXSTACK_TRIAGE_TEST_SECRET:+set}" "\${GH_TOKEN:+set}" >> '${root}/helper-env'
+PATH='${root}':"$PATH" TRIAGE_TEST_TRACE='${root}/forge.jsonl' exec '${process.execPath}' "$@"
+`, { mode: 0o700 });
   writeFileSync(`${root}/registry-token`, 'fixture-read-token', { mode: 0o600 });
   const binding = JSON.stringify({ bun: `${root}/bun`, skillsDirectory: skills, project: 'fixture-project',
     registryTokenFile: `${root}/registry-token`, repositories });
@@ -68,31 +74,43 @@ async function fixture(repositories, { options = ['high'], effective = selection
 
   const calls = [];
   const previous = Object.fromEntries(['Effect', 'Option', 'Schema', 'T3'].map((name) => [name, globalThis[name]]));
+  const testEnv = { AXSTACK_TRIAGE_TEST_SECRET: 'fixture-secret', GH_TOKEN: 'fixture-forge-token' };
+  const savedEnv = Object.fromEntries(Object.keys(testEnv).map((name) => [name, process.env[name]]));
+  Object.assign(process.env, testEnv);
   const scheduledAt = new Date(Date.now() - age).toISOString();
   const runs = [{ status: 'running', key: `trigger:axstack-pr-triage/daily:02:00:all:${scheduledAt}`, id: runId }];
   let claim;
   Object.assign(globalThis, {
-    Effect: { gen: (body) => effect(() => evaluate(body())), promise: effect },
+    Effect: {
+      gen: (body) => effect(() => evaluate(body())),
+      tryPromise: ({ try: read, catch: failure }) => effect(() => read().catch((error) => { throw failure(error); })),
+    },
     Schema: { Json: {}, String: {}, Boolean: {}, Struct: () => ({}) }, Option: { isSome: Boolean },
     T3: {
       workflow: (name, options, body) => ({ name, options, body }), daily: (time) => time,
-      step: (_name, _options, operation) => operation, runs: () => effect(() => runs), stop: (detail) => effect(() => ({ detail })),
+      step: (_name, _options, operation) => operation, runs: () => effect(() => runs),
+      stop: (detail) => effect(() => ({ status: 'stopped', detail })),
       store: { entry: () => ({ get: effect(() => claim), set: (value) => effect(() => { claim = { value }; }) }), transaction: (operation) => operation },
       agent: { try: (name, request) => effect(() => {
         calls.push({ name, ...request });
-        return { outcome: 'done', value: 'Fixture report.', thread: { threadId } };
+        return report;
       }) },
     },
   });
   try {
     const { default: workflow } = await import(`${work}/triage.mjs`);
     expect(workflow.options.triggers).toEqual(['02:00']);
-    const result = await workflow.body({ scheduledAt }).run();
+    const result = await workflow.body({ scheduledAt }).run().catch((error) => ({ status: 'paused', detail: error.message }));
     if (repeat) runs[0].id = '1'.repeat(32);
     const again = repeat ? await workflow.body({ scheduledAt }).run() : null;
-    return { result, again, calls, rpcReads, scheduledAt, forge: await Bun.file(`${root}/forge.jsonl`).text().catch(() => '') };
+    const helperEnv = (await Bun.file(`${root}/helper-env`).text().catch(() => '')).trim().split('\n');
+    return { result, again, calls, rpcReads, scheduledAt, helperEnv, forge: await Bun.file(`${root}/forge.jsonl`).text().catch(() => '') };
   } finally {
     Object.assign(globalThis, previous);
+    for (const [name, value] of Object.entries(savedEnv)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
     await server.stop(true);
   }
 }
@@ -123,14 +141,20 @@ test.each([
 
 test('unavailable configured effort holds before starting the report agent', async () => {
   const { result, calls, rpcReads } = await fixture(['five/project'], { options: ['low'] });
-  expect(result.detail).toContain('report agent binding unavailable or mismatched');
+  expect(result).toEqual({ status: 'paused', detail: 'report model or effort is unavailable in the live catalog' });
   expect(rpcReads).toEqual(['server.getConfig']);
   expect(calls).toEqual([]);
+});
+
+test('only the forge helper receives the forge token and neither helper inherits unrelated server secrets', async () => {
+  const { helperEnv } = await fixture(['five/project']);
+  expect(helperEnv).toEqual([':set', ':', ':']);
 });
 
 test('host binding drift and stale slots hold before consulting the forge or provider', async () => {
   for (const options of [{ drift: true }, { age: 601_000 }]) {
     const { result, calls, rpcReads, forge } = await fixture(['five/project'], options);
+    expect(result.status).toBe(options.drift ? 'paused' : 'stopped');
     expect(result.detail).toMatch(/changed|stale/);
     expect(calls).toEqual([]);
     expect(rpcReads).toEqual([]);
@@ -142,7 +166,16 @@ test('an effective binding mismatch holds a started report', async () => {
   const { result, calls, rpcReads } = await fixture(['five/project'], {
     effective: { ...selection, options: [{ id: 'reasoningEffort', value: 'low' }] },
   });
-  expect(result.detail).toContain('effective report agent binding unavailable or mismatched');
+  expect(result).toEqual({ status: 'paused', detail: 'effective report agent binding mismatched' });
   expect(calls).toHaveLength(1);
   expect(rpcReads).toEqual(['server.getConfig', 'orchestration.getThreadProjection']);
+});
+
+test.each([
+  ['report agent did not start', { outcome: 'failed' }],
+  ['report agent did not return a report', { outcome: 'done', value: '', thread: { threadId } }],
+])('nightly triage pauses when the %s', async (detail, report) => {
+  const { result, calls } = await fixture(['five/project'], { report });
+  expect(result).toEqual({ status: 'paused', detail });
+  expect(calls).toHaveLength(1);
 });
