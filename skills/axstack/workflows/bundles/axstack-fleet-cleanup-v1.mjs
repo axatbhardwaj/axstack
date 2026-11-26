@@ -346,7 +346,25 @@ async function checkoutFact(config, host, project, thread, worktrees, receipt) {
   if (keys === null || index === null || index.split("\x00").some((entry) => entry.startsWith("160000 "))) {
     return "worktree-status";
   }
-  const overrides = keys.split("\x00").filter((key) => /^filter\..*\.(clean|process)$/.test(key)).flatMap((key) => ["-c", key + "=", "-c", key.replace(/\.(clean|process)$/, ".required") + "=false"]);
+  const drivers = new Set;
+  for (const key of keys.split("\x00")) {
+    if (key.includes("="))
+      return "worktree-status";
+    if (!key.startsWith("filter."))
+      continue;
+    const driver = /^filter\.([A-Za-z0-9_.-]+)\.(?:clean|process|smudge|required)$/.exec(key)?.[1];
+    if (!driver)
+      return "worktree-status";
+    drivers.add(driver);
+  }
+  const overrides = [...drivers].flatMap((driver) => [
+    "-c",
+    `filter.${driver}.clean=`,
+    "-c",
+    `filter.${driver}.process=`,
+    "-c",
+    `filter.${driver}.required=false`
+  ]);
   const dirt = await git(config, host, dir, [...overrides, "status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignored"]);
   if (dirt === null)
     return "worktree-status";
