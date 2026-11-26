@@ -10,6 +10,7 @@ test('each catalogued workflow ships one entry that matches a fresh Bun build an
   const catalogFile = join(workflows, 'catalog.json');
   expect(existsSync(catalogFile)).toBe(true);
   const catalog = JSON.parse(readFileSync(catalogFile, 'utf8'));
+  const pins = JSON.parse(readFileSync(join(workflows, 'bundle-digests.json'), 'utf8'));
   expect(catalog[probe]).toBeGreaterThanOrEqual(1);
   expect(readdirSync(bundled).sort()).toEqual(Object.entries(catalog).map(([name, version]) => name + '-v' + version + '.mjs').sort());
   for (const [name, version] of Object.entries(catalog)) {
@@ -19,7 +20,11 @@ test('each catalogued workflow ships one entry that matches a fresh Bun build an
     ], { cwd: workflows });
     expect(build.stderr.toString()).toBe('');
     expect(build.exitCode).toBe(0);
-    expect(build.stdout.toString()).toBe(readFileSync(file, 'utf8'));
+    const bytes = readFileSync(file);
+    expect(build.stdout.toString()).toBe(bytes.toString());
+    const identity = `${name}@${version}`;
+    const digest = new Bun.CryptoHasher('sha256').update(bytes).digest('hex');
+    expect(digest, `${identity}: changed bytes require a new workflow version and digest pin`).toBe(pins[identity]);
     const loaded = Bun.spawnSync([process.execPath, '-e', `
       const type = new Proxy({}, { get: () => () => ({}) });
       Object.assign(globalThis, {
