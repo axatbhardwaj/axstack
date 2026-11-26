@@ -71,10 +71,13 @@ export function dueSlot(policy, now, superseded) {
     return term('pass', { runId: latest.runId, scheduledAt: latest.scheduledAt, ...latest.startedAt && { startedAt: latest.startedAt } });
   }
   if (first > cutoff) return term('n/a', { firstDueAt: policy.firstDueAt, reason: 'initial two-interval window' });
-  if (!Array.isArray(slots) || policy.slotsComplete !== true) {
+  const indexedWindowCovered = word(policy.triggerId) &&
+    (policy.latestIndexedSlot === null || timestamp(policy.latestIndexedSlot) < cutoff);
+  if (!Array.isArray(slots) || (policy.slotsComplete !== true && !indexedWindowCovered)) {
     return term('unknown', policy.triggerId ? 'T3 workflow_runs export is missing or incomplete' : 'scheduled-run provenance is incomplete');
   }
-  return term('fail', { cutoff: new Date(cutoff).toISOString(), lastDueAt: latest?.scheduledAt ?? null });
+  return term('fail', { cutoff: new Date(cutoff).toISOString(), lastDueAt: latest?.scheduledAt ?? null,
+    ...policy.slotsComplete !== true && { latestIndexedSlot: policy.latestIndexedSlot } });
 }
 
 function currentSteps(run, shows, now) {
