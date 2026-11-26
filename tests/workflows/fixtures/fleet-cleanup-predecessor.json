@@ -1,0 +1,17 @@
+{
+  "coverage": {
+    "axat-vps": 26,
+    "io": 29,
+    "iobook": 25,
+    "iobox": 28,
+    "iosatellite": 25
+  },
+  "actions": [
+    "settle",
+    "settle",
+    "archive"
+  ],
+  "continuation": 0,
+  "outstandingCleanupOwnedSnoozes": [],
+  "retainedPasses": 3
+}

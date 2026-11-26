@@ -1,0 +1,15 @@
+[
+  {
+    "threadId": "mcp:f15e0000-0000-4000-8000-000000000001",
+    "projectId": "71710000-0000-4000-8000-000000000001",
+    "latestRunId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    "createdBy": "agent",
+    "status": "completed",
+    "settled": true,
+    "pinned": false,
+    "snoozed": false,
+    "blockedOnThreadWait": false,
+    "relationshipToParent": null,
+    "updatedAt": "2026-11-27T00:00:00.000Z"
+  }
+]

@@ -126,6 +126,101 @@ unverified. If a checkout remains, use the run ID and PR number to find it in
 the bound worktree root. Confirm no thread uses it and that it is clean before
 removing it with `git worktree remove` without force.
 
+## Fleet cleanup (MIG-9)
+
+Keep **Fleet thread cleanup · 30 minutes** enabled on axat-vps until a
+complete quiet decision is proven on the configured fleet. T3 0.1.12
+prints a bare thread array without its denominator and omits subagents,
+worktree attachments, active run IDs and pending request counts from the
+observed list. The predecessor receipt records actions and coverage but
+provides no fresh, exact-run eligibility facts for the next tick. These
+gaps keep MIG-9 on the native schedule.
+
+The workflow preserves the predecessor's sidebar metadata scope. It
+recognizes exact-run settlement and archive candidates. Existing snoozes
+and continuation cursors require reconciliation through the predecessor.
+The report-only path surfaces gaps without handing a cleanup turn to the
+agent. A cleanup turn can follow only after a positive inventory, exclusive
+operation claims, and effective binding readback from the same owner thread.
+
+In active mode, each unknown tick can create a report thread. Persistent
+gaps can produce 48 report threads per day at the 30-minute cadence. A
+retained operation claim can leave one additional paused run per tick that
+rediscovers the same item until the claim is reconciled.
+
+### Binding and evidence
+
+The mode-0600 binding uses `mode` (`shadow` or `active`), the local
+registered `project` path and `projectId`, absolute paths for `bun`, `t3`,
+`git`, `ssh`, installed `roles`, the scoped `registryTokenFile`, and
+`receipt`. The token needs `orchestration:read`. The seat comes from the
+installed `axstack-owner` role and the live catalog. Under `hosts`, supply
+exactly `io`, `iobook`, `iobox`, `iosatellite`, and `axat-vps`. For each,
+provide its absolute T3 `base`, absolute `t3` path and `projects` with exact
+`id`, `path` and Git `repository` paths. Reads use local binaries on
+axat-vps and noninteractive SSH as `xzat` elsewhere. Measure inventory
+duration on the full fleet before activation. The workflow runs one T3
+list and one Git worktree list per configured project, with additional
+Git reads for candidate worktrees. Reconcile an attached submodule checkout
+through the predecessor when the workflow cannot prove its status.
+
+With the predecessor, point `receipt` to its private `latest.md` or to a
+private JSON copy in a disposable replay. The current predecessor format
+is an unknown for admission. A complete fact source must supply both:
+
+- Project coverage for all five hosts from an independently exhausted
+  native inventory. The workflow accepts a version-1 private receipt whose
+  `capturedAt` falls within the 30 minutes ending at the scheduled tick,
+  including both endpoints. The receipt also carries `coverage[host].projectsComplete`, exact `projectIds`,
+  `outstandingCleanupOwnedSnoozes`, and `decisions`. Each decision names
+  the host, project, thread, latest run and native `updatedAt`, with
+  `action` of `retain`, `settle` or `archive`. Cleanup decisions require
+  affirmative `accepted`, `descendantsClear`, `ownership`, `preserved`
+  and `protectionClear` guards. An attached worktree also needs a
+  `publishedHead` verified at the remote and fresh local Git checks.
+  Branch merge status is unchecked because settlement and archival change
+  only thread metadata.
+- A project thread listing with full rows, including descendants and the
+  native request and worktree facts. The replay contract uses an envelope
+  with `complete: true`, `includesDescendants: true`, `nextCursor: null`
+  and `threads`. The shipped T3 CLI does not emit that envelope. Before
+  cutover, prove the supported native read and its coverage end to end.
+  A project binding or a wrapper that merely marks a bare array complete
+  cannot supply that proof.
+
+Before cutover, identify and verify the producer that will refresh the
+coverage and decision receipt between scheduled ticks, including quiet and
+report-only ticks. A cleanup turn records action readbacks when it runs.
+
+### Shadow, handoff and rollback
+
+1. Replay the shipped workflow in an isolated T3 base with `mode: "shadow"`.
+   Record eligible work, a quiet tick, host unreachable, incomplete thread
+   coverage, duplicate claims, binding mismatches, and dirty or unpushed
+   worktrees. Test preflight and claim holds separately with fake agents.
+   Compare native predecessor inputs wherever captured and record every
+   difference. Shadow inventory creates no claims or agent threads.
+2. Leave the predecessor as the sole writer until the missing native inputs
+   and all decision classes pass with zero mismatches. Before cutover, save
+   the predecessor schedule and binding, verify the last run drained, disable
+   it, and read back its disabled state. Reconcile the latest receipt, pending
+   snoozes, manual overrides, holds, project coverage, continuation cursors
+   and interrupted actions. Seed any unresolved operation claims in T3 with
+   their exact prior owners. Read back the imported state and verify one owner.
+3. With recorded authority, opt in on axat-vps using the private active
+   binding and a passing host conformance receipt. Read back the registry,
+   trigger and first due slot, then bind it in [workflow health](workflow-health.md#trigger-bindings).
+   Confirm the first exact operation and its native readback before treating
+   the handoff as complete. A paused claim requires owner reconciliation.
+   Inspect the current thread and private receipt before resuming or cancelling.
+4. After a verified state advance, drill rollback with a disposable predecessor:
+   drain or cancel the workflow's owned runs, remove its version, and read back
+   registry absence. Export exact actions and readbacks, unresolved claims,
+   snooze ownership, manual overrides and continuation state to the predecessor's
+   receipt format. Restore its recorded schedule and binding from step 2.
+   Verify one enabled owner and check the first restored pass against the
+   exported state before using the rollback on live data.
+
 ## Roll forward or back
 
 Changing a shipped bundle requires a new version in the source and catalog.
