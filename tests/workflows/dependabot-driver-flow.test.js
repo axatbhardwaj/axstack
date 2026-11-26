@@ -30,7 +30,15 @@ function replay(cases) {
   writeFileSync(
     scratch + '/dependabot-worktree.mjs',
     `
-export async function prepareWorktree() { return '/fixture/detached' }
+export async function prepareWorktree(_config, owner, number) {
+  if (globalThis.caseData.worktreeUnavailable) return null
+  globalThis.checkouts.add(owner + '/' + number)
+  return '/fixture/detached'
+}
+export async function retainedCheckout(_config, owner, number) {
+  globalThis.checkoutReads++
+  return globalThis.checkouts.has(owner + '/' + number) ? 'present' : 'absent'
+}
 export async function cleanupWorktree() { globalThis.cleaned++; return true }
 `,
   );
@@ -64,6 +72,7 @@ const gen = (f) => unit(async () => {
 });
 const currentStore = new Map();
 const runtimeRuns = [];
+globalThis.checkouts = new Set();
 class FailedStep extends Error {
   constructor(step, cause) {
     super(cause.message, { cause });
@@ -104,6 +113,7 @@ for (const [index, item] of cases.entries()) {
     currentStore.clear();
     if (!item.freshStore) currentStore.set('dependabot-merge:report-only-count', 3);
     runtimeRuns.length = 0;
+    globalThis.checkouts.clear();
   }
   const id = item.continueSeries ? String(index).padStart(32, '0') : ${JSON.stringify(runId)};
   const currentRun = { id, status: 'running' };
@@ -113,6 +123,7 @@ for (const [index, item] of cases.entries()) {
   globalThis.prompts = [];
   globalThis.calls = [];
   globalThis.cleaned = 0;
+  globalThis.checkoutReads = 0;
   globalThis.ended = false;
   const forge = fixture({ title: 'Bump actions/checkout from 6 to 7.0.0\\nUNTRUSTED FORGE TEXT', ...item.forge });
   const requests = [];
@@ -144,7 +155,7 @@ for (const [index, item] of cases.entries()) {
     currentRun.status = 'cancelled';
     if (item.finishCancellation !== false) await flow.options.onEnd({}, { id, outcome:'cancelled' }).run();
   }
-  console.log(JSON.stringify({ disposition, reason, failedStep, requests, calls:globalThis.calls, cleaned:globalThis.cleaned }));
+  console.log(JSON.stringify({ disposition, reason, failedStep, requests, calls:globalThis.calls, cleaned:globalThis.cleaned, checkoutReads:globalThis.checkoutReads }));
 
 }
 `;
@@ -250,7 +261,36 @@ test.each([
   expect(retry).toMatchObject({ disposition: 'paused', failedStep: 'pr-1-cancelled-claim', calls: [], cleaned: 0 });
   expect(retry.reason).toContain(runId);
   expect(retry.reason).toMatch(/cancelled/);
-  expect(retry.reason).toMatch(/worktree/);
+  expect(retry.reason).toContain('retained checkout directory');
+  expect(retry.checkoutReads).toBe(1);
+});
+
+test('a cancelled report-only claim holds without checkout cleanup guidance', () => {
+  const [report, retry] = replay([{ freshStore: true, cancelAfter: true }, { continueSeries: true }]);
+  expect(report).toMatchObject({ disposition: 'report-only', calls: [] });
+  expect(retry).toMatchObject({
+    disposition: 'paused',
+    failedStep: 'pr-1-cancelled-claim',
+    calls: [],
+    checkoutReads: 0,
+  });
+  expect(retry.reason).toContain(runId);
+  expect(retry.reason).toContain('report-only');
+  expect(retry.reason).not.toMatch(/worktree|checkout|cleanup/);
+});
+
+test('a cancelled owner claim with no checkout holds without cleanup guidance', () => {
+  const [prior, retry] = replay([{ worktreeUnavailable: true, cancelAfter: true }, { continueSeries: true }]);
+  expect(prior).toMatchObject({ disposition: 'paused', failedStep: 'pr-1-worktree', calls: [] });
+  expect(retry).toMatchObject({
+    disposition: 'paused',
+    failedStep: 'pr-1-cancelled-claim',
+    calls: [],
+    checkoutReads: 1,
+  });
+  expect(retry.reason).toContain(runId);
+  expect(retry.reason).toContain('No retained checkout was found');
+  expect(retry.reason).not.toMatch(/inspect|cleanup/);
 });
 
 test('the preparation marker is required even when binding readback matches', () => {
