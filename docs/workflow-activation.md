@@ -87,6 +87,32 @@ Repeat the observation to verify that the registry no longer lists the version
 and check that it has no active runs. If a report is needed after deactivation,
 use the [native schedule fallback](../skills/axstack/references/automations.md#native-schedule-fallback).
 
+## Scheduled binding example
+
+For `axstack-dependabot-merge`, use a private binding such as
+`/absolute/private/dependabot-v1.json`.
+
+```json
+{
+  "project": "/absolute/canonical/t3-project",
+  "worktreeRoot": "/absolute/private/worktrees",
+  "roles": "/absolute/installed/skills/axstack/roles.json",
+  "registryTokenFile": "/absolute/private/t3-reader-token",
+  "bun": "/absolute/bin/bun",
+  "t3": "/absolute/bin/t3",
+  "reportOnlyTrial": true
+}
+```
+
+Use the canonical path of the registered T3 project, a separate worktree root
+owned by the T3 user with mode 0700, and a mode 0600 token file scoped to
+`orchestration:read`. The trial defaults to `true`. Keep the binding bytes
+stable so the same version retains its recorded digest.
+
+```sh
+axstack workflow opt-in --name axstack-dependabot-merge --binding /absolute/private/dependabot-v1.json --conformance /absolute/private/receipt.json --yes
+```
+
 ## Roll forward or back
 
 Changing a shipped bundle requires a new version in the source and catalog.
