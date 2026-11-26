@@ -704,6 +704,9 @@ Run `bun run test tests/workflows/fleet-cleanup-{workflow,native}.test.js
 tests/workflows/native-bundle.test.js`. The replay checks five-host
 coverage, cleanup and report-only agent calls, operation claims, binding
 readback, native result readback and dirty or unpushed worktree guards.
+It checks that a validated filter driver gets empty clean and process
+overrides and that an unsafe config key stops before Git status and wakes
+only the diagnostic agent.
 The disposable T3 test checks that a missing private binding pauses
 before creating an agent step. Read the recorded loader skip if T3 is
 unavailable. The captured 0.1.12 list and predecessor receipt exercise
