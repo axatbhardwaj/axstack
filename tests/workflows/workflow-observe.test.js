@@ -6,6 +6,8 @@ import { makeTempRoot } from '../installer/helpers.js';
 const cli = `${import.meta.dir}/../../bin/axstack.js`;
 const date = '2026-01-01T12:00:00Z';
 const loopback = 'http://127.0.0.1:1234';
+const schedule = 'fixture-probe';
+const triggerId = `${schedule}/every:1800000`;
 const triggers = 'CREATE TABLE workflow_triggers(trigger_id TEXT PRIMARY KEY, next_at TEXT)';
 const runs = `
   CREATE TABLE workflow_runs(run_id TEXT PRIMARY KEY, workflow TEXT, version INTEGER, idempotency_key TEXT,
@@ -228,24 +230,39 @@ test.each(['mode', 'owner'])('observe refuses registry access with invalid token
   expect(existsSync(files.socket)).toBe(false);
 });
 
+function scheduledSlot(files, observed, firstDueAt = '2026-01-01T08:00:00Z') {
+  const identity = `${schedule}@1`;
+  const record = { digest: 'a'.repeat(64), bindingDigest: 'b'.repeat(64), binding: `${files.root}/binding.json` };
+  const result = Bun.spawnSync([process.execPath, cli, 'workflow', 'health', '--input', '-'], {
+    env: { HOME: `${files.root}/home`, TMPDIR: files.root },
+    stdin: Buffer.from(JSON.stringify({ at: date, hosts: [{
+      ...observed, host: 'fixture-host',
+      manifest: { version: 1, workflows: { [identity]: record } }, catalog: { [schedule]: 1 },
+      policies: { [identity]: { kind: 'scheduled', firstDueAt, intervalMs: 1_800_000, triggerId } },
+    }] })),
+    stderr: 'pipe',
+  });
+  expect(result.exitCode, result.stderr.toString()).toBe(2); // The fixture has no registry or conformance receipt.
+  return JSON.parse(result.stdout.toString()).hosts[0].workflows[0].checks.dueSlot;
+}
+
 test.each([
-  ['old slot and old history', '2026-01-01T09:00:00.000Z', '2026-01-01T10:00:00Z', true, 'fail'],
-  ['slot at the unobserved cutoff', '2026-01-01T11:00:00.000Z', '2026-01-01T11:45:00Z', true, 'unknown'],
-  ['no run for the trigger', null, '2026-01-01T10:00:00Z', true, 'fail'],
-  ['old history and a missing native index', '2026-01-01T09:00:00.000Z', '2026-01-01T10:00:00Z', false, 'unknown'],
-])('health evaluates a capped journal with %s', (_, scheduledAt, manualAt, indexed, status) => {
+  ['old slot and old history', '2026-01-01T09:00:00.000Z', '2026-01-01T10:00:00Z', true, 'fail', null],
+  ['slot at the unobserved cutoff', '2026-01-01T11:00:00.000Z', '2026-01-01T11:45:00Z', true, 'unknown', '2026-01-01T09:00:00.000Z'],
+  ['no run for the trigger', null, '2026-01-01T10:00:00Z', true, 'fail', null],
+  ['old history and a missing native index', '2026-01-01T09:00:00.000Z', '2026-01-01T10:00:00Z', false, 'unknown', null],
+])('health evaluates a capped journal with %s', (_, scheduledAt, manualAt, indexed, status, olderAt) => {
   const files = fixture();
   const db = new Database(files.dbPath);
   db.exec(triggers);
   db.exec(runs);
   if (!indexed) db.exec('DROP INDEX workflow_runs_key');
-  const workflow = 'fixture-probe';
-  const identity = `${workflow}@1`;
-  const triggerId = `${workflow}/every:1800000`;
   db.query('INSERT INTO workflow_triggers VALUES (?, ?)').run(triggerId, date);
   const insert = db.query('INSERT INTO workflow_runs VALUES (?, ?, 1, ?, ?, ?, ?, ?, NULL, NULL)');
   db.transaction(() => {
-    if (scheduledAt) insert.run('last-slot', workflow, `trigger:${triggerId}:${scheduledAt}`, 'completed',
+    if (olderAt) insert.run('older-slot', schedule, `trigger:${triggerId}:${olderAt}`, 'completed',
+      olderAt, olderAt, JSON.stringify({ scheduledAt: olderAt }));
+    if (scheduledAt) insert.run('last-slot', schedule, `trigger:${triggerId}:${scheduledAt}`, 'completed',
       scheduledAt, scheduledAt, JSON.stringify({ scheduledAt }));
     const manualRuns = scheduledAt ? 1000 : 1001;
     for (let index = 0; index < manualRuns; index++) {
@@ -256,19 +273,38 @@ test.each([
 
   const observed = observe(files);
   expect(observed.journal).toMatchObject({ complete: false, runs: [] });
-  const record = { digest: 'a'.repeat(64), bindingDigest: 'b'.repeat(64), binding: `${files.root}/binding.json` };
-  const result = Bun.spawnSync([process.execPath, cli, 'workflow', 'health', '--input', '-'], {
-    env: { HOME: `${files.root}/home`, TMPDIR: files.root },
-    stdin: Buffer.from(JSON.stringify({ at: date, hosts: [{
-      ...observed, host: 'fixture-host',
-      manifest: { version: 1, workflows: { [identity]: record } }, catalog: { [workflow]: 1 },
-      policies: { [identity]: { kind: 'scheduled', firstDueAt: '2026-01-01T08:00:00Z', intervalMs: 1_800_000, triggerId } },
-    }] })),
-    stderr: 'pipe',
-  });
-  expect(result.exitCode, result.stderr.toString()).toBe(2); // The fixture has no registry or conformance receipt.
-  const { hosts } = JSON.parse(result.stdout.toString());
-  const dueSlot = hosts[0].workflows[0].checks.dueSlot;
+  const dueSlot = scheduledSlot(files, observed);
   expect(dueSlot).toMatchObject({ status });
   if (status === 'fail') expect(dueSlot.evidence.latestIndexedSlot).toBe(scheduledAt);
+});
+
+test.each([
+  ['latest skipped slot', true, null, 'pass'],
+  ['skipped slot from 75 hours ago', false, null, 'pass'],
+  ['latest skipped slot with invalid retained input', true, '{}', 'unknown'],
+])('health evaluates a complete journal with the %s', (_, skippedLatest, skippedInput, status) => {
+  const files = fixture();
+  const db = new Database(files.dbPath);
+  db.exec(triggers);
+  db.exec(runs);
+  const latest = '2026-01-01T11:30:00.123Z';
+  const earlier = new Date(skippedLatest ? Date.parse(latest) - 1_800_000 : Date.parse(date) - 75 * 3_600_000).toISOString();
+  db.query('INSERT INTO workflow_triggers VALUES (?, ?)').run(triggerId, date);
+  const insert = db.query('INSERT INTO workflow_runs VALUES (?, ?, 1, ?, ?, ?, ?, ?, NULL, NULL)');
+  insert.run('earlier', schedule, `trigger:${triggerId}:${earlier}`, skippedLatest ? 'completed' : 'skipped',
+    earlier, earlier, skippedLatest ? JSON.stringify({ scheduledAt: earlier }) : skippedInput);
+  if (!skippedLatest) {
+    const middle = '2026-01-01T11:00:00.123Z';
+    insert.run('middle', schedule, `trigger:${triggerId}:${middle}`, 'completed',
+      middle, middle, JSON.stringify({ scheduledAt: middle }));
+  }
+  insert.run('latest', schedule, `trigger:${triggerId}:${latest}`, skippedLatest ? 'skipped' : 'completed',
+    latest, latest, skippedLatest ? skippedInput : JSON.stringify({ scheduledAt: latest }));
+  db.close();
+
+  const observed = observe(files);
+  expect(observed.journal.complete).toBe(true);
+  const dueSlot = scheduledSlot(files, observed, '2025-12-28T00:00:00Z');
+  expect(dueSlot).toMatchObject({ status });
+  if (status === 'pass') expect(dueSlot.evidence).toMatchObject({ runId: 'latest', scheduledAt: latest });
 });
