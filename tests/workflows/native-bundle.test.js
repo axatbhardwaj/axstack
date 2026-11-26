@@ -11,9 +11,9 @@ test('each catalogued workflow ships one entry that matches a fresh Bun build an
   expect(existsSync(catalogFile)).toBe(true);
   const catalog = JSON.parse(readFileSync(catalogFile, 'utf8'));
   const pins = JSON.parse(readFileSync(join(workflows, 'bundle-digests.json'), 'utf8'));
-  expect(catalog[probe]).toBeGreaterThanOrEqual(1);
-  expect(readdirSync(bundled).sort()).toEqual(Object.entries(catalog).map(([name, version]) => name + '-v' + version + '.mjs').sort());
-  for (const [name, version] of Object.entries(catalog)) {
+  expect(catalog[probe].version).toBeGreaterThanOrEqual(1);
+  expect(readdirSync(bundled).sort()).toEqual(Object.entries(catalog).map(([name, { version }]) => name + '-v' + version + '.mjs').sort());
+  for (const [name, { version }] of Object.entries(catalog)) {
     const file = join(bundled, name + '-v' + version + '.mjs');
     const build = Bun.spawnSync([
       process.execPath, 'build', 'entries/' + name + '.mjs', '--target=node', '--format=esm',
@@ -28,7 +28,8 @@ test('each catalogued workflow ships one entry that matches a fresh Bun build an
     const loaded = Bun.spawnSync([process.execPath, '-e', `
       const type = new Proxy({}, { get: () => () => ({}) });
       Object.assign(globalThis, {
-        T3: { workflow: (name, options, body) => ({ name, options, hasBody: typeof body === 'function' }) },
+        T3: { daily: () => ({}),
+          workflow: (name, options, body) => ({ name, options, hasBody: typeof body === 'function' }) },
         Effect: type, Schema: type, Option: type, Duration: type, Schedule: type,
       });
       console.log(JSON.stringify((await import(Bun.argv[1])).default));

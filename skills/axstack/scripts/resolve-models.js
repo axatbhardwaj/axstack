@@ -86,11 +86,10 @@ function modelFrom(models, options) {
   return candidates[0];
 }
 
-try {
-  const options = argumentsFrom(process.argv.slice(2));
-  const { provider, capabilities: path, effort } = options;
+/** @param {{provider?: string, model?: string, class?: string, effort?: string, excluded: string[]}} options */
+export function resolveModel(catalog, options) {
+  const { provider, effort } = options;
   if (!Object.hasOwn(bindings, provider)) throw new Error(`unknown provider ${provider}`);
-  const catalog = JSON.parse(readFileSync(path, 'utf8'));
   const instance = providerFrom(catalog, provider);
   const model = modelFrom(instance.models, options);
   if ((options.class === 'terra' || /^gpt-\d+(?:\.\d+)*-terra$/.test(model.id)) && effort !== 'high') {
@@ -102,9 +101,17 @@ try {
     throw new Error(`unsupported effort ${effort} for ${provider}/${model.id}`);
   }
   const effortOption = { id: effortOptions[0].id, value: effort };
-  console.log(JSON.stringify({ provider, providerInstanceId: instance.providerInstanceId,
-    model: model.id, effortOption, source: 'capabilities', path }));
-} catch (error) {
-  console.error(`model capabilities resolution hold: ${error.message}`);
-  process.exitCode = 1;
+  return { provider, providerInstanceId: instance.providerInstanceId, model: model.id, effortOption };
+}
+
+if (import.meta.main) {
+  try {
+    const options = argumentsFrom(process.argv.slice(2));
+    const path = options.capabilities;
+    const catalog = JSON.parse(readFileSync(path, 'utf8'));
+    console.log(JSON.stringify({ ...resolveModel(catalog, options), source: 'capabilities', path }));
+  } catch (error) {
+    console.error(`model capabilities resolution hold: ${error.message}`);
+    process.exitCode = 1;
+  }
 }

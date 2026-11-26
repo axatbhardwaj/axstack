@@ -1,7 +1,7 @@
 import catalog from './catalog.json';
 import { journalPolicy, journalRegistration } from './health-journal.mjs';
 import { dueSlot, object, runChecks, runInventory, term, timestamp, word } from './health-runs.mjs';
-import { CONFORMANCE_SUITE, matchesWorkflowConformance, supportsWorkflowT3, validateWorkflowManifest } from './workflow-contract.mjs';
+import { CONFORMANCE_SUITE, matchesWorkflowConformance, supportsWorkflowT3, validateWorkflowManifest, workflowVersions } from './workflow-contract.mjs';
 
 function manifestEntries(manifest) {
   try {
@@ -88,7 +88,7 @@ function hostHealth(host, now) {
   const registered = reachable ? registryIndex(host.registry) : null;
   const conformance = conformanceCheck(host.t3, host.conformance, reachable);
   const workflows = (identities ?? []).sort().map((identity) => workflowHealth(host, identity, inventory, registered, now,
-    Object.hasOwn(host, 'catalog') ? host.catalog : catalog));
+    Object.hasOwn(host, 'catalog') ? host.catalog : workflowVersions(catalog)));
   return {
     host: host.host,
     source: word(host.evidence) ? host.evidence : null,

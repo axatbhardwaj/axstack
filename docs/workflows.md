@@ -156,10 +156,10 @@ starts later for each repository the user names.
 
 Use the packaged [nightly prompt](../skills/axstack/references/pr-triage-nightly.md)
 and [setup guidance](../skills/axstack/references/automations.md#nightly-pr-triage-setup).
-Read existing schedules before creating the single unbound native T3 schedule
-at 02:00 host time; reuse it instead of creating a duplicate.
-Keep the host timezone, schedule ID, prompt, and repository set in a durable
-activation record outside run records so Close-out preserves them.
+Use [workflow activation](workflow-activation.md#nightly-pr-triage) to opt in
+to `axstack-pr-triage` at 02:00 on the opt-in host. Record the host
+timezone and repository binding, and confirm a single active triage schedule
+for the set. The setup guidance describes the unbound native schedule fallback.
 Each pass reports all own open PRs in its own T3 thread, with forge state or
 `UNKNOWN`, PRs inactive for 7 days, and the top three to act on.
 The pass stays read-only and never declares merge-ready.

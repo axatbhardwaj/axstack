@@ -32,17 +32,76 @@ The installer reads the T3 run back after starting the probe. Expect
 the lifetime of the version. Changing them will pause the probe at the binding
 check. The manifest includes paths and digests and has mode 0600.
 
+## Nightly PR triage
+
+Use the current conformance receipt for the opt-in host. Record the
+server timezone and confirm the native schedule inventory for the bound repo set.
+MIG-1 starts with no predecessor. Use one active triage schedule for the set.
+
+Prepare an owner-only binding (mode 0600) outside the repository and T3 base.
+Use the installed Axstack skill directory that contains `roles.json` and a
+registered local T3 project with an empty workspace for the report thread.
+The server's `gh` login determines which author's open PRs are reported.
+
+```json
+{
+  "bun": "/absolute/path/to/bun",
+  "skillsDirectory": "/absolute/path/to/installed/skills/axstack",
+  "project": "T3_PROJECT_ID",
+  "registryTokenFile": "/absolute/private/workflow-read.token",
+  "repositories": ["OWNER/REPO"]
+}
+```
+
+Put a T3 token scoped to `orchestration:read` in the private token file (mode
+0600). The CLI uses it for local registry readback. The workflow checks the
+live report seat against `axstack-auditor-sol` and reads back the effective
+thread binding using the same scoped token. Rotate the token at the same path
+before it expires.
+
+The report seat uses the installed role's `full-access` runtime mode. The
+narrower Codex modes in T3 0.1.12 use approval or auto-review policies. The
+report turn receives collected facts and runs as a tool-free reply.
+
+```sh
+axstack workflow opt-in --name axstack-pr-triage --binding /absolute/private/pr-triage.json --conformance /absolute/private/receipt.json --yes
+axstack workflow observe --base-dir "$HOME/.t3" --conformance /absolute/private/receipt.json --registry-token-file /absolute/private/workflow-read.token
+```
+
+Expect `axstack-pr-triage@1 registered` and the native daily trigger in the
+observation. Opt-in does not start a triage run. Configure the watchdog from
+the observed trigger described in [workflow health](workflow-health.md#trigger-bindings).
+Keep the first three eligible nights as a report-only trial. For each, record
+the workflow run ID, coverage, effective binding and report thread or hold.
+Subsequent nights retain the same read-only report behaviour. T3 drops a daily
+slot missed by more than ten minutes.
+
+An actionable hold pauses the run and appears in workflow health. Inspect its
+reason with `t3 workflow show <run-id>`. Resume after restoring missing binding
+evidence, or cancel a failed report so the next slot can run.
+
+To deactivate, locate the exact runs with `t3 workflow list --json`, drain
+or cancel active runs, and run
+`axstack workflow remove --name axstack-pr-triage --version 1 --yes`.
+Repeat the observation to verify that the registry no longer lists the version
+and check that it has no active runs. If a report is needed after deactivation,
+use the [native schedule fallback](../skills/axstack/references/automations.md#native-schedule-fallback).
+
 ## Roll forward or back
 
-Each bundle change requires a new version in both the source and the catalog.
-The following command rebuilds the shipped bytes from the workflow directory.
+Changing a shipped bundle requires a new version in the source and catalog.
+Rebuild from the workflow directory with the minimum supported Bun. Run
+`bun run test tests/workflows/native-bundle.test.js` with both CI Bun versions
+to check that each catalogued bundle rebuilds byte for byte.
 
 ```sh
 cd skills/axstack/workflows
 bun build entries/axstack-load-probe.mjs --target=node --format=esm > bundles/axstack-load-probe-v1.mjs
 ```
 
-Use the new version in the output filename. Append its SHA-256 under
+Use the new version in the output filename and set the catalog entry's
+`version`. Keep `registration` as `probe` for a safe start-on-opt-in probe
+or `registry` for read-only registration. Append the SHA-256 under
 `name@version` in `bundle-digests.json` to pin the shipped bytes. Opting in to a newer package adds a versioned
 definition beside the older one. T3 starts new runs on
 the newest version and keeps previous runs attached to their version.

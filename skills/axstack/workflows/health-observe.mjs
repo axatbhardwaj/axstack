@@ -1,6 +1,7 @@
 import { Database } from 'bun:sqlite';
 import catalog from './catalog.json';
 import { workflowRegistry } from './health-registry.mjs';
+import { workflowVersions } from './workflow-contract.mjs';
 
 const STATUSES = ['running', 'waiting', 'paused'];
 const JOURNAL_LIMIT = 1000;
@@ -160,7 +161,7 @@ export async function runWorkflowObservation(flags) {
   const { version, environment, suite, status } = receipt ?? {};
   const runtime = await observeRuntime(base, tokenPath, manifest);
   console.log(JSON.stringify({
-    reachable: true, evidence: 'local T3 CLI and statev2.sqlite', manifest, catalog,
+    reachable: true, evidence: 'local T3 CLI and statev2.sqlite', manifest, catalog: workflowVersions(catalog),
     conformance: receipt ? { version, environment, suite, status } : null,
     ...runtime,
   }));

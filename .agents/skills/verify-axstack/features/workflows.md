@@ -664,6 +664,7 @@ recovery, version-pinned bundle bytes, guarded conformance, and the real loader.
 bun run test tests/installer/workflow-opt-in.test.js \
   tests/installer/workflow-packed.test.js tests/workflows/native-bundle.test.js \
   tests/workflows/native-conformance*.test.js \
+  tests/workflows/pr-triage-{collect,nightly,workflow}.test.js \
   tests/workflows/workflow-health.test.js tests/workflows/workflow-health-prose.test.js \
   tests/workflows/workflow-observe.test.js \
   > "$EVIDENCE/native-workflows.log" 2>&1
@@ -687,3 +688,12 @@ with and without the scoped registry token, checks the native load-probe
 receipt, and feeds the collected paused run into `workflow health`.
 Live fleet collection, the installed watchdog schedule and its sweep handoff
 require the explicit bindings in [workflow health](../../../../docs/workflow-health.md).
+
+Nightly triage replays quiet, normal, and partial forge coverage through the
+shipped collector and one simulated report agent. The replay checks the wake
+marker, catalog binding, effective binding readback, slot claim, and holds.
+The packed fixture confirms registry-only opt-in, reads back the exact daily
+trigger, drives an isolated due slot with incomplete binding, and checks that
+workflow health reports the resulting pause. It verifies deactivation through
+the live registry. The first three eligible nights on
+the opt-in host supply separate activation evidence.

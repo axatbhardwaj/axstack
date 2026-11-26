@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { supportsWorkflowT3, WORKFLOW_T3_FLOOR } from '../skills/axstack/workflows/workflow-contract.mjs';
+import { workflowRegistry } from '../skills/axstack/workflows/health-registry.mjs';
 import { join } from './posixpath.js';
 
 export { CONFORMANCE_SUITE } from '../skills/axstack/workflows/workflow-contract.mjs';
@@ -50,6 +51,21 @@ export function requireDrained(t3, base, name, version) {
       }
     }
   }
+}
+
+export async function requireRegistration(base, name, version, tokenPath) {
+  if (typeof tokenPath !== 'string' || !tokenPath.startsWith('/')) {
+    throw new Error('workflow binding requires an absolute registryTokenFile path');
+  }
+  const { origin } = JSON.parse(readFileSync(join(base, 'userdata/server-runtime.json'), 'utf8'));
+  const deadline = Date.now() + 5000;
+  do {
+    const registry = await workflowRegistry(origin, tokenPath);
+    if (!registry) break;
+    if (registry.workflows.some((entry) => entry?.name === name && entry.version === version)) return;
+    await Bun.sleep(150);
+  } while (Date.now() < deadline);
+  throw new Error(`T3 registry did not confirm ${name}@${version} with the read-scoped token`);
 }
 
 export async function requireProbe(t3, base, name, version) {
