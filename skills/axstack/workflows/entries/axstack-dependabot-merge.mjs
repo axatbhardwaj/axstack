@@ -7,8 +7,19 @@ const { workflow: define, agent, every, step, store } = T3;
 const base = decodeURIComponent(new URL('../', import.meta.url).pathname).replace(/\/$/, '');
 const trialCount = 'dependabot-merge:report-only-count';
 const runEvidence = (id) => store.entry('dependabot-merge:cleanup:' + id, Schema.Json);
-const effectStep = (name, work) => step(name, { returns: Schema.Json }, Effect.promise(work));
+class Hold extends Error {}
+const effectStep = (name, work) => step(name, { returns: Schema.Json }, Effect.tryPromise({
+  try: work,
+  catch: (error) => error instanceof Hold ? error : new Error('scheduled action PR evidence is unavailable'),
+}));
 const binding = () => verifiedBinding(base, identity);
+async function requireBinding() {
+  const config = await binding();
+  if (!config) throw new Hold('private binding is missing, invalid, or changed');
+  return config;
+}
+
+const outsideScope = (pull) => pull.facts.author === 'fail' || pull.facts.branch === 'fail';
 
 function reserve(runId, { number, head }, trial, ready = false) {
   const claim = store.entry(`${repository}#${number}@${head}`, Schema.Json);
@@ -38,42 +49,50 @@ function sameDriverMessages(view, prepare, merge) {
   return input.length === (merge ? 2 : 1) && input[0] === prepare && (!merge || input[1] === merge);
 }
 
-function handleHead(config, runId, pull) {
+function handleHead(trial, runId, pull) {
   return Effect.gen(function* () {
     const label = `pr-${pull.number}`;
-    const trial = config.reportOnlyTrial !== false;
     const position = yield* step(label + '-trial', { returns: Schema.String }, reserve(runId, pull, trial));
     if (position === 'report-only' || position === 'duplicate') return { disposition: position };
 
-    const expected = yield* effectStep(label + '-owner-catalog', () => ownerBinding(base, config));
-    if (!expected) return { disposition: 'binding-hold' };
+    const { project, ...expected } = yield* effectStep(label + '-owner-catalog', async () => {
+      const config = await requireBinding();
+      const seat = await ownerBinding(base, config);
+      if (!seat) throw new Hold('owner binding could not be resolved from installed roles and the live catalog');
+      return { ...seat, project: config.project };
+    });
     const claimed = yield* step(label + '-claim', { returns: Schema.String }, reserve(runId, pull, trial, true));
     if (claimed !== 'claimed') return { disposition: claimed };
-    const worktree = yield* effectStep(label + '-worktree', async () =>
-      await binding() ? prepareWorktree(config, runId, pull.number, pull.base) : null);
-    if (!worktree) return { disposition: 'worktree-hold' };
+    const worktree = yield* effectStep(label + '-worktree', async () => {
+      const checkout = await prepareWorktree(await requireBinding(), runId, pull.number, pull.base);
+      if (!checkout) throw new Hold('detached owner worktree could not be prepared at the observed base');
+      return checkout;
+    });
 
     const prompt = briefs(runId, pull.number, pull.head);
     const prepared = yield* agent.try(label + '-bind', {
-      brief: prompt.prepare, title: `axstack-owner · ${repository} #${pull.number}`, project: config.project,
+      brief: prompt.prepare, title: `axstack-owner · ${repository} #${pull.number}`, project,
       ...expected, workspace: { type: 'existing_worktree', worktreePath: worktree },
     });
     const threadId = prepared.thread?.threadId;
-    const matched = yield* effectStep(label + '-binding-readback', async () => {
-      if (prepared.outcome !== 'done' || typeof prepared.value !== 'string' || !await binding()) return false;
-      const observed = await driverReadback(base, config, expected, worktree, threadId);
-      return prepared.value.trim() === 'AXSTACK-BOUND' && sameDriverMessages(observed, prompt.prepare);
+    yield* effectStep(label + '-binding-readback', async () => {
+      if (prepared.outcome !== 'done' || prepared.value?.trim() !== 'AXSTACK-BOUND') {
+        throw new Hold('owner preparation did not finish with its binding marker');
+      }
+      const observed = await driverReadback(base, await requireBinding(), expected, worktree, threadId);
+      if (!sameDriverMessages(observed, prompt.prepare)) throw new Hold('owner binding or preparation transcript mismatched');
+      return true;
     });
-    if (!matched) return { disposition: 'binding-hold', threadId: threadId ?? null };
 
     const result = yield* agent.try(label + '-driver', {
       thread: prepared.thread, brief: prompt.merge,
     });
     const receipt = yield* effectStep(label + '-driver-readback', async () => {
-      if (result.outcome !== 'done' || typeof result.value !== 'string' ||
-          result.thread?.threadId !== threadId || !await binding()) return null;
-      const observed = await driverReadback(base, config, expected, worktree, threadId);
-      if (!sameDriverMessages(observed, prompt.prepare, prompt.merge)) return null;
+      if (result.outcome !== 'done' || typeof result.value !== 'string' || result.thread?.threadId !== threadId) {
+        throw new Hold('owner driver did not return a completed receipt in its bound thread');
+      }
+      const observed = await driverReadback(base, await requireBinding(), expected, worktree, threadId);
+      if (!sameDriverMessages(observed, prompt.prepare, prompt.merge)) throw new Hold('owner driver transcript mismatched');
       const line = result.value.trim().split('\n').at(-1);
       const reported = line === `AXSTACK-RESULT ${pull.head} MERGED` ? 'merged' :
         line === `AXSTACK-RESULT ${pull.head} HELD` ? 'held' : null;
@@ -81,16 +100,22 @@ function handleHead(config, runId, pull) {
       const actual = response?.body;
       if (!reported || response?.status !== 200 || actual?.number !== pull.number ||
           actual.base?.repo?.full_name !== repository || typeof actual.merged !== 'boolean' ||
-          (reported === 'merged' && (actual.merged !== true || actual.head?.sha !== pull.head))) return null;
+          (reported === 'merged' && (actual.merged !== true || actual.head?.sha !== pull.head))) {
+        throw new Hold('exact-head driver outcome could not be verified on the forge');
+      }
       return { disposition: reported, threadId, runId, number: pull.number, base: pull.base, head: pull.head, worktree, expected };
     });
-    if (!receipt) return { disposition: 'evidence-hold', threadId };
     yield* step(label + '-retain-evidence', { returns: Schema.Boolean }, Effect.gen(function* () {
       const slot = runEvidence(runId);
       const current = Option.getOrElse(yield* slot.get, () => ({}));
       yield* slot.set({ ...current, [pull.number]: receipt });
       return true;
     }));
+    if (receipt.disposition === 'held') {
+      yield* effectStep(label + '-driver-hold', async () => {
+        throw new Hold('owner held the merge after exact-head re-verification');
+      });
+    }
     return { disposition: receipt.disposition, threadId };
   });
 }
@@ -115,23 +140,31 @@ const onEnd = (_tick, end) => Effect.gen(function* () {
 export default define(workflow, {
   version, payload: T3.Tick, returns: Schema.Json, triggers: [every('30 minutes')], resumeAfter: [], onEnd,
 }, (_tick, { id }) => Effect.gen(function* () {
-  const config = yield* step('binding', { returns: Schema.Boolean }, Effect.promise(async () => Boolean(await binding())));
-  if (!config) return { binding: 'unknown', discovery: 'unknown', pulls: [] };
-  // Keep private host paths, roles and the token outside durable step results.
+  const blocked = yield* step('active-slot', { returns: Schema.Boolean }, Effect.gen(function* () {
+    const active = yield* T3.runs({ workflow });
+    return active.some((otherRun) => otherRun.id !== id && otherRun.status === 'paused');
+  }));
+  if (blocked) return yield* T3.stop('an earlier slot is paused');
+
   const observation = yield* effectStep('discover', async () => {
-    const privateConfig = await binding();
-    return privateConfig ? scanPulls(github, (input) => parseYaml(privateConfig.bun, input)) :
-      { discovery: 'unknown', pulls: [] };
+    const config = await requireBinding();
+    const found = await scanPulls(github, (input) => parseYaml(config.bun, input));
+    if (found.discovery === 'unknown') throw new Hold(found.reason);
+    for (const pull of found.pulls) {
+      if (outsideScope(pull)) continue;
+      const unresolved = Object.entries(pull.facts).filter(([, fact]) => fact !== 'pass');
+      if (unresolved.length) {
+        const details = unresolved.map(([term, state]) => pull.reasons[term] ?? term + ' ' + state);
+        throw new Hold(`PR #${pull.number} at ${pull.head} held. ${details.join(', ')}`);
+      }
+    }
+    return { ...found, trial: config.reportOnlyTrial !== false };
   });
-  if (observation.discovery !== 'pass') return observation;
   const pulls = [];
   for (const pull of observation.pulls) {
-    let outcome = { disposition: 'guard-hold' };
-    if (Object.values(pull.facts).every((term) => term === 'pass')) {
-      const privateConfig = yield* Effect.promise(binding);
-      outcome = privateConfig ? yield* handleHead(privateConfig, id, pull) : { disposition: 'binding-hold' };
-    }
-    pulls.push({ number: pull.number, head: pull.head, facts: pull.facts, ...outcome });
+    const outcome = outsideScope(pull) ? { disposition: 'outside-scope' } :
+      yield* handleHead(observation.trial, id, pull);
+    pulls.push({ number: pull.number, head: pull.head, facts: pull.facts, reasons: pull.reasons, ...outcome });
   }
   return { discovery: 'pass', pulls };
 }));
