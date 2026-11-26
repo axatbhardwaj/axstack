@@ -138,7 +138,7 @@ try {
 
 const identifier = /^[A-Za-z0-9_-]+$/;
 export const validId = (value) => typeof value === 'string' && identifier.test(value);
-export async function driverReadback(base, binding, expected, worktree, threadId) {
+export async function driverReadback(base, binding, expected, worktree, threadId, { exclusive = false } = {}) {
   if (typeof threadId !== 'string' || !/^[A-Za-z0-9:_-]{1,160}$/.test(threadId)) return null;
   const [view, selection] = await Promise.all([
     run(binding.t3, ['thread', 'show', '--base-dir', base, threadId, '--messages', '12', '--json']),
@@ -148,12 +148,20 @@ export async function driverReadback(base, binding, expected, worktree, threadId
   const thread = observed?.thread;
   const model = json(selection);
   const desired = expected.model;
-  if (thread?.status !== 'completed' || thread.archived !== false || thread.worktreePath !== worktree ||
+  if (thread?.threadId !== threadId || thread.status !== 'completed' || thread.archived !== false ||
+      thread.pinned !== false || thread.createdBy !== 'system' || thread.creationSource !== 'server' ||
+      thread.worktreePath !== worktree ||
       thread.providerInstanceId !== desired.instanceId || thread.model !== desired.model ||
       thread.runtimeMode !== expected.runtimeMode || model?.instanceId !== desired.instanceId ||
       model.model !== desired.model || !Array.isArray(model.options) ||
       model.options.length !== desired.options.length ||
       !desired.options.every((option) => model.options.some((item) =>
         item.id === option.id && item.value === option.value))) return null;
+  if (exclusive) {
+    const threads = json(await run(binding.t3, ['thread', 'list', '--base-dir', base, '--project', binding.project, '--json']));
+    if (!Array.isArray(threads)) return null;
+    const attached = threads.filter((item) => item?.worktreePath === worktree);
+    if (attached.length !== 1 || attached[0].threadId !== threadId) return null;
+  }
   return observed;
 }
