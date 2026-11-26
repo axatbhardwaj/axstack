@@ -59,9 +59,8 @@ resources may proceed.
 
 Never clean a user-created thread, the current driver, a user-taken-over thread, an active or unknown worker, an unsettled descendant, or a resource with ambiguous ownership.
 Preserve unknown files, unmerged author work, ambiguous publication, and evidence that has not been durably preserved.
-With recorded authority, owners can activate the packaged T3 workflow for
-fleet cleanup.
-Its agent follows the same per-resource guards.
+With recorded authority, activate the packaged T3 workflow for fleet cleanup
+after MIG-9 cutover. Its agent follows per-resource guards.
 Do not force removal, bulk-clean, or edit a runtime database.
 Report other projects' resources. Never touch them.
 
