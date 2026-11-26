@@ -143,6 +143,11 @@ The report-only path surfaces gaps without handing a cleanup turn to the
 agent. A cleanup turn can follow only after a positive inventory, exclusive
 operation claims, and effective binding readback from the same owner thread.
 
+In active mode, each unknown tick can create a report thread. Persistent
+gaps can produce 48 report threads per day at the 30-minute cadence. A
+retained operation claim can leave one additional paused run per tick that
+rediscovers the same item until the claim is reconciled.
+
 ### Binding and evidence
 
 The mode-0600 binding uses `mode` (`shadow` or `active`), the local
@@ -164,14 +169,17 @@ private JSON copy in a disposable replay. The current predecessor format
 is an unknown for admission. A complete fact source must supply both:
 
 - Project coverage for all five hosts from an independently exhausted
-  native inventory. The version-1 private receipt has `capturedAt` in the
-  current slot, `coverage[host].projectsComplete`, exact `projectIds`,
+  native inventory. The workflow accepts a version-1 private receipt whose
+  `capturedAt` falls within the 30 minutes ending at the scheduled tick,
+  including both endpoints. The receipt also carries `coverage[host].projectsComplete`, exact `projectIds`,
   `outstandingCleanupOwnedSnoozes`, and `decisions`. Each decision names
   the host, project, thread, latest run and native `updatedAt`, with
   `action` of `retain`, `settle` or `archive`. Cleanup decisions require
   affirmative `accepted`, `descendantsClear`, `ownership`, `preserved`
   and `protectionClear` guards. An attached worktree also needs a
   `publishedHead` verified at the remote and fresh local Git checks.
+  Branch merge status is unchecked because settlement and archival change
+  only thread metadata.
 - A project thread listing with full rows, including descendants and the
   native request and worktree facts. The replay contract uses an envelope
   with `complete: true`, `includesDescendants: true`, `nextCursor: null`
@@ -179,6 +187,10 @@ is an unknown for admission. A complete fact source must supply both:
   cutover, prove the supported native read and its coverage end to end.
   A project binding or a wrapper that merely marks a bare array complete
   cannot supply that proof.
+
+Before cutover, identify and verify the producer that will refresh the
+coverage and decision receipt between scheduled ticks, including quiet and
+report-only ticks. A cleanup turn records action readbacks when it runs.
 
 ### Shadow, handoff and rollback
 
