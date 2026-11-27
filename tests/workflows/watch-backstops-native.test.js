@@ -53,6 +53,44 @@ test('runs four anchored timers with the native 5- and 60-minute wake cadence', 
   expect(replayed.result.decision).toBe('complete');
 });
 
+test('after a 3h17m outage, one catch-up advances each timer to its latest due slot', () => {
+  const replayed = replay({ outage: true, rounds: 2 });
+  expect(replayed.slots.map(({ due, consumed }) => ({ due, consumed }))).toEqual([
+    { due: ['watch', 'writer'], consumed: { watch: Date.parse('2026-11-27T03:00Z'), writer: Date.parse('2026-11-27T03:15Z') } },
+    { due: ['writer'], consumed: { watch: Date.parse('2026-11-27T03:00Z'), writer: Date.parse('2026-11-27T03:20Z') } },
+  ]);
+  expect(replayed.agents.map(({ at }) => at)).toEqual(['2026-11-27T03:17:05.000Z', '2026-11-27T03:20:05.000Z']);
+});
+
+test('one claimed slot accepts a T3 resend after a failed owner turn and keeps the writer cadence', () => {
+  const replayed = replay({ delivery: 'resend', rounds: 3 });
+  expect(replayed.result.decision).toBe('complete');
+  expect(replayed.agents.map(({ at }) => at)).toEqual([
+    '2026-11-27T00:00:05.000Z', '2026-11-27T00:05:05.000Z', '2026-11-27T00:10:05.000Z',
+  ]);
+  expect(replayed.readbacks.map(({ observedMessages }) => observedMessages)).toEqual([2, 1, 1]);
+});
+
+test('two matching T3 messages without the exact slot claim cannot pass readback', () => {
+  const replayed = replay({ guard: 'readback-claim-lost' });
+  expect(replayed.result).toMatchObject({ decision: 'paused', step: 'wake-readback-1',
+    reason: 'wake slot claim is unavailable or has another owner' });
+  expect(replayed.agents).toHaveLength(1);
+  expect(replayed.readbacks).toEqual([]);
+});
+
+for (const [guard, gap] of [
+  ['owner-status-unknown', 'native owner status is unknown'],
+  ['owner-queue-gap', 'native owner run coverage is unavailable'],
+]) {
+  test(`${guard} wakes with the gap even when a native event is present`, () => {
+    const replayed = replay({ guard, native: 'simultaneous' });
+    expect(replayed.result.decision).toBe('complete');
+    expect(replayed.slots).toEqual([expect.objectContaining({ decision: 'wake', gap })]);
+    expect(replayed.agents).toHaveLength(1);
+  });
+}
+
 for (const status of ['parked', 'user-stopped', 'complete']) {
   test(`${status}: stop the run cleanly without waking`, () => {
     const replayed = replay({ status });
@@ -124,8 +162,6 @@ const guards = {
   'owner-protected': /protected/,
   'owner-request': /protected/,
   'owner-held-queue': /protected/,
-  'owner-queue-gap': /owner state/,
-  'owner-status-unknown': /owner state/,
   'owner-id-mismatch': /owner evidence/,
   'provider-mismatch': /binding/,
   'model-mismatch': /binding/,
