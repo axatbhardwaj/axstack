@@ -72,7 +72,7 @@ export function brief(runId, state, prs, flagged) {
   const lines = [
     `AXSTACK-WAKE ${managerIdentity} run ${runId}`,
     '',
-    'Follow the Workflow report section of the installed review-manager-prompt.md. Use read-only tools and submit the typed receipt.',
+    'Follow the installed review-manager-report.md.',
     `Continuity store key: ${managerIdentity}:continuity`,
     `Import digest: ${state.sourceSha}`,
     `Prior manager: ${state.prior}`,
@@ -86,5 +86,5 @@ export function receiptMatches(result, runId, state) {
   const receipt = result?.value;
   return result?.outcome === 'done' && receipt?.kind === 'AXSTACK-REVIEW-MANAGER' &&
     receipt.runId === runId && receipt.sourceSha === state.sourceSha && reviewId(receipt.threadId) &&
-    receipt.threadId === result.thread?.threadId;
+    receipt.threadId === result.thread?.threadId && Array.isArray(receipt.writes) && receipt.writes.length === 0;
 }
