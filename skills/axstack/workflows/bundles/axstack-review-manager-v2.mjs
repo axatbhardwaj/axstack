@@ -4,6 +4,7 @@ var workflowName = "axstack-review-manager";
 var version = 2;
 var managerIdentity = `${workflowName}@${version}`;
 var interval = 1800000;
+var triggerId = `${workflowName}/every:${interval}`;
 var busy = ["preparing", "queued", "starting", "running", "waiting"];
 var reviewId = (value) => typeof value === "string" && /^[A-Za-z0-9_][A-Za-z0-9:_%.-]{0,511}$/.test(value);
 var repository = (value) => typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(value);
@@ -25,7 +26,7 @@ function importState(progress) {
   const lane = progress.split(`## Open holds
 `)[0];
   const owner = /^- scheduledTaskId, threadId\/runId, workspace and exact terminal receipt: ([^,]+), ([^/\s,]+)\/([^,]+), ([^,]+), (.+)$/m.exec(lane);
-  if (!owner || !reviewId(owner[1]) || !reviewId(owner[2]) || !reviewId(owner[3]) || !/^- Active PR jobs and descendants: .+$/m.test(lane) || !/^- Quiet gate: .+$/m.test(progress) || !/^- Last full pass: .+$/m.test(progress))
+  if (!owner || !(reviewId(owner[1]) || owner[1] === triggerId) || !reviewId(owner[2]) || !reviewId(owner[3]) || !/^- Active PR jobs and descendants: .+$/m.test(lane) || !/^- Quiet gate: .+$/m.test(progress) || !/^- Last full pass: .+$/m.test(progress))
     return null;
   const current = /^- Current pass identity: \S+ (\S+) /m.exec(lane)?.[1];
   const unresolved = progress.split(`## Watermarks
@@ -136,7 +137,7 @@ function managerBrief(runId) {
 
 Read the private activation binding for ${managerIdentity} from the local T3 workflow ownership manifest.
 Follow the installed review-manager-prompt.md in its skillsDirectory verbatim. Use progressCopy as HOST_CONTINUITY_PATH and operationalLimits as HOST_OPERATIONAL_LIMITS.
-For the current-pass scheduledTaskId use axstack-review-manager/every:1800000. Before reviewer admission read your effective T3 thread binding and compare it with nativeSeat and this workflow run's manager-launch step. Keep the native continuity and admission guards.
+For the current-pass scheduledTaskId use ${triggerId}. Before reviewer admission read your effective T3 thread binding and compare it with nativeSeat and this workflow run's manager-launch step. Keep the native continuity and admission guards.
 At pass end submit the typed receipt via t3_submit_output with your actual threadId and runId, and outcome quiet, full, or held. A quiet pass submits only the receipt. Preserve the prompt's guarded settlement once the receipt is recorded.`;
 }
 function reviewManager(runtime) {
