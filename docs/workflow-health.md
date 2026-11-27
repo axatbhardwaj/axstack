@@ -101,6 +101,10 @@ stable. On T3 0.1.12 an interval trigger has the form
 `axstack-fleet-cleanup@1` with `intervalMs` set to `1800000` and
 `triggerId` set to `axstack-fleet-cleanup/every:1800000`. Set `firstDueAt`
 from the first due slot observed after authorized cutover.
+For the active Review manager on axat-vps, bind `axstack-review-manager@2` as
+`scheduled` with `intervalMs:1800000` and
+`triggerId:"axstack-review-manager/every:1800000"`. Derive `firstDueAt` from
+the observed first due slot of the active activation.
 Nightly triage uses
 `axstack-pr-triage/daily:02:00:all`. Set `firstDueAt` to the first eligible
 02:00 in the server's timezone as an ISO UTC timestamp and use
