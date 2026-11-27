@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 
 export const workflowName = 'axstack-review-manager';
-export const version = 1;
+export const version = 2;
 export const managerIdentity = `${workflowName}@${version}`;
 export const interval = 1_800_000;
 export const busy = ['preparing', 'queued', 'starting', 'running', 'waiting'];
