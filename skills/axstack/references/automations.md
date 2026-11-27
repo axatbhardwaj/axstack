@@ -76,6 +76,39 @@ Read [T3 runtime](t3-runtime.md) for capability, provider/effort, prompt, dispat
 completion and cleanup boundaries; a manager never checks out a PR branch in
 its pass worktree. Missed slots do not replay a backlog.
 
+### Workflow shadow
+
+`axstack-review-manager@1` declares a 30-minute T3 trigger for axat-vps.
+The native schedule keeps ownership while T3 0.1.12 project and descendant
+coverage is unknown. Every unknown tick records a wake in shadow mode.
+Report mode returns typed facts in the workflow run result. Workflow code
+summarizes quiet terms, coverage, imported continuity, holds and reap.
+Starting a manager agent belongs to active mode after cutover. Active mode
+remains blocked. The native manager owns live reap and reviewer admission.
+A missing, stale or failed reap receipt records a wake reason. A live
+producer for `reapReceipt` is pending, so live reap stays unknown.
+Cutover requires a producer for the reap receipt.
+
+Bind `mode`, `project`, `projectId`, `projects`, `repository`, `repositories`,
+`bun`, `t3`, `skillsDirectory`, `progressCopy` and `reapReceipt` in the private workflow binding. Copy the predecessor's
+progress before its identity write. The workflow imports that exact continuity
+once under its slot claim. Agreement can drift as soon as the predecessor
+advances. The `full-pass-age` fact fails four hours after the imported full
+pass and records a wake reason. Use a fresh import for each live shadow
+comparison. Idle flagged threads never block a slot. A bounded reply read
+proves presence and leaves absence unknown.
+
+For drift, use the native schedule export plus the same host's saved
+`registry` and `journal` observations. Declare `workflow.mode` on the
+Review manager binding row. Retain the native schedule and exact continuity
+through D3 replay. Cutover needs proved coverage, matching live shadow
+evidence and the required POCs, then stop and read back the predecessor,
+reconcile its final state and verify one writer. After a state advance in a
+disposable rehearsal, stop the workflow, export the latest continuity and
+operation claims, restore the predecessor and verify one owner. Until then,
+rollback of the shadow consists of removing its registry entry and verifying
+the native schedule still owns the lane.
+
 T3 sessions are exempt from Claude trust preflight.
 
 ## Session admission

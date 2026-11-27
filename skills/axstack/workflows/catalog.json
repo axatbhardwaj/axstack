@@ -4,5 +4,6 @@
   "axstack-load-probe": { "version": 1, "registration": "probe" },
   "axstack-pr-triage": { "version": 1, "registration": "registry" },
   "axstack-release-reinstall": { "version": 2, "registration": "registry" },
+  "axstack-review-manager": { "version": 1, "registration": "registry" },
   "axstack-watch-backstops": { "version": 1, "registration": "registry" }
 }
