@@ -1,22 +1,23 @@
 import { expect, test } from 'bun:test';
-import { copyFileSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { makeTempRoot } from '../installer/helpers.js';
 import { hash, managerIdentity, version, workflowName } from '../../skills/axstack/workflows/review-manager.mjs';
 
 const source = `${import.meta.dir}/../../skills/axstack`;
 const { quiet } = await Bun.file(import.meta.dir + '/fixtures/review-manager-predecessor.json').json();
-const threadId = 'workflow:' + '8'.repeat(64);
-const receipt = { threadId, runId: 'run:thread:workflow%3A' + '8'.repeat(64) + ':ordinal:1', outcome: 'full' };
-const seat = {
-  model: { instanceId: 'codex', model: 'gpt-6.2-sol', options: [{ id: 'reasoningEffort', value: 'high' }] },
-  runtimeMode: 'full-access',
+const threadId = 'mcp:2f5f844a-87ee-4f85-a509-782c4845a8e8';
+const nativeId = quiet.input.prior.thread.threadId;
+const projectId = quiet.input.inventory.args.projectId;
+// Sanitized fields from POC-6 owner-after-idle-cli and idle-cli. The CLI
+// reports a single current state, while the projection reports queued runs.
+const thread = {
+  threadId, projectId, status: 'completed', activeRunId: null, runCount: 16,
+  pendingRequestCount: 0, pendingBackgroundTasks: [], blockedOnThreadWait: false,
+  archived: false, snoozed: false, providerInstanceId: 'claudeAgent', model: 'claude-opus-5-5',
 };
-const catalog = { providers: [{
-  instanceId: 'codex', driver: 'codex', enabled: true, installed: true, status: 'ready',
-  models: [{ slug: seat.model.model, capabilities: { optionDescriptors: [
-    { id: 'reasoningEffort', options: [{ id: 'high' }] },
-  ] } }],
-}] };
+const delivery = { threadId, runId: 'run:thread:mcp%3Afixture:ordinal:17',
+  messageId: 'message:mcp:client%3Afixture:thread-send:fixture', delivery: 'started', status: 'starting' };
+const completedRuns = Array.from({ length: 16 }, (_, index) => ({ id: 'run-' + index, status: 'completed' }));
 
 const action = (run) => ({ run, *[Symbol.iterator]() { return yield run; } });
 function gen(body) {
@@ -28,8 +29,9 @@ function gen(body) {
   });
 }
 
-function fakeRuntime({ progress, config, worktreeRoot, getScenario }) {
-  const calls = [], values = new Map();
+function fakeRuntime() {
+  const values = new Map();
+  let inTransaction = false;
   Object.assign(globalThis, {
     Schema: new Proxy({}, { get: (_target, name) => ['String', 'Number', 'Boolean', 'Json'].includes(name) ? {} : (shape) => shape }),
     Effect: { gen, fail: (error) => action(() => { throw error; }),
@@ -42,73 +44,60 @@ function fakeRuntime({ progress, config, worktreeRoot, getScenario }) {
       Tick: {}, runs: () => action(() => []), every: (value) => value,
       workflow: (_name, _schema, body) => body,
       step: (name, _schema, effect) => action(async () => {
-        calls.push(name);
         try { return await effect.run(); } catch (error) { throw Object.assign(error, { step: name }); }
       }),
       store: {
-        transaction: (effect) => effect,
+        transaction: (effect) => action(async () => {
+          inTransaction = true;
+          try { return await effect.run(); } finally { inTransaction = false; }
+        }),
         entry: (key) => ({
           get: action(() => ({ value: values.get(key) })),
-          set: (value) => action(() => values.set(key, value)),
+          set: (value) => action(() => {
+            if (!inTransaction) throw new Error('write escaped the store transaction');
+            values.set(key, value);
+          }),
         }),
       },
-      agent: { try: (_name, options) => action(() => {
-        const scenario = getScenario();
-        calls.push({ agent: options });
-        expect(readFileSync(config.progressCopy, 'utf8')).toBe(progress);
-        expect(options.workspace.worktreePath).toBe(`${worktreeRoot}/review-manager-${scenario.runId}`);
-        expect(options).toMatchObject({ ...seat, project: config.projectId, workspace: { type: 'existing_worktree' } });
-        expect(options.brief.split('\n')[0]).toBe(`AXSTACK-WAKE ${managerIdentity} run ${scenario.runId}`);
-        expect(options.brief).not.toMatch(/PRIVATE LIMIT|PRIVATE PR|predecessor\.md|reviewThread/);
-        return { outcome: 'done', thread: { threadId }, value: scenario.output === undefined ? receipt : scenario.output };
-      }) },
+      agent: { try: () => { throw new Error('active entry attempted an agent step'); } },
     },
   });
-  return { calls, values };
+  return values;
 }
 
-test('replays the shipped active entry with native readback shapes and real detached Git worktrees', async () => {
+test('the shipped workflow wakes one existing thread and reads manager and native-pass occupancy', async () => {
   const root = makeTempRoot('axstack-active-review-');
   const env = { PATH: `${root}/bin:/usr/bin:/bin`, HOME: root + '/home', TMPDIR: root,
     AXSTACK_ACTIVE_TEST_SENTINEL: 'synthetic' };
-  const original = Object.fromEntries(Object.keys(env).map((key) => [key, process.env[key]]));
+  const fixedKeys = [...Object.keys(env), 'GH_TOKEN', 'GITHUB_TOKEN', 'GH_CONFIG_DIR', 'XDG_CONFIG_HOME'];
+  const original = Object.fromEntries(fixedKeys.map((key) => [key, process.env[key]]));
   let server, scenario;
   try {
-    for (const dir of ['workflows', 'bin', 'home', 'project', 'worktrees', 'userdata', 'skills', 'skills/sandbox']) {
+    for (const dir of ['workflows', 'bin', 'home', 'project', 'userdata', 'skills', 'skills/sandbox']) {
       mkdirSync(root + '/' + dir, { mode: 0o700 });
     }
     const command = (name, script) => writeFileSync(root + '/bin/' + name,
       '#!/bin/sh\nset -eu\ntest -z "$(printenv AXSTACK_ACTIVE_TEST_SENTINEL || true)"\n' + script + '\n', { mode: 0o700 });
-    const print = (value) => "cat <<'JSON'\n" + JSON.stringify(value) + "\nJSON\n";
     const token = root + '/token';
     const project = root + '/project';
-    const worktreeRoot = root + '/worktrees';
+    const progress = root + '/progress.md';
     const config = {
-      mode: 'active', project, projectId: quiet.input.inventory.args.projectId, projects: [project],
-      repository: quiet.input.repository, repositories: [quiet.input.repository], worktreeRoot,
-      progressCopy: root + '/predecessor.md', bun: process.execPath, t3: root + '/bin/t3',
-      skillsDirectory: root + '/skills', registryTokenFile: token, nativeSeat: seat, operationalLimits: 'PRIVATE LIMIT',
+      mode: 'active', project, projectId, projects: [project], managerThreadId: threadId,
+      repository: quiet.input.repository, repositories: [quiet.input.repository], nativePassThreadId: nativeId,
+      progressCopy: progress, bun: process.execPath, t3: root + '/bin/t3',
+      skillsDirectory: root + '/skills', registryTokenFile: token,
     };
-    const gitEnv = { ...env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: env.HOME + '/.gitconfig' };
-    writeFileSync(gitEnv.GIT_CONFIG_GLOBAL, '[init]\n', { mode: 0o600 });
-    const git = (...args) => {
-      const result = Bun.spawnSync(['/usr/bin/git', ...args], { env: gitEnv, cwd: project });
-      expect(result.exitCode, result.stderr.toString()).toBe(0);
-      return result.stdout.toString().trim();
-    };
-    git('init', '-b', 'main');
-    git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--allow-empty', '-m', 'fixture');
-    const sha = git('rev-parse', 'HEAD');
-    git('update-ref', 'refs/remotes/origin/main', sha);
-    command('git', 'exec env GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" /usr/bin/git "$@"');
+    command('git', `touch "${root}/git-called"; exit 4`);
     command('gh', 'exit 1');
     command('docker', 'test "$*" = "info --format {{.ServerVersion}}"\nprintf "%s\\n" 28.0.0');
-    command('t3', `case "$2:$5" in
-list:--project) ${print(quiet.input.inventory.value.threads)}
-;;
-show:${threadId}) cat "${root}/thread.json";;
-show:*) ${print(quiet.input.prior)}
-;;
+    command('t3', `test "$4" = "${root}"
+case "$2:$5" in
+list:--project) printf '[]\\n';;
+show:${threadId}) cat "${root}/manager.json";;
+show:${nativeId}) cat "${root}/native.json";;
+send:${threadId}) test "$#" = 7; test "$7" = --json
+  printf '%s\\n' "$6" >> "${root}/messages"
+  cat "${root}/delivery.json";;
 *) exit 3;;
 esac`);
     symlinkSync(source + '/scripts', config.skillsDirectory + '/scripts');
@@ -118,11 +107,8 @@ await Bun.write(${JSON.stringify(root + '/launcher-called')}, 'reap');
 console.log('[]');
 process.exit(Number(await Bun.file(${JSON.stringify(root + '/reap-exit')}).text()));
 `);
-    writeFileSync(config.skillsDirectory + '/roles.json', JSON.stringify({
-      version: 1, roles: [{ id: 'axstack-owner', provider: 'codex', modeId: 'full-access', modelClass: 'sol', thinkingOptionId: 'high' }],
-    }));
     writeFileSync(token, 'synthetic-reader', { mode: 0o600 });
-    writeFileSync(config.progressCopy, quiet.progress, { mode: 0o600 });
+    writeFileSync(progress, quiet.progress, { mode: 0o600 });
     server = Bun.serve({ hostname: '127.0.0.1', port: 0,
       fetch(request, local) {
         if (request.headers.get('authorization') !== 'Bearer synthetic-reader') return new Response(null, { status: 401 });
@@ -130,9 +116,11 @@ process.exit(Number(await Bun.file(${JSON.stringify(root + '/reap-exit')}).text(
       },
       websocket: { message(socket, raw) {
         const request = JSON.parse(String(raw));
-        const value = request.tag === 'server.getConfig' ? catalog : {
-          thread: { id: threadId, modelSelection: scenario.effective?.model ?? seat.model,
-            runtimeMode: scenario.effective?.runtimeMode ?? seat.runtimeMode },
+        expect(request.tag).toBe('orchestration.getThreadProjection');
+        const id = request.payload.threadId;
+        const value = id === threadId && scenario.missing ? null : {
+          thread: { id, projectId, archivedAt: null, deletedAt: null },
+          runs: id === threadId ? (scenario.runs === undefined ? completedRuns : scenario.runs) : [],
         };
         socket.send(JSON.stringify({ _tag: 'Chunk', requestId: request.id, values: [value] }));
       } },
@@ -140,58 +128,66 @@ process.exit(Number(await Bun.file(${JSON.stringify(root + '/reap-exit')}).text(
     writeFileSync(root + '/userdata/server-runtime.json', JSON.stringify({
       origin: server.url.origin, pid: process.pid, startedAt: new Date().toISOString(),
     }));
-    const bind = (actual, declared = actual) => {
+    const bind = (changed) => {
       const binding = root + '/binding.json';
-      writeFileSync(binding, JSON.stringify(actual), { mode: 0o600 });
+      writeFileSync(binding, JSON.stringify({ ...config, ...changed }), { mode: 0o600 });
       writeFileSync(root + '/.axstack-workflows.json', JSON.stringify({ workflows: {
-        [managerIdentity]: { binding, bindingDigest: hash(JSON.stringify(declared)) },
+        [managerIdentity]: { binding, bindingDigest: hash(JSON.stringify(config)) },
       } }), { mode: 0o600 });
     };
+    for (const key of fixedKeys) delete process.env[key];
     Object.assign(process.env, env);
-    const { calls, values } = fakeRuntime({ progress: quiet.progress, config, worktreeRoot, getScenario: () => scenario });
+    const values = fakeRuntime();
     const bundle = `${workflowName}-v${version}.mjs`;
     copyFileSync(source + '/workflows/bundles/' + bundle, root + '/workflows/' + bundle);
     const run = (await import(root + '/workflows/' + bundle)).default;
     const now = Date.now();
     const cases = [
-      { decision: 'managed' },
-      { decision: 'managed', reapExit: 2 },
-      { step: 'manager-launch', expectedSeat: { ...seat, model: { ...seat.model, model: 'gpt-6.1-sol' } }, agents: 0 },
-      { step: 'manager-readback', effective: { ...seat, runtimeMode: 'approval-required' } },
-      { step: 'manager-readback', effective: { ...seat, model: { ...seat.model, options: [{ id: 'reasoningEffort', value: 'low' }] } } },
-      { step: 'manager-readback', output: null },
-      { step: 'manager-readback', output: { ...receipt, runId: 'not-the-manager-run' } },
-      { step: 'binding', edit: true, agents: 0 },
-      { step: 'claim-slot', repeat: true, agents: 0 },
+      { decision: 'woke', count: 1 },
+      { decision: 'busy', manager: { status: 'running', activeRunId: delivery.runId } },
+      { decision: 'busy', manager: { pendingBackgroundTasks: [{ taskId: 'delegate:pr-job' }] } },
+      { decision: 'busy', runs: [...completedRuns, { id: 'next-turn', status: 'queued' }] },
+      { decision: 'busy', manager: { blockedOnThreadWait: true } },
+      { decision: 'woke', count: 1, reapExit: 2 },
+      { decision: 'busy', native: { status: 'running', runCount: 16 } },
+      { decision: 'busy', native: { status: 'running' }, managerContinuity: true },
+      { decision: 'busy', native: { pendingBackgroundTasks: [{ taskId: 'delegate:native-pr-job' }] } },
+      { step: 'manager-wake', manager: { archived: true } },
+      { step: 'manager-wake', missing: true },
+      { step: 'manager-wake', manager: { snoozed: true } },
+      { decision: 'woke', count: 1, manager: { status: 'unknown' }, reason: 'manager-activity:unknown' },
+      { decision: 'woke', count: 1, runs: null, reason: 'manager-activity:unknown' },
+      { decision: 'woke', count: 1, native: { status: 'unknown' }, reason: 'native-pass-activity:unknown' },
+      { decision: 'busy', manager: { status: 'unknown', activeRunId: delivery.runId } },
+      { decision: 'busy', manager: { status: 'unknown' }, native: { status: 'running' } },
+      { step: 'manager-wake', count: 1, delivery: { ...delivery, threadId: 'wrong-thread' } },
+      { step: 'binding', edit: { mode: 'report' } },
+      { step: 'binding', edit: { managerThreadId: 'wrong-thread' } },
+      { step: 'claim-slot', repeat: true },
     ];
     for (const [index, next] of cases.entries()) {
-      scenario = { runId: index.toString(16).padStart(32, '0'), ...next };
-      const scheduledAt = new Date(now + (index - Number(scenario.repeat ?? false)) * 1_800_000).toISOString();
-      const bound = { ...config, nativeSeat: scenario.expectedSeat ?? seat };
-      bind(scenario.edit ? { ...bound, mode: 'report' } : bound, bound);
-      writeFileSync(root + '/reap-exit', String(scenario.reapExit ?? 0));
-      writeFileSync(root + '/thread.json', JSON.stringify({
-        thread: { ...quiet.input.prior.thread, threadId, latestRunId: receipt.runId,
-          worktreePath: worktreeRoot + '/review-manager-' + scenario.runId },
-      }));
-      calls.length = 0;
-      const result = await run({ scheduledAt }, { id: scenario.runId }).run()
+      scenario = next;
+      const runId = index.toString(16).padStart(32, '0');
+      const scheduledAt = new Date(now + (index - Number(next.repeat ?? false)) * 1_800_000).toISOString();
+      bind(next.edit ?? {});
+      writeFileSync(progress, next.managerContinuity ? quiet.progress.replace(nativeId, threadId) : quiet.progress);
+      writeFileSync(root + '/messages', '');
+      writeFileSync(root + '/reap-exit', String(next.reapExit ?? 0));
+      writeFileSync(root + '/manager.json', JSON.stringify(next.missing ? { error: 'thread missing' } : { thread: { ...thread, ...next.manager } }));
+      writeFileSync(root + '/native.json', JSON.stringify({ thread: { ...thread, threadId: nativeId, ...next.native } }));
+      writeFileSync(root + '/delivery.json', JSON.stringify(next.delivery ?? delivery));
+      const result = await run({ scheduledAt }, { id: runId }).run()
         .catch((error) => ({ decision: 'paused', step: error.step }));
-      if (scenario.reapExit === undefined && !scenario.step) expect(result.reasons).not.toContain('reap:fail');
-      expect(result).toMatchObject(scenario.step ? { decision: 'paused', step: scenario.step } : {
-        decision: scenario.decision, mode: 'active', reasons: expect.arrayContaining([
-          'identity:unknown', 'project-coverage:unknown', ...(scenario.reapExit ? ['reap:fail'] : []),
-        ]), receipt,
-      });
-      expect(calls.filter((call) => call.agent)).toHaveLength(scenario.agents ?? 1);
-      if (!scenario.step || scenario.step === 'manager-readback') {
-        expect(git('worktree', 'list', '--porcelain')).toContain(`HEAD ${sha}\ndetached`);
-      }
+      expect(result).toMatchObject(next.step ? { decision: 'paused', step: next.step } : { decision: next.decision, mode: 'active' });
+      if (next.reason) expect(result.reasons).toContain(next.reason);
+      if (next.reapExit) expect(result.reasons).toContain('reap:fail');
+      expect(readFileSync(root + '/messages', 'utf8')).toBe(next.count ?
+        `AXSTACK-WAKE ${managerIdentity} run ${runId}\nManager ${threadId}\n` : '');
     }
     expect([...values.keys()]).toEqual([managerIdentity + ':latest-slot']);
-    expect(readFileSync(config.progressCopy, 'utf8')).toBe(quiet.progress);
+    expect(readFileSync(progress, 'utf8')).toBe(quiet.progress);
     expect(readFileSync(root + '/launcher-called', 'utf8')).toBe('reap');
-    expect(git('status', '--porcelain')).toBe('');
+    expect(existsSync(root + '/git-called')).toBe(false);
   } finally {
     await server?.stop(true);
     for (const [name, value] of Object.entries(original)) {
