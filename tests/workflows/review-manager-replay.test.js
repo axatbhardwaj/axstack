@@ -7,11 +7,7 @@ const other = '00000000-0000-4000-8000-000000000002';
 const prefix = 'axstack-review-manager@2';
 const threadId = 'workflow:' + '8'.repeat(64);
 const managerRunId = 'run:thread:workflow%3A' + '8'.repeat(64) + ':ordinal:1';
-const seat = {
-  model: { instanceId: 'codex', model: 'gpt-6.2-sol', options: [{ id: 'reasoningEffort', value: 'high' }] },
-  runtimeMode: 'full-access',
-};
-const receipt = { threadId, runId: managerRunId, outcome: 'full' };
+const delivery = { threadId, runId: managerRunId, messageId: 'message:mcp:fixture', delivery: 'started' };
 const hash = (value) => new Bun.CryptoHasher('sha256').update(value).digest('hex');
 
 const effect = (run) => ({ run, *[Symbol.iterator]() { return yield run; } });
@@ -30,7 +26,7 @@ async function replay(options = {}) {
   const calls = [];
   const steps = [];
   let transaction = false;
-  const bindings = { mode: options.mode ?? (options.shadow ? 'shadow' : 'report'), project: '/fixture/project' };
+  const bindings = { mode: options.mode ?? (options.shadow ? 'shadow' : 'report'), project: '/fixture/project', managerThreadId: threadId };
   if (options.workflowOwned) fixture.progress = fixture.progress.replace(
     /exact terminal receipt: [^,]+,/, 'exact terminal receipt: axstack-review-manager/every:1800000,');
   if (options.flagged) fixture.progress = fixture.progress.replace('- none\n\n## Watermarks',
@@ -81,17 +77,14 @@ async function replay(options = {}) {
           }),
         }),
       },
-      agent: { try: (name, config) => effect(() => {
-        agents.push({ name, config });
-        return { outcome: 'done', thread: { threadId }, value: options.receipt === undefined ? receipt : options.receipt };
-      }) },
+      agent: { try: () => effect(() => { throw new Error('workflow must not launch or wait on an agent'); }) },
     },
   });
 
   const entry = (await import('../../skills/axstack/workflows/review-manager-workflow.mjs')).reviewManager({
     binding: async () => bindings,
-    launch: async () => options.bindingMismatch ? null : { ...seat, project: '/fixture/project', worktree: '/fixture/checkout' },
-    verifyManager: async (_config, _expected, output) => !options.readbackMismatch && output.runId === managerRunId,
+    managerState: async () => options.manager ?? { status: 'idle', gaps: [] },
+    wake: async (_config, brief) => { agents.push(brief); return options.badDelivery ? null : delivery; },
     importProgress: async () => { calls.push('import'); return fixture.progress; },
     reap: async () => options.noReap ? null : fixture.input.reap,
     discover: async () => ({
@@ -159,7 +152,7 @@ for (const [label, input, reason] of [
     expect(result).toMatchObject({ decision: 'reported', reasons: expect.arrayContaining([reason]) });
     expect(agents).toEqual([]);
     const active = await replay({ ...input, mode: 'active' });
-    expect(active.result).toMatchObject({ decision: 'managed', reasons: expect.arrayContaining([reason]), receipt });
+    expect(active.result).toMatchObject({ decision: 'woke', reasons: expect.arrayContaining([reason]), delivery });
     expect(active.agents).toHaveLength(1);
   });
 }
@@ -270,32 +263,37 @@ test('the next active tick reads continuity written by a workflow manager', asyn
 });
 
 for (const [facts, reason] of [[{ coverage: 'unknown' }, 'project-coverage:unknown'], [{ reap: true }, 'reap:fail']]) {
-  test('active ' + reason + ' starts one full-access manager with a typed receipt', async () => {
+  test('active ' + reason + ' sends one ID-only wake', async () => {
     const { result, agents, steps } = await replay({ mode: 'active', ...facts });
-    expect(result).toMatchObject({ decision: 'managed', mode: 'active', reasons: [reason], receipt });
+    expect(result).toMatchObject({ decision: 'woke', mode: 'active', reasons: [reason], delivery });
     expect(steps).toContain('sandbox-reap');
-    expect(agents).toHaveLength(1);
-    const { config } = agents[0];
-    expect(config).toMatchObject({ ...seat, workspace: { type: 'existing_worktree', worktreePath: '/fixture/checkout' } });
-    expect(config.brief.split('\n')[0]).toBe(`AXSTACK-WAKE ${prefix} run ${id}`);
-    expect(config.brief).not.toMatch(/INJECTED|PRIVATE|fixture\/repo|fixture\/checkout/);
-    expect(config.returns).toMatchObject({ threadId: {}, runId: {}, outcome: ['quiet', 'full', 'held'] });
+    expect(agents).toEqual([`AXSTACK-WAKE ${prefix} run ${id}\nManager ${threadId}`]);
   });
 }
 
-for (const [label, options, step, count] of [
-  ['pre-launch binding mismatch', { bindingMismatch: true }, 'manager-launch', 0],
-  ['effective binding mismatch', { readbackMismatch: true }, 'manager-readback', 1],
-  ['missing receipt', { receipt: null }, 'manager-readback', 1],
-  ['malformed receipt', { receipt: { ...receipt, threadId: 'another-thread' } }, 'manager-readback', 1],
-  ['held receipt', { receipt: { ...receipt, outcome: 'held' } }, 'manager-readback', 1],
-]) {
-  test('active ' + label + ' pauses', async () => {
-    const { result, agents } = await replay({ mode: 'active', coverage: 'unknown', ...options });
-    expect(result).toMatchObject({ decision: 'paused', step });
-    expect(agents).toHaveLength(count);
-  });
-}
+test('a busy manager is an ordinary tick outcome across the duration of a pass', async () => {
+  const at = '2026-11-26T22:00:00Z';
+  const first = await replay({ mode: 'active', coverage: 'unknown', scheduledAt: at });
+  expect(first.result.decision).toBe('woke');
+  for (let index = 1; index <= 4; index++) {
+    const run = await replay({
+      mode: 'active', coverage: 'unknown', values: first.values, runId: 'next-' + index,
+      scheduledAt: new Date(Date.parse(at) + index * 1_800_000).toISOString(),
+      manager: { status: 'busy', gaps: [] },
+    });
+    expect(run.result).toMatchObject({ decision: 'busy', mode: 'active' });
+    expect(run.agents).toEqual([]);
+  }
+});
+
+test('active delivery ambiguity holds without a second send on resume', async () => {
+  const first = await replay({ mode: 'active', coverage: 'unknown', badDelivery: true });
+  expect(first.result).toMatchObject({ decision: 'paused', step: 'manager-wake' });
+  expect(first.agents).toHaveLength(1);
+  const second = await replay({ mode: 'active', coverage: 'unknown', values: first.values });
+  expect(second.result).toMatchObject({ decision: 'paused', step: 'manager-wake' });
+  expect(second.agents).toEqual([]);
+});
 
 test('active duplicate slot pauses before starting a second manager', async () => {
   const first = await replay({ mode: 'active', coverage: 'unknown' });
