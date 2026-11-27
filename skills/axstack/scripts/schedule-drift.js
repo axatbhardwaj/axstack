@@ -17,9 +17,11 @@ const HELP = `schedule-drift — canonical schedule comparison (R2 fact mode)
                   Prompt comparison ignores trailing LF characters only; all other whitespace remains exact.
                   A live prompt containing any unfilled {{HOST_ prefix fails, even if bound bytes match.
                   Schedule is the exact host declaration; review-manager additionally requires interval 1800000.
-                  The review-manager row can declare workflow:{mode:"shadow"|"report"}.
-                  The same export then includes registry and journal from workflow observe input.
-                  Workflow coverage and the enabled native predecessor are separate activation facts.
+                  The review-manager row can declare workflow:{mode:"shadow"|"report",version?:1|2}
+                  or workflow:{mode:"active",bindingDigest:SHA256_OF_ACTIVE_BINDING_BYTES}.
+                  Include registry and journal from workflow observe. Active also needs its manifest
+                  and reviewManagerTick from workflow show --json for a recent scheduled slot.
+                  Active activation expects the native predecessor disabled.
   --prompts DIR   Directory containing the three packaged prompt files; default: installed ../references.
   --now ISO       Observation time with timezone; default: current UTC. Saved times prove no live delivery.
   --max-age-seconds N Maximum export age, inclusive; positive integer, default 300. Future exports are unknown.
@@ -124,26 +126,69 @@ function compare(args) {
 }
 
 function reviewWorkflowFacts(source, binding, task, now) {
-  const { name, version, host, trigger, intervalMs, modes } = policy.workflow;
+  const { name, version, activeVersion, host, trigger, intervalMs, modes, watchdog } = policy.workflow;
+  const active = binding.workflow.mode === 'active';
+  const expectedVersion = active ? activeVersion : binding.workflow.version ?? version;
   const rows = source?.registry?.workflows;
   const defined = Array.isArray(rows) && Object.hasOwn(source.registry.definition ?? {}, 'problem');
   const matches = defined ? rows.filter((row) => row?.name === name) : [];
-  const exact = matches.length === 1 && matches[0].version === version;
+  const exact = [version, activeVersion].includes(expectedVersion) &&
+    matches.length === 1 && matches[0].version === expectedVersion;
   const registration = !defined ? 'unknown' : exact && source.host === host &&
     source.registry.definition.problem === null ? 'pass' : 'fail';
-  const triggers = source?.journal?.complete === true && Array.isArray(source.journal.triggers)
-    ? source.journal.triggers.filter((row) => row?.triggerId?.startsWith?.(name + '/')) : null;
+  const journal = source?.journal;
+  const triggerId = watchdog.triggerId;
+  const triggerCoverage = journal?.complete === true || active && Object.hasOwn(journal?.latestScheduledAt ?? {}, triggerId);
+  const triggers = triggerCoverage && Array.isArray(journal.triggers)
+    ? journal.triggers.filter((row) => row?.triggerId?.startsWith?.(name + '/')) : null;
   const next = triggers?.length === 1 ? time(triggers[0].nextAt) : NaN;
   const cadence = !triggers || !defined ? 'unknown' : exact && equal(matches[0].triggers, [trigger]) &&
-    triggers.length === 1 && triggers[0].triggerId === `${name}/every:${intervalMs}` && next > now &&
+    triggers.length === 1 && triggers[0].triggerId === triggerId && next > now &&
     next <= now + intervalMs ? 'pass' : 'fail';
   const predecessor = !source || typeof task?.enabled !== 'boolean' ? 'unknown' :
-    task.enabled && binding.enabled === true && source.host === host && task.projectId === binding.projectId ? 'pass' : 'fail';
+    task.enabled === !active && binding.enabled === !active && source.host === host &&
+    task.projectId === binding.projectId ? 'pass' : 'fail';
   return [
     ['registry', registration, 'expected live version, host and loader status from the native registry'],
     ['cadence', cadence, 'canonical registry cadence and one next due trigger in the current interval'],
-    ['predecessor', predecessor, 'native Review manager remains enabled during shadow or report testing'],
-    ['cutover', modes.includes(binding.workflow.mode) ? 'n/a' : 'fail', 'project coverage remains unknown on T3 0.1.12'],
+    ['predecessor', predecessor, active ? 'native Review manager is disabled' : 'native Review manager remains enabled during shadow or report testing'],
+    ...(active ? activeCutoverFacts(source, binding.workflow, now) : [
+      ['cutover', modes.includes(binding.workflow.mode) ? 'n/a' : 'fail', 'shadow and report are observational'],
+    ]),
+  ];
+}
+
+function activeCutoverFacts(source, binding, now) {
+  const { name, activeVersion, intervalMs, watchdog } = policy.workflow;
+  const expected = binding.bindingDigest;
+  const rows = source?.manifest?.version === 1 ? source.manifest.workflows : null;
+  const digest = rows?.[`${name}@${activeVersion}`]?.bindingDigest;
+  const digestKnown = /^[a-f0-9]{64}$/;
+  const registered = !object(rows) || !digestKnown.test(expected ?? '') ? 'unknown' :
+    digest === expected && Object.keys(rows).every((key) => !key.startsWith(name + '@') || key === `${name}@${activeVersion}`)
+      ? 'pass' : 'fail';
+  const shown = source?.reviewManagerTick?.run;
+  const result = shown?.result;
+  const receipt = result?.receipt;
+  const validResult = result?.mode === 'active' && (result.decision === 'quiet' ||
+    result.decision === 'managed' && nonempty(receipt?.threadId) && nonempty(receipt?.runId) &&
+    ['quiet', 'full'].includes(receipt.outcome));
+  const archive = source?.journal?.runs;
+  const matches = nonempty(shown?.runId) && Array.isArray(archive)
+    ? archive.filter((row) => row?.runId === shown.runId) : [];
+  const tick = matches[0];
+  const scheduled = time(tick?.scheduledAt);
+  const start = time(tick?.startedAt);
+  const end = time(tick?.endedAt);
+  const pass = matches.length === 1 && tick.workflow === name && tick.version === activeVersion &&
+    tick.parentRunId === null && tick.idempotencyKey === `trigger:${watchdog.triggerId}:${tick.scheduledAt}` &&
+    scheduled >= now - 2 * intervalMs && start >= scheduled && end >= start && end <= now &&
+    tick.status === 'completed' && shown.status === tick.status && shown.startedAt === tick.startedAt &&
+    shown.endedAt === tick.endedAt && validResult;
+  const known = nonempty(shown?.runId) && Array.isArray(archive) && (matches.length > 0 || source.journal.complete === true);
+  return [
+    ['binding', registered, 'one active opt-in with the digest of the declared private binding bytes'],
+    ['cutover', !known ? 'unknown' : pass ? 'pass' : 'fail', 'recent completed native trigger slot with an active workflow result'],
   ];
 }
 
