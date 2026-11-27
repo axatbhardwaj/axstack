@@ -189,9 +189,9 @@ for (const [label, change, id, expected] of [
   });
 }
 
-test('native predecessor comparison uses the prompt bytes before the workflow report', () => {
+test('native predecessor comparison includes every byte of the packaged native prompt', () => {
   const { report } = run((data) => {
-    data.prompts['review-manager-prompt.md'] += '\n## Workflow report\n\nSubmit the workflow receipt.\n';
+    data.prompts['review-manager-prompt.md'] += '\n## Workflow report\n\nUnexpected extra native instructions.\n';
   });
-  expect(status(report, 'review-manager-prompt.md.prompt')).toBe('pass');
+  expect(status(report, 'review-manager-prompt.md.prompt')).toBe('fail');
 });
