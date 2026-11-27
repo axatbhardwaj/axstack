@@ -90,7 +90,7 @@ function brief(runId, state, prs, flagged) {
   const lines = [
     `AXSTACK-WAKE ${managerIdentity} run ${runId}`,
     "",
-    "Follow the Workflow report section of the installed review-manager-prompt.md. Use read-only tools and submit the typed receipt.",
+    "Follow the installed review-manager-report.md.",
     `Continuity store key: ${managerIdentity}:continuity`,
     `Import digest: ${state.sourceSha}`,
     `Prior manager: ${state.prior}`,
@@ -102,7 +102,7 @@ function brief(runId, state, prs, flagged) {
 }
 function receiptMatches(result, runId, state) {
   const receipt = result?.value;
-  return result?.outcome === "done" && receipt?.kind === "AXSTACK-REVIEW-MANAGER" && receipt.runId === runId && receipt.sourceSha === state.sourceSha && reviewId(receipt.threadId) && receipt.threadId === result.thread?.threadId;
+  return result?.outcome === "done" && receipt?.kind === "AXSTACK-REVIEW-MANAGER" && receipt.runId === runId && receipt.sourceSha === state.sourceSha && reviewId(receipt.threadId) && receipt.threadId === result.thread?.threadId && Array.isArray(receipt.writes) && receipt.writes.length === 0;
 }
 
 // review-manager-workflow.mjs
@@ -122,7 +122,8 @@ function reviewManager(runtime) {
     kind: Schema.Literal("AXSTACK-REVIEW-MANAGER"),
     runId: Schema.String,
     sourceSha: Schema.String,
-    threadId: Schema.String
+    threadId: Schema.String,
+    writes: Schema.Array(Schema.String)
   });
   return T3.workflow(workflowName, {
     version,
@@ -184,7 +185,7 @@ function reviewManager(runtime) {
         throw new Hold("continuity import readback mismatched");
       return true;
     });
-    const reap = (yield* read("sandbox-reap", () => runtime.reap(config, scheduledAt))) ?? {};
+    const reap = (yield* read("read-reap-receipt", () => runtime.reap(config, scheduledAt))) ?? {};
     const discovery = yield* read("safe-6-discovery", () => runtime.discover(config));
     const watermarks = yield* step("read-reply-watermarks", { returns: Schema.Json }, Effect.gen(function* () {
       return value(yield* entry("reply-watermarks").get) ?? {};
@@ -208,9 +209,9 @@ function reviewManager(runtime) {
       const seat = await runtime.resolveSeat(config);
       if (!seat)
         throw new Hold("axstack-owner binding is unavailable in the live catalog");
-      return seat;
+      return { ...seat, runtimeMode: "approval-required" };
     });
-    yield* read("verify-wake-claim", async () => {
+    yield* read("verify-binding-unchanged", async () => {
       if (!await runtime.sameBinding(config))
         throw new Hold("Review manager binding changed during the slot");
       return true;
@@ -686,7 +687,7 @@ function reviewRuntime(base) {
     inventory: (config, state, watermarks) => threads(base, config, state, watermarks),
     quietFacts,
     resolveSeat: (config) => ownerBinding(base, config),
-    verifySeat: async (config, expected, threadId) => await sameBinding(config) && JSON.stringify(await ownerBinding(base, config)) === JSON.stringify(expected) && (await driverReadback(base, config, expected, null, threadId))?.thread?.projectId === config.projectId
+    verifySeat: async (config, expected, threadId) => await sameBinding(config) && JSON.stringify((await ownerBinding(base, config))?.model) === JSON.stringify(expected.model) && (await driverReadback(base, config, expected, null, threadId))?.thread?.projectId === config.projectId
   };
 }
 
