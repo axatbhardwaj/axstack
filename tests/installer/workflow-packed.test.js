@@ -71,6 +71,21 @@ test.skipIf(!t3)('packed axstack stays dormant until opt-in and the real T3 load
       workflows: [expect.objectContaining({ name: workflow, version: 1 })],
       definition: { problem: null },
     });
+    const watchBackstops = 'axstack-watch-backstops';
+    const backstopBinding = join(server.root, 'backstop.json');
+    writeFileSync(backstopBinding, JSON.stringify({ registryTokenFile: registryToken }), { mode: 0o600 });
+    expect(cli('workflow', 'opt-in', '--name', watchBackstops, '--binding', backstopBinding, '--conformance', receipt, '--yes'))
+      .toContain(watchBackstops + '@1 registered');
+    const backstopRegistration = observe('--registry-token-file', registryToken);
+    expect(backstopRegistration.registry.workflows).toContainEqual(expect.objectContaining({ name: watchBackstops, version: 1 }));
+    expect(backstopRegistration.journal.triggers.some(({ triggerId }) => triggerId.startsWith(watchBackstops))).toBe(false);
+    expect(backstopRegistration.journal.runs.some(({ workflow }) => workflow === watchBackstops)).toBe(false);
+    const backstop = server.start(watchBackstops, 'packed-owner', { ownerId: crypto.randomUUID(), shadow: true });
+    expect((await server.waitFor(backstop.runId, 'paused')).detail).toContain('private binding');
+    expect(server.command('workflow', 'show', backstop.runId, '--json').steps.map(({ name }) => name)).toEqual(['owner-lease']);
+    server.command('workflow', 'cancel', backstop.runId, '--json');
+    await server.waitFor(backstop.runId, 'cancelled');
+    expect(cli('workflow', 'remove', '--name', watchBackstops, '--version', '1', '--yes')).toContain('removed');
     const triage = 'axstack-pr-triage';
     const triageBinding = join(server.root, 'triage.json');
     writeFileSync(triageBinding, JSON.stringify({ registryTokenFile: registryToken }), { mode: 0o600 });
