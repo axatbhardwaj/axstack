@@ -1,30 +1,58 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import catalog from '../../skills/axstack/workflows/catalog.json';
 
 export const workflow = 'axstack-release-reinstall';
+export const workflowVersion = catalog[workflow].version;
 const routes = { io: 'xzat@io', iobook: 'iobook', iobox: 'xzat@iobox', iosatellite: 'xzat@iosatellite', 'axat-vps': 'local' };
 export const targets = Object.keys(routes);
 const digest = (bytes) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex');
 const executable = { mode: 0o700 };
 const privateFile = { mode: 0o600 };
+const repo = new URL('../../', import.meta.url).pathname;
+const pack = Bun.spawnSync([process.execPath, 'pm', 'pack', '--dry-run'], { cwd: repo });
+if (pack.exitCode !== 0) throw new Error(pack.stderr.toString());
+const files = [...pack.stdout.toString().matchAll(/^packed \S+ (.+)$/gm)].map(([, path]) => path);
+const skillFiles = files.filter((path) =>
+  /^skills\/[^/]+\/SKILL\.md$/.test(path) || path.startsWith('skills/axstack/references/'));
+const packageFiles = [...files.filter((path) => path === 'bin/axstack.js' || path === 'package.json'), ...skillFiles];
+const harnessRoots = { claude: '.claude/skills', codex: '.agents/skills', opencode: '.config/opencode/skills' };
 
-function populate(home, version) {
-  const root = home + '/.local/share/axstack/releases/' + version + '/package';
-  const skill = 'axstack release skill\n';
-  for (const dir of [home + '/.local/bin', home + '/.bun/install/global/node_modules/axstack', root + '/bin']) {
-    mkdirSync(dir, { recursive: true });
+const packageDir = (home, version) => home + '/.local/share/axstack/releases/' + version + '/package';
+
+function copy(source, target) {
+  mkdirSync(target.slice(0, target.lastIndexOf('/')), { recursive: true });
+  copyFileSync(source, target);
+}
+
+function stagePackage(home, version) {
+  const root = packageDir(home, version);
+  for (const path of packageFiles) {
+    copy(repo + path, root + '/' + path);
   }
-  writeFileSync(root + '/package.json', JSON.stringify({ name: 'axstack', version }));
-  writeFileSync(root + '/bin/axstack.js', '');
-  for (const skillName of ['axstack', 'axstack-implement', 'voa']) {
-    const marker = (dir) => dir + '/' + skillName + '/SKILL.md';
-    for (const dir of [root + '/skills', ...['.agents/skills', '.claude/skills', '.config/opencode/skills']
-      .map((path) => home + '/' + path)]) {
-      mkdirSync(dir + '/' + skillName, { recursive: true });
-      writeFileSync(marker(dir), skill);
-    }
-  }
-  writeFileSync(home + '/.bun/install/global/node_modules/axstack/package.json', JSON.stringify({ name: 'axstack', version }));
-  writeFileSync(home + '/.local/bin/axstack', '#!/bin/sh\n[ "$1" != install ] || { fake-install opencode "$@"; exit; }\nprintf "axstack ' + version + '\\n"\n', executable);
+  const manifest = JSON.parse(readFileSync(root + '/package.json', 'utf8'));
+  writeFileSync(root + '/package.json', JSON.stringify({ ...manifest, version }));
+}
+
+function installHarness(home, root, harness) {
+  const target = home + '/' + harnessRoots[harness] + '/';
+  for (const path of skillFiles) copy(root + '/' + path, target + path.slice('skills/'.length));
+}
+
+function installGlobal(home, version) {
+  const global = home + '/.bun/install/global/node_modules/axstack';
+  mkdirSync(global, { recursive: true });
+  writeFileSync(global + '/package.json', JSON.stringify({ name: 'axstack', version }));
+}
+
+function populate(home, version, host) {
+  stagePackage(home, version);
+  const root = packageDir(home, version);
+  for (const harness of ['claude', 'codex']) installHarness(home, root, harness);
+  if (host === 'io' || host === 'axat-vps') installHarness(home, root, 'opencode');
+  if (host === 'axat-vps') installGlobal(home, version);
+  mkdirSync(home + '/.local/bin', { recursive: true });
+  writeFileSync(home + '/.local/bin/axstack', '#!/bin/sh\n[ "$1" != install ] || { fake-install opencode ' + version +
+    ' "$@"; exit; }\nprintf "axstack ' + version + '\\n"\n', executable);
 }
 
 export function fakeFleet(server, bundle) {
@@ -36,21 +64,21 @@ export function fakeFleet(server, bundle) {
   const stateFiles = Object.fromEntries(targets.map((host) => [host, server.root + '/' + host + '.json']));
   const homes = Object.fromEntries(targets.map((host) => [host, host === 'axat-vps' ? server.home : server.root + '/' + host]));
   const prompts = server.root + '/agent-calls.json';
-  const controls = { log, registryFile, stateFiles, homes, routes, prompts, bindingFile };
-  writeFileSync(server.workflows + '/' + workflow + '-v1.mjs', bundle);
+  const controls = { log, registryFile, stateFiles, homes, routes, prompts, bindingFile, repo, packageFiles, skillFiles, harnessRoots };
+  writeFileSync(server.workflows + '/' + workflow + '-v' + workflowVersion + '.mjs', bundle);
   mkdirSync(bin);
   writeFileSync(log, '');
   writeFileSync(script, 'set -eu\nfake-install reinstall "$1"\nfake-install claude\nfake-install codex\n', privateFile);
   for (const [host, home] of Object.entries(homes)) {
-    populate(home, '1.2.2');
+    populate(home, '1.2.2', host);
     writeFileSync(stateFiles[host], '{}');
   }
   const runner = `#!${process.execPath}
-import { appendFileSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
-const { log, registryFile, stateFiles, homes, routes, prompts, bindingFile } = ${JSON.stringify(controls)};
-${populate.toString()}
+import { appendFileSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+const { log, registryFile, stateFiles, homes, routes, prompts, bindingFile, repo, packageFiles, skillFiles, harnessRoots } = ${JSON.stringify(controls)};
+const packageDir = ${packageDir};
+${[copy, stagePackage, installHarness, installGlobal, populate].join('\n')}
 const executable = { mode: 0o700 };
-const mkdirSync = (await import('node:fs')).mkdirSync;
 const name = Bun.argv[1].split('/').at(-1);
 const args = Bun.argv.slice(2);
 const local = Object.entries(homes).find(([, home]) => home === Bun.env.HOME)?.[0];
@@ -64,7 +92,7 @@ if (name === 'npm' || name === 'curl') {
     if (args[0] === 'pack') {
       const v = args.find((arg) => arg.startsWith('axstack@')).split('@')[1];
       const scratch = mkdtempSync(Bun.env.TMPDIR + '/pack-');
-      populate(scratch, v);
+      stagePackage(scratch, v);
       const tar = Bun.spawnSync(['/usr/bin/tar', '-czf', process.cwd() + '/axstack-' + v + '.tgz',
         '-C', scratch + '/.local/share/axstack/releases/' + v, 'package']);
       rmSync(scratch, { recursive: true });
@@ -118,7 +146,7 @@ if (name === 'npm' || name === 'curl') {
       console.log('unstructured output');
       process.exit();
     }
-    if (apply && fixture.newerOnApply) populate(homes[host], '1.2.4');
+    if (apply && fixture.newerOnApply) populate(homes[host], '1.2.4', host);
   }
   const command = parameters[0] === '-lc' ? ['--noprofile', '--norc', '-c', ...parameters.slice(1)] : parameters;
   const processHandle = Bun.spawn(['/bin/bash', ...command], {
@@ -133,9 +161,15 @@ if (name === 'npm' || name === 'curl') {
   if (fixture.timerUnknown === unit) process.exit(1);
   const mismatch = fixture.hasWritten && fixture.mismatch &&
     (fixture.mismatch === true || unit === 'axstack-' + fixture.mismatch + '.timer');
-  if (args.includes('is-active')) console.log(fixture.disabled || (mismatch && !fixture.disabledAfter) ? 'inactive' : 'active');
-  else if (args.includes('is-enabled')) console.log(mismatch && fixture.disabledAfter ? 'disabled' : 'enabled');
-  else if (args.includes('--property=DropInPaths')) console.log('/fixture/pool.conf');
+  if (args.includes('is-active')) {
+    const inactive = fixture.disabled || (mismatch && !fixture.disabledAfter);
+    console.log(inactive ? 'inactive' : 'active');
+    if (inactive) process.exit(3);
+  } else if (args.includes('is-enabled')) {
+    const disabled = mismatch && fixture.disabledAfter;
+    console.log(disabled ? 'disabled' : 'enabled');
+    if (disabled) process.exit(1);
+  } else if (args.includes('--property=DropInPaths')) console.log(fixture.dropIn ?? '');
   else process.exit(98);
 } else if (name === 'fake-install') {
   if (args[0] === 'reinstall') {
@@ -144,10 +178,11 @@ if (name === 'npm' || name === 'curl') {
     if (fixture.exit) process.exit(fixture.exit);
     if (fixture.delay) await Bun.sleep(fixture.delay);
     populate(homes[local], args[1]);
-    if (fixture.missingSkills) unlinkSync(homes[local] + '/.agents/skills/voa/SKILL.md');
+    if (fixture.missingSkills) unlinkSync(homes[local] + '/' + fixture.missingSkills);
     writeFileSync(stateFiles[local], JSON.stringify({ ...fixture, hasWritten: true }));
   } else {
     emit('write ' + local + ' ' + args[0] + (Bun.env.CLAUDE_CONFIG_DIR ? ' shadow' : ' clean') + (args.includes('--no-claude-settings') ? ' --no-claude-settings' : ''));
+    if (args[0] === 'opencode') installHarness(homes[local], packageDir(homes[local], args[1]), 'opencode');
   }
 } else if (name === 'fixture-rpc') {
   if (args.includes('server.getConfig')) {
@@ -175,12 +210,13 @@ if (name === 'npm' || name === 'curl') {
   } else if (args[0] === 'add') {
     emit('write ' + local + ' bun-global ' + args.at(-1));
     const version = args.at(-1).split('@')[1];
-    writeFileSync(homes[local] + '/.bun/install/global/node_modules/axstack/package.json', JSON.stringify({ name: 'axstack', version }));
+    installGlobal(homes[local], version);
   } else if (args[1] === '--version') {
     const manifest = JSON.parse(readFileSync(args[0].replace('/bin/axstack.js', '/package.json'), 'utf8'));
     console.log('axstack ' + manifest.version);
   } else if (args[1] === 'install') {
     const harness = args[args.indexOf('--harness') + 1];
+    installHarness(homes[local], args[0].slice(0, -'/bin/axstack.js'.length), harness);
     emit('write ' + local + ' ' + harness + (Bun.env.CLAUDE_CONFIG_DIR ? ' shadow' : ' clean') +
       (args.includes('--no-claude-settings') ? ' --no-claude-settings' : ''));
   } else process.exit(98);
@@ -198,7 +234,9 @@ if (name === 'npm' || name === 'curl') {
   function host(id, fixture) {
     writeFileSync(stateFiles[id], JSON.stringify(fixture));
     const home = homes[id];
-    if (fixture.version) populate(home, fixture.version);
+    if (fixture.version) populate(home, fixture.version, id);
+    if (fixture.globalVersion) installGlobal(home, fixture.globalVersion);
+    if (fixture.staleSkill) writeFileSync(home + '/' + fixture.staleSkill, 'stale fixture bytes\n');
     if (fixture.malformedPackage) {
       writeFileSync(home + '/.local/share/axstack/releases/1.2.3/package/package.json', '{');
     } else if (existsSync(home + '/.local/share/axstack/releases/1.2.3/package/package.json')) {
@@ -229,7 +267,7 @@ if (name === 'npm' || name === 'curl') {
       }] }), privateFile);
     }
     writeFileSync(server.base + '/.axstack-workflows.json', JSON.stringify({ version: 1, workflows: {
-      [workflow + '@1']: { binding: bindingFile, digest: digest(bundle), bindingDigest: changed ?? digest(binding) },
+      [workflow + '@' + workflowVersion]: { binding: bindingFile, digest: digest(bundle), bindingDigest: changed ?? digest(binding) },
     } }), privateFile);
   }
   changeBinding();

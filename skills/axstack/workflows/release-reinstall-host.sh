@@ -41,23 +41,18 @@ timer() {
 }
 
 skills() {
-  local marker name harness
-  [[ -r $package_dir/bin/axstack.js ]] || return 1
-  for name in axstack axstack-implement voa; do
-    [[ -s $package_dir/skills/$name/SKILL.md ]] || return 1
+  local marker skill harness
+  [[ -r $package_dir/bin/axstack.js && -s $package_dir/skills/axstack-implement/SKILL.md ]] || return 1
+  local -a markers=(axstack/references/contracts.md)
+  for skill in "$package_dir"/skills/axstack-* "$package_dir"/skills/voa; do
+    markers+=("${skill##*/}/SKILL.md")
   done
   local -a roots=("$HOME/.agents/skills" "$HOME/.claude/skills")
   if [[ $host == io || $host == axat-vps ]]; then roots+=("$HOME/.config/opencode/skills"); fi
-  for marker in "$package_dir"/skills/{axstack,axstack-*,voa}/SKILL.md; do
-    if [[ ! -r $marker ]]; then
-      # A glob may have no matches in an older package.
-      [[ $marker == *'/axstack-*/SKILL.md' ]] && continue
-      return 1
-    fi
-    name=${marker%/SKILL.md}
-    name=${name##*/}
+  for marker in "${markers[@]}"; do
+    [[ -s $package_dir/skills/$marker ]] || return 1
     for harness in "${roots[@]}"; do
-      cmp -s "$marker" "$harness/$name/SKILL.md" || return 1
+      cmp -s "$package_dir/skills/$marker" "$harness/$marker" || return 1
     done
   done
 }

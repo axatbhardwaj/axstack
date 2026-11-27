@@ -3,5 +3,5 @@
   "axstack-fleet-cleanup": { "version": 1, "registration": "registry" },
   "axstack-load-probe": { "version": 1, "registration": "probe" },
   "axstack-pr-triage": { "version": 1, "registration": "registry" },
-  "axstack-release-reinstall": { "version": 1, "registration": "registry" }
+  "axstack-release-reinstall": { "version": 2, "registration": "registry" }
 }

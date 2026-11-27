@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { makeTempRoot } from '../installer/helpers.js';
-import { fakeFleet, targets, workflow } from './release-reinstall-fixture.js';
+import { fakeFleet, targets, workflow, workflowVersion } from './release-reinstall-fixture.js';
 
 const source = new URL('../../skills/axstack/workflows/', import.meta.url).pathname;
 const runId = 'f'.repeat(32);
@@ -72,7 +72,7 @@ function replay(options = {}) {
   for (const host of targets) fixture.host(host, { version: '1.2.3' });
   fixture.host(options.host ?? 'iobook', { version: '1.2.2', ...options.hostState });
   fixture.registry(options.registry ?? {});
-  const result = Bun.spawnSync([process.execPath, '-e', runner, workflows + '/' + workflow + '-v1.mjs', fixture.prompts,
+  const result = Bun.spawnSync([process.execPath, '-e', runner, workflows + '/' + workflow + '-v' + workflowVersion + '.mjs', fixture.prompts,
     options.version ?? 'v1.2.3', options.id ?? runId, JSON.stringify(options.store ?? [])], { env, timeout: 25_000 });
   expect(result.exitCode, result.stderr.toString()).toBe(0);
   const actual = { ...JSON.parse(result.stdout.toString()), writes: fixture.writes(), events: fixture.events() };
@@ -91,11 +91,43 @@ const claims = (phase, run = runId, leasePhase = phase, release = 'v1.2.3') => {
   ];
 };
 
+linuxTest('the shipped skill layout verifies on all five already installed hosts without writes', () => {
+  const actual = replay({ hostState: { version: '1.2.3' }, label: 'shipped-layout-already-installed' });
+  expect(actual.hold, JSON.stringify({ writes: actual.writes, events: actual.events })).toBeUndefined();
+  expect(Object.keys(actual.result.hosts).sort()).toEqual([...targets].sort());
+  for (const host of targets) {
+    expect(actual.result.hosts[host]).toMatchObject({
+      version: 'v1.2.3', packageVersion: 'v1.2.3', packageSkills: 'present', dropIn: 'absent',
+      defaultSync: { active: 'active', enabled: 'enabled' },
+      singleServer: { active: 'active', enabled: 'enabled' },
+    });
+  }
+  expect(actual.result.hosts['axat-vps'].bunGlobal).toBe('v1.2.3');
+  expect(actual.writes).toEqual([]);
+  expect(actual.calls).toEqual([]);
+});
+
+linuxTest.each([
+  ['iobook', '.claude/skills/axstack-audit/SKILL.md'],
+  ['io', '.config/opencode/skills/axstack/references/contracts.md'],
+  ['axat-vps', '.config/opencode/skills/axstack-implement/SKILL.md'],
+])('a stale installed marker on %s triggers only that host reinstall', (host, staleSkill) => {
+  const actual = replay({ host, hostState: { version: '1.2.3', staleSkill } });
+  expect(actual.result?.hosts[host].packageSkills, actual.hold).toBe('present');
+  expect(actual.writes.filter((write) => write.includes(' reinstall '))).toEqual([host + ' reinstall 1.2.3']);
+}, 15_000);
+
+linuxTest('a stale VPS Bun global triggers a reinstall despite a current CLI and release package', () => {
+  const actual = replay({ host: 'axat-vps', hostState: { version: '1.2.3', globalVersion: '1.2.2' } });
+  expect(actual.result?.hosts['axat-vps'].bunGlobal, actual.hold).toBe('v1.2.3');
+  expect(actual.writes).toContain('axat-vps bun-global axstack@1.2.3');
+}, 15_000);
+
 linuxTest.each([
   ['install-exit', { hostState: { exit: 42 } }, 'install exited nonzero'],
   ['receipt-mismatch', { hostState: { mismatch: 'default-sync' } }, 'verification mismatch'],
   ['single-server-disabled', { hostState: { mismatch: 'single-server', disabledAfter: true } }, 'verification mismatch'],
-  ['installed-skill-missing', { hostState: { missingSkills: true } }, 'verification mismatch'],
+  ['installed-skill-missing', { hostState: { missingSkills: '.agents/skills/voa/SKILL.md' } }, 'verification mismatch'],
   ['agent-readback', { hostState: { mismatch: true, agentMismatch: true } }, 'binding or transcript mismatched'],
 ])('failure replay %s reports only to the bound failure agent', (label, options, reason) => {
   const actual = replay({ ...options, label });
@@ -104,7 +136,7 @@ linuxTest.each([
   expect(actual.writes.filter((write) => write === 'iobook reinstall 1.2.3')).toHaveLength(1);
   expect(actual.calls).toEqual([{
     project: expect.stringMatching(/\/project$/), title: 'Axstack release reinstall failure', timeout: '10 minutes',
-    brief: 'AXSTACK-WAKE axstack-release-reinstall@1 run ' + runId +
+    brief: 'AXSTACK-WAKE ' + workflow + '@' + workflowVersion + ' run ' + runId +
       '\n\nRead this T3 workflow run and report the release reinstall failure in this thread. The release driver owns recovery and hold clearance.',
     model: { instanceId: 'codex', model: 'gpt-6.2-sol', options: [{ id: 'reasoningEffort', value: 'high' }] },
     runtimeMode: 'full-access',

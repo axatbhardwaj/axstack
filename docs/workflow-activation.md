@@ -284,7 +284,7 @@ noninteractive authentication without copying credentials. Opt in on the VPS.
 axstack workflow opt-in --name axstack-release-reinstall --binding /absolute/private/release-reinstall.json --conformance /absolute/private/receipt.json --yes
 ```
 
-Read back `axstack-release-reinstall@1` in the native registry. Use the
+Read back `axstack-release-reinstall@2` in the native registry. Use the
 on-demand watchdog policy and keep the binding and script bytes stable.
 The release driver starts and observes each authorized
 [reinstall](host-operations.md#release-reinstall). Use the documented version
