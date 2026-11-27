@@ -67,17 +67,16 @@ A live prompt containing an unfilled `{{HOST_` token must report `fail`, includi
 when a binding value reintroduces the token or a binding value is missing.
 Fixture and saved-export comparisons do not prove current live schedule delivery.
 
-For the Review manager shadow, also run `bun run test tests/workflows/review-manager-replay.test.js
-tests/workflows/review-manager-runtime.test.js tests/workflows/review-manager-native.test.js
-tests/workflows/native-bundle.test.js`. Use the isolated T3 0.1.12 binary for the
-native test and both CI Bun versions for bundle parity. The native test verifies
-import, a shadow wake, a typed report, the next slot and a duplicate hold.
-Both modes complete with zero agent steps. Replay checks the report's fact
-projection and the two-hour wedge boundary. Adapter fixtures check the quiet-helper environment and the search row
-cap. The archived inputs exercise quiet and wake decisions with known and
-unknown coverage. Live project and
-descendant coverage, a matching live shadow tick and the D3 handoff remain
-separate evidence obligations.
+For Review manager modes, also run `bun run test tests/workflows/review-manager-replay.test.js
+tests/workflows/review-manager-runtime.test.js tests/workflows/review-manager-active.test.js
+tests/workflows/review-manager-native.test.js tests/workflows/native-bundle.test.js`.
+Use isolated T3 0.1.12 for native pause and duplicate readback and both CI Bun
+versions for exact bundle bytes. Replay the archived quiet and wake shapes,
+unknown coverage, reap failure, binding mismatch, digest drift and missing
+or invalid receipts. Verify the active store keeps only the slot claim and
+the workflow leaves the continuity file unchanged. The all-pass quiet case
+uses a fixture with known coverage. The active live tick, native predecessor
+retirement and rollback drill require their own readback.
 
 ## Parallel-first acceptance (Outcomes 1–6)
 
