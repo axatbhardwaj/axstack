@@ -1,4 +1,5 @@
 import { lstat, readFile, realpath } from 'node:fs/promises';
+import { gitStatusFilterOverrides } from '../git-status-filters.js';
 import { gitArgv } from '../scripts/git-argv.js';
 import { bindingMatches } from './binding.mjs';
 import { json, run } from './dependabot-runtime.mjs';
@@ -87,9 +88,8 @@ async function checkoutFact(config, host, project, thread, worktrees, receipt) {
   if (keys === null || index === null || index.split('\0').some((entry) => entry.startsWith('160000 '))) {
     return 'worktree-status';
   }
-  // As in readiness, override repository-configured filters before status.
-  const overrides = keys.split('\0').filter((key) => /^filter\..*\.(clean|process)$/.test(key))
-    .flatMap((key) => ['-c', key + '=', '-c', key.replace(/\.(clean|process)$/, '.required') + '=false']);
+  const overrides = gitStatusFilterOverrides(keys);
+  if (!overrides) return 'worktree-status';
   const dirt = await git(config, host, dir, [...overrides, 'status', '--porcelain=v1', '-z', '--untracked-files=all', '--ignored']);
   if (dirt === null) return 'worktree-status';
   if (dirt !== '') return 'retain';

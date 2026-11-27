@@ -164,14 +164,40 @@ test('a second-item duplicate pauses the batch before claiming the first item', 
 }, 12_000);
 
 test('configured Git filters and fsmonitor are disabled for the status read', async () => {
-  const { result, commands } = await replay({ eligible: true, worktree: '/fixture/topic', filter: true });
-  expect(result.decision).toBe('complete');
+  const { result, commands } = await replay({
+    eligible: true, worktree: '/fixture/topic',
+    configKeys: ['core.fsmonitor', 'filter.Fixture_1.dev-test.smudge', 'filter.Fixture_1.dev-test.required'],
+  });
+  expect(result).toMatchObject({ decision: 'complete', items: [operation], gaps: [] });
   const status = commands.find(({ args }) => args.includes('status'));
+  expect(status?.args.filter((_, index, args) => args[index - 1] === '-c')).toEqual([
+    'core.hooksPath=/dev/null', 'core.fsmonitor=false',
+    'filter.Fixture_1.dev-test.clean=', 'filter.Fixture_1.dev-test.process=', 'filter.Fixture_1.dev-test.required=false',
+  ]);
   expect(status?.args).toEqual(expect.arrayContaining([
-    '--no-optional-locks', 'core.fsmonitor=false', 'core.hooksPath=/dev/null',
-    'filter.fixture.clean=', 'filter.fixture.process=', 'filter.fixture.required=false',
+    '--no-optional-locks', '--porcelain=v1', '-z', '--untracked-files=all', '--ignored',
   ]));
 }, 12_000);
+
+for (const [label, key] of [
+  ['an equals sign in a filter driver', 'filter.x=y.clean'],
+  ['an equals sign in another Git config key', 'remote.x=y.url'],
+  ['whitespace in a filter driver', 'filter.x y.process'],
+  ['a quote in a filter driver', 'filter.x"y.clean'],
+  ['a control character in a filter driver', 'filter.x\ny.smudge'],
+  ['an unsupported filter setting', 'filter.fixture.other'],
+]) {
+  test(`${label} holds the worktree before Git status`, async () => {
+    const { result, agents, claims, commands } = await replay({
+      eligible: true, worktree: '/fixture/topic', configKeys: [key],
+    });
+    expect(commands.some(({ args }) => args.includes('status'))).toBe(false);
+    expect(result).toEqual({ decision: 'unknown', items: [], gaps: ['axat-vps/worktree-status'] });
+    expect(agents.map(({ name }) => name)).toEqual(['report-gap']);
+    expect(agents[0].options.brief).not.toContain(operation);
+    expect(claims).toEqual({});
+  }, 12_000);
+}
 
 test('an accepted archive requires a settled thread and reads back archival', async () => {
   const archive = operation.replace(/settle$/, 'archive');

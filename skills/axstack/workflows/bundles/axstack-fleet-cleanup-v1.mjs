@@ -251,6 +251,29 @@ function wakeBrief(runId, phase, itemIds = []) {
 // fleet-cleanup-runtime.mjs
 import { lstat as lstat2, readFile as readFile2, realpath as realpath2 } from "node:fs/promises";
 
+// ../git-status-filters.js
+function gitStatusFilterOverrides(keys) {
+  const drivers = new Set;
+  for (const key of keys.split("\x00")) {
+    if (key.includes("="))
+      return null;
+    if (!key.startsWith("filter."))
+      continue;
+    const driver = /^filter\.([A-Za-z0-9_.-]+)\.(?:clean|process|smudge|required)$/.exec(key)?.[1];
+    if (!driver)
+      return null;
+    drivers.add(driver);
+  }
+  return [...drivers].flatMap((driver) => [
+    "-c",
+    `filter.${driver}.clean=`,
+    "-c",
+    `filter.${driver}.process=`,
+    "-c",
+    `filter.${driver}.required=false`
+  ]);
+}
+
 // ../scripts/git-argv.js
 function gitArgv(...args) {
   return ["git", "--no-optional-locks", "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", ...args];
@@ -346,7 +369,9 @@ async function checkoutFact(config, host, project, thread, worktrees, receipt) {
   if (keys === null || index === null || index.split("\x00").some((entry) => entry.startsWith("160000 "))) {
     return "worktree-status";
   }
-  const overrides = keys.split("\x00").filter((key) => /^filter\..*\.(clean|process)$/.test(key)).flatMap((key) => ["-c", key + "=", "-c", key.replace(/\.(clean|process)$/, ".required") + "=false"]);
+  const overrides = gitStatusFilterOverrides(keys);
+  if (!overrides)
+    return "worktree-status";
   const dirt = await git(config, host, dir, [...overrides, "status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignored"]);
   if (dirt === null)
     return "worktree-status";

@@ -5,6 +5,8 @@ import { main, summarizePillars } from '../../skills/axstack/scripts/readiness.j
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`;
 const root = makeTempDir(`${process.env.TMPDIR ?? '/tmp'}/readiness-`);
+const gitConfigEnv = { GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: `${root}/empty.gitconfig` };
+writeFileSync(gitConfigEnv.GIT_CONFIG_GLOBAL, '', { flag: 'wx', mode: 0o600 });
 const fakeGh = `${root}/gh`;
 writeFileSync(fakeGh, `#!/usr/bin/env bun
 import { appendFileSync } from 'node:fs';
@@ -17,7 +19,7 @@ console.log(response.raw ?? pages.map((page) => JSON.stringify(page)).join('\\n'
 `, { mode: 0o700 });
 
 function command(cwd, argv) {
-  const result = Bun.spawnSync(argv, { cwd, stdout: 'pipe', stderr: 'pipe' });
+  const result = Bun.spawnSync(argv, { cwd, env: { ...process.env, ...gitConfigEnv }, stdout: 'pipe', stderr: 'pipe' });
   if (result.exitCode) throw new Error(result.stderr.toString());
   return result.stdout.toString().trim();
 }
@@ -44,7 +46,7 @@ function assess(repo, extra = [], options = {}) {
     env: { ...process.env, GH: fakeGh, ...options.env }, stdout: 'pipe', stderr: 'pipe',
   });
   const output = result.stdout.toString();
-  return { code: result.exitCode, error: result.stderr.toString(), report: output ? JSON.parse(readFileSync(out, 'utf8')) : null, out };
+  return { code: result.exitCode, error: result.stderr.toString(), report: output ? JSON.parse(readFileSync(out, 'utf8')) : null, out, output };
 }
 function criterion(report, id) {
   return report.criteria.find((item) => item.id === id);
@@ -598,6 +600,61 @@ console.log(await Bun.stdin.text());
   expect(result.report.header.dirty).toBe(true);
   expect(() => readFileSync(marker)).toThrow();
   expect(manifest(repo)).toEqual(before);
+});
+
+function assessWithGitTrace(repo, keys, extra = []) {
+  for (const key of keys) git(repo, 'config', '--local', key, '');
+  const shim = mkdtempSync(`${root}/status-git-`);
+  const log = `${shim}/calls`;
+  writeFileSync(log, '');
+  writeFileSync(`${shim}/.gitconfig`, '[filter "lfs"]\n  clean =\n  process =\n  required = true\n', { mode: 0o600 });
+  // Readiness scrubs inherited GIT_* variables. Apply isolation when the shim starts Git.
+  writeFileSync(`${shim}/git`, `#!/usr/bin/env bun
+import { appendFileSync } from 'node:fs';
+const args = process.argv.slice(2);
+appendFileSync(${JSON.stringify(log)}, JSON.stringify(args) + '\\n');
+if (args.includes('status')) process.exit(0);
+if (args.includes('clone')) process.exit(1);
+const result = Bun.spawnSync([${JSON.stringify(Bun.which('git'))}, ...args], {
+  env: { ...process.env, ...${JSON.stringify(gitConfigEnv)} }, stdin: 'inherit', stdout: 'inherit', stderr: 'inherit',
+});
+process.exit(result.exitCode);
+`, { mode: 0o700 });
+  const result = assess(repo, extra, { env: { HOME: shim, PATH: `${shim}:${process.env.PATH}` } });
+  return { result, calls: readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line)) };
+}
+
+test.each([
+  ['an equals sign in a filter driver', 'filter.x=y.clean'],
+  ['an equals sign in another Git key', 'remote.x=y.url'],
+  ['whitespace in a filter driver', 'filter.x y.process'],
+  ['an unsupported filter setting', 'filter.fixture.other'],
+])('readiness holds before status for %s', (_label, key) => {
+  const { result, calls } = assessWithGitTrace(fixture(complete), [key], ['--run']);
+  expect(calls.some((args) => args.includes('status'))).toBe(false);
+  expect(calls.some((args) => args.includes('clone'))).toBe(false);
+  expect(result.code, result.error).toBe(2);
+  expect(result.report.header.dirty).toBeNull();
+  const term = {
+    id: 'worktree-status', status: 'unknown',
+    reason: 'unsafe Git config key', evidence: ['git config --null --name-only --list'],
+  };
+  expect(result.report.header.worktreeStatus).toEqual(term);
+  expect(JSON.parse(result.output).worktreeStatus).toEqual(term);
+});
+
+test('readiness uses one override set per validated filter driver', () => {
+  const { result, calls } = assessWithGitTrace(fixture(complete), [
+    'filter.Fixture_1.dev-test.clean', 'filter.Fixture_1.dev-test.process',
+    'filter.Fixture_1.dev-test.smudge', 'filter.Fixture_1.dev-test.required',
+  ]);
+  expect(result.code, result.error).toBe(0);
+  expect(result.report.header.dirty).toBe(false);
+  const statusCall = calls.find((args) => args.includes('status'));
+  expect(statusCall?.filter((_, index, args) => args[index - 1] === '-c')).toEqual([
+    'core.hooksPath=/dev/null', 'core.fsmonitor=false',
+    'filter.Fixture_1.dev-test.clean=', 'filter.Fixture_1.dev-test.process=', 'filter.Fixture_1.dev-test.required=false',
+  ]);
 });
 
 test('committed text reads are batched and binary files cannot declare prose commands', () => {
