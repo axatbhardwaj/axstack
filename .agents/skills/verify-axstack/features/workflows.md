@@ -55,9 +55,9 @@ For the Review manager shadow, also run `bun run test tests/workflows/review-man
 tests/workflows/review-manager-runtime.test.js tests/workflows/review-manager-native.test.js
 tests/workflows/native-bundle.test.js`. Use the isolated T3 0.1.12 binary for the
 native test and both CI Bun versions for bundle parity. The native test verifies
-import, a shadow wake and a duplicate hold. Replay checks the dedicated report
-prompt, approval-required mode, empty writes receipt and two-hour wedge
-boundary. Adapter fixtures check the quiet-helper environment and the search row
+import, a shadow wake, a typed report, the next slot and a duplicate hold.
+Both modes complete with zero agent steps. Replay checks the report's fact
+projection and the two-hour wedge boundary. Adapter fixtures check the quiet-helper environment and the search row
 cap. The archived inputs exercise quiet and wake decisions with known and
 unknown coverage. Live project and
 descendant coverage, a matching live shadow tick and the D3 handoff remain
