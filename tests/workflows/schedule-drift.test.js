@@ -181,7 +181,7 @@ for (const [label, change, id, expected] of [
   ['stale next slot', (data) => { data.export.journal.triggers[0].nextAt = '2026-11-15T22:00:00Z'; }, 'cadence', 'fail'],
   ['unknown trigger inventory', (data) => { data.export.journal.complete = false; }, 'cadence', 'unknown'],
   ['disabled predecessor during shadow', (data) => { data.export.tasks[0].enabled = false; }, 'predecessor', 'fail'],
-  ['unproved cutover', (data) => { activate(data, 'active'); }, 'cutover', 'unknown'],
+  ['unproved cutover with the native declaration still enabled', (data) => { activate(data, 'active'); }, 'cutover', 'fail'],
 ]) {
   test('Review manager workflow drift checks ' + label, () => {
     const { report } = run((data) => { activate(data); change(data); });
@@ -208,24 +208,29 @@ function activeActivation(data) {
   data.export.registry.workflows[0].version = 2;
   data.export.manifest = { version: 1, workflows: { [reviewWorkflow + '@2']: { bindingDigest: digest } } };
   const tick = { runId: 'fixture-active-slot', workflow: reviewWorkflow, version: 2, parentRunId: null,
-    scheduledAt: at, idempotencyKey: `trigger:${triggerId}:${at}`, status: 'completed', startedAt: at, endedAt: at };
+    scheduledAt: at, idempotencyKey: `trigger:${triggerId}:${at}`, status: 'running',
+    startedAt: '2026-11-15T23:59:31.000Z', endedAt: null };
   data.export.journal.runs = [tick];
-  data.export.reviewManagerTick = { run: { runId: tick.runId, status: tick.status, startedAt: at, endedAt: at,
-    result: { mode: 'active', decision: 'managed', receipt: { threadId: 'thread-id', runId: 'run-id', outcome: 'full' } } } };
 }
 
 for (const [label, mutate, fact, expected] of [
-  ['completed native slot', () => {}, 'cutover', 'pass'],
+  ['recent workflow tick while the two-hour manager is still in flight', () => {}, 'cutover', 'pass'],
   ['registered active version', () => {}, 'registry', 'pass'],
   ['scheduled trigger', () => {}, 'cadence', 'pass'],
   ['retired predecessor', () => {}, 'predecessor', 'pass'],
   ['matching opt-in digest', () => {}, 'binding', 'pass'],
   ['different opt-in digest', (data) => { data.bindings.schedules[0].workflow.bindingDigest = 'b'.repeat(64); }, 'binding', 'fail'],
-  ['missing return receipt', (data) => { delete data.export.reviewManagerTick.run.result.receipt; }, 'cutover', 'fail'],
   ['manual tick', (data) => { data.export.journal.runs[0].idempotencyKey = 'manual-key'; }, 'cutover', 'fail'],
   ['still enabled predecessor', (data) => { data.export.tasks[0].enabled = true; }, 'predecessor', 'fail'],
-  ['old shadow result', (data) => { delete data.export.reviewManagerTick.run.result.mode; }, 'cutover', 'fail'],
-  ['missing tick', (data) => { delete data.export.reviewManagerTick; }, 'cutover', 'unknown'],
+  ['both wake sources active', (data) => { data.export.tasks[0].enabled = true; }, 'cutover', 'fail'],
+  ['neither wake source active', (data) => { data.export.journal.runs = []; }, 'cutover', 'fail'],
+  ['recent tick from a removed workflow', (data) => { data.export.registry.workflows = []; }, 'cutover', 'fail'],
+  ['earlier than the last interval', (data) => {
+    const tick = data.export.journal.runs[0];
+    tick.scheduledAt = '2026-11-15T23:29:59.999Z';
+    tick.idempotencyKey = `trigger:${reviewWorkflow}/every:1800000:${tick.scheduledAt}`;
+  }, 'cutover', 'fail'],
+  ['missing tick inventory', (data) => { delete data.export.journal.runs; }, 'cutover', 'unknown'],
 ]) {
   test('active activation checks ' + label, () => {
     const { report } = run((data) => { activeActivation(data); mutate(data); });
