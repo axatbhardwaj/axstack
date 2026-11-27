@@ -201,7 +201,6 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
 
 test('workflow report preserves the native manager lane during unknown project coverage', () => {
   const text = compact('skills/axstack/references/automations.md');
-  const prompt = compact('skills/axstack/references/review-manager-prompt.md').split('## Workflow report')[1];
   const lane = [/native schedule/i, /keeps ownership|remains the owner/i, /project and descendant coverage is unknown|unknown project and descendant coverage/i];
   checkRule(text, (prose) => requires(prose, ...lane),
     'With unknown project and descendant coverage, the native schedule remains the owner.',
@@ -211,6 +210,44 @@ test('workflow report preserves the native manager lane during unknown project c
   checkRule(text, (prose) => prohibits(prose, denial, ...slot),
     'Idle flagged threads cannot block the next slot.',
     [[denial, 'always block']], slot);
-  expect(requires(prompt, /read-only/i)).toBe(true);
-  expect(requires(prompt, /t3_submit_output/i, /runId/, /sourceSha/, /threadId/)).toBe(true);
+});
+
+test('workflow report has a dedicated read-only prompt and preserves existing owners', async () => {
+  const file = Bun.file(`${root}/skills/axstack/references/review-manager-report.md`);
+  const prompt = await file.exists() ? await file.text() : '';
+  const readOnly = /(?:keep|use|restrict|limit)[^.]*read-only/i;
+  checkRule(prompt, (value) => requires(value, readOnly, /report/i),
+    'Use read-only operations for the report.',
+    [[readOnly, 'Use write-enabled operations']], [/read-only/i, /report/i]);
+  const leave = /leave|reserve/i;
+  const scope = [/PRs|pull requests/i, /threads/i, /schedules/i, /files/i, /store/i, /(?:remote )?hosts/i, /(?:existing|current) owners/i];
+  checkRule(prompt, (value) => requires(value, leave, ...scope),
+    'Reserve pull requests, threads, schedules, files, store state and hosts for their current owners.',
+    [[leave, 'take over']], [leave, ...scope]);
+  expect(requires(prompt, /t3_submit_output/i, /runId/, /sourceSha/, /threadId/, /writes/)).toBe(true);
+  expect(prompt).not.toMatch(/sandbox reap|progress\.md|dispatch.*review/i);
+});
+
+test('workflow shadow documents continuity freshness and the native reap boundary', () => {
+  const prose = compact('skills/axstack/references/automations.md').split('### Workflow shadow')[1].split('## Session admission')[0];
+  const once = [/imports?|loads?/i, /continuity/i, /(?:exactly )?once|a single time/i];
+  checkRule(prose, (value) => requires(value, ...once),
+    'The workflow loads continuity a single time when it starts.',
+    [[once[2], 'every tick']], once);
+  const age = [/full-pass-age/i, /fails?|becomes stale/i, /(?:4|four) hours/i, /wakes?/i];
+  checkRule(prose, (value) => requires(value, ...age),
+    'The full-pass-age fact becomes stale within four hours and wakes the manager.',
+    [[age[1], 'passes forever']], age);
+  const wake = [/missing|absent/i, /stale|expired/i, /failed|unsuccessful/i, /reap/i, /wakes?|wake reason/i];
+  checkRule(prose, (value) => requires(value, ...wake),
+    'A reap result wakes the manager if absent, expired or unsuccessful.',
+    [[wake[4], 'quiet reason']], wake);
+  const ownership = [/native (?:schedule|manager)/i, /owns?|retains?/i, /live reap/i, /reviewer admission/i];
+  checkRule(prose, (value) => requires(value, ...ownership),
+    'The native manager retains live reap and reviewer admission.',
+    [[ownership[1], 'cedes']], ownership);
+  const producer = [/reap receipt/i, /producer/i, /cutover/i, /requires?|depends on/i];
+  checkRule(prose, (value) => requires(value, ...producer),
+    'Cutover depends on an established producer for the reap receipt.',
+    [[producer[3], 'can proceed without']], producer);
 });
