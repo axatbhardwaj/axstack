@@ -19,7 +19,7 @@ async function fixture(work, overrides = {}) {
   try {
     const config = {
       mode: 'shadow', project: scratch + '/project', projectId,
-      projects: [scratch + '/project'], repositories: [repo], repository: repo,
+      projects: [scratch + '/project', ...(overrides.extraProjects ?? [])], repositories: [repo], repository: repo,
       bun: process.execPath, t3: scratch + '/t3', roles: scratch + '/roles.json',
       registryTokenFile: scratch + '/token', progressCopy: scratch + '/predecessor.md',
       reapReceipt: scratch + '/reap.json',
@@ -58,7 +58,7 @@ async function fixture(work, overrides = {}) {
       '*"pulls?"*"page=2") exit 4;;\n' +
       '*"pulls?"*) ' + pages + '\n' + print([pr]) + ';;\n' +
       '*"--review-requested"*) ' + print([]) + ';;\n' +
-      '*"--involves"*) ' + print([candidate]) + ';;\nesac\n');
+      '*"--involves"*) ' + print(overrides.emptySearch ? [] : [candidate]) + ';;\nesac\n');
     process.env.PATH = scratch + ':' + originalPath;
     process.env[marker] = 'synthetic-marker';
     await work(reviewRuntime(scratch), config);
@@ -93,11 +93,11 @@ test('SAFE-6 reads per-repository pages and retains only eligible IDs', () => fi
 
 test('a lost second repository page leaves discovery unknown', () => fixture(async (runtime, config) => {
   expect(await runtime.discover(config)).toMatchObject({ status: 'unknown' });
-}, { next: true }));
+}, { next: true, emptySearch: true }));
 
 test('unsafe binding arguments never reach a native command', () => fixture(async (runtime) => {
   expect(await runtime.binding()).toBeNull();
-}, { config: { projects: ['/fixture/space and quote'] } }));
+}, { extraProjects: ['/fixture/space and quote'] }));
 
 test('sandbox receipt from the previous interval is usable and future/stale receipts wake', async () => {
   const previous = new Date(Date.parse(stamp) - 1_800_000).toISOString();
