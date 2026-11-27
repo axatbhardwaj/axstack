@@ -36,6 +36,12 @@ Preserve the activation record and schedule through Close-out.
 Each scheduled pass reports in its own T3 thread under the read-only prompt.
 Source checks do not prove live schedule delivery or report coverage.
 
+## Owner watch timers
+
+On eligible hosts, the owning driver starts the
+[on-demand backstop workflow](../../axstack-watch/references/workflow-backstops.md)
+after local opt-in, shadow, and cutover. Native PR events continue separately.
+
 ## Topology and schedules
 
 The T3 project `axstack-review-lane` uses the VPS's existing

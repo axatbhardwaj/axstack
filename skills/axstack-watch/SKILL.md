@@ -119,7 +119,7 @@ load. When the watch needs a new owner or automated observation, first read
 anything. Task-owned observations use their recorded wakes and expiry.
 Outside parked holds, for own open PRs in chat-run mode, use the 60-minute backstop cadence under
 [Chat-run watch runtime](references/watch-runtime.md#chat-run-watch);
-the bound T3 schedule resumes the original driver thread. One read-only PR observation needs
+the selected T3 timer resumes the original driver thread. One read-only PR observation needs
 neither. Start no automation for a read-only check.
 
 For standalone adoption, materialize `axstack-owner` only when no live owner

@@ -89,6 +89,10 @@ progress. Preserve an unknown status when that evidence is unavailable.
 Bind `axstack-release-reinstall@2` as on-demand on axat-vps. The watchdog
 observes invoked runs. The release driver keeps its own bound one-shot check.
 See [release reinstall](host-operations.md#release-reinstall).
+Bind `axstack-watch-backstops@1` as on-demand on io, iobox, iosatellite and
+axat-vps after local opt-in. Use `progressTimeoutMs: 14400000` and report any
+active agent step with the owner-thread evidence. Do not bind a due-slot
+trigger. See [owner watch backstops](../skills/axstack-watch/references/workflow-backstops.md).
 
 Use `"kind": "scheduled"` with `intervalMs`, `firstDueAt`, and the exact native
 `triggerId` for a scheduled definition. Keep the historical activation time

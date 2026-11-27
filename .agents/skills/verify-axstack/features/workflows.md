@@ -20,6 +20,22 @@ calls, the Dependabot owner binding, and the installed local dispatch rule.
 Removal and inversion controls reject policy regressions. Equivalent wording
 passes. Live workflow execution requires separate runtime evidence.
 
+## Owner watch backstops
+
+After Launch and Doctor, run `bun run test tests/workflows/watch-backstops-native.test.js
+tests/workflows/watch-backstops-prose.test.js tests/workflows/native-bundle.test.js
+tests/installer/workflow-packed.test.js`.
+Replay the bundled entry with the T3 CLI/projection fixtures. Verify continued
+cadence after a T3 resend, catch-up after an outage, wake gaps, and guarded
+pauses. Readback cases check the run and slot claim, owner thread, creator,
+and message source. Prose probes check cadence and the owner instructions
+for the turn-end check, cause resolution before resume and state readback,
+terminal re-arm with an active cause, native fallback after failed recovery,
+and one delivery per slot. Repeat the bundle check with Bun 1.3.14 and 1.4.2.
+The packed loader uses an isolated T3 base. Host-local activation,
+concurrent native delivery after the final snapshot, and the live rollback
+drill require separate evidence.
+
 ## Peer sandbox adoption
 
 After Launch and Doctor, run `bun run test tests/workflows/sandbox-adoption.test.js

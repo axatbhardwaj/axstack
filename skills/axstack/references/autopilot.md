@@ -100,8 +100,10 @@ Explicit user stop-after-publication and observation-only requests prevail.
 Never require a manual `axstack-watch` invocation.
 The driver remains the single owner and sole run-record writer.
 Never create a per-PR session or an ownership hand-off.
-Read the [T3 runtime boundary](t3-runtime.md) and use its bound
-`schedule_task` wake (`everyMs:3600000`), recording the scheduledTaskId.
+Read the [T3 runtime boundary](t3-runtime.md). After local opt-in and verified
+cutover, use the [owner backstop workflow](../../axstack-watch/references/workflow-backstops.md)
+and record its run ID. For native fallback, use the bound `schedule_task`
+wake (`everyMs:3600000`), recording the scheduledTaskId.
 Follow [Native PR links and watches](t3-runtime.md#native-pr-links-and-watches)
 alongside that bound schedule.
 Apply [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
@@ -124,7 +126,7 @@ Keep its decision hold until the user resolves scope or cancels.
 For a required PR closed without merging, apply parking eligibility.
 The chat-run watch never expires or waits for re-authorization while PRs remain open.
 Follow [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch)
-for quiet cadence and native schedule re-arming.
+for quiet cadence and re-arming the selected timer.
 Run Close-out after the watch ends, subject to its existing acceptance conditions.
 
 ## Release and install, when applicable
