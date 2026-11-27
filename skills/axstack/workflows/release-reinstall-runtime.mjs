@@ -5,7 +5,7 @@ import { bindingMatches } from './binding.mjs';
 import hostScript from './release-reinstall-host.sh' with { type: 'text' };
 
 export const NAME = 'axstack-release-reinstall';
-export const VERSION = 1;
+export const VERSION = 2;
 export const IDENTITY = NAME + '@' + VERSION;
 const routes = { io: 'xzat@io', iobook: 'iobook', iobox: 'xzat@iobox', iosatellite: 'xzat@iosatellite', 'axat-vps': 'local' };
 export const hosts = Object.keys(routes);
