@@ -1,11 +1,10 @@
 import { expect, test } from 'bun:test';
+import { projectQuietFacts } from '../../skills/axstack/workflows/review-manager.mjs';
 
 const history = await Bun.file(import.meta.dir + '/fixtures/review-manager-predecessor.json').json();
 const id = '00000000-0000-4000-8000-000000000001';
 const other = '00000000-0000-4000-8000-000000000002';
-const manager = 'workflow:manager-fixture';
 const prefix = 'axstack-review-manager@1';
-const seat = { model: { instanceId: 'codex', model: 'gpt-6.2-sol', options: [{ id: 'reasoningEffort', value: 'high' }] }, runtimeMode: 'full-access' };
 const hash = (value) => new Bun.CryptoHasher('sha256').update(value).digest('hex');
 
 const effect = (run) => ({ run, *[Symbol.iterator]() { return yield run; } });
@@ -41,7 +40,10 @@ async function replay(options = {}) {
   if (options.full) fixture.progress = fixture.progress.replace(/^- Last full pass: .+$/m, '- Last full pass: 2026-11-26T18:21:02Z');
 
   Object.assign(globalThis, {
-    Schema: { Json: {}, String: {}, Struct: (shape) => shape, Literal: (value) => value, Array: (item) => [item] },
+    Schema: {
+      Json: {}, String: {}, Number: {}, Boolean: {}, Struct: (shape) => shape, Literals: (values) => values,
+      Array: (item) => [item], optional: (item) => item, NullOr: (item) => item,
+    },
     Option: { isSome: (option) => option.value !== undefined },
     Effect: { gen, fail: (error) => effect(() => { throw error; }), tryPromise: ({ try: work, catch: map }) => effect(async () => {
       try { return await work(); } catch (error) { throw map(error); }
@@ -51,7 +53,6 @@ async function replay(options = {}) {
       runs: () => effect(() => options.active ? [{ id: other, status: 'waiting' }] : []),
       step: (name, _schema, work) => effect(async () => {
         steps.push(name);
-        if (name === options.supersedeAt) values.set(prefix + ':latest-slot', { runId: other, scheduledAt });
         if (name === 'read-continuity' && options.corruptContinuity) {
           values.set(prefix + ':continuity', { progress: fixture.progress, sourceSha: 'invalid' });
         }
@@ -70,18 +71,7 @@ async function replay(options = {}) {
           }),
         }),
       },
-      agent: { try: (_name, settings) => effect(() => {
-        agents.push(settings);
-        return {
-          outcome: options.missing || options.wrongOutcome ? 'held' : 'done', thread: { threadId: manager },
-          value: options.missing ? null : {
-            kind: options.wrongKind ? 'OTHER' : 'AXSTACK-REVIEW-MANAGER', runId: options.invalid ? other : options.runId ?? id,
-            sourceSha: options.staleReceipt ? '0'.repeat(64) : hash(fixture.progress),
-            threadId: options.wrongThread ? 'workflow:other' : manager,
-            ...(!options.missingWrites && { writes: options.writes === undefined ? [] : options.writes }),
-          },
-        };
-      }) },
+      agent: { try: (name) => effect(() => { agents.push(name); }) },
     },
   });
 
@@ -114,12 +104,9 @@ async function replay(options = {}) {
         if (options.reap || options.noDocker || options.noReap) report.terms.find(({ id }) => id === 'reap').status = 'pass';
         if (options.quietUnknown) report.terms.find(({ id }) => id === 'prior-pass').status = 'unknown';
         if (options.quietDuplicate) report.terms[0] = report.terms[1];
-        return report;
+        return projectQuietFacts(report);
       } finally { await tmp.rm(dir, { recursive: true }); }
     },
-    resolveSeat: async () => options.noSeat ? null : seat,
-    sameBinding: async () => !options.bindingChanged,
-    verifySeat: async () => !options.mismatch,
   });
   const result = await entry.body({ scheduledAt: options.scheduledAt ?? scheduledAt }, { id: options.runId ?? id }).run()
     .catch((error) => ({ decision: 'paused', step: error.step, detail: error.message }));
@@ -127,8 +114,8 @@ async function replay(options = {}) {
 }
 
 test('predecessor quiet observation skips one manager and uses the pre-identity copy', async () => {
-  const run = await replay();
-  expect(run.result).toMatchObject({ decision: 'quiet', reasons: [] });
+  const run = await replay({ shadow: true });
+  expect(run.result).toEqual({ decision: 'quiet', reasons: [] });
   expect(run.trigger).toEqual(['30 minutes']);
   expect(run.agents).toHaveLength(0);
   expect(run.calls).toContainEqual(['helper-input', run.fixture.progress]);
@@ -152,14 +139,10 @@ for (const [label, input, reason] of [
   ['duplicated quiet fact', { quietDuplicate: true }, 'observations:unknown'],
   ['stale observation', { scheduledAt: '2026-11-26T23:00:00Z' }, 'slot-observation:unknown'],
 ]) {
-  test(label + ' wakes exactly one report manager with IDs only', async () => {
+  test(label + ' is reported without an agent', async () => {
     const { result, agents } = await replay(input);
     expect(result).toMatchObject({ decision: 'reported', reasons: expect.arrayContaining([reason]) });
-    expect(agents).toHaveLength(1);
-    expect(agents[0]).toMatchObject({ model: seat.model, runtimeMode: 'approval-required' });
-    expect(agents[0].brief.split('\n')[0]).toBe(`AXSTACK-WAKE ${prefix} run ${id}`);
-    expect(agents[0].brief.match(/[\w.-]+\.md/g)).toEqual(['review-manager-report.md']);
-    expect(agents[0].brief).not.toMatch(/INJECTED|bad title|Open holds|one reply/i);
+    expect(agents).toEqual([]);
   });
 }
 
@@ -178,7 +161,7 @@ test('run labels distinguish the saved reap receipt from an execution step', asy
 
 test('shadow records the wake decision without starting a manager', async () => {
   const { result, agents } = await replay({ shadow: true, coverage: 'unknown' });
-  expect(result).toMatchObject({ decision: 'shadow-wake', reasons: ['project-coverage:unknown'] });
+  expect(result).toEqual({ decision: 'shadow-wake', reasons: ['project-coverage:unknown'] });
   expect(agents).toHaveLength(0);
 });
 
@@ -193,32 +176,17 @@ test('an import keeps exact ownership, holds and watermarks and is idempotent ac
   expect(second.values.get(prefix + ':continuity')).toEqual(stored);
 });
 
-for (const [label, input, step, agentCount] of [
-  ['binding mismatch', { changed: true, mismatch: true }, 'verify-manager-binding', 1],
-  ['missing receipt', { changed: true, missing: true }, 'verify-manager-receipt', 1],
-  ['wrong run in receipt', { changed: true, invalid: true }, 'verify-manager-receipt', 1],
-  ['stale digest in receipt', { changed: true, staleReceipt: true }, 'verify-manager-receipt', 1],
-  ['wrong thread in receipt', { changed: true, wrongThread: true }, 'verify-manager-receipt', 1],
-  ['receipt missing writes', { changed: true, missingWrites: true }, 'verify-manager-receipt', 1],
-  ['receipt with declared writes', { changed: true, writes: ['store'] }, 'verify-manager-receipt', 1],
-  ['receipt with invalid writes', { changed: true, writes: null }, 'verify-manager-receipt', 1],
-  ['wrong receipt kind', { changed: true, wrongKind: true }, 'verify-manager-receipt', 1],
-  ['held outcome with receipt', { changed: true, wrongOutcome: true }, 'verify-manager-receipt', 1],
-  ['superseded before the wake', { changed: true, supersedeAt: 'read-wake-claim' }, 'require-wake-claim', 0],
-  ['superseded during the report', { changed: true, supersedeAt: 'record-report' }, 'verify-report-write', 1],
-  ['corrupt stored continuity', { corruptContinuity: true }, 'verify-continuity', 0],
-  ['another active slot', { active: true }, 'claim-slot', 0],
-  ['unauthorized active binding', { mode: 'active' }, 'binding', 0],
-  ['malformed continuity ownership', { badOwnership: true }, 'read-predecessor-copy', 0],
-  ['catalog seat unavailable', { changed: true, noSeat: true }, 'resolve-manager-binding', 0],
-  ['binding changed during observation', { changed: true, bindingChanged: true }, 'verify-binding-unchanged', 0],
-  ['invalid workflow ID', { runId: 'untrusted ID with spaces' }, 'claim-slot', 0],
+for (const [label, input, step] of [
+  ['corrupt stored continuity', { corruptContinuity: true }, 'verify-continuity'],
+  ['another active slot', { active: true }, 'claim-slot'],
+  ['unauthorized active binding', { mode: 'active' }, 'binding'],
+  ['malformed continuity ownership', { badOwnership: true }, 'read-predecessor-copy'],
+  ['invalid workflow ID', { runId: 'untrusted ID with spaces' }, 'claim-slot'],
 ]) {
   test(label + ' pauses in the owning step', async () => {
-    const { result, agents, values } = await replay(input);
+    const { result, agents } = await replay(input);
     expect(result).toMatchObject({ decision: 'paused', step });
-    expect(agents).toHaveLength(agentCount);
-    expect(values.has(prefix + ':last-report')).toBe(false);
+    expect(agents).toEqual([]);
   });
 }
 
@@ -228,4 +196,41 @@ test('duplicate slot claim pauses a different run before any agent', async () =>
   expect(result).toMatchObject({ decision: 'paused', step: 'claim-slot' });
   expect(agents).toEqual([]);
   expect(calls).toEqual([]);
+});
+
+test('report mode projects the archived observations and writes only the run result', async () => {
+  const { result, agents, values, fixture } = await replay({ changed: true, flagged: true, coverage: 'unknown' });
+  expect(agents).toEqual([]);
+  expect([...values.keys()].sort()).toEqual([prefix + ':continuity', prefix + ':latest-slot']);
+  expect(result).toMatchObject({
+    decision: 'reported',
+    reasons: expect.arrayContaining(['pr-list:fail', 'project-coverage:unknown', 'flagged-reply']),
+    report: {
+      runId: id,
+      observedAt: fixture.input.observedAt,
+      coverage: { projects: 'unknown', discovery: 'pass' },
+      continuity: { sourceSha: hash(fixture.progress), prior: fixture.input.prior.thread.threadId },
+      holds: { count: 1, flagged: [{ threadId: fixture.flaggedId, status: 'reply' }] },
+      reap: { status: 'pass', exitCode: 0, dockerAvailable: true },
+      prs: [fixture.pr],
+    },
+  });
+  expect(result.report.terms).toHaveLength(12);
+  expect(result.report.terms).toContainEqual({ id: 'pr-list', status: 'fail' });
+  expect(result.report.terms).toContainEqual({ id: 'continuity', status: 'pass' });
+  expect(JSON.stringify(result.report)).not.toMatch(/INJECTED|Open holds|one reply/i);
+});
+
+test('a quiet report includes archived facts without starting an agent', async () => {
+  const { result, agents } = await replay();
+  expect(agents).toEqual([]);
+  expect(result).toMatchObject({ decision: 'quiet', reasons: [], report: { holds: { count: 0 } } });
+  expect(result.report.terms.every((term) => term.status === 'pass')).toBe(true);
+});
+
+test('a report retains unknown facts and the absence of a reap receipt', async () => {
+  const { result } = await replay({ noReap: true, quietMissing: true, coverage: 'unknown' });
+  expect(result).toMatchObject({ decision: 'reported', report: {
+    terms: [], holds: { count: null }, reap: { status: 'unknown', exitCode: null, dockerAvailable: null },
+  } });
 });
