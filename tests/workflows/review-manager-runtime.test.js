@@ -38,7 +38,7 @@ async function fixture(work, overrides = {}) {
     await mkdir(config.project, { mode: 0o700 });
     await writeFile(binding, bytes, { mode: 0o600 });
     await writeFile(scratch + '/.axstack-workflows.json', JSON.stringify({ workflows: {
-      [identity]: { binding, bindingDigest: hash(bytes) },
+      [identity]: { binding, bindingDigest: overrides.drift ? '0'.repeat(64) : hash(bytes) },
     } }), { mode: 0o600 });
     await writeFile(config.progressCopy, quiet.progress, { mode: 0o600 });
     await writeFile(config.reapReceipt, JSON.stringify({ version: 2, observedAt: overrides.receiptTime ?? stamp, terms: [
@@ -98,6 +98,10 @@ test('a lost second repository page leaves discovery unknown', () => fixture(asy
 test('unsafe binding arguments never reach a native command', () => fixture(async (runtime) => {
   expect(await runtime.binding()).toBeNull();
 }, { extraProjects: ['/fixture/space and quote'] }));
+
+test('a changed private binding digest holds before native reads', () => fixture(async (runtime) => {
+  expect(await runtime.binding()).toBeNull();
+}, { drift: true }));
 
 test('sandbox receipt from the previous interval is usable and future/stale receipts wake', async () => {
   const previous = new Date(Date.parse(stamp) - 1_800_000).toISOString();
