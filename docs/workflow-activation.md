@@ -87,6 +87,59 @@ Repeat the observation to verify that the registry no longer lists the version
 and check that it has no active runs. If a report is needed after deactivation,
 use the [native schedule fallback](../skills/axstack/references/automations.md#native-schedule-fallback).
 
+## Review manager
+
+On axat-vps, save the native Review manager task ID, prompt, exact model
+selection, workspace binding and enabled state for rollback. The active workflow
+uses the existing manager prose and the same manager-owned `progress.md`.
+Use the native continuity path as `progressCopy`. Workflow reads happen before
+the new pass writes its identity.
+
+1. Drain version 1 shadow or report runs and remove that definition with
+   `axstack workflow remove --name axstack-review-manager --version 1 --yes`.
+   Verify its registry removal. Keep the native schedule enabled.
+2. Create a fresh private binding for version 2 with the [observational binding](../skills/axstack/references/automations.md#workflow-shadow)
+   fields except `reapReceipt`. Set `mode` to `active`. Use the canonical
+   registered clone path for `project` and its actual T3 ID for `projectId`.
+   Set `registryTokenFile` to a private local `orchestration:read` token file.
+   Set `worktreeRoot` to an owned canonical 0700 directory outside the clone.
+   Set `operationalLimits` to the native prompt's exact host limit text. Set
+   `nativeSeat` to the native pass's readback as
+   `{model:{instanceId,model,options},runtimeMode:"full-access"}`.
+   The installed `axstack-owner` role must resolve to that seat in the live catalog.
+3. Between native passes, opt in as shown below. Plan the first due slot so
+   the existing schedule has no pass running during the trial. Read back the
+   exact version, next trigger and workflow run. Observe one completed scheduled
+   tick and verify its effective seat, typed manager receipt and continuity
+   readback. If the trial pauses, diagnose it before continuing.
+4. Disable the native task by its saved ID. Verify disabled state and one
+   active trigger. Export the complete native task inventory, add `manifest`,
+   `registry` and `journal` from `axstack workflow observe`, and add the full
+   `t3 workflow show <run-id> --json` as `reviewManagerTick`. Declare
+   `enabled:false` and `workflow:{mode:"active",bindingDigest:SHA256}` on the
+   native prompt's drift row. Compute the digest over the current private
+   binding bytes. Run the installed `schedule-drift.js` comparison and keep
+   the registration, cadence, binding, cutover and predecessor facts.
+5. Bind the [scheduled watchdog policy](workflow-health.md#trigger-bindings)
+   using the observed first due time. Project coverage is unknown on T3
+   0.1.12, so the workflow wakes a pass every slot. The workflow's reap step
+   records the launcher result. Reap failure still wakes a pass.
+
+```sh
+axstack workflow opt-in --name axstack-review-manager --binding /absolute/private/review-manager-v2.json --conformance /absolute/private/receipt.json --yes
+```
+
+**Rollback drill.** In an isolated T3 base with disposable continuity, advance
+a test tick. Drain the workflow and remove it using the command below. Re-enable
+the original native timer with its saved binding. Read back the registry and
+task, then confirm one native pass reads the latest `progress.md` and remains
+the sole owner. Use the same order for rollback on axat-vps and retire the
+workflow watchdog entry after registry removal.
+
+```sh
+axstack workflow remove --name axstack-review-manager --version 2 --yes
+```
+
 ## Scheduled binding example
 
 For `axstack-dependabot-merge`, use a private binding such as
