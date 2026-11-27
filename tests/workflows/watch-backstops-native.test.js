@@ -79,6 +79,24 @@ test('two matching T3 messages without the exact slot claim cannot pass readback
   expect(replayed.readbacks).toEqual([]);
 });
 
+test('readback rejects a claim for a different run with the same slot number', () => {
+  const replayed = replay({ guard: 'readback-run-changed' });
+  expect(replayed.result).toMatchObject({ decision: 'paused', step: 'wake-readback-1',
+    reason: 'wake slot claim is unavailable or has another owner' });
+  expect(replayed.agents).toHaveLength(1);
+  expect(replayed.readbacks).toEqual([]);
+});
+
+for (const delivery of ['foreign-thread', 'agent-copy', 'non-server-copy']) {
+  test('readback rejects same-text delivery with ' + delivery, () => {
+    const replayed = replay({ delivery });
+    expect(replayed.result).toMatchObject({ decision: 'paused', step: 'wake-readback-1',
+      reason: 'wake delivery could not be read back' });
+    expect(replayed.agents).toHaveLength(1);
+    expect(replayed.readbacks).toEqual([]);
+  });
+}
+
 for (const [guard, gap] of [
   ['owner-status-unknown', 'native owner status is unknown'],
   ['owner-queue-gap', 'native owner run coverage is unavailable'],
