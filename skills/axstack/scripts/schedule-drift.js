@@ -98,7 +98,6 @@ function compare(args) {
       const bytes = readFileSync(`${args['--prompts']}/${file}`);
       packagedSha256 = sha256(bytes);
       expected = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
-      if (file === files[0]) expected = expected.split('\n## Workflow report\n')[0];
       expected = expected.replace(/\{\{(HOST_[A-Z_]+)\}\}/g, (_, key) => {
         if (!object(binding?.values) || typeof binding.values[key] !== 'string') throw new Error('unbound host token');
         return binding.values[key];
