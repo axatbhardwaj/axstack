@@ -1,7 +1,7 @@
 import { readSkillFile as readFileSync } from './skill-source.js';
 import { test, expect } from 'bun:test';
 import { publicDocPaths } from './public-docs.js';
-import { requires } from './prose-contract.js';
+import { checkRule, prohibits, requires } from './prose-contract.js';
 
 const root = import.meta.dir.slice(0, -'/tests/workflows'.length);
 const read = (path) => readFileSync(`${root}/${path}`, 'utf8');
@@ -197,4 +197,20 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
     expect(scenario.expected.length).toBeGreaterThan(1);
     expect(scenario.forbidden.length).toBeGreaterThan(1);
   }
+});
+
+test('workflow report preserves the native manager lane during unknown project coverage', () => {
+  const text = compact('skills/axstack/references/automations.md');
+  const prompt = compact('skills/axstack/references/review-manager-prompt.md').split('## Workflow report')[1];
+  const lane = [/native schedule/i, /keeps ownership|remains the owner/i, /project and descendant coverage is unknown|unknown project and descendant coverage/i];
+  checkRule(text, (prose) => requires(prose, ...lane),
+    'With unknown project and descendant coverage, the native schedule remains the owner.',
+    [[lane[1], 'switches ownership']], lane);
+  const denial = /never block|cannot block/i;
+  const slot = [/idle flagged threads/i, /slot/i];
+  checkRule(text, (prose) => prohibits(prose, denial, ...slot),
+    'Idle flagged threads cannot block the next slot.',
+    [[denial, 'always block']], slot);
+  expect(requires(prompt, /read-only/i)).toBe(true);
+  expect(requires(prompt, /t3_submit_output/i, /runId/, /sourceSha/, /threadId/)).toBe(true);
 });
