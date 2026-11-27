@@ -4,7 +4,14 @@ import { projectQuietFacts } from '../../skills/axstack/workflows/review-manager
 const history = await Bun.file(import.meta.dir + '/fixtures/review-manager-predecessor.json').json();
 const id = '00000000-0000-4000-8000-000000000001';
 const other = '00000000-0000-4000-8000-000000000002';
-const prefix = 'axstack-review-manager@1';
+const prefix = 'axstack-review-manager@2';
+const threadId = 'workflow:' + '8'.repeat(64);
+const managerRunId = 'run:thread:workflow%3A' + '8'.repeat(64) + ':ordinal:1';
+const seat = {
+  model: { instanceId: 'codex', model: 'gpt-6.2-sol', options: [{ id: 'reasoningEffort', value: 'high' }] },
+  runtimeMode: 'full-access',
+};
+const receipt = { threadId, runId: managerRunId, outcome: 'full' };
 const hash = (value) => new Bun.CryptoHasher('sha256').update(value).digest('hex');
 
 const effect = (run) => ({ run, *[Symbol.iterator]() { return yield run; } });
@@ -41,6 +48,7 @@ async function replay(options = {}) {
 
   Object.assign(globalThis, {
     Schema: {
+      Literal: (item) => item,
       Json: {}, String: {}, Number: {}, Boolean: {}, Struct: (shape) => shape, Literals: (values) => values,
       Array: (item) => [item], optional: (item) => item, NullOr: (item) => item,
     },
@@ -71,12 +79,17 @@ async function replay(options = {}) {
           }),
         }),
       },
-      agent: { try: (name) => effect(() => { agents.push(name); }) },
+      agent: { try: (name, config) => effect(() => {
+        agents.push({ name, config });
+        return { outcome: 'done', thread: { threadId }, value: options.receipt === undefined ? receipt : options.receipt };
+      }) },
     },
   });
 
   const entry = (await import('../../skills/axstack/workflows/review-manager-workflow.mjs')).reviewManager({
     binding: async () => bindings,
+    launch: async () => options.bindingMismatch ? null : { ...seat, project: '/fixture/project', worktree: '/fixture/checkout' },
+    verifyManager: async (_config, _expected, output) => !options.readbackMismatch && output.runId === managerRunId,
     importProgress: async () => { calls.push('import'); return fixture.progress; },
     reap: async () => options.noReap ? null : fixture.input.reap,
     discover: async () => ({
@@ -139,10 +152,13 @@ for (const [label, input, reason] of [
   ['duplicated quiet fact', { quietDuplicate: true }, 'observations:unknown'],
   ['stale observation', { scheduledAt: '2026-11-26T23:00:00Z' }, 'slot-observation:unknown'],
 ]) {
-  test(label + ' is reported without an agent', async () => {
+  test(label + ' reports a wake and starts a manager only in active mode', async () => {
     const { result, agents } = await replay(input);
     expect(result).toMatchObject({ decision: 'reported', reasons: expect.arrayContaining([reason]) });
     expect(agents).toEqual([]);
+    const active = await replay({ ...input, mode: 'active' });
+    expect(active.result).toMatchObject({ decision: 'managed', reasons: expect.arrayContaining([reason]), receipt });
+    expect(active.agents).toHaveLength(1);
   });
 }
 
@@ -179,7 +195,7 @@ test('an import keeps exact ownership, holds and watermarks and is idempotent ac
 for (const [label, input, step] of [
   ['corrupt stored continuity', { corruptContinuity: true }, 'verify-continuity'],
   ['another active slot', { active: true }, 'claim-slot'],
-  ['unauthorized active binding', { mode: 'active' }, 'binding'],
+  ['invalid binding mode', { mode: 'unverified' }, 'binding'],
   ['malformed continuity ownership', { badOwnership: true }, 'read-predecessor-copy'],
   ['invalid workflow ID', { runId: 'untrusted ID with spaces' }, 'claim-slot'],
 ]) {
@@ -233,4 +249,50 @@ test('a report retains unknown facts and the absence of a reap receipt', async (
   expect(result).toMatchObject({ decision: 'reported', report: {
     terms: [], holds: { count: null }, reap: { status: 'unknown', exitCode: null, dockerAvailable: null },
   } });
+});
+
+
+test('active all-pass tick skips the agent and keeps continuity out of the store', async () => {
+  const { result, agents, values, calls, fixture } = await replay({ mode: 'active' });
+  expect(result).toMatchObject({ decision: 'quiet', mode: 'active', reasons: [] });
+  expect(agents).toEqual([]);
+  expect([...values.keys()]).toEqual([prefix + ':latest-slot']);
+  expect(calls).toContainEqual(['helper-input', fixture.progress]);
+});
+
+for (const [facts, reason] of [[{ coverage: 'unknown' }, 'project-coverage:unknown'], [{ reap: true }, 'reap:fail']]) {
+  test('active ' + reason + ' starts one full-access manager with a typed receipt', async () => {
+    const { result, agents, steps } = await replay({ mode: 'active', ...facts });
+    expect(result).toMatchObject({ decision: 'managed', mode: 'active', reasons: [reason], receipt });
+    expect(steps).toContain('sandbox-reap');
+    expect(agents).toHaveLength(1);
+    const { config } = agents[0];
+    expect(config).toMatchObject({ ...seat, workspace: { type: 'existing_worktree', worktreePath: '/fixture/checkout' } });
+    expect(config.brief.split('\n')[0]).toBe(`AXSTACK-WAKE ${prefix} run ${id}`);
+    expect(config.brief).not.toMatch(/INJECTED|PRIVATE|fixture\/repo|fixture\/checkout/);
+    expect(config.returns).toMatchObject({ threadId: {}, runId: {}, outcome: ['quiet', 'full', 'held'] });
+  });
+}
+
+for (const [label, options, step, count] of [
+  ['pre-launch binding mismatch', { bindingMismatch: true }, 'manager-launch', 0],
+  ['effective binding mismatch', { readbackMismatch: true }, 'manager-readback', 1],
+  ['missing receipt', { receipt: null }, 'manager-readback', 1],
+  ['malformed receipt', { receipt: { ...receipt, threadId: 'another-thread' } }, 'manager-readback', 1],
+  ['held receipt', { receipt: { ...receipt, outcome: 'held' } }, 'manager-readback', 1],
+]) {
+  test('active ' + label + ' pauses', async () => {
+    const { result, agents } = await replay({ mode: 'active', coverage: 'unknown', ...options });
+    expect(result).toMatchObject({ decision: 'paused', step });
+    expect(agents).toHaveLength(count);
+  });
+}
+
+test('active duplicate slot pauses before starting a second manager', async () => {
+  const first = await replay({ mode: 'active', coverage: 'unknown' });
+  expect(first.agents).toHaveLength(1);
+  const { result, agents, calls } = await replay({ mode: 'active', values: first.values, runId: other });
+  expect(result).toMatchObject({ decision: 'paused', step: 'claim-slot' });
+  expect(agents).toEqual([]);
+  expect(calls).toEqual([]);
 });
