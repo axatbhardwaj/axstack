@@ -51,6 +51,15 @@ A live prompt containing an unfilled `{{HOST_` token must report `fail`, includi
 when a binding value reintroduces the token or a binding value is missing.
 Fixture and saved-export comparisons do not prove current live schedule delivery.
 
+For the Review manager shadow, also run `bun run test tests/workflows/review-manager-replay.test.js
+tests/workflows/review-manager-runtime.test.js tests/workflows/review-manager-native.test.js
+tests/workflows/native-bundle.test.js`. Use the isolated T3 0.1.12 binary for the
+native test and both CI Bun versions for bundle parity. The native test verifies
+import, a shadow wake and a duplicate hold. The archived inputs exercise the
+quiet and wake decisions with known and unknown coverage. Live project and
+descendant coverage, a matching live shadow tick and the D3 handoff remain
+separate evidence obligations.
+
 ## Parallel-first acceptance (Outcomes 1–6)
 
 The shared shipped contract is
