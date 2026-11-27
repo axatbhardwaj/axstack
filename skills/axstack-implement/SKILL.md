@@ -438,7 +438,7 @@ children on scheduled wakes. The bounded forge check wait is the only other
 implementation wait.
 After verified readback of every own PR publication, the driver arms or joins
 its maintain-mode chat-run watch under [Autopilot](../axstack/references/autopilot.md).
-That watch owns the bound T3 schedule wake; its runtime sets the cadence.
+That watch uses the driver's selected timer path and cadence.
 A turn with unsettled launched threads must end only under the bound-watch rule in the T3 runtime contract.
 With settled threads, end a turn only when every required PR is `merge-ready` or `held`.
 Follow [Route each wake](../axstack-watch/SKILL.md#4-route-each-wake).
