@@ -1,8 +1,9 @@
 import { execFile } from 'node:child_process';
-import { lstat, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { bindingMatches } from './binding.mjs';
-import { github, json, run } from './dependabot-runtime.mjs';
+import { github, json, ownerBinding, run, runtimeRpc } from './dependabot-runtime.mjs';
+import { sameReportBinding } from './pr-triage.mjs';
 import { githubPages } from './dependabot-pages.mjs';
 import { busy, hash, reviewId, managerIdentity, interval, projectQuietFacts, repository, time } from './review-manager.mjs';
 
@@ -27,13 +28,21 @@ async function readPrivateBinding(base) {
     const bytes = await privateRead(record.binding);
     if (bytes === null || !bindingMatches(record.bindingDigest, hash(bytes))) return null;
     const config = json(bytes);
-    if (!config || !['shadow', 'report'].includes(config.mode) || !reviewId(config.projectId) ||
+    if (!config || !['shadow', 'report', 'active'].includes(config.mode) || !reviewId(config.projectId) ||
         !['project', 'bun', 't3', 'skillsDirectory', 'progressCopy']
-          .every((key) => path(config[key])) || !path(config.reapReceipt) ||
+          .every((key) => path(config[key])) ||
         !unique(config.projects, path) || !config.projects.includes(config.project) ||
         !unique(config.repositories, repository) || !config.repositories.includes(config.repository) ||
         config.progressCopy === config.reapReceipt) return null;
-    return config;
+    if (config.mode === 'active') {
+      if (![config.registryTokenFile, config.worktreeRoot].every(path) ||
+          config.nativeSeat?.runtimeMode !== 'full-access' ||
+          typeof config.operationalLimits !== 'string' || !config.operationalLimits.trim()) return null;
+      // The agent reads operational limits directly from the private binding.
+      const { operationalLimits: _privateLimits, ...safeConfig } = config;
+      return { ...safeConfig, digest: record.bindingDigest };
+    }
+    return path(config.reapReceipt) ? config : null;
   } catch {
     return null;
   }
@@ -133,17 +142,27 @@ async function threads(base, config, state, watermarks) {
   };
 }
 
-function executeQuiet(config, input, progress, at) {
+function bunCommand(config, args, { timeout = 10_000, killSignal = 'SIGTERM' } = {}) {
   const env = Object.fromEntries(['PATH', 'HOME', 'TMPDIR']
     .filter((name) => process.env[name] !== undefined).map((name) => [name, process.env[name]]));
   return new Promise((resolve) => {
-    const child = execFile(config.bun, ['--no-env-file', config.skillsDirectory + '/scripts/schedule-drift.js',
-      'quiet-facts', '--input', input, '--continuity', progress, '--now', at],
-    { cwd: '/', env, timeout: 10_000, maxBuffer: 4 * 1024 * 1024, killSignal: 'SIGKILL' },
-    (error, stdout) => resolve(!error || error.code === 2 ? json(stdout) : null));
+    const child = execFile(config.bun, ['--no-env-file', ...args],
+      { cwd: '/', env, timeout, maxBuffer: 4 * 1024 * 1024, killSignal },
+      (error, stdout) => resolve({ exitCode: error ? Number.isInteger(error.code) ? error.code : 1 : 0, output: json(stdout) }));
     child.stdin?.on('error', () => {});
     child.stdin?.end();
   });
+}
+
+async function activeReap(config) {
+  const docker = await run('docker', ['info', '--format', '{{.ServerVersion}}'], { cwd: '/' });
+  if (!docker?.trim()) return { exitCode: 1, dockerAvailable: false };
+  const { exitCode, output } = await bunCommand(config, [config.skillsDirectory + '/sandbox/launcher.js', 'reap'],
+    { timeout: 920_000 });
+  return {
+    exitCode: exitCode || (Array.isArray(output) && output.every((term) => term?.status === 'pass') ? 0 : 1),
+    dockerAvailable: true,
+  };
 }
 
 async function quietFacts(config, progress, input) {
@@ -153,16 +172,83 @@ async function quietFacts(config, progress, input) {
       writeFile(dir + '/input.json', JSON.stringify(input), { mode: 0o600 }),
       writeFile(dir + '/progress.md', progress, { mode: 0o600 }),
     ]);
-    return projectQuietFacts(await executeQuiet(config, dir + '/input.json', dir + '/progress.md', input.observedAt));
+    const { exitCode, output } = await bunCommand(config, [config.skillsDirectory + '/scripts/schedule-drift.js',
+      'quiet-facts', '--input', dir + '/input.json', '--continuity', dir + '/progress.md', '--now', input.observedAt],
+      { killSignal: 'SIGKILL' });
+    return projectQuietFacts(exitCode === 0 || exitCode === 2 ? output : null);
   } finally {
     await rm(dir, { recursive: true });
   }
 }
 
+async function prepareWorktree(config, runId) {
+  const { project, worktreeRoot } = config;
+  const info = await lstat(worktreeRoot);
+  if (!/^[A-Za-z0-9_-]+$/.test(runId) || !info.isDirectory() || info.uid !== process.getuid() ||
+      (info.mode & 0o077) || worktreeRoot === project || worktreeRoot.startsWith(project + '/') ||
+      project.startsWith(worktreeRoot + '/') || await realpath(worktreeRoot) !== worktreeRoot ||
+      await realpath(project) !== project) return null;
+  const git = (...args) => run('git', args, { cwd: project });
+  if ((await git('rev-parse', '--show-toplevel'))?.trim() !== project) return null;
+  const sha = (await git('rev-parse', '--verify', 'refs/remotes/origin/main^{commit}'))?.trim();
+  if (!/^[a-f0-9]{40}$/.test(sha ?? '')) return null;
+  const worktree = worktreeRoot + '/review-manager-' + runId;
+  try {
+    await mkdir(worktree, { mode: 0o700 });
+    if (await git('worktree', 'add', '--detach', '--', worktree, sha) === null) return null;
+  } catch (error) {
+    if (error.code !== 'EEXIST') throw error;
+  }
+  if (await realpath(worktree) !== worktree) return null;
+  const before = await git('worktree', 'list', '--porcelain', '-z');
+  const verified = before?.split('\0\0').some((record) => {
+    const fields = record.split('\0');
+    return fields[0] === 'worktree ' + worktree && fields.includes('HEAD ' + sha) && fields.includes('detached');
+  });
+  return verified ? worktree : null;
+}
+
+async function stillBound(base, config) {
+  return (await readPrivateBinding(base))?.digest === config.digest;
+}
+
+async function managerLaunch(base, config, runId) {
+  if (!await stillBound(base, config)) return null;
+  const seat = await ownerBinding(base, { ...config, roles: config.skillsDirectory + '/roles.json' });
+  if (!seat || !sameReportBinding(seat, config.nativeSeat)) return null;
+  const worktree = await prepareWorktree(config, runId);
+  return worktree ? { ...seat, project: config.projectId, worktree } : null;
+}
+
+async function verifyManager(base, config, expected, receipt) {
+  if (!await stillBound(base, config)) return false;
+  const runtimeFile = base + '/userdata/server-runtime.json';
+  const before = await readFile(runtimeFile, 'utf8');
+  const state = json(before);
+  const [projection, view] = await Promise.all([
+    runtimeRpc(config, state?.origin, 'orchestration.getThreadProjection', receipt.threadId),
+    run(config.t3, ['thread', 'show', '--base-dir', base, receipt.threadId, '--messages', '1', '--json'], { cwd: '/' }),
+  ]);
+  const effective = projection?.thread;
+  const thread = json(view)?.thread;
+  return before === await readFile(runtimeFile, 'utf8') && effective?.id === receipt.threadId &&
+    thread?.threadId === receipt.threadId && thread.projectId === expected.project &&
+    thread.worktreePath === expected.worktree && thread.latestRunId === receipt.runId &&
+    sameReportBinding(expected, { model: effective.modelSelection, runtimeMode: effective.runtimeMode });
+}
+
 export function reviewRuntime(base) {
   return {
     binding: () => readPrivateBinding(base),
-    importProgress: (config) => privateRead(config.progressCopy), reap: readReapReceipt, discover: discoverReviewPRs,
+    importProgress: (config) => privateRead(config.progressCopy),
+    reap: async (config, scheduledAt) => {
+      if (config.mode !== 'active') return readReapReceipt(config, scheduledAt);
+      if (!await stillBound(base, config)) throw new Error('active binding changed before reap');
+      return activeReap(config);
+    },
+    discover: discoverReviewPRs,
+    launch: (config, runId) => managerLaunch(base, config, runId),
+    verifyManager: (config, expected, receipt) => verifyManager(base, config, expected, receipt),
     inventory: (config, state, watermarks) => threads(base, config, state, watermarks), quietFacts,
   };
 }
