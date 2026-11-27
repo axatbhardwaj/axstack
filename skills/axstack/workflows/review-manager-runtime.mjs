@@ -2,9 +2,9 @@ import { execFile } from 'node:child_process';
 import { lstat, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { bindingMatches } from './binding.mjs';
-import { driverReadback, github, json, ownerBinding, run } from './dependabot-runtime.mjs';
+import { github, json, run } from './dependabot-runtime.mjs';
 import { githubPages } from './dependabot-pages.mjs';
-import { busy, hash, reviewId, managerIdentity, interval, repository, time } from './review-manager.mjs';
+import { busy, hash, reviewId, managerIdentity, interval, projectQuietFacts, repository, time } from './review-manager.mjs';
 
 const path = (value) => typeof value === 'string' && /^\/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+$/.test(value) &&
   !value.split('/').some((part) => part === '..' || part === '.');
@@ -28,7 +28,7 @@ async function readPrivateBinding(base) {
     if (bytes === null || !bindingMatches(record.bindingDigest, hash(bytes))) return null;
     const config = json(bytes);
     if (!config || !['shadow', 'report'].includes(config.mode) || !reviewId(config.projectId) ||
-        !['project', 'bun', 't3', 'roles', 'registryTokenFile', 'skillsDirectory', 'progressCopy']
+        !['project', 'bun', 't3', 'skillsDirectory', 'progressCopy']
           .every((key) => path(config[key])) || !path(config.reapReceipt) ||
         !unique(config.projects, path) || !config.projects.includes(config.project) ||
         !unique(config.repositories, repository) || !config.repositories.includes(config.repository) ||
@@ -153,23 +153,16 @@ async function quietFacts(config, progress, input) {
       writeFile(dir + '/input.json', JSON.stringify(input), { mode: 0o600 }),
       writeFile(dir + '/progress.md', progress, { mode: 0o600 }),
     ]);
-    const report = await executeQuiet(config, dir + '/input.json', dir + '/progress.md', input.observedAt);
-    if (!Array.isArray(report?.terms)) return null;
-    return { version: report.version, terms: report.terms.map((term) => ({ id: term?.id ?? null, status: term?.status ?? null })) };
+    return projectQuietFacts(await executeQuiet(config, dir + '/input.json', dir + '/progress.md', input.observedAt));
   } finally {
     await rm(dir, { recursive: true });
   }
 }
 
 export function reviewRuntime(base) {
-  const sameBinding = async (config) => JSON.stringify(await readPrivateBinding(base)) === JSON.stringify(config);
   return {
-    binding: () => readPrivateBinding(base), sameBinding,
+    binding: () => readPrivateBinding(base),
     importProgress: (config) => privateRead(config.progressCopy), reap: readReapReceipt, discover: discoverReviewPRs,
     inventory: (config, state, watermarks) => threads(base, config, state, watermarks), quietFacts,
-    resolveSeat: (config) => ownerBinding(base, config),
-    verifySeat: async (config, expected, threadId) =>
-      await sameBinding(config) && JSON.stringify((await ownerBinding(base, config))?.model) === JSON.stringify(expected.model) &&
-      (await driverReadback(base, config, expected, null, threadId))?.thread?.projectId === config.projectId,
   };
 }
