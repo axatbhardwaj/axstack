@@ -96,19 +96,18 @@ reply read proves presence and leaves absence unknown.
 
 ### Active workflow
 
-Version 2 can replace the native timer after explicit cutover. Active mode
-claims the slot in a T3 store transaction. A duplicate pauses. Each slot reaps
-with the existing sandbox launcher and runs the same discovery, inventory and
-quiet facts. The manager owns `progress.md` and the workflow reads a pre-identity
-snapshot for its facts each tick and checks that its digest stays stable
-between reads.
+Version 2 claims slots in a T3 store transaction. Duplicates pause.
+The manager owns `progress.md` and the workflow reads a pre-identity snapshot
+for reap, discovery, inventory and quiet facts. An idle slot skips a wake
+only when every quiet term passes.
 
-A slot skips the agent only when every quiet term passes. On T3 0.1.12,
-project and descendant coverage is unknown. Identity stays unknown because
-the CLI snapshot lacks the native current-thread and descendant evidence.
-Each tick currently wakes one manager with the native prose in the bound
-`axstack-owner` seat and `full-access` runtime. The workflow verifies the
-effective binding and typed receipt. A mismatch or missing receipt pauses.
+A non-quiet slot sends one `AXSTACK-WAKE` to the bound thread. The manager
+uses its own model across turns. Pending runs, jobs or a busy native pass
+make the slot busy. Missing or archived threads pause. Unknown activity
+wakes with a gap when no busy evidence exists.
+
+The retained-worktree cap still applies to manager-owned worktrees.
+Past the limit, hold admission and remove the trigger after drain.
 See [cutover and rollback](https://github.com/axatbhardwaj/axstack/blob/main/docs/workflow-activation.md#review-manager).
 
 T3 sessions are exempt from Claude trust preflight.
