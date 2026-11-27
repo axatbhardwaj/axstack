@@ -27,7 +27,12 @@ async function replay(options = {}) {
   const bindings = { mode: options.mode ?? (options.shadow ? 'shadow' : 'report'), project: '/fixture/project' };
   if (options.flagged) fixture.progress = fixture.progress.replace('- none\n\n## Watermarks',
     `- ${fixture.flaggedId ?? 'fixture-thread'}: flagged; resume: user decision only\n\n## Watermarks`);
-  if (options.wedged) Object.assign(fixture.input.prior.thread, { status: 'waiting', settled: false, updatedAt: '2026-11-26T19:00:00Z' });
+  if (options.ownerAge !== undefined) {
+    Object.assign(fixture.input.prior.thread, {
+      status: 'waiting', settled: false,
+      updatedAt: new Date(Date.parse(fixture.input.observedAt) - options.ownerAge).toISOString(),
+    });
+  }
   if (options.reap) fixture.input.reap.exitCode = 2;
   if (options.noDocker) fixture.input.reap.dockerAvailable = false;
   if (options.badOwnership) fixture.progress = fixture.progress.replace('receipt: ', 'receipt: missing comma ');
@@ -36,7 +41,7 @@ async function replay(options = {}) {
   if (options.full) fixture.progress = fixture.progress.replace(/^- Last full pass: .+$/m, '- Last full pass: 2026-11-26T18:21:02Z');
 
   Object.assign(globalThis, {
-    Schema: { Json: {}, String: {}, Struct: (shape) => shape, Literal: (value) => value },
+    Schema: { Json: {}, String: {}, Struct: (shape) => shape, Literal: (value) => value, Array: (item) => [item] },
     Option: { isSome: (option) => option.value !== undefined },
     Effect: { gen, fail: (error) => effect(() => { throw error; }), tryPromise: ({ try: work, catch: map }) => effect(async () => {
       try { return await work(); } catch (error) { throw map(error); }
@@ -73,6 +78,7 @@ async function replay(options = {}) {
             kind: options.wrongKind ? 'OTHER' : 'AXSTACK-REVIEW-MANAGER', runId: options.invalid ? other : options.runId ?? id,
             sourceSha: options.staleReceipt ? '0'.repeat(64) : hash(fixture.progress),
             threadId: options.wrongThread ? 'workflow:other' : manager,
+            ...(!options.missingWrites && { writes: options.writes === undefined ? [] : options.writes }),
           },
         };
       }) },
@@ -137,7 +143,7 @@ for (const [label, input, reason] of [
   ['missing explicit resume condition', { badHolds: true }, 'pending-work:unknown'],
   ['uppercase none is pending work', { badJobs: true }, 'pending-work:fail'],
   ['bounded flagged history', { flagUnknown: true }, 'flagged-history:unknown'],
-  ['wedged prior owner', { wedged: true }, 'wedged-owner'],
+  ['wedged prior owner at exactly two hours', { ownerAge: 7_200_000 }, 'wedged-owner'],
   ['four-hour full pass', { full: true }, 'full-pass-age:fail'],
   ['unknown project coverage', { coverage: 'unknown' }, 'project-coverage:unknown'],
   ['failed repository discovery', { discovery: 'unknown' }, 'safe-6:unknown'],
@@ -150,11 +156,25 @@ for (const [label, input, reason] of [
     const { result, agents } = await replay(input);
     expect(result).toMatchObject({ decision: 'reported', reasons: expect.arrayContaining([reason]) });
     expect(agents).toHaveLength(1);
-    expect(agents[0]).toMatchObject(seat);
+    expect(agents[0]).toMatchObject({ model: seat.model, runtimeMode: 'approval-required' });
     expect(agents[0].brief.split('\n')[0]).toBe(`AXSTACK-WAKE ${prefix} run ${id}`);
+    expect(agents[0].brief.match(/[\w.-]+\.md/g)).toEqual(['review-manager-report.md']);
     expect(agents[0].brief).not.toMatch(/INJECTED|bad title|Open holds|one reply/i);
   });
 }
+
+test('an active owner one millisecond before two hours is not yet wedged', async () => {
+  const { result } = await replay({ ownerAge: 7_199_999 });
+  expect(result.decision).toBe('reported');
+  expect(result.reasons).toContain('lane-idle:fail');
+  expect(result.reasons).not.toContain('wedged-owner');
+});
+
+test('run labels distinguish the saved reap receipt from an execution step', async () => {
+  const { steps } = await replay({ changed: true });
+  expect(steps).toContain('read-reap-receipt');
+  expect(steps).not.toContain('sandbox-reap');
+});
 
 test('shadow records the wake decision without starting a manager', async () => {
   const { result, agents } = await replay({ shadow: true, coverage: 'unknown' });
@@ -179,6 +199,9 @@ for (const [label, input, step, agentCount] of [
   ['wrong run in receipt', { changed: true, invalid: true }, 'verify-manager-receipt', 1],
   ['stale digest in receipt', { changed: true, staleReceipt: true }, 'verify-manager-receipt', 1],
   ['wrong thread in receipt', { changed: true, wrongThread: true }, 'verify-manager-receipt', 1],
+  ['receipt missing writes', { changed: true, missingWrites: true }, 'verify-manager-receipt', 1],
+  ['receipt with declared writes', { changed: true, writes: ['store'] }, 'verify-manager-receipt', 1],
+  ['receipt with invalid writes', { changed: true, writes: null }, 'verify-manager-receipt', 1],
   ['wrong receipt kind', { changed: true, wrongKind: true }, 'verify-manager-receipt', 1],
   ['held outcome with receipt', { changed: true, wrongOutcome: true }, 'verify-manager-receipt', 1],
   ['superseded before the wake', { changed: true, supersedeAt: 'read-wake-claim' }, 'require-wake-claim', 0],
@@ -188,7 +211,7 @@ for (const [label, input, step, agentCount] of [
   ['unauthorized active binding', { mode: 'active' }, 'binding', 0],
   ['malformed continuity ownership', { badOwnership: true }, 'read-predecessor-copy', 0],
   ['catalog seat unavailable', { changed: true, noSeat: true }, 'resolve-manager-binding', 0],
-  ['binding changed during observation', { changed: true, bindingChanged: true }, 'verify-wake-claim', 0],
+  ['binding changed during observation', { changed: true, bindingChanged: true }, 'verify-binding-unchanged', 0],
   ['invalid workflow ID', { runId: 'untrusted ID with spaces' }, 'claim-slot', 0],
 ]) {
   test(label + ' pauses in the owning step', async () => {
