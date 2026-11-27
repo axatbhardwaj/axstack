@@ -116,6 +116,14 @@
     },
     "dependentHold": "T30"
   },
+  "workflow": {
+    "name": "axstack-review-manager",
+    "version": 1,
+    "host": "axat-vps",
+    "trigger": "every 30m",
+    "intervalMs": 1800000,
+    "modes": ["shadow", "report"]
+  },
   "inventory": {
     "pr-triage-nightly.md": "No packaged nightly schedule found in the complete project inventory; user-owned queue triage excluded.",
     "test-audit-weekly.md": "No packaged weekly schedule found in the complete project inventory."
