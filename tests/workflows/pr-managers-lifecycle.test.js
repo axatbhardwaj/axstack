@@ -199,10 +199,11 @@ test('evaluation scenarios cover each accepted decision boundary', () => {
   }
 });
 
-test('workflow report preserves the native manager lane during unknown project coverage', () => {
+test('shadow and report preserve the native manager lane during unknown coverage', () => {
   const text = compact('skills/axstack/references/automations.md');
+  const shadow = text.split('### Workflow shadow')[1].split('### Active workflow')[0];
   const lane = [/native schedule/i, /keeps ownership|remains the owner/i, /project and descendant coverage is unknown|unknown project and descendant coverage/i];
-  checkRule(text, (prose) => requires(prose, ...lane),
+  checkRule(shadow, (prose) => requires(prose, ...lane),
     'With unknown project and descendant coverage, the native schedule remains the owner.',
     [[lane[1], 'switches ownership']], lane);
   const denial = /never block|cannot block/i;
@@ -213,7 +214,7 @@ test('workflow report preserves the native manager lane during unknown project c
 });
 
 test('workflow shadow documents continuity freshness and the native reap boundary', () => {
-  const prose = compact('skills/axstack/references/automations.md').split('### Workflow shadow')[1].split('## Session admission')[0];
+  const prose = compact('skills/axstack/references/automations.md').split('### Workflow shadow')[1].split('### Active workflow')[0];
   const once = [/imports?|loads?/i, /continuity/i, /(?:exactly )?once|a single time/i];
   checkRule(prose, (value) => requires(value, ...once),
     'The workflow loads continuity a single time when it starts.',
@@ -230,8 +231,17 @@ test('workflow shadow documents continuity freshness and the native reap boundar
   checkRule(prose, (value) => requires(value, ...ownership),
     'The native manager retains live reap and reviewer admission.',
     [[ownership[1], 'cedes']], ownership);
-  const producer = [/reap receipt/i, /producer/i, /cutover/i, /requires?|depends on/i];
-  checkRule(prose, (value) => requires(value, ...producer),
-    'Cutover depends on an established producer for the reap receipt.',
-    [[producer[3], 'can proceed without']], producer);
+});
+
+test('the active cutover keeps continuity with the manager and wakes on uncertainty', () => {
+  const active = compact('skills/axstack/references/automations.md')
+    .split('### Active workflow')[1].split('## Session admission')[0];
+  const ownership = [/manager owns/i, /progress\.md/i, /workflow reads/i, /pre-identity/i];
+  checkRule(active, (prose) => requires(prose, ...ownership),
+    'The manager owns `progress.md` and the workflow reads a pre-identity snapshot.',
+    [[ownership[0], 'workflow owns'], [ownership[2], 'workflow overwrites']], ownership);
+  const quiet = [/skips the agent/i, /only (?:when|if)/i, /every quiet term passes/i];
+  checkRule(active, (prose) => requires(prose, ...quiet),
+    'Active skips the agent only if every quiet term passes.',
+    [[quiet[2], 'any quiet term passes']], quiet);
 });
