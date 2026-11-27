@@ -138,6 +138,11 @@ for (const command of ['git', 'gh', 'ssh']) {
 process.env.PATH = root;
 process.env.AXSTACK_C6_TEST_SENTINEL = 'excluded';
 const agents = [];
+const messageOverride = {
+  'foreign-thread': { threadId: prior },
+  'agent-copy': { createdBy: 'agent' },
+  'non-server-copy': { creationSource: 'web' },
+}[settings.delivery];
 syncProjection();
 if (settings.native === 'old') native(iso(-300_000));
 if (settings.native === 'forged') native(iso(0), true);
@@ -215,7 +220,7 @@ Object.assign(globalThis, {
       if (settings.delivery !== 'missing') {
         const message = {
           id: 'workflow-wake-' + slots.length, role: 'user', createdBy: 'system', creationSource: 'server', threadId: ownerId,
-          createdAt: new Date(now).toISOString(), text: options.brief,
+          createdAt: new Date(now).toISOString(), text: options.brief, ...messageOverride,
         };
         projection.messages.push(message);
         // T3 v0.1.12 retries a failed first owner turn inside the same agent step.
@@ -228,6 +233,7 @@ Object.assign(globalThis, {
         }
       }
       if (guard === 'readback-claim-lost') store.set(leaseKey, { runId, round: 0 });
+      if (guard === 'readback-run-changed') store.set(leaseKey, { ...store.get(leaseKey), runId: prior });
       if (settings.delivery === 'binding-changed') projection.thread.modelSelection.options[0].value = 'low';
       if (settings.delivery === 'parks') {
         receipt.state = 'parked';
