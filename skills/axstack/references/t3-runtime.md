@@ -398,7 +398,10 @@ the failed attempt's branch is kept until salvage. Unknown liveness holds
 replacement; reconcile the old writer before admitting another.
 
 The bound lifecycle rule below applies only to owned launched-fallback Writers
-awaiting completion. With an unsettled launched thread, the driver turn must end only while a bound
+awaiting completion. After verified cutover, the driver's active
+[owner backstop workflow](../../axstack-watch/references/workflow-backstops.md)
+covers this rule at the 5-minute writer cadence. On native fallback,
+with an unsettled launched thread, the driver turn must end only while a bound
 `schedule_task` with `bindToCurrentThread:true` is armed at the 5-minute lifecycle
 cadence `everyMs:300000` under
 [Chat-run watch runtime](../../axstack-watch/references/watch-runtime.md#chat-run-watch),
@@ -418,7 +421,7 @@ A queued user message is a pending local action, so the driver must keep every
 queued user message and report it in its reply even on an otherwise unchanged
 wake, because only the user resumes a held queue.
 
-Once nothing remains unsettled the driver must `delete_scheduled_task` for the
+For native fallback, once nothing remains unsettled the driver must `delete_scheduled_task` for the
 run watch and use `list_scheduled_tasks` to read back its absence; an uncertain
 delete preserves the hold and recorded ID.
 
@@ -474,7 +477,7 @@ using `action: unsettle`, then call `watch_pull_request` again.
 Never re-arm in a loop.
 Route native PR wake events through watch §4 and the unchanged §5 readiness predicate.
 
-If `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule
+On native fallback, if `watch_pull_request` is unavailable, fall back to the bound 5-minute schedule
 and `scripts/pr-digest.js` without a hold.
 If re-arming fails, restore the bound 5-minute schedule.
 For forge-resolved human waits, including user merge and human review,
