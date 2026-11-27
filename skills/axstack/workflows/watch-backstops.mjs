@@ -44,9 +44,7 @@ export function ownerState(ownerId, binding, view, projection, ending = false) {
   if (thread.archived === true) return { hold: 'owner is archived' };
   if (!ending && (thread.snoozed === true || thread.pendingRequestCount > 0)) return { hold: 'owner is protected or awaiting user input' };
   if (thread.archived !== false || typeof thread.snoozed !== 'boolean' ||
-      !Number.isSafeInteger(thread.pendingRequestCount) || thread.pendingRequestCount < 0 ||
-      !['idle', 'completed', 'running', 'starting', 'waiting', 'queued', 'preparing',
-        'interrupted', 'failed', 'cancelled', 'rolled_back'].includes(thread.status)) {
+      !Number.isSafeInteger(thread.pendingRequestCount) || thread.pendingRequestCount < 0) {
     return { hold: 'native owner state is unknown' };
   }
   const observed = projection?.thread;
@@ -58,11 +56,16 @@ export function ownerState(ownerId, binding, view, projection, ending = false) {
         projectId: observed.projectId, model: { ...model, options: model?.options === undefined ? [] : model.options },
         runtimeMode: observed.runtimeMode,
       })) return { hold: 'effective owner binding is unknown or mismatched' };
-  if (!Array.isArray(projection.runs)) return { hold: 'native owner state is unknown' };
-  if (!ending && projection.runs.some((run) => run?.status === 'queued' && run.queueHeld === true)) {
+  const runsKnown = Array.isArray(projection.runs);
+  if (!ending && runsKnown && projection.runs.some((run) => run?.status === 'queued' && run.queueHeld === true)) {
     return { hold: 'owner is protected by a held queue' };
   }
-  return { status: thread.status };
+  const statusKnown = ['idle', 'completed', 'running', 'starting', 'waiting', 'queued', 'preparing',
+    'interrupted', 'failed', 'cancelled', 'rolled_back'].includes(thread.status);
+  const gaps = [];
+  if (!statusKnown) gaps.push('native owner status is unknown');
+  if (!runsKnown) gaps.push('native owner run coverage is unavailable');
+  return { status: statusKnown ? thread.status : 'unknown', gaps };
 }
 
 export function timerPlan(receipt, consumed, now) {
