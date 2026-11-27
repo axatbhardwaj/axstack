@@ -1,0 +1,206 @@
+{
+  "quiet": {
+    "input": {
+      "observedAt": "2026-11-26T22:21:02Z",
+      "repository": "fixture/repo-fdf683fae0",
+      "login": "id-e72d2df99c1403afdf6c",
+      "reap": {
+        "exitCode": 0,
+        "dockerAvailable": true
+      },
+      "searches": [
+        [],
+        [
+          {
+            "number": 23,
+            "isDraft": false,
+            "updatedAt": "2026-11-26T20:49:05Z",
+            "repository": {
+              "nameWithOwner": "fixture/repo-45d690a7c5"
+            },
+            "author": {
+              "login": "id-e72d2df99c1403afdf6c"
+            }
+          },
+          {
+            "number": 2,
+            "isDraft": false,
+            "updatedAt": "2025-02-13T16:30:09Z",
+            "repository": {
+              "nameWithOwner": "fixture/repo-8f683a53a9"
+            },
+            "author": {
+              "login": "id-3aa597297d4317e5c9e2"
+            }
+          }
+        ]
+      ],
+      "inventory": {
+        "args": {
+          "projectId": "id-0e2111aa0999bb697ea9",
+          "includeSubagents": true,
+          "statuses": [
+            "preparing",
+            "queued",
+            "starting",
+            "running",
+            "waiting"
+          ]
+        },
+        "value": {
+          "projectId": "id-0e2111aa0999bb697ea9",
+          "currentThreadId": "id-25fcfc20f1b9b6901bbe",
+          "threads": [
+            {
+              "threadId": "id-25fcfc20f1b9b6901bbe",
+              "projectId": "id-0e2111aa0999bb697ea9",
+              "parentThreadId": null,
+              "latestRunId": "id-710d85f47a4f3a0847e8",
+              "status": "running",
+              "settled": false,
+              "createdBy": "agent",
+              "creationSource": "mcp",
+              "updatedAt": "2026-11-26T22:21:10.973Z"
+            },
+            {
+              "threadId": "id-7f73e26bdcd788520242",
+              "projectId": "id-0e2111aa0999bb697ea9",
+              "parentThreadId": "id-7143541c4aebcb7c54b6",
+              "latestRunId": "id-376ff00c7cf1471183db",
+              "status": "running",
+              "settled": false,
+              "createdBy": "agent",
+              "creationSource": "mcp",
+              "updatedAt": "2026-11-26T22:20:59.326Z"
+            },
+            {
+              "threadId": "id-1a0c7c3781c88155f581",
+              "projectId": "id-0e2111aa0999bb697ea9",
+              "parentThreadId": "id-7143541c4aebcb7c54b6",
+              "latestRunId": "id-03005bb3804b69b95133",
+              "status": "running",
+              "settled": false,
+              "createdBy": "agent",
+              "creationSource": "mcp",
+              "updatedAt": "2026-11-26T22:20:41.163Z"
+            },
+            {
+              "threadId": "id-7143541c4aebcb7c54b6",
+              "projectId": "id-0e2111aa0999bb697ea9",
+              "parentThreadId": null,
+              "latestRunId": "id-77d3e7c8c90b8964c0ed",
+              "status": "waiting",
+              "settled": false,
+              "createdBy": "user",
+              "creationSource": "web",
+              "updatedAt": "2026-11-26T21:50:21.678Z"
+            }
+          ],
+          "nextCursor": null,
+          "total": 4
+        }
+      },
+      "prior": {
+        "thread": {
+          "threadId": "id-c3a7fa5dda95c8c83975",
+          "projectId": "id-0e2111aa0999bb697ea9",
+          "parentThreadId": null,
+          "latestRunId": "id-df005285f4e146742d43",
+          "status": "completed",
+          "settled": true,
+          "createdBy": "agent",
+          "creationSource": "mcp",
+          "updatedAt": "2026-11-26T22:04:45.849Z",
+          "pinned": false
+        }
+      }
+    },
+    "progress": "# Review-manager continuity\n\n## Lane state\n- scheduledTaskId, threadId/runId, workspace and exact terminal receipt: id-20f359265be77c1a4cf8, id-c3a7fa5dda95c8c83975/id-df005285f4e146742d43, /fixture/worktree, receipt id-56df4dcdf808040d40f0\n- Active PR jobs and descendants: none\n\n## Open holds\n- none\n\n## Watermarks\n- Quiet gate: [[\"fixture/repo-8f683a53a9#2\",\"98b9cfae68ff8a86724c9eb507a292c0dce02065\",\"2025-02-13T16:30:09Z\"]]\n- Last full pass: 2026-11-26T21:52:48Z\n- Non-lane roots: [\"id-7143541c4aebcb7c54b6\"]\n\n## Last pass\n- 2026-11-26T21:52:48Z predecessor full pass, receipt id-56df4dcdf808040d40f0\n",
+    "flaggedId": "id-248c749a4ce7feb4ca0c",
+    "pr": "fixture/repo-8f683a53a9#2"
+  },
+  "changed": {
+    "input": {
+      "observedAt": "2026-11-23T20:18:08Z",
+      "repository": "fixture/repo-fdf683fae0",
+      "login": "id-e72d2df99c1403afdf6c",
+      "reap": {
+        "exitCode": 0,
+        "dockerAvailable": true
+      },
+      "searches": [
+        [],
+        [
+          {
+            "number": 606,
+            "isDraft": false,
+            "updatedAt": "2026-11-23T13:43:48Z",
+            "repository": {
+              "nameWithOwner": "fixture/repo-ee956cac40"
+            },
+            "author": {
+              "login": "id-e72d2df99c1403afdf6c"
+            }
+          },
+          {
+            "number": 2259,
+            "isDraft": false,
+            "updatedAt": "2026-11-23T20:18:00Z",
+            "repository": {
+              "nameWithOwner": "fixture/repo-a260f148c1"
+            },
+            "author": {
+              "login": "id-fee0e30de9f455173cf8"
+            }
+          }
+        ]
+      ],
+      "inventory": {
+        "args": {
+          "projectId": "id-0e2111aa0999bb697ea9",
+          "includeSubagents": true,
+          "statuses": [
+            "preparing",
+            "queued",
+            "starting",
+            "running",
+            "waiting"
+          ]
+        },
+        "value": {
+          "projectId": "id-0e2111aa0999bb697ea9",
+          "currentThreadId": "id-7a9c32c299fe46023474",
+          "threads": [
+            {
+              "threadId": "id-7a9c32c299fe46023474",
+              "projectId": "id-0e2111aa0999bb697ea9",
+              "parentThreadId": null,
+              "latestRunId": "id-d29c9b2a1c4112fa8e7c",
+              "status": "running",
+              "settled": false,
+              "createdBy": "agent",
+              "creationSource": "mcp"
+            }
+          ],
+          "nextCursor": null,
+          "total": 1
+        }
+      },
+      "prior": {
+        "thread": {
+          "threadId": "id-628609cdccdb9316c0cb",
+          "projectId": "id-0e2111aa0999bb697ea9",
+          "parentThreadId": null,
+          "latestRunId": "id-1e505221c47990be1f5f",
+          "status": "completed",
+          "settled": true,
+          "createdBy": "agent",
+          "creationSource": "mcp"
+        }
+      }
+    },
+    "progress": "# Review-manager continuity\n\n## Lane state\n- scheduledTaskId, threadId/runId, workspace and exact terminal receipt: id-20f359265be77c1a4cf8, id-628609cdccdb9316c0cb/id-1e505221c47990be1f5f, /fixture/worktree, receipt id-1b4a1fc3b245a97972a4\n- Active PR jobs and descendants: none\n\n## Open holds\n- none\n\n## Watermarks\n- Quiet gate: [[\"fixture/repo-a260f148c1#2259\",\"205534f452d7e887c0f6b6e54013b9d195ea9a43\",\"2026-11-23T20:10:08Z\"]]\n- Last full pass: 2026-11-23T20:11:30Z\n- Non-lane roots: []\n\n## Last pass\n- 2026-11-23T20:11:30Z predecessor full pass, receipt id-1b4a1fc3b245a97972a4\n",
+    "flaggedId": "id-d5c46356cb48c3353565",
+    "pr": "fixture/repo-a260f148c1#2259"
+  }
+}
