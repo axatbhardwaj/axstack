@@ -1,9 +1,9 @@
-import { brief, decide, reviewId, managerIdentity, importState, workflowName, receiptMatches, time, version } from './review-manager.mjs';
+import { decide, reviewId, managerIdentity, importState, workflowName, reportFacts, time, version } from './review-manager.mjs';
 
 class Hold extends Error {}
 
 export function reviewManager(runtime) {
-  const { agent, every, step, store, runs } = T3;
+  const { every, step, store, runs } = T3;
   const entry = (key) => store.entry(managerIdentity + ':' + key, Schema.Json);
   const slot = () => entry('latest-slot');
   const read = (key, work) => step(key, { returns: Schema.Json }, Effect.tryPromise({
@@ -12,13 +12,28 @@ export function reviewManager(runtime) {
   }));
   const transaction = (key, work) => step(key, { returns: Schema.Json }, store.transaction(Effect.gen(work)));
   const value = (option) => Option.isSome(option) ? option.value : null;
-  const managerReceipt = Schema.Struct({
-    kind: Schema.Literal('AXSTACK-REVIEW-MANAGER'), runId: Schema.String,
-    sourceSha: Schema.String, threadId: Schema.String, writes: Schema.Array(Schema.String),
+  const factStatus = Schema.Literals(['pass', 'fail', 'unknown']);
+  const returns = Schema.Struct({
+    decision: Schema.Literals(['quiet', 'shadow-wake', 'reported']),
+    reasons: Schema.Array(Schema.String),
+    report: Schema.optional(Schema.Struct({
+      runId: Schema.String, scheduledAt: Schema.String, observedAt: Schema.String,
+      coverage: Schema.Struct({ projects: factStatus, readableProjects: Schema.NullOr(Schema.Number), discovery: factStatus }),
+      continuity: Schema.Struct({ sourceSha: Schema.String, prior: Schema.String, schedule: Schema.String }),
+      holds: Schema.Struct({
+        count: Schema.NullOr(Schema.Number),
+        flagged: Schema.Array(Schema.Struct({ threadId: Schema.String, status: Schema.Literals(['reply', 'unknown']) })),
+      }),
+      reap: Schema.Struct({
+        status: factStatus, exitCode: Schema.NullOr(Schema.Number), dockerAvailable: Schema.NullOr(Schema.Boolean),
+      }),
+      terms: Schema.Array(Schema.Struct({ id: Schema.String, status: factStatus })),
+      prs: Schema.Array(Schema.String),
+    })),
   });
 
   return T3.workflow(workflowName, {
-    version, payload: T3.Tick, returns: Schema.Json, triggers: [every('30 minutes')], resumeAfter: [],
+    version, payload: T3.Tick, returns, triggers: [every('30 minutes')], resumeAfter: [],
   }, ({ scheduledAt }, { id: runId }) => Effect.gen(function* () {
     yield* step('claim-slot', { returns: Schema.Json }, Effect.gen(function* () {
       if (!reviewId(runId) || !Number.isFinite(time(scheduledAt))) {
@@ -77,52 +92,13 @@ export function reviewManager(runtime) {
       reap, repository: discovery.repository, login: discovery.login, searches: discovery.searches,
       inventory: inventory.inventory, prior: inventory.prior, observedAt: inventory.observedAt,
     }));
-    const reasons = decide({ discovery, inventory, reap, facts }, scheduledAt);
-    if (!reasons.length) return { decision: 'quiet', reasons };
-    if (config.mode === 'shadow') return { decision: 'shadow-wake', reasons };
-
-    const expected = yield* read('resolve-manager-binding', async () => {
-      const seat = await runtime.resolveSeat(config);
-      if (!seat) throw new Hold('axstack-owner binding is unavailable in the live catalog');
-      return { ...seat, runtimeMode: 'approval-required' };
-    });
-    yield* read('verify-binding-unchanged', async () => {
-      if (!await runtime.sameBinding(config)) throw new Hold('Review manager binding changed during the slot');
-      return true;
-    });
-    const current = yield* step('read-wake-claim', { returns: Schema.Json }, Effect.gen(function* () {
-      return value(yield* slot().get);
-    }));
-    yield* read('require-wake-claim', async () => {
-      // A run that resumes after a newer slot must not start its old agent.
-      if (current?.runId !== runId) throw new Hold('Review manager wake claim was superseded');
-      return true;
-    });
-    const result = yield* agent.try('manager', {
-      ...expected, project: config.project, title: 'Review manager report',
-      brief: brief(runId, state, discovery.prs, inventory.flagged), returns: managerReceipt,
-    });
-    yield* read('verify-manager-receipt', async () => {
-      if (!receiptMatches(result, runId, state)) throw new Hold('manager receipt missing or invalid');
-      return true;
-    });
-    yield* read('verify-manager-binding', async () => {
-      if (!await runtime.verifySeat(config, expected, result.thread.threadId)) throw new Hold('effective manager binding mismatched');
-      return true;
-    });
-    const saved = yield* transaction('record-report', function* () {
-      if (value(yield* slot().get)?.runId !== runId ||
-          value(yield* entry('continuity').get)?.sourceSha !== state.sourceSha) return false;
-      const report = { ...result.value, scheduledAt, reasons };
-      yield* entry('last-report').set(report);
-      const updates = inventory.flagged.filter((row) => reviewId(row.id) && row.watermark);
-      yield* entry('reply-watermarks').set({ ...watermarks, ...Object.fromEntries(updates.map((row) => [row.id, row.watermark])) });
-      return value(yield* entry('last-report').get)?.runId === runId;
-    });
-    yield* read('verify-report-write', async () => {
-      if (!saved) throw new Hold('manager receipt was superseded or failed readback');
-      return true;
-    });
-    return { decision: 'reported', reasons };
+    const observation = { discovery, inventory, reap, facts };
+    const reasons = decide(observation, scheduledAt);
+    if (config.mode === 'shadow') return { decision: reasons.length ? 'shadow-wake' : 'quiet', reasons };
+    return {
+      decision: reasons.length ? 'reported' : 'quiet',
+      reasons,
+      report: reportFacts(runId, scheduledAt, state, observation),
+    };
   }));
 }
