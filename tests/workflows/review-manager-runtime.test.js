@@ -20,8 +20,7 @@ async function fixture(work, overrides = {}) {
     const config = {
       mode: 'shadow', project: scratch + '/project', projectId,
       projects: [scratch + '/project', ...(overrides.extraProjects ?? [])], repositories: [repo], repository: repo,
-      bun: process.execPath, t3: scratch + '/t3', roles: scratch + '/roles.json',
-      registryTokenFile: scratch + '/token', progressCopy: scratch + '/predecessor.md',
+      bun: process.execPath, t3: scratch + '/t3', progressCopy: scratch + '/predecessor.md',
       reapReceipt: scratch + '/reap.json',
       skillsDirectory: import.meta.dir.slice(0, -'/tests/workflows'.length) + '/skills/axstack',
       ...overrides.config,
