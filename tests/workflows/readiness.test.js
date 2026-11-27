@@ -5,6 +5,8 @@ import { main, summarizePillars } from '../../skills/axstack/scripts/readiness.j
 
 const script = `${import.meta.dir}/../../skills/axstack/scripts/readiness.js`;
 const root = makeTempDir(`${process.env.TMPDIR ?? '/tmp'}/readiness-`);
+const gitConfigEnv = { GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: `${root}/empty.gitconfig` };
+writeFileSync(gitConfigEnv.GIT_CONFIG_GLOBAL, '', { flag: 'wx', mode: 0o600 });
 const fakeGh = `${root}/gh`;
 writeFileSync(fakeGh, `#!/usr/bin/env bun
 import { appendFileSync } from 'node:fs';
@@ -17,7 +19,7 @@ console.log(response.raw ?? pages.map((page) => JSON.stringify(page)).join('\\n'
 `, { mode: 0o700 });
 
 function command(cwd, argv) {
-  const result = Bun.spawnSync(argv, { cwd, stdout: 'pipe', stderr: 'pipe' });
+  const result = Bun.spawnSync(argv, { cwd, env: { ...process.env, ...gitConfigEnv }, stdout: 'pipe', stderr: 'pipe' });
   if (result.exitCode) throw new Error(result.stderr.toString());
   return result.stdout.toString().trim();
 }
@@ -605,6 +607,8 @@ function assessWithGitTrace(repo, keys, extra = []) {
   const shim = mkdtempSync(`${root}/status-git-`);
   const log = `${shim}/calls`;
   writeFileSync(log, '');
+  writeFileSync(`${shim}/.gitconfig`, '[filter "lfs"]\n  clean =\n  process =\n  required = true\n', { mode: 0o600 });
+  // Readiness scrubs inherited GIT_* variables. Apply isolation when the shim starts Git.
   writeFileSync(`${shim}/git`, `#!/usr/bin/env bun
 import { appendFileSync } from 'node:fs';
 const args = process.argv.slice(2);
@@ -612,11 +616,11 @@ appendFileSync(${JSON.stringify(log)}, JSON.stringify(args) + '\\n');
 if (args.includes('status')) process.exit(0);
 if (args.includes('clone')) process.exit(1);
 const result = Bun.spawnSync([${JSON.stringify(Bun.which('git'))}, ...args], {
-  stdin: 'inherit', stdout: 'inherit', stderr: 'inherit',
+  env: { ...process.env, ...${JSON.stringify(gitConfigEnv)} }, stdin: 'inherit', stdout: 'inherit', stderr: 'inherit',
 });
 process.exit(result.exitCode);
 `, { mode: 0o700 });
-  const result = assess(repo, extra, { env: { PATH: `${shim}:${process.env.PATH}` } });
+  const result = assess(repo, extra, { env: { HOME: shim, PATH: `${shim}:${process.env.PATH}` } });
   return { result, calls: readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line)) };
 }
 
