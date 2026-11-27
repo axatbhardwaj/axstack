@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { readFileSync } from 'node:fs';
 import { compareQuietPRs } from './pr-digest.js';
+import policy from '../references/schedule-policy.json';
 
 const HELP = `schedule-drift — canonical schedule comparison (R2 fact mode)
   quiet-facts --help  Saved-input review-manager observations (separate fact mode).
@@ -16,6 +17,9 @@ const HELP = `schedule-drift — canonical schedule comparison (R2 fact mode)
                   Prompt comparison ignores trailing LF characters only; all other whitespace remains exact.
                   A live prompt containing any unfilled {{HOST_ prefix fails, even if bound bytes match.
                   Schedule is the exact host declaration; review-manager additionally requires interval 1800000.
+                  The review-manager row can declare workflow:{mode:"shadow"|"report"}.
+                  The same export then includes registry and journal from workflow observe input.
+                  Workflow coverage and the enabled native predecessor are separate activation facts.
   --prompts DIR   Directory containing the three packaged prompt files; default: installed ../references.
   --now ISO       Observation time with timezone; default: current UTC. Saved times prove no live delivery.
   --max-age-seconds N Maximum export age, inclusive; positive integer, default 300. Future exports are unknown.
@@ -94,6 +98,7 @@ function compare(args) {
       const bytes = readFileSync(`${args['--prompts']}/${file}`);
       packagedSha256 = sha256(bytes);
       expected = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+      if (file === files[0]) expected = expected.split('\n## Workflow report\n')[0];
       expected = expected.replace(/\{\{(HOST_[A-Z_]+)\}\}/g, (_, key) => {
         if (!object(binding?.values) || typeof binding.values[key] !== 'string') throw new Error('unbound host token');
         return binding.values[key];
@@ -108,9 +113,39 @@ function compare(args) {
     fact('cadence', scheduleKnown, canonical && equal(task?.schedule, binding?.schedule), 'exact declared schedule; review-manager interval fixed at 1800000ms');
     fact('enabled', typeof binding?.enabled === 'boolean' && typeof task?.enabled === 'boolean',
       task?.enabled === binding?.enabled, 'enabled state compared with private declaration');
+    if (file === files[0] && binding?.workflow) {
+      const usable = fresh && declared && source.host === bindings.host;
+      for (const [id, status, evidence] of reviewWorkflowFacts(usable ? source : null, binding, task, time(args['--now']))) {
+        term(`review-manager-workflow.${id}`, status, evidence);
+      }
+    }
   }
   const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map((s) => [s, terms.filter((t) => t.status === s).length]));
   return { version: 1, observedAt: args['--now'], exportSha256, bindingsSha256, terms, counts };
+}
+
+function reviewWorkflowFacts(source, binding, task, now) {
+  const { name, version, host, trigger, intervalMs, modes } = policy.workflow;
+  const rows = source?.registry?.workflows;
+  const defined = Array.isArray(rows) && Object.hasOwn(source.registry.definition ?? {}, 'problem');
+  const matches = defined ? rows.filter((row) => row?.name === name) : [];
+  const exact = matches.length === 1 && matches[0].version === version;
+  const registration = !defined ? 'unknown' : exact && source.host === host &&
+    source.registry.definition.problem === null ? 'pass' : 'fail';
+  const triggers = source?.journal?.complete === true && Array.isArray(source.journal.triggers)
+    ? source.journal.triggers.filter((row) => row?.triggerId?.startsWith?.(name + '/')) : null;
+  const next = triggers?.length === 1 ? time(triggers[0].nextAt) : NaN;
+  const cadence = !triggers || !defined ? 'unknown' : exact && equal(matches[0].triggers, [trigger]) &&
+    triggers.length === 1 && triggers[0].triggerId === `${name}/every:${intervalMs}` && next > now &&
+    next <= now + intervalMs ? 'pass' : 'fail';
+  const predecessor = !source || typeof task?.enabled !== 'boolean' ? 'unknown' :
+    task.enabled && binding.enabled === true && source.host === host && task.projectId === binding.projectId ? 'pass' : 'fail';
+  return [
+    ['registry', registration, 'expected live version, host and loader status from the native registry'],
+    ['cadence', cadence, 'canonical registry cadence and one next due trigger in the current interval'],
+    ['predecessor', predecessor, 'native Review manager remains enabled during shadow or report testing'],
+    ['cutover', modes.includes(binding.workflow.mode) ? 'n/a' : 'fail', 'project coverage remains unknown on T3 0.1.12'],
+  ];
 }
 
 function validSchedule(s) {
