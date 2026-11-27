@@ -41,14 +41,28 @@ const quietTerms = [
   'thread-readbacks', 'ownership', 'prior-pass', 'lane-idle', 'pending-work',
 ];
 
+function reapStatus(reap) {
+  if (!Number.isInteger(reap.exitCode) || typeof reap.dockerAvailable !== 'boolean') return 'unknown';
+  return reap.exitCode === 0 && reap.dockerAvailable ? 'pass' : 'fail';
+}
+
+export function projectQuietFacts(report) {
+  if (!Array.isArray(report?.terms)) return null;
+  const holds = report.terms.find((term) => term?.id === 'pending-work')?.evidence?.holds;
+  return {
+    version: report.version,
+    terms: report.terms.map((term) => ({ id: term?.id ?? null, status: term?.status ?? null })),
+    ...(Array.isArray(holds) && { holdCount: holds.filter((row) => row !== '- none').length }),
+  };
+}
+
 export function decide({ discovery, inventory, reap, facts }, scheduledAt) {
   const reasons = [];
   if (!inSlot(inventory.observedAt, scheduledAt)) reasons.push('slot-observation:unknown');
   if (inventory.coverage !== 'pass') reasons.push('project-coverage:unknown');
   if (discovery.status !== 'pass') reasons.push('safe-6:unknown');
-  if (reap.exitCode !== 0 || reap.dockerAvailable !== true) {
-    reasons.push(Number.isInteger(reap.exitCode) && typeof reap.dockerAvailable === 'boolean' ? 'reap:fail' : 'reap:unknown');
-  }
+  const reapFact = reapStatus(reap);
+  if (reapFact !== 'pass') reasons.push('reap:' + reapFact);
   if (inventory.flagged.some((row) => row.status === 'reply')) reasons.push('flagged-reply');
   if (inventory.flagged.some((row) => row.status === 'unknown')) reasons.push('flagged-history:unknown');
   const prior = inventory.prior?.thread;
@@ -68,23 +82,27 @@ export function decide({ discovery, inventory, reap, facts }, scheduledAt) {
   return [...new Set(reasons)];
 }
 
-export function brief(runId, state, prs, flagged) {
-  const lines = [
-    `AXSTACK-WAKE ${managerIdentity} run ${runId}`,
-    '',
-    'Follow the installed review-manager-report.md.',
-    `Continuity store key: ${managerIdentity}:continuity`,
-    `Import digest: ${state.sourceSha}`,
-    `Prior manager: ${state.prior}`,
-    `Flagged threads: ${flagged.map((row) => row.id).filter(reviewId).join(', ')}`,
-    `Observed PRs: ${[...new Set(prs.filter(prId))].sort().join(', ')}`,
-  ];
-  return lines.join('\n');
-}
-
-export function receiptMatches(result, runId, state) {
-  const receipt = result?.value;
-  return result?.outcome === 'done' && receipt?.kind === 'AXSTACK-REVIEW-MANAGER' &&
-    receipt.runId === runId && receipt.sourceSha === state.sourceSha && reviewId(receipt.threadId) &&
-    receipt.threadId === result.thread?.threadId && Array.isArray(receipt.writes) && receipt.writes.length === 0;
+export function reportFacts(runId, scheduledAt, state, { discovery, inventory, reap, facts }) {
+  const terms = facts?.version === 2 && Array.isArray(facts.terms)
+    ? facts.terms.filter((term) => quietTerms.includes(term.id)).map(({ id, status }) =>
+      ({ id, status: status === 'pass' || status === 'fail' ? status : 'unknown' }))
+    : [];
+  return {
+    runId, scheduledAt, observedAt: inventory.observedAt,
+    coverage: {
+      projects: inventory.coverage, readableProjects: inventory.readableProjects ?? null, discovery: discovery.status,
+    },
+    continuity: { sourceSha: state.sourceSha, prior: state.prior, schedule: state.schedule },
+    holds: {
+      count: facts?.version === 2 ? facts.holdCount ?? null : null,
+      flagged: inventory.flagged.filter((row) => reviewId(row.id)).map((row) => ({ threadId: row.id, status: row.status })),
+    },
+    reap: {
+      status: reapStatus(reap),
+      exitCode: Number.isInteger(reap.exitCode) ? reap.exitCode : null,
+      dockerAvailable: typeof reap.dockerAvailable === 'boolean' ? reap.dockerAvailable : null,
+    },
+    terms,
+    prs: [...new Set(discovery.prs.filter(prId))].sort(),
+  };
 }
