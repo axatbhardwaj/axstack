@@ -33,7 +33,22 @@ function ownerState(ownerId, binding, view, projection, ending = false) {
     return { hold: "owner is archived" };
   if (!ending && (thread.snoozed === true || thread.pendingRequestCount > 0))
     return { hold: "owner is protected or awaiting user input" };
-  if (thread.archived !== false || typeof thread.snoozed !== "boolean" || !Number.isSafeInteger(thread.pendingRequestCount) || thread.pendingRequestCount < 0 || ![
+  if (thread.archived !== false || typeof thread.snoozed !== "boolean" || !Number.isSafeInteger(thread.pendingRequestCount) || thread.pendingRequestCount < 0) {
+    return { hold: "native owner state is unknown" };
+  }
+  const observed = projection?.thread;
+  const model = observed?.modelSelection;
+  if (observed?.id !== ownerId || observed.archivedAt !== null || observed.deletedAt !== null || thread.projectId !== observed.projectId || thread.model !== model?.model || thread.providerInstanceId !== model?.instanceId || thread.runtimeMode !== observed.runtimeMode || !sameBinding(binding, {
+    projectId: observed.projectId,
+    model: { ...model, options: model?.options === undefined ? [] : model.options },
+    runtimeMode: observed.runtimeMode
+  }))
+    return { hold: "effective owner binding is unknown or mismatched" };
+  const runsKnown = Array.isArray(projection.runs);
+  if (!ending && runsKnown && projection.runs.some((run) => run?.status === "queued" && run.queueHeld === true)) {
+    return { hold: "owner is protected by a held queue" };
+  }
+  const statusKnown = [
     "idle",
     "completed",
     "running",
@@ -45,23 +60,13 @@ function ownerState(ownerId, binding, view, projection, ending = false) {
     "failed",
     "cancelled",
     "rolled_back"
-  ].includes(thread.status)) {
-    return { hold: "native owner state is unknown" };
-  }
-  const observed = projection?.thread;
-  const model = observed?.modelSelection;
-  if (observed?.id !== ownerId || observed.archivedAt !== null || observed.deletedAt !== null || thread.projectId !== observed.projectId || thread.model !== model?.model || thread.providerInstanceId !== model?.instanceId || thread.runtimeMode !== observed.runtimeMode || !sameBinding(binding, {
-    projectId: observed.projectId,
-    model: { ...model, options: model?.options === undefined ? [] : model.options },
-    runtimeMode: observed.runtimeMode
-  }))
-    return { hold: "effective owner binding is unknown or mismatched" };
-  if (!Array.isArray(projection.runs))
-    return { hold: "native owner state is unknown" };
-  if (!ending && projection.runs.some((run) => run?.status === "queued" && run.queueHeld === true)) {
-    return { hold: "owner is protected by a held queue" };
-  }
-  return { status: thread.status };
+  ].includes(thread.status);
+  const gaps = [];
+  if (!statusKnown)
+    gaps.push("native owner status is unknown");
+  if (!runsKnown)
+    gaps.push("native owner run coverage is unavailable");
+  return { status: statusKnown ? thread.status : "unknown", gaps };
 }
 function timerPlan(receipt, consumed, now) {
   if (receipt.state !== "active")
@@ -336,9 +341,11 @@ var axstack_watch_backstops_default = T3.workflow(NAME, {
         return current;
       const owner = yield* readOwner(ownerId, config, binding);
       const signal = activity(owner.messages, ownerId, current.since, Date.now());
-      if (!shadow && signal.decision === "wake")
+      const decision = owner.gaps.length ? "wake" : signal.decision;
+      const gap = [signal.gap, ...owner.gaps].filter(Boolean).join(", ");
+      if (!shadow && decision === "wake")
         yield* claimWake(lease, id, tick);
-      return { ...current, ...signal, ownerStatus: owner.status };
+      return { ...current, ...signal, decision, ownerStatus: owner.status, ...gap && { gap } };
     }));
     if (slot.stop)
       return { decision: slot.stop };
@@ -354,9 +361,13 @@ Owner ${ownerId} slot ${tick}`;
       const { config, receipt } = yield* readControl(ownerId, binding);
       const owner = yield* readOwner(ownerId, config, binding, receipt.state !== "active");
       const matches = Array.isArray(owner.messages) ? owner.messages.filter((message) => message.threadId === ownerId && message.createdBy === "system" && message.creationSource === "server" && message.text === brief) : [];
-      if (matches.length !== 1)
-        return yield* hold("wake delivery could not be read back exactly once");
-      return { delivery: "pass" };
+      const claim = yield* lease.get;
+      if (!Option.isSome(claim) || claim.value?.runId !== id || claim.value.round !== tick) {
+        return yield* hold("wake slot claim is unavailable or has another owner");
+      }
+      if (!matches.length)
+        return yield* hold("wake delivery could not be read back");
+      return { delivery: "pass", observedMessages: matches.length };
     }));
   }
 }));
