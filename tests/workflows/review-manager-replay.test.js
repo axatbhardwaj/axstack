@@ -31,6 +31,8 @@ async function replay(options = {}) {
   const steps = [];
   let transaction = false;
   const bindings = { mode: options.mode ?? (options.shadow ? 'shadow' : 'report'), project: '/fixture/project' };
+  if (options.workflowOwned) fixture.progress = fixture.progress.replace(
+    /exact terminal receipt: [^,]+,/, 'exact terminal receipt: axstack-review-manager/every:1800000,');
   if (options.flagged) fixture.progress = fixture.progress.replace('- none\n\n## Watermarks',
     `- ${fixture.flaggedId ?? 'fixture-thread'}: flagged; resume: user decision only\n\n## Watermarks`);
   if (options.ownerAge !== undefined) {
@@ -258,6 +260,13 @@ test('active all-pass tick skips the agent and keeps continuity out of the store
   expect(agents).toEqual([]);
   expect([...values.keys()]).toEqual([prefix + ':latest-slot']);
   expect(calls).toContainEqual(['helper-input', fixture.progress]);
+});
+
+test('the next active tick reads continuity written by a workflow manager', async () => {
+  const run = await replay({ mode: 'active', workflowOwned: true });
+  expect(run.result).toEqual({ decision: 'quiet', mode: 'active', reasons: [] });
+  expect(run.calls).toContainEqual(['helper-input', run.fixture.progress]);
+  expect(run.agents).toEqual([]);
 });
 
 for (const [facts, reason] of [[{ coverage: 'unknown' }, 'project-coverage:unknown'], [{ reap: true }, 'reap:fail']]) {
