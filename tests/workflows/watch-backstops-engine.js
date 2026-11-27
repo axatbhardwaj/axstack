@@ -52,8 +52,9 @@ if (guard === 'manifest-not-private') chmodSync(manifestFile, 0o644);
 if (guard === 'binding-not-private') chmodSync(configFile, 0o644);
 
 const receipt = { ownerId, state: status, binding: structuredClone(binding), capturedAt: iso(-300_000), timers: {
-  watch: iso(settings.cadence ? 3_600_000 : 0), autopilot: settings.cadence ? iso(3_600_000) : null,
-  writer: settings.cadence ? iso(300_000) : null, recovery: settings.cadence ? iso(300_000) : null,
+  watch: iso(settings.cadence || settings.outage ? 3_600_000 : 0), autopilot: settings.cadence ? iso(3_600_000) : null,
+  writer: settings.cadence || settings.outage || settings.delivery === 'resend' ? iso(300_000) : null,
+  recovery: settings.cadence ? iso(300_000) : null,
 } };
 if (guard === 'wrong-receipt-owner') receipt.ownerId = prior;
 if (guard === 'unsafe-receipt-state') receipt.state = 'unknown';
@@ -149,6 +150,7 @@ const gen = (fn) => unit(async () => {
   return next.value;
 });
 const slots = [];
+const readbacks = [];
 const store = new Map();
 const leaseKey = 'axstack-watch-backstops:' + (settings.shadow ? 'shadow:' : 'live:') + ownerId;
 if (settings.prior || ['claim-conflict', 'prior-run-gap'].includes(guard)) store.set(leaseKey, { runId: prior, round: 1 });
@@ -174,7 +176,10 @@ Object.assign(globalThis, {
           slots.push(result);
           if (settings.shadow || result.decision === 'native') settled();
         }
-        if (name.startsWith('wake-readback-') && settings.delivery !== 'parks') settled();
+        if (name.startsWith('wake-readback-')) {
+          readbacks.push(result);
+          if (settings.delivery !== 'parks') settled();
+        }
         return result;
       } catch (error) {
         throw Object.assign(error, { step: name });
@@ -182,6 +187,7 @@ Object.assign(globalThis, {
     }),
     sleep: (name, duration) => unit(() => {
       now += Number(duration.split(' ')[0]) * 1000;
+      if (settings.outage && name === 'wait-timers-1') now = start + 197 * 60_000;
       if (!name.startsWith('coalesce-native-')) return;
       if (settings.native === 'simultaneous') native(new Date(now - 500).toISOString());
       if (guard === 'slot-claim-lost') store.set(leaseKey, { runId: prior, round: 0 });
@@ -207,9 +213,21 @@ Object.assign(globalThis, {
     agent: { try: (_name, options) => unit(() => {
       agents.push({ at: new Date(now).toISOString(), options, queue: settings.busy ? 'queued' : 'started' });
       if (settings.delivery !== 'missing') {
-        projection.messages.push({ id: 'workflow-wake-' + slots.length, role: 'user', createdBy: 'system', creationSource: 'server', threadId: ownerId,
-          createdAt: new Date(now).toISOString(), text: options.brief });
+        const message = {
+          id: 'workflow-wake-' + slots.length, role: 'user', createdBy: 'system', creationSource: 'server', threadId: ownerId,
+          createdAt: new Date(now).toISOString(), text: options.brief,
+        };
+        projection.messages.push(message);
+        // T3 v0.1.12 retries a failed first owner turn inside the same agent step.
+        // It starts a new turn with another message ID and the verbatim brief.
+        if ((settings.delivery === 'resend' && slots.length === 1) || guard === 'readback-claim-lost') {
+          const runPrefix = `run:thread:${encodeURIComponent(ownerId)}:ordinal:`;
+          message.runId = runPrefix + '148';
+          projection.runs.push({ id: message.runId, status: 'failed' }, { id: runPrefix + '149', status: 'completed' });
+          projection.messages.push({ ...message, id: message.id + '-retry', runId: runPrefix + '149' });
+        }
       }
+      if (guard === 'readback-claim-lost') store.set(leaseKey, { runId, round: 0 });
       if (settings.delivery === 'binding-changed') projection.thread.modelSelection.options[0].value = 'low';
       if (settings.delivery === 'parks') {
         receipt.state = 'parked';
@@ -218,7 +236,7 @@ Object.assign(globalThis, {
         write(root + '/view.json', view);
       }
       syncProjection();
-      return { outcome: settings.delivery ? 'failed' : 'done' };
+      return { outcome: ['ambiguous', 'missing'].includes(settings.delivery) ? 'failed' : 'done' };
     }) },
   },
 });
@@ -232,4 +250,4 @@ try {
 } catch (error) {
   result = { decision: 'paused', reason: error.message, step: error.step ?? null };
 }
-console.log(JSON.stringify({ result, agents, slots, nativeEvents, ownerId, runId, triggers: workflow.config.triggers }));
+console.log(JSON.stringify({ result, agents, slots, readbacks, nativeEvents, ownerId, runId, triggers: workflow.config.triggers }));
