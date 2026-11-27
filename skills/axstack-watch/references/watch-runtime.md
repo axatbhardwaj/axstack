@@ -33,7 +33,11 @@ merge-ready. An own PR published after the watch stops arms a new watch under
 after verified readback, subject to the user's explicit publication boundary.
 
 The initiating T3 thread remains the sole driver and `progress.md` writer.
-Initially use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md):
+Use the [owner backstop workflow](workflow-backstops.md) on a locally opted-in
+host after verified cutover. Apply the same cadence and stop conditions below
+through the workflow control record.
+
+For native fallback, initially use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md):
 `schedule_task` with `bindToCurrentThread:true`, `everyMs:3600000`, a stable
 `clientRequestId`, and the authorized watch prompt. Record the schedule ID,
 driver thread, chosen mechanism and native schedule lifetime; the watch inherits the driver binding at creation.
@@ -82,12 +86,13 @@ Read back each schedule update and record its receipt; an uncertain update holds
 Each wake reconciles unsettled launched-fallback Writer runs before running the authorized maintenance loop.
 A failed run holds incomplete work even when its writer sent no receipt.
 A missing schedule capability holds activation. Delegated roles follow T3 runtime.
-T3 supplies chat-run watch wakes through native events and schedules.
+T3 supplies chat-run watch wakes through native events and schedules on the fallback path.
 Drivers never poll delegated tasks between wakes.
 
 At the start of each driver wake, follow [Provider bindings](../../axstack/references/t3-runtime.md#preflight-and-binding)
 for provider binding.
 On native PR wakes, reconcile the event plus a current-state read instead of running `pr-digest.js`.
+Treat workflow timer wakes as schedule wakes for the digest.
 On 5-minute schedule wakes before the recorded GraphQL reset time, skip
 `pr-digest.js` for the affected repository and continue local reconciliation.
 On the first schedule wake at or after the recorded GraphQL reset time, resume
@@ -180,6 +185,8 @@ or the user cancels. Without an Autopilot or Release record, the release step is
 applicable to this watch. A required PR closed without merging records a
 decision hold until the user resolves scope or cancels; the run is not release-eligible.
 For a required PR closed without merging, apply parking eligibility.
+For the workflow, record the terminal state and read back the exact run.
+For native fallback, follow the schedule teardown procedure.
 Delete only the recorded watch with `delete_scheduled_task` and read back its absence with
 `list_scheduled_tasks`.
 An uncertain delete preserves the hold and recorded schedule ID.
