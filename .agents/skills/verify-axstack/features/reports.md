@@ -122,6 +122,9 @@ files pass the content heuristic. Private-key markers and tracked env paths
 fail. Unavailable, opaque, binary or malformed PEM evidence stays unknown.
 This checks PEM envelopes and encoding, not cryptographic validity. Other key
 formats remain conservative path checks. Reports contain paths, not key bytes.
+Unsafe Git config keys produce an unknown worktree-status term, exit code 2
+and no Git status or execution clone. A valid filter driver gets one set of
+clean, process and required overrides.
 Without PID containment, an escaped writer can leave `logIncomplete: true`
 in concise `--run` stdout. The full report keeps each command's flag and the
 summary keeps its existing `incompleteLogs` count. Status and descendant
