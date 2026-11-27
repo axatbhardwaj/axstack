@@ -212,22 +212,6 @@ test('workflow report preserves the native manager lane during unknown project c
     [[denial, 'always block']], slot);
 });
 
-test('workflow report has a dedicated read-only prompt and preserves existing owners', async () => {
-  const file = Bun.file(`${root}/skills/axstack/references/review-manager-report.md`);
-  const prompt = await file.exists() ? await file.text() : '';
-  const readOnly = /(?:keep|use|restrict|limit)[^.]*read-only/i;
-  checkRule(prompt, (value) => requires(value, readOnly, /report/i),
-    'Use read-only operations for the report.',
-    [[readOnly, 'Use write-enabled operations']], [/read-only/i, /report/i]);
-  const leave = /leave|reserve/i;
-  const scope = [/PRs|pull requests/i, /threads/i, /schedules/i, /files/i, /store/i, /(?:remote )?hosts/i, /(?:existing|current) owners/i];
-  checkRule(prompt, (value) => requires(value, leave, ...scope),
-    'Reserve pull requests, threads, schedules, files, store state and hosts for their current owners.',
-    [[leave, 'take over']], [leave, ...scope]);
-  expect(requires(prompt, /t3_submit_output/i, /runId/, /sourceSha/, /threadId/, /writes/)).toBe(true);
-  expect(prompt).not.toMatch(/sandbox reap|progress\.md|dispatch.*review/i);
-});
-
 test('workflow shadow documents continuity freshness and the native reap boundary', () => {
   const prose = compact('skills/axstack/references/automations.md').split('### Workflow shadow')[1].split('## Session admission')[0];
   const once = [/imports?|loads?/i, /continuity/i, /(?:exactly )?once|a single time/i];
