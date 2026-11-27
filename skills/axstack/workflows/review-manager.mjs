@@ -4,6 +4,7 @@ export const workflowName = 'axstack-review-manager';
 export const version = 2;
 export const managerIdentity = `${workflowName}@${version}`;
 export const interval = 1_800_000;
+export const triggerId = `${workflowName}/every:${interval}`;
 export const busy = ['preparing', 'queued', 'starting', 'running', 'waiting'];
 export const reviewId = (value) => typeof value === 'string' && /^[A-Za-z0-9_][A-Za-z0-9:_%.-]{0,511}$/.test(value);
 export const repository = (value) => typeof value === 'string' &&
@@ -24,7 +25,7 @@ export function importState(progress) {
   if (headings.join('/') !== 'Lane state/Open holds/Watermarks/Last pass') return null;
   const lane = progress.split('## Open holds\n')[0];
   const owner = /^- scheduledTaskId, threadId\/runId, workspace and exact terminal receipt: ([^,]+), ([^/\s,]+)\/([^,]+), ([^,]+), (.+)$/m.exec(lane);
-  if (!owner || !reviewId(owner[1]) || !reviewId(owner[2]) || !reviewId(owner[3]) ||
+  if (!owner || !(reviewId(owner[1]) || owner[1] === triggerId) || !reviewId(owner[2]) || !reviewId(owner[3]) ||
       !/^- Active PR jobs and descendants: .+$/m.test(lane) || !/^- Quiet gate: .+$/m.test(progress) ||
       !/^- Last full pass: .+$/m.test(progress)) return null;
   const current = /^- Current pass identity: \S+ (\S+) /m.exec(lane)?.[1];
