@@ -57,7 +57,7 @@ test.skipIf(!t3).each(['shadow', 'report'])('isolated T3 completes %s, imports c
 }, 40_000);
 
 
-test.skipIf(!t3)('isolated T3 pauses active binding mismatch and edited mode before agent admission', async () => {
+test.skipIf(!t3)('isolated T3 holds a missing manager and rejects edited mode and destination', async () => {
   const scheduledAt = new Date().toISOString();
   await usingIsolatedT3({ t3, defaultLocation: true, beforeStart(server) {
     copyFileSync(bundle, server.workflows + `/${name}-v${version}.mjs`);
@@ -65,10 +65,8 @@ test.skipIf(!t3)('isolated T3 pauses active binding mismatch and edited mode bef
     const config = {
       mode: 'active', project: server.project, projectId: quiet.input.inventory.args.projectId,
       projects: [server.project], repository: quiet.input.repository, repositories: [quiet.input.repository],
-      progressCopy: server.root + '/progress.md', worktreeRoot: server.root + '/checkouts',
-      registryTokenFile: server.root + '/absent-token', operationalLimits: 'fixture limits',
-      nativeSeat: { runtimeMode: 'full-access', model: { instanceId: 'codex', model: 'gpt-6.2-sol',
-        options: [{ id: 'reasoningEffort', value: 'high' }] } },
+      progressCopy: server.root + '/progress.md', managerThreadId: 'absent-manager',
+      registryTokenFile: server.root + '/absent-token',
       t3, bun: process.execPath, skillsDirectory,
     };
     const bytes = JSON.stringify(config);
@@ -83,11 +81,10 @@ test.skipIf(!t3)('isolated T3 pauses active binding mismatch and edited mode bef
     server.env.PATH = server.root + ':' + server.env.PATH;
   } }, async (server) => {
     const first = server.start(name, 'isolated-active', { scheduledAt });
-    expect((await server.waitFor(first.runId, 'paused')).detail).toContain('binding or detached workspace mismatched');
+    expect((await server.waitFor(first.runId, 'paused')).detail).toContain('manager thread is missing or unreadable');
     const steps = server.command('workflow', 'show', first.runId, '--json').steps;
     expect(steps.find((step) => step.name === 'sandbox-reap')?.result).toEqual({ exitCode: 1, dockerAvailable: false });
     expect(steps.some((step) => step.kind === 'agent')).toBe(false);
-    expect(JSON.stringify(steps)).not.toContain('fixture limits');
     const store = server.command('workflow', 'store', 'list', identity, '--json');
     expect(JSON.stringify(store)).not.toContain(':continuity');
     expect(await Bun.file(server.root + '/progress.md').text()).toBe(quiet.progress);
@@ -96,11 +93,13 @@ test.skipIf(!t3)('isolated T3 pauses active binding mismatch and edited mode bef
 
     const file = server.root + '/binding.json';
     const config = await Bun.file(file).json();
-    writeFileSync(file, JSON.stringify({ ...config, mode: 'report' }));
-    const nextAt = new Date(Date.parse(scheduledAt) + 1_800_000).toISOString();
-    const edited = server.start(name, 'isolated-active-edited-mode', { scheduledAt: nextAt });
-    expect((await server.waitFor(edited.runId, 'paused')).detail).toContain('binding is missing, invalid, or changed');
-    const editedSteps = server.command('workflow', 'show', edited.runId, '--json').steps;
-    expect(editedSteps.map((step) => step.name)).toEqual(['claim-slot', 'binding']);
+    for (const [index, patch] of [{ mode: 'report' }, { managerThreadId: 'different-manager' }].entries()) {
+      writeFileSync(file, JSON.stringify({ ...config, ...patch }));
+      const nextAt = new Date(Date.parse(scheduledAt) + (index + 1) * 1_800_000).toISOString();
+      const edited = server.start(name, 'isolated-active-edited-' + index, { scheduledAt: nextAt });
+      expect((await server.waitFor(edited.runId, 'paused')).detail).toContain('binding is missing, invalid, or changed');
+      const editedSteps = server.command('workflow', 'show', edited.runId, '--json').steps;
+      expect(editedSteps.map((step) => step.name)).toEqual(['claim-slot', 'binding']);
+    }
   });
-}, 40_000);
+}, 55_000);
