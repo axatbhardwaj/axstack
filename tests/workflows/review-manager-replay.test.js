@@ -46,6 +46,10 @@ async function replay(options = {}) {
       runs: () => effect(() => options.active ? [{ id: other, status: 'waiting' }] : []),
       step: (name, _schema, work) => effect(async () => {
         steps.push(name);
+        if (name === options.supersedeAt) values.set(prefix + ':latest-slot', { runId: other, scheduledAt });
+        if (name === 'read-continuity' && options.corruptContinuity) {
+          values.set(prefix + ':continuity', { progress: fixture.progress, sourceSha: 'invalid' });
+        }
         try { return await work.run(); } catch (error) { throw Object.assign(error, { step: name }); }
       }),
       store: {
@@ -64,9 +68,9 @@ async function replay(options = {}) {
       agent: { try: (_name, settings) => effect(() => {
         agents.push(settings);
         return {
-          outcome: options.missing ? 'held' : 'done', thread: { threadId: manager },
+          outcome: options.missing || options.wrongOutcome ? 'held' : 'done', thread: { threadId: manager },
           value: options.missing ? null : {
-            kind: 'AXSTACK-REVIEW-MANAGER', runId: options.invalid ? other : options.runId ?? id,
+            kind: options.wrongKind ? 'OTHER' : 'AXSTACK-REVIEW-MANAGER', runId: options.invalid ? other : options.runId ?? id,
             sourceSha: options.staleReceipt ? '0'.repeat(64) : hash(fixture.progress),
             threadId: options.wrongThread ? 'workflow:other' : manager,
           },
@@ -175,6 +179,11 @@ for (const [label, input, step, agentCount] of [
   ['wrong run in receipt', { changed: true, invalid: true }, 'verify-manager-receipt', 1],
   ['stale digest in receipt', { changed: true, staleReceipt: true }, 'verify-manager-receipt', 1],
   ['wrong thread in receipt', { changed: true, wrongThread: true }, 'verify-manager-receipt', 1],
+  ['wrong receipt kind', { changed: true, wrongKind: true }, 'verify-manager-receipt', 1],
+  ['held outcome with receipt', { changed: true, wrongOutcome: true }, 'verify-manager-receipt', 1],
+  ['superseded before the wake', { changed: true, supersedeAt: 'read-wake-claim' }, 'require-wake-claim', 0],
+  ['superseded during the report', { changed: true, supersedeAt: 'record-report' }, 'verify-report-write', 1],
+  ['corrupt stored continuity', { corruptContinuity: true }, 'verify-continuity', 0],
   ['another active slot', { active: true }, 'claim-slot', 0],
   ['unauthorized active binding', { mode: 'active' }, 'binding', 0],
   ['malformed continuity ownership', { badOwnership: true }, 'read-predecessor-copy', 0],
