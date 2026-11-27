@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { gitStatusFilterOverrides } from '../git-status-filters.js';
 import { gitArgv, gitEnv } from './git-argv.js';
 import { readFileSync, mkdirSync, writeFileSync, lstatSync, realpathSync, renameSync, unlinkSync } from 'node:fs';
 import { executeDeclared } from './readiness-run.js';
@@ -304,11 +305,17 @@ function forgeStatus(origin) {
   }
 }
 
-function dirty(repo) {
-  // Status normally invokes clean/process filters. Observe raw source bytes instead.
-  const keys = git(repo, 'config', '--null', '--list').split('\0').map((entry) => entry.split('\n')[0]).filter((key) => /^filter\..*\.(clean|process)$/.test(key));
-  const overrides = keys.flatMap((key) => ['-c', `${key}=`, '-c', `${key.replace(/\.(clean|process)$/, '.required')}=false`]);
-  return git(repo, ...overrides, 'status', '--porcelain', '--untracked-files=all').length > 0;
+function observeWorktree(repo) {
+  const keys = git(repo, 'config', '--null', '--name-only', '--list');
+  const overrides = gitStatusFilterOverrides(keys);
+  if (!overrides) return {
+    dirty: null,
+    worktreeStatus: {
+      id: 'worktree-status', status: 'unknown',
+      reason: 'unsafe Git config key', evidence: ['git config --null --name-only --list'],
+    },
+  };
+  return { dirty: git(repo, ...overrides, 'status', '--porcelain', '--untracked-files=all').length > 0 };
 }
 
 async function report(args, paths) {
@@ -319,16 +326,17 @@ async function report(args, paths) {
   let rawOrigin = '';
   try { rawOrigin = git(repo, 'remote', 'get-url', 'origin').trim(); } catch { /* No origin. */ }
   const origin = normalizeOrigin(rawOrigin, repo);
+  const { dirty, worktreeStatus } = observeWorktree(repo);
   const header = {
     inputs: { repo: realpathSync(repo), rev: args['--rev'] ?? 'HEAD', baseline: args['--baseline'] ?? null, run: Boolean(args['--run']) },
     repoIdentity: { roots: git(repo, 'rev-list', '--max-parents=0', revision).trim().split('\n').sort(), origin },
-    revision, dirty: dirty(repo),
+    revision, dirty, worktreeStatus,
     observedAt: new Date().toISOString(), ghObservedAt: new Date().toISOString(), scriptVersion, criteriaVersion,
   };
   const files = snapshot(repo, revision);
   const criteria = assess(files);
   let execution;
-  if (args['--run']) {
+  if (args['--run'] && !worktreeStatus) {
     let pkg = {};
     try { pkg = JSON.parse(files.read('package.json') || '{}'); } catch { /* Static criteria already record invalid JSON. */ }
     execution = await executeDeclared(repo, revision, paths, criteria, packageManager(files, pkg), pkg, {
@@ -438,6 +446,7 @@ SIGKILL cannot trigger cleanup; scratch and active processes may remain.
 Repository code can write outside scratch; --run is not a sandbox.
 Without --run no repository commands execute. GH selects the read-only gh executable.
 Dirty observation disables Git filters and filesystem-monitor hooks.
+Unsafe Git config keys yield an unknown worktree-status term and hold before status or --run.
 Example: bun readiness.js --repo /repo --run --out /repo/.git/axstack/readiness/check.json
 Exit codes: 0 report (including failed criteria), 1 error, 2 incomplete, 10 regression.`;
 
@@ -466,12 +475,14 @@ export async function main(argv, io = { stdout: (text) => process.stdout.write(t
     writeReport(paths, result);
     const counts = Object.fromEntries(['pass', 'fail', 'unknown', 'n/a'].map((status) => [status, result.criteria.filter((item) => item.status === status).length]));
     io.stdout(`${JSON.stringify({
-      revision: result.header.revision, inputs: result.header.inputs, network: result.header.network, descendants: result.header.descendants, executionError: result.executionError,
+      revision: result.header.revision, inputs: result.header.inputs, worktreeStatus: result.header.worktreeStatus,
+      network: result.header.network, descendants: result.header.descendants, executionError: result.executionError,
       reportPath: paths.out, counts, pillars: result.pillars, omittedCriteria: result.criteria.length, omittedCommands: result.commands?.length ?? 0,
       omittedLogBytes: (result.commands ?? []).reduce((total, step) => total + step.omittedBytes, 0),
       incompleteLogs: (result.commands ?? []).filter((step) => step.logIncomplete).length,
       ...(args['--run'] && { logIncomplete: (result.commands ?? []).some((step) => step.logIncomplete) }),
     })}\n`);
+    if (result.header.worktreeStatus) return 2;
     return code || (result.executionError ? 2 : 0);
   } catch (error) {
     io.stderr(`Readiness error: ${error.message}\n`);
