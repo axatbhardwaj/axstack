@@ -1,4 +1,4 @@
-import { decide, reviewId, managerIdentity, importState, workflowName, reportFacts, time, version } from './review-manager.mjs';
+import { decide, reviewId, managerIdentity, importState, workflowName, reportFacts, time, triggerId, version } from './review-manager.mjs';
 
 class Hold extends Error {}
 
@@ -9,7 +9,7 @@ function managerBrief(runId) {
 
 Read the private activation binding for ${managerIdentity} from the local T3 workflow ownership manifest.
 Follow the installed review-manager-prompt.md in its skillsDirectory verbatim. Use progressCopy as HOST_CONTINUITY_PATH and operationalLimits as HOST_OPERATIONAL_LIMITS.
-For the current-pass scheduledTaskId use axstack-review-manager/every:1800000. Before reviewer admission read your effective T3 thread binding and compare it with nativeSeat and this workflow run's manager-launch step. Keep the native continuity and admission guards.
+For the current-pass scheduledTaskId use ${triggerId}. Before reviewer admission read your effective T3 thread binding and compare it with nativeSeat and this workflow run's manager-launch step. Keep the native continuity and admission guards.
 At pass end submit the typed receipt via t3_submit_output with your actual threadId and runId, and outcome quiet, full, or held. A quiet pass submits only the receipt. Preserve the prompt's guarded settlement once the receipt is recorded.`;
 }
 
