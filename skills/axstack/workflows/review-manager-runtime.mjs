@@ -1,11 +1,10 @@
 import { execFile } from 'node:child_process';
-import { lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { lstat, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { bindingMatches } from './binding.mjs';
-import { github, json, ownerBinding, run, runtimeRpc } from './dependabot-runtime.mjs';
-import { sameReportBinding } from './pr-triage.mjs';
+import { github, json, run, runtimeRpc } from './dependabot-runtime.mjs';
 import { githubPages } from './dependabot-pages.mjs';
-import { busy, hash, reviewId, managerIdentity, interval, projectQuietFacts, repository, time } from './review-manager.mjs';
+import { busy, hash, importState, reviewId, managerIdentity, interval, projectQuietFacts, repository, time } from './review-manager.mjs';
 
 const path = (value) => typeof value === 'string' && /^\/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+$/.test(value) &&
   !value.split('/').some((part) => part === '..' || part === '.');
@@ -35,12 +34,9 @@ async function readPrivateBinding(base) {
         !unique(config.repositories, repository) || !config.repositories.includes(config.repository) ||
         config.progressCopy === config.reapReceipt) return null;
     if (config.mode === 'active') {
-      if (![config.registryTokenFile, config.worktreeRoot].every(path) ||
-          config.nativeSeat?.runtimeMode !== 'full-access' ||
-          typeof config.operationalLimits !== 'string' || !config.operationalLimits.trim()) return null;
-      // The agent reads operational limits directly from the private binding.
-      const { operationalLimits: _privateLimits, ...safeConfig } = config;
-      return { ...safeConfig, digest: record.bindingDigest };
+      if (!path(config.registryTokenFile) || !reviewId(config.managerThreadId) ||
+          (config.nativePassThreadId !== undefined && !reviewId(config.nativePassThreadId))) return null;
+      return { ...config, digest: record.bindingDigest };
     }
     return path(config.reapReceipt) ? config : null;
   } catch {
@@ -111,9 +107,11 @@ async function discoverReviewPRs(config) {
     searches: projected, prs: [...prs].sort() };
 }
 
+const t3Thread = (base, config, command, ...args) => run(config.t3,
+  ['thread', command, '--base-dir', base, ...args, '--json'], { cwd: '/' }).then(json);
+
 async function threads(base, config, state, watermarks) {
-  const t3 = async (command, ...args) => json(await run(config.t3, ['thread', command,
-    '--base-dir', base, ...args, '--json'], { cwd: '/' }));
+  const t3 = (command, ...args) => t3Thread(base, config, command, ...args);
   const shown = async (threadId) => {
     if (!reviewId(threadId)) return null;
     const view = await t3('show', threadId, '--messages', '20');
@@ -135,10 +133,15 @@ async function threads(base, config, state, watermarks) {
     // A known reply proves presence. The bounded CLI tail cannot prove absence.
     return watermark === watermarks[id] ? { id, status: 'unknown' } : { id, status: 'reply', watermark };
   });
+  const nativePassIds = state.owners.filter((id) => id !== config.managerThreadId);
+  const nativeBusy = [...byId.values()].some((item) => nativePassIds.includes(item?.thread?.threadId) &&
+    threadActivity(item.thread, null) === 'busy') || lists.filter(Array.isArray).flat().some((row) =>
+    row?.projectId === config.projectId && nativePassIds.includes(row.threadId) && threadActivity(row, null) === 'busy');
   return {
     coverage: 'unknown', readableProjects: lists.filter(Array.isArray).length,
     inventory: null, prior: priorFields ? { thread: priorFields } : null, ownerUpdatedAt: owner?.updatedAt ?? null,
     flagged, observedAt: new Date().toISOString(),
+    ...(config.mode === 'active' && { nativePassIds, nativeBusy }),
   };
 }
 
@@ -181,60 +184,74 @@ async function quietFacts(config, progress, input) {
   }
 }
 
-async function prepareWorktree(config, runId) {
-  const { project, worktreeRoot } = config;
-  const info = await lstat(worktreeRoot);
-  if (!/^[A-Za-z0-9_-]+$/.test(runId) || !info.isDirectory() || info.uid !== process.getuid() ||
-      (info.mode & 0o077) || worktreeRoot === project || worktreeRoot.startsWith(project + '/') ||
-      project.startsWith(worktreeRoot + '/') || await realpath(worktreeRoot) !== worktreeRoot ||
-      await realpath(project) !== project) return null;
-  const git = (...args) => run('git', args, { cwd: project });
-  if ((await git('rev-parse', '--show-toplevel'))?.trim() !== project) return null;
-  const sha = (await git('rev-parse', '--verify', 'refs/remotes/origin/main^{commit}'))?.trim();
-  if (!/^[a-f0-9]{40}$/.test(sha ?? '')) return null;
-  const worktree = worktreeRoot + '/review-manager-' + runId;
-  try {
-    await mkdir(worktree, { mode: 0o700 });
-    if (await git('worktree', 'add', '--detach', '--', worktree, sha) === null) return null;
-  } catch (error) {
-    if (error.code !== 'EEXIST') throw error;
-  }
-  if (await realpath(worktree) !== worktree) return null;
-  const before = await git('worktree', 'list', '--porcelain', '-z');
-  const verified = before?.split('\0\0').some((record) => {
-    const fields = record.split('\0');
-    return fields[0] === 'worktree ' + worktree && fields.includes('HEAD ' + sha) && fields.includes('detached');
-  });
-  return verified ? worktree : null;
-}
-
 async function stillBound(base, config) {
-  return (await readPrivateBinding(base))?.digest === config.digest;
+  const current = await readPrivateBinding(base);
+  return current?.mode === 'active' && current.digest === config.digest;
 }
 
-async function managerLaunch(base, config, runId) {
-  if (!await stillBound(base, config)) return null;
-  const seat = await ownerBinding(base, { ...config, roles: config.skillsDirectory + '/roles.json' });
-  if (!seat || !sameReportBinding(seat, config.nativeSeat)) return null;
-  const worktree = await prepareWorktree(config, runId);
-  return worktree ? { ...seat, project: config.projectId, worktree } : null;
+const idle = ['idle', 'completed', 'interrupted', 'failed', 'cancelled', 'rolled_back'];
+function threadActivity(thread, runs) {
+  if (busy.includes(thread?.status) || reviewId(thread?.activeRunId) || thread?.blockedOnThreadWait === true ||
+      (Array.isArray(thread?.pendingBackgroundTasks) && thread.pendingBackgroundTasks.length > 0) ||
+      (Array.isArray(runs) && runs.some((row) => busy.includes(row?.status)))) return 'busy';
+  if (!idle.includes(thread?.status) || thread.activeRunId !== null || thread.blockedOnThreadWait !== false ||
+      !Array.isArray(thread.pendingBackgroundTasks) || !Array.isArray(runs) ||
+      !runs.every((row) => idle.includes(row?.status))) return 'unknown';
+  return 'idle';
 }
 
-async function verifyManager(base, config, expected, receipt) {
-  if (!await stillBound(base, config)) return false;
+async function managerState(base, config, inventory) {
+  if (!await stillBound(base, config)) return { hold: 'private Review manager binding changed before wake' };
+  const { managerThreadId, projectId } = config;
+  const current = importState(await privateRead(config.progressCopy).catch(() => null));
+  const previous = [...new Set([config.nativePassThreadId, ...inventory.nativePassIds, ...(current?.owners ?? [])])]
+    .filter((id) => id && id !== managerThreadId);
   const runtimeFile = base + '/userdata/server-runtime.json';
-  const before = await readFile(runtimeFile, 'utf8');
-  const state = json(before);
-  const [projection, view] = await Promise.all([
-    runtimeRpc(config, state?.origin, 'orchestration.getThreadProjection', receipt.threadId),
-    run(config.t3, ['thread', 'show', '--base-dir', base, receipt.threadId, '--messages', '1', '--json'], { cwd: '/' }),
+  const before = await readFile(runtimeFile, 'utf8').catch(() => null);
+  const origin = json(before)?.origin;
+  const read = (id) => Promise.all([
+    t3Thread(base, config, 'show', id, '--messages', '1'),
+    runtimeRpc(config, origin, 'orchestration.getThreadProjection', id),
   ]);
-  const effective = projection?.thread;
-  const thread = json(view)?.thread;
-  return before === await readFile(runtimeFile, 'utf8') && effective?.id === receipt.threadId &&
-    thread?.threadId === receipt.threadId && thread.projectId === expected.project &&
-    thread.worktreePath === expected.worktree && thread.latestRunId === receipt.runId &&
-    sameReportBinding(expected, { model: effective.modelSelection, runtimeMode: effective.runtimeMode });
+  const [[view, projection], ...prior] = await Promise.all([managerThreadId, ...previous].map(read));
+  const stable = before !== null && before === await readFile(runtimeFile, 'utf8').catch(() => null);
+  const thread = view?.thread;
+  const projected = stable ? projection?.thread : null;
+  if ((thread && (thread.threadId !== managerThreadId || thread.projectId !== projectId)) ||
+      (projected && (projected.id !== managerThreadId || projected.projectId !== projectId))) {
+    return { hold: 'Review manager thread identity or project mismatched' };
+  }
+  if (!thread && !projected) return { hold: 'Review manager thread is missing or unreadable' };
+  if (thread?.archived === true || projected?.archivedAt || projected?.deletedAt) {
+    return { hold: 'Review manager thread is archived or deleted' };
+  }
+  const status = threadActivity(thread, projected ? projection.runs : null);
+  const previousActivity = prior.map(([seen, snapshot], index) => {
+    const observed = seen?.thread;
+    const runs = stable && snapshot?.thread?.id === previous[index] && snapshot.thread.projectId === projectId
+      ? snapshot.runs : null;
+    return threadActivity(observed?.threadId === previous[index] && observed.projectId === projectId ? observed : null, runs);
+  });
+  if (status === 'busy' || inventory.nativeBusy || previousActivity.includes('busy')) return { status: 'busy', gaps: [] };
+  if (thread?.snoozed === true || thread?.pendingRequestCount > 0) {
+    return { hold: 'Review manager thread is snoozed or awaiting user input' };
+  }
+  const gaps = [];
+  if (status === 'unknown' || thread?.archived !== false || thread?.snoozed !== false ||
+      thread?.pendingRequestCount !== 0) gaps.push('manager-activity:unknown');
+  if (!current || previousActivity.includes('unknown')) gaps.push('native-pass-activity:unknown');
+  return { status: gaps.length ? 'unknown' : 'idle', gaps };
+}
+
+async function wake(base, config, brief) {
+  if (!await stillBound(base, config)) return null;
+  // POC-6 CLI delivery returns once T3 accepts the message. The manager's
+  // later turns are driven by its own thread and background task completions.
+  const sent = await t3Thread(base, config, 'send', config.managerThreadId, brief);
+  if (sent?.threadId !== config.managerThreadId || !reviewId(sent.runId) || !reviewId(sent.messageId) ||
+      !['started', 'queued'].includes(sent.delivery)) return null;
+  const { threadId, runId, messageId, delivery } = sent;
+  return { threadId, runId, messageId, delivery };
 }
 
 export function reviewRuntime(base) {
@@ -247,8 +264,8 @@ export function reviewRuntime(base) {
       return activeReap(config);
     },
     discover: discoverReviewPRs,
-    launch: (config, runId) => managerLaunch(base, config, runId),
-    verifyManager: (config, expected, receipt) => verifyManager(base, config, expected, receipt),
+    managerState: (config, inventory) => managerState(base, config, inventory),
+    wake: (config, brief) => wake(base, config, brief),
     inventory: (config, state, watermarks) => threads(base, config, state, watermarks), quietFacts,
   };
 }
