@@ -158,3 +158,40 @@ for (const [name, change] of [
     expect(status(report, `test-audit-weekly.md.${suffix}`)).toBe('unknown');
   }
 });
+
+const reviewWorkflow = 'axstack-review-manager';
+const activate = (data, mode = 'shadow') => {
+  const binding = data.bindings.schedules[0];
+  data.export.host = data.bindings.host = 'axat-vps';
+  binding.workflow = { mode };
+  data.export.tasks[0].enabled = mode === 'shadow';
+  data.export.registry = { definition: { problem: null }, workflows: [
+    { name: reviewWorkflow, version: 1, triggers: ['every 30m'] },
+  ] };
+  data.export.journal = { complete: true, triggers: [
+    { triggerId: reviewWorkflow + '/every:1800000', nextAt: '2026-11-16T00:01:00Z' },
+  ] };
+};
+
+for (const [label, change, id, expected] of [
+  ['shadow and native schedule', () => {}, 'predecessor', 'pass'],
+  ['missing registry', (data) => { delete data.export.registry; }, 'registry', 'unknown'],
+  ['wrong exact version', (data) => { data.export.registry.workflows[0].version = 2; }, 'registry', 'fail'],
+  ['wrong interval', (data) => { data.export.registry.workflows[0].triggers = ['every 1h']; }, 'cadence', 'fail'],
+  ['stale next slot', (data) => { data.export.journal.triggers[0].nextAt = '2026-11-15T22:00:00Z'; }, 'cadence', 'fail'],
+  ['unknown trigger inventory', (data) => { data.export.journal.complete = false; }, 'cadence', 'unknown'],
+  ['disabled predecessor during shadow', (data) => { data.export.tasks[0].enabled = false; }, 'predecessor', 'fail'],
+  ['unproved cutover', (data) => { activate(data, 'active'); }, 'cutover', 'fail'],
+]) {
+  test('Review manager workflow drift checks ' + label, () => {
+    const { report } = run((data) => { activate(data); change(data); });
+    expect(status(report, 'review-manager-workflow.' + id)).toBe(expected);
+  });
+}
+
+test('native predecessor comparison uses the prompt bytes before the workflow report', () => {
+  const { report } = run((data) => {
+    data.prompts['review-manager-prompt.md'] += '\n## Workflow report\n\nSubmit the workflow receipt.\n';
+  });
+  expect(status(report, 'review-manager-prompt.md.prompt')).toBe('pass');
+});
