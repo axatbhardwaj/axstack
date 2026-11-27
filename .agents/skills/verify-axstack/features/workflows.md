@@ -72,11 +72,12 @@ tests/workflows/review-manager-runtime.test.js tests/workflows/review-manager-ac
 tests/workflows/review-manager-native.test.js tests/workflows/native-bundle.test.js`.
 Use isolated T3 0.1.12 for native pause and duplicate readback and both CI Bun
 versions for exact bundle bytes. Replay the archived quiet and wake shapes,
-unknown coverage, reap failure, binding mismatch, digest drift and missing
-or invalid receipts. Verify the active store keeps only the slot claim and
-the workflow leaves the continuity file unchanged. The all-pass quiet case
-uses a fixture with known coverage. The active live tick, native predecessor
-retirement and rollback drill require their own readback.
+including one idle delivery, a multi-turn busy manager, pending jobs and an
+active native predecessor. Check missing or archived threads, digest drift,
+unknown activity, and ambiguous delivery. Verify no worktree or continuity
+write. Drift fixtures cover a recent trigger firing while a pass is in
+flight and detect overlapping or absent wake sources. The active live tick,
+native predecessor retirement and rollback drill require their own readback.
 
 ## Parallel-first acceptance (Outcomes 1–6)
 
