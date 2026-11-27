@@ -26,6 +26,15 @@ async function fixture(work, overrides = {}) {
       skillsDirectory: import.meta.dir.slice(0, -'/tests/workflows'.length) + '/skills/axstack',
       ...overrides.config,
     };
+    if (overrides.quietProbe) {
+      config.skillsDirectory = scratch + '/probe-skill';
+      await mkdir(config.skillsDirectory + '/scripts', { recursive: true, mode: 0o700 });
+      await writeFile(config.skillsDirectory + '/scripts/schedule-drift.js', `
+        const expected = ['PATH', 'HOME', 'TMPDIR'].every((key) => process.env[key]);
+        const status = expected && process.env.AXSTACK_REVIEW_TEST_SENTINEL === undefined ? 'pass' : 'fail';
+        console.log(JSON.stringify({ version: 2, terms: [{ id: 'environment', status }] }));
+      `, { mode: 0o600 });
+    }
     const binding = scratch + '/binding.json';
     const bytes = JSON.stringify(config);
     const markerCheck = '[ "$(printenv AXSTACK_REVIEW_TEST_SENTINEL || true)" = "" ] || exit 82';
@@ -49,16 +58,25 @@ async function fixture(work, overrides = {}) {
       'show) case "$5" in\n' +
       'fixture-flagged) ' + print({ thread: flagged, messages: [userReply] }) + ';;\n' +
       '*) ' + print({ thread: prior, messages: [] }) + ';;\nesac;;\nesac\n');
-    const pages = 'printf "HTTP/2 200 OK\\r\\n%s\\r\\n" ' +
-      (overrides.next ? "'Link: <https://api.github.com/repos/fixture/example/pulls?page=2>; rel=\"next\"'" : "''");
-    const pr = { number: candidate.number, title: 'PRIVATE PR TITLE', draft: candidate.isDraft,
-      updated_at: candidate.updatedAt, state: 'open', user: candidate.author, base: { repo: { full_name: repo } } };
+    const search = Array.from({ length: overrides.searchLength ?? 1 }, (_, index) =>
+      ({ ...candidate, number: candidate.number + index }));
+    const pages = [];
+    for (let offset = 0; offset < search.length; offset += 100) {
+      const page = offset / 100 + 1;
+      const next = overrides.next || offset + 100 < search.length;
+      const header = next ? `Link: <https://api.github.com/repos/${repo}/pulls?page=${page + 1}>; rel="next"\\r\\n` : '';
+      const prs = search.slice(offset, offset + 100).map((row) => ({
+        number: row.number, title: 'PRIVATE PR TITLE', draft: row.isDraft,
+        updated_at: row.updatedAt, state: 'open', user: row.author, base: { repo: { full_name: repo } },
+      }));
+      pages.push(`*"pulls?"*"page=${page}") printf "HTTP/2 200 OK\\r\\n%b\\r\\n" '${header}'\n` + print(prs) + ';;\n');
+    }
     await command('gh', 'case "$*" in\n' +
       '*" user") ' + print({ login }) + ';;\n' +
-      '*"pulls?"*"page=2") exit 4;;\n' +
-      '*"pulls?"*) ' + pages + '\n' + print([pr]) + ';;\n' +
+      pages.join('') +
+      '*"pulls?"*) exit 4;;\n' +
       '*"--review-requested"*) ' + print([]) + ';;\n' +
-      '*"--involves"*) ' + print(overrides.emptySearch ? [] : [candidate]) + ';;\nesac\n');
+      '*"--involves"*) ' + print(overrides.emptySearch ? [] : search) + ';;\nesac\n');
     process.env.PATH = scratch + ':' + originalPath;
     process.env[marker] = 'synthetic-marker';
     await work(reviewRuntime(scratch), config);
@@ -112,3 +130,21 @@ test('sandbox receipt from the previous interval is usable and future/stale rece
     });
   }
 });
+
+test('quiet helper gets its read context without inheriting the sentinel', () => fixture(async (runtime, config) => {
+  expect(await runtime.quietFacts(config, quiet.progress, quiet.input)).toEqual({
+    version: 2, terms: [{ id: 'environment', status: 'pass' }],
+  });
+}, { quietProbe: true }));
+
+for (const [length, expected] of [[999, 'pass'], [1000, 'unknown']]) {
+  test(`a ${length}-row search is ${expected} even when all REST pages agree`, () => fixture(async (runtime, config) => {
+    const result = await runtime.discover(config);
+    expect(result.status).toBe(expected);
+    if (expected === 'pass') expect(result.searches[1]).toHaveLength(length);
+    else {
+      expect(result.searches[1]).toBeNull();
+      expect(result.prs).toEqual([]);
+    }
+  }, { searchLength: length }));
+}
