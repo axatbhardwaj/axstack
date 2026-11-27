@@ -169,7 +169,7 @@ export function reviewRuntime(base) {
     inventory: (config, state, watermarks) => threads(base, config, state, watermarks), quietFacts,
     resolveSeat: (config) => ownerBinding(base, config),
     verifySeat: async (config, expected, threadId) =>
-      await sameBinding(config) && JSON.stringify(await ownerBinding(base, config)) === JSON.stringify(expected) &&
+      await sameBinding(config) && JSON.stringify((await ownerBinding(base, config))?.model) === JSON.stringify(expected.model) &&
       (await driverReadback(base, config, expected, null, threadId))?.thread?.projectId === config.projectId,
   };
 }
