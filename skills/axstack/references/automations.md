@@ -57,7 +57,8 @@ except the guarded pass-end self-settle.
 
 The lane thread must use the recorded `axstack-owner` binding and verify its
 readback through `t3_thread_read`. Before `schedule_task`, render the packaged prompt
-by filling every `{{HOST_*}}` placeholder from the private host binding used by
+using the bytes before the Workflow report heading and filling every
+`{{HOST_*}}` placeholder from the private host binding used by
 `schedule-drift.js`. Never deploy a prompt containing an unfilled `{{HOST_*}}` placeholder.
 Then `schedule_task` uses the rendered packaged prompt,
 every 30 minutes with `everyMs:1800000`, `bindToCurrentThread:false`, and a stable `clientRequestId`.
@@ -69,6 +70,34 @@ A binding mismatch holds admission.
 Read [T3 runtime](t3-runtime.md) for capability, provider/effort, prompt, dispatch,
 completion and cleanup boundaries; a manager never checks out a PR branch in
 its pass worktree. Missed slots do not replay a backlog.
+
+### Workflow shadow
+
+`axstack-review-manager@1` declares a 30-minute T3 trigger for axat-vps.
+The native schedule keeps ownership while T3 0.1.12 project and descendant
+coverage is unknown. Every unknown tick records a wake in shadow mode.
+Report mode exercises one read-only manager and verifies the typed receipt
+and effective binding. Neither mode reaps live resources or admits reviewers.
+The sandbox step reads a private copy of the predecessor's recent quiet-facts
+receipt. A missing, stale or failed reap remains a wake reason.
+
+Bind `mode`, `project`, `projectId`, `projects`, `repository`, `repositories`,
+`roles`, `registryTokenFile`, `bun`, `t3`, `skillsDirectory`, `progressCopy`
+and `reapReceipt` in the private workflow binding. Copy the predecessor's
+progress before its identity write. The workflow imports that exact continuity
+once under its slot claim. Idle flagged threads never block a slot. A bounded
+reply read proves presence and leaves absence unknown.
+
+For drift, use the native schedule export plus the same host's saved
+`registry` and `journal` observations. Declare `workflow.mode` on the
+Review manager binding row. Retain the native schedule and exact continuity
+through D3 replay. Cutover needs proved coverage, matching live shadow
+evidence and the required POCs, then stop and read back the predecessor,
+reconcile its final state and verify one writer. After a state advance in a
+disposable rehearsal, stop the workflow, export the latest continuity and
+operation claims, restore the predecessor and verify one owner. Until then,
+rollback of the shadow consists of removing its registry entry and verifying
+the native schedule still owns the lane.
 
 T3 sessions are exempt from Claude trust preflight.
 
