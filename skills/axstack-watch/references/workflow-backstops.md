@@ -47,16 +47,21 @@ Record the chosen mechanism and the interval deadlines in the run record.
 Copy the effective T3 binding, including options, from the owner record.
 Use UTC deadlines. Use `null` for inactive causes. `watch` (own PR/release)
 and `autopilot` recur after 60 minutes. `writer` (launched-fallback Writer
-without a completion wake) and `recovery` (native PR watch unavailable,
-unarmed or GraphQL-limited) recur after 5 minutes. A delegate's native
+or unsettled follow-up without a completion wake) and `recovery` (native PR
+watch unavailable, unarmed or GraphQL-limited) recur after 5 minutes. A delegate's native
 completion requires no timer. Keep armed deadline anchors stable across
 turns. For a new cause, record its first due time.
 
 Start locally with `t3 workflow start axstack-watch-backstops --key "$KEY" --input "$PAYLOAD" --json`.
 Use a stable key for the owner, mode and activation attempt. The input is
-`{"ownerId":"THREAD_ID","shadow":false}` in live mode. Record the run ID,
-check `t3 workflow show` and reuse the active run. A paused run retains the
-owner claim. Resolve its recorded cause in the owner thread before resuming.
+`{"ownerId":"THREAD_ID","shadow":false}` in live mode. Record the run ID
+and reuse the active run. At each turn end with an active owner and an active
+timer cause, read `t3 workflow show <runId> --json` for the recorded run.
+If paused, resolve the cause in the owner thread and use
+`t3 workflow resume <runId> --json`, then read back the state. If a terminal
+run still has an active cause, reconcile its last slot and re-arm with a fresh
+key and the next due times. If workflow recovery fails, record the hold and follow the rollback
+procedure to restore the native timer.
 
 When the owner parks, the user stops, or the watch completes, publish
 `parked`, `user-stopped` or `complete`. The workflow ends on observing the
@@ -74,7 +79,9 @@ runs the applicable PR digest and GraphQL-reset skip, and evaluates
 readiness in the owner thread. Keep the native event path. If a native PR
 event consumes a simultaneous slot, reconcile due local lifecycle and release
 work on that wake too. Deduplicate actions using the recorded event IDs,
-current revision and acknowledged observations. A wake never clears a hold.
+current revision and acknowledged observations. T3 can resend the same brief
+after a failed turn. Treat the same run and slot IDs as one delivery.
+A wake never clears a hold.
 
 ## Shadow, cutover and rollback
 
