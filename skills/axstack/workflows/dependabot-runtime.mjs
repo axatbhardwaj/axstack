@@ -74,7 +74,7 @@ const [origin, tokenPath, method, threadId] = Bun.argv.slice(1);
 console.log(JSON.stringify(await readWorkflowRpc(origin, tokenPath, method, threadId ? { threadId } : {})));
 `;
 
-async function runtimeRpc(binding, origin, method, threadId) {
+export async function runtimeRpc(binding, origin, method, threadId) {
   if (typeof origin !== 'string') return null;
   return json(await run(binding.bun, ['--no-env-file', '-e', rpcScript, origin,
     binding.registryTokenFile, method, ...(threadId ? [threadId] : [])]));
