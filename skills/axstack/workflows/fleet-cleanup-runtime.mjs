@@ -1,4 +1,5 @@
 import { lstat, readFile, realpath } from 'node:fs/promises';
+import { gitStatusFilterOverrides } from '../git-status-filters.js';
 import { gitArgv } from '../scripts/git-argv.js';
 import { bindingMatches } from './binding.mjs';
 import { json, run } from './dependabot-runtime.mjs';
@@ -87,18 +88,8 @@ async function checkoutFact(config, host, project, thread, worktrees, receipt) {
   if (keys === null || index === null || index.split('\0').some((entry) => entry.startsWith('160000 '))) {
     return 'worktree-status';
   }
-  // Git splits -c at the first '=', so build overrides only from validated driver names.
-  const drivers = new Set();
-  for (const key of keys.split('\0')) {
-    if (key.includes('=')) return 'worktree-status';
-    if (!key.startsWith('filter.')) continue;
-    const driver = /^filter\.([A-Za-z0-9_.-]+)\.(?:clean|process|smudge|required)$/.exec(key)?.[1];
-    if (!driver) return 'worktree-status';
-    drivers.add(driver);
-  }
-  const overrides = [...drivers].flatMap((driver) => [
-    '-c', `filter.${driver}.clean=`, '-c', `filter.${driver}.process=`, '-c', `filter.${driver}.required=false`,
-  ]);
+  const overrides = gitStatusFilterOverrides(keys);
+  if (!overrides) return 'worktree-status';
   const dirt = await git(config, host, dir, [...overrides, 'status', '--porcelain=v1', '-z', '--untracked-files=all', '--ignored']);
   if (dirt === null) return 'worktree-status';
   if (dirt !== '') return 'retain';
