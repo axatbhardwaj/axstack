@@ -14,7 +14,7 @@ export function reviewManager(runtime) {
   const value = (option) => Option.isSome(option) ? option.value : null;
   const managerReceipt = Schema.Struct({
     kind: Schema.Literal('AXSTACK-REVIEW-MANAGER'), runId: Schema.String,
-    sourceSha: Schema.String, threadId: Schema.String,
+    sourceSha: Schema.String, threadId: Schema.String, writes: Schema.Array(Schema.String),
   });
 
   return T3.workflow(workflowName, {
@@ -67,7 +67,7 @@ export function reviewManager(runtime) {
       return true;
     });
 
-    const reap = (yield* read('sandbox-reap', () => runtime.reap(config, scheduledAt))) ?? {};
+    const reap = (yield* read('read-reap-receipt', () => runtime.reap(config, scheduledAt))) ?? {};
     const discovery = yield* read('safe-6-discovery', () => runtime.discover(config));
     const watermarks = yield* step('read-reply-watermarks', { returns: Schema.Json }, Effect.gen(function* () {
       return value(yield* entry('reply-watermarks').get) ?? {};
@@ -84,10 +84,9 @@ export function reviewManager(runtime) {
     const expected = yield* read('resolve-manager-binding', async () => {
       const seat = await runtime.resolveSeat(config);
       if (!seat) throw new Hold('axstack-owner binding is unavailable in the live catalog');
-      return seat;
+      return { ...seat, runtimeMode: 'approval-required' };
     });
-    yield* read('verify-wake-claim', async () => {
-      // A run that resumes after a newer slot must not start its old agent.
+    yield* read('verify-binding-unchanged', async () => {
       if (!await runtime.sameBinding(config)) throw new Hold('Review manager binding changed during the slot');
       return true;
     });
@@ -95,6 +94,7 @@ export function reviewManager(runtime) {
       return value(yield* slot().get);
     }));
     yield* read('require-wake-claim', async () => {
+      // A run that resumes after a newer slot must not start its old agent.
       if (current?.runId !== runId) throw new Hold('Review manager wake claim was superseded');
       return true;
     });
