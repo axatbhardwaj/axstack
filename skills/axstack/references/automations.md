@@ -75,21 +75,20 @@ its pass worktree. Missed slots do not replay a backlog.
 `axstack-review-manager@1` declares a 30-minute T3 trigger for axat-vps.
 The native schedule keeps ownership while T3 0.1.12 project and descendant
 coverage is unknown. Every unknown tick records a wake in shadow mode.
-Report mode uses the [report prompt](review-manager-report.md) and an
-approval-required T3 seat. Receipt acceptance requires binding readback and
-an empty declared writes list. The native manager owns live reap and reviewer
-admission. The workflow reads a private quiet-facts receipt. A missing,
-stale or failed reap result wakes the manager. A live producer for
-`reapReceipt` is pending, so live reap stays unknown and wakes the manager.
+Report mode returns typed facts in the workflow run result. Workflow code
+summarizes quiet terms, coverage, imported continuity, holds and reap.
+Starting a manager agent belongs to active mode after cutover. Active mode
+remains blocked. The native manager owns live reap and reviewer admission.
+A missing, stale or failed reap receipt records a wake reason. A live
+producer for `reapReceipt` is pending, so live reap stays unknown.
 Cutover requires a producer for the reap receipt.
 
 Bind `mode`, `project`, `projectId`, `projects`, `repository`, `repositories`,
-`roles`, `registryTokenFile`, `bun`, `t3`, `skillsDirectory`, `progressCopy`
-and `reapReceipt` in the private workflow binding. Copy the predecessor's
+`bun`, `t3`, `skillsDirectory`, `progressCopy` and `reapReceipt` in the private workflow binding. Copy the predecessor's
 progress before its identity write. The workflow imports that exact continuity
 once under its slot claim. Agreement can drift as soon as the predecessor
 advances. The `full-pass-age` fact fails four hours after the imported full
-pass and wakes the manager. Use a fresh import for each live shadow
+pass and records a wake reason. Use a fresh import for each live shadow
 comparison. Idle flagged threads never block a slot. A bounded reply read
 proves presence and leaves absence unknown.
 
