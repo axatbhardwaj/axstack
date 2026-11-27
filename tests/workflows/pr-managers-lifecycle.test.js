@@ -240,8 +240,12 @@ test('the active cutover keeps continuity with the manager and wakes on uncertai
   checkRule(active, (prose) => requires(prose, ...ownership),
     'The manager owns `progress.md` and the workflow reads a pre-identity snapshot.',
     [[ownership[0], 'workflow owns'], [ownership[2], 'workflow overwrites']], ownership);
-  const quiet = [/skips the agent/i, /only (?:when|if)/i, /every quiet term passes/i];
+  const quiet = [/skips a wake/i, /only (?:when|if)/i, /every quiet term passes/i];
   checkRule(active, (prose) => requires(prose, ...quiet),
-    'Active skips the agent only if every quiet term passes.',
+    'Active skips a wake only if every quiet term passes.',
     [[quiet[2], 'any quiet term passes']], quiet);
+  const cap = [/retained-worktree cap/i, /still applies|remains in force/i, /manager-owned worktrees/i];
+  checkRule(active, (prose) => requires(prose, ...cap),
+    'The retained-worktree cap remains in force for manager-owned worktrees.',
+    [[cap[1], 'no longer applies']], cap);
 });
