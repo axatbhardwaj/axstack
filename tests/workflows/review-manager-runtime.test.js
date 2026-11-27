@@ -10,11 +10,11 @@ const login = quiet.input.login;
 const rows = quiet.input.searches.flat();
 const candidate = rows.find((row) => row.author.login !== login);
 const projectId = quiet.input.inventory.args.projectId;
+const marker = 'AXSTACK_REVIEW_TEST_SENTINEL';
 
 async function fixture(work, overrides = {}) {
   const scratch = await mkdtemp((process.env.TMPDIR ?? '/tmp') + '/axstack-review-runtime-');
   const originalPath = process.env.PATH;
-  const marker = 'AXSTACK_REVIEW_TEST_SENTINEL';
   const originalMarker = process.env[marker];
   try {
     const config = {
@@ -26,15 +26,6 @@ async function fixture(work, overrides = {}) {
       skillsDirectory: import.meta.dir.slice(0, -'/tests/workflows'.length) + '/skills/axstack',
       ...overrides.config,
     };
-    if (overrides.quietProbe) {
-      config.skillsDirectory = scratch + '/probe-skill';
-      await mkdir(config.skillsDirectory + '/scripts', { recursive: true, mode: 0o700 });
-      await writeFile(config.skillsDirectory + '/scripts/schedule-drift.js', `
-        const expected = ['PATH', 'HOME', 'TMPDIR'].every((key) => process.env[key]);
-        const status = expected && process.env.AXSTACK_REVIEW_TEST_SENTINEL === undefined ? 'pass' : 'fail';
-        console.log(JSON.stringify({ version: 2, terms: [{ id: 'environment', status }] }));
-      `, { mode: 0o600 });
-    }
     const binding = scratch + '/binding.json';
     const bytes = JSON.stringify(config);
     const markerCheck = '[ "$(printenv AXSTACK_REVIEW_TEST_SENTINEL || true)" = "" ] || exit 82';
@@ -131,11 +122,40 @@ test('sandbox receipt from the previous interval is usable and future/stale rece
   }
 });
 
-test('quiet helper gets its read context without inheriting the sentinel', () => fixture(async (runtime, config) => {
-  expect(await runtime.quietFacts(config, quiet.progress, quiet.input)).toEqual({
-    version: 2, terms: [{ id: 'environment', status: 'pass' }],
-  });
-}, { quietProbe: true }));
+test('quiet helper gets its read context without inheriting the sentinel', async () => {
+  const scratch = await mkdtemp((process.env.TMPDIR ?? '/tmp') + '/axstack-quiet-env-');
+  try {
+    const allowedEnv = { PATH: '/usr/bin:/bin', HOME: scratch + '/home', TMPDIR: scratch };
+    await mkdir(allowedEnv.HOME, { mode: 0o700 });
+    await mkdir(scratch + '/scripts', { mode: 0o700 });
+    await writeFile(scratch + '/scripts/schedule-drift.js', `
+      const expected = ${JSON.stringify(allowedEnv)};
+      const matches = Object.entries(expected).every(([key, value]) => process.env[key] === value);
+      const status = matches && process.env[${JSON.stringify(marker)}] === undefined ? 'pass' : 'fail';
+      console.log(JSON.stringify({ version: 2, terms: [{ id: 'environment', status }] }));
+    `, { mode: 0o600 });
+
+    // Give the real adapter a fixed parent environment so its allowlist is the only filter before the helper.
+    const runtimeFile = import.meta.resolve('../../skills/axstack/workflows/review-manager-runtime.mjs');
+    const drive = `
+      import { reviewRuntime } from ${JSON.stringify(runtimeFile)};
+      const { progress, input } = await Bun.stdin.json();
+      const root = process.env.TMPDIR;
+      const facts = await reviewRuntime(root).quietFacts({ bun: process.execPath, skillsDirectory: root }, progress, input);
+      console.log(JSON.stringify(facts));
+    `;
+    const result = Bun.spawnSync([process.execPath, '--no-env-file', '-e', drive], {
+      cwd: scratch, env: { ...allowedEnv, [marker]: 'synthetic-marker' },
+      stdin: Buffer.from(JSON.stringify(quiet)), stdout: 'pipe', stderr: 'pipe',
+    });
+    expect(result.exitCode, result.stderr.toString()).toBe(0);
+    expect(JSON.parse(result.stdout.toString())).toEqual({
+      version: 2, terms: [{ id: 'environment', status: 'pass' }],
+    });
+  } finally {
+    await rm(scratch, { recursive: true });
+  }
+});
 
 for (const [length, expected] of [[999, 'pass'], [1000, 'unknown']]) {
   test(`a ${length}-row search is ${expected} even when all REST pages agree`, () => fixture(async (runtime, config) => {
