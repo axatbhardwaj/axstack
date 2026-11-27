@@ -659,6 +659,10 @@ After Launch and Doctor, keep T3 on PATH if a disposable local server is
 available. The packed loader test writes only its temporary HOME and base.
 The following command checks private ownership, interrupted deployment
 recovery, version-pinned bundle bytes, guarded conformance, and the real loader.
+Release reinstall fixtures use skill files from Bun's package inventory and
+check that all five current installs pass without writes. The replays also
+check mismatched harness markers, timers, release versions, and the VPS Bun
+global.
 
 ```bash
 bun run test tests/installer/workflow-opt-in.test.js \
