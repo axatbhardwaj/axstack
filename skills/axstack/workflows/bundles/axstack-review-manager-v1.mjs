@@ -54,6 +54,21 @@ var quietTerms = [
   "lane-idle",
   "pending-work"
 ];
+function reapStatus(reap) {
+  if (!Number.isInteger(reap.exitCode) || typeof reap.dockerAvailable !== "boolean")
+    return "unknown";
+  return reap.exitCode === 0 && reap.dockerAvailable ? "pass" : "fail";
+}
+function projectQuietFacts(report) {
+  if (!Array.isArray(report?.terms))
+    return null;
+  const holds = report.terms.find((term) => term?.id === "pending-work")?.evidence?.holds;
+  return {
+    version: report.version,
+    terms: report.terms.map((term) => ({ id: term?.id ?? null, status: term?.status ?? null })),
+    ...Array.isArray(holds) && { holdCount: holds.filter((row) => row !== "- none").length }
+  };
+}
 function decide({ discovery, inventory, reap, facts }, scheduledAt) {
   const reasons = [];
   if (!inSlot(inventory.observedAt, scheduledAt))
@@ -62,9 +77,9 @@ function decide({ discovery, inventory, reap, facts }, scheduledAt) {
     reasons.push("project-coverage:unknown");
   if (discovery.status !== "pass")
     reasons.push("safe-6:unknown");
-  if (reap.exitCode !== 0 || reap.dockerAvailable !== true) {
-    reasons.push(Number.isInteger(reap.exitCode) && typeof reap.dockerAvailable === "boolean" ? "reap:fail" : "reap:unknown");
-  }
+  const reapFact = reapStatus(reap);
+  if (reapFact !== "pass")
+    reasons.push("reap:" + reapFact);
   if (inventory.flagged.some((row) => row.status === "reply"))
     reasons.push("flagged-reply");
   if (inventory.flagged.some((row) => row.status === "unknown"))
@@ -86,30 +101,37 @@ function decide({ discovery, inventory, reap, facts }, scheduledAt) {
   }
   return [...new Set(reasons)];
 }
-function brief(runId, state, prs, flagged) {
-  const lines = [
-    `AXSTACK-WAKE ${managerIdentity} run ${runId}`,
-    "",
-    "Follow the installed review-manager-report.md.",
-    `Continuity store key: ${managerIdentity}:continuity`,
-    `Import digest: ${state.sourceSha}`,
-    `Prior manager: ${state.prior}`,
-    `Flagged threads: ${flagged.map((row) => row.id).filter(reviewId).join(", ")}`,
-    `Observed PRs: ${[...new Set(prs.filter(prId))].sort().join(", ")}`
-  ];
-  return lines.join(`
-`);
-}
-function receiptMatches(result, runId, state) {
-  const receipt = result?.value;
-  return result?.outcome === "done" && receipt?.kind === "AXSTACK-REVIEW-MANAGER" && receipt.runId === runId && receipt.sourceSha === state.sourceSha && reviewId(receipt.threadId) && receipt.threadId === result.thread?.threadId && Array.isArray(receipt.writes) && receipt.writes.length === 0;
+function reportFacts(runId, scheduledAt, state, { discovery, inventory, reap, facts }) {
+  const terms = facts?.version === 2 && Array.isArray(facts.terms) ? facts.terms.filter((term) => quietTerms.includes(term.id)).map(({ id, status }) => ({ id, status: status === "pass" || status === "fail" ? status : "unknown" })) : [];
+  return {
+    runId,
+    scheduledAt,
+    observedAt: inventory.observedAt,
+    coverage: {
+      projects: inventory.coverage,
+      readableProjects: inventory.readableProjects ?? null,
+      discovery: discovery.status
+    },
+    continuity: { sourceSha: state.sourceSha, prior: state.prior, schedule: state.schedule },
+    holds: {
+      count: facts?.version === 2 ? facts.holdCount ?? null : null,
+      flagged: inventory.flagged.filter((row) => reviewId(row.id)).map((row) => ({ threadId: row.id, status: row.status }))
+    },
+    reap: {
+      status: reapStatus(reap),
+      exitCode: Number.isInteger(reap.exitCode) ? reap.exitCode : null,
+      dockerAvailable: typeof reap.dockerAvailable === "boolean" ? reap.dockerAvailable : null
+    },
+    terms,
+    prs: [...new Set(discovery.prs.filter(prId))].sort()
+  };
 }
 
 // review-manager-workflow.mjs
 class Hold extends Error {
 }
 function reviewManager(runtime) {
-  const { agent, every, step, store, runs } = T3;
+  const { every, step, store, runs } = T3;
   const entry = (key) => store.entry(managerIdentity + ":" + key, Schema.Json);
   const slot = () => entry("latest-slot");
   const read = (key, work) => step(key, { returns: Schema.Json }, Effect.tryPromise({
@@ -118,17 +140,33 @@ function reviewManager(runtime) {
   }));
   const transaction = (key, work) => step(key, { returns: Schema.Json }, store.transaction(Effect.gen(work)));
   const value = (option) => Option.isSome(option) ? option.value : null;
-  const managerReceipt = Schema.Struct({
-    kind: Schema.Literal("AXSTACK-REVIEW-MANAGER"),
-    runId: Schema.String,
-    sourceSha: Schema.String,
-    threadId: Schema.String,
-    writes: Schema.Array(Schema.String)
+  const factStatus = Schema.Literals(["pass", "fail", "unknown"]);
+  const returns = Schema.Struct({
+    decision: Schema.Literals(["quiet", "shadow-wake", "reported"]),
+    reasons: Schema.Array(Schema.String),
+    report: Schema.optional(Schema.Struct({
+      runId: Schema.String,
+      scheduledAt: Schema.String,
+      observedAt: Schema.String,
+      coverage: Schema.Struct({ projects: factStatus, readableProjects: Schema.NullOr(Schema.Number), discovery: factStatus }),
+      continuity: Schema.Struct({ sourceSha: Schema.String, prior: Schema.String, schedule: Schema.String }),
+      holds: Schema.Struct({
+        count: Schema.NullOr(Schema.Number),
+        flagged: Schema.Array(Schema.Struct({ threadId: Schema.String, status: Schema.Literals(["reply", "unknown"]) }))
+      }),
+      reap: Schema.Struct({
+        status: factStatus,
+        exitCode: Schema.NullOr(Schema.Number),
+        dockerAvailable: Schema.NullOr(Schema.Boolean)
+      }),
+      terms: Schema.Array(Schema.Struct({ id: Schema.String, status: factStatus })),
+      prs: Schema.Array(Schema.String)
+    }))
   });
   return T3.workflow(workflowName, {
     version,
     payload: T3.Tick,
-    returns: Schema.Json,
+    returns,
     triggers: [every("30 minutes")],
     resumeAfter: []
   }, ({ scheduledAt }, { id: runId }) => Effect.gen(function* () {
@@ -200,68 +238,21 @@ function reviewManager(runtime) {
       prior: inventory.prior,
       observedAt: inventory.observedAt
     }));
-    const reasons = decide({ discovery, inventory, reap, facts }, scheduledAt);
-    if (!reasons.length)
-      return { decision: "quiet", reasons };
+    const observation = { discovery, inventory, reap, facts };
+    const reasons = decide(observation, scheduledAt);
     if (config.mode === "shadow")
-      return { decision: "shadow-wake", reasons };
-    const expected = yield* read("resolve-manager-binding", async () => {
-      const seat = await runtime.resolveSeat(config);
-      if (!seat)
-        throw new Hold("axstack-owner binding is unavailable in the live catalog");
-      return { ...seat, runtimeMode: "approval-required" };
-    });
-    yield* read("verify-binding-unchanged", async () => {
-      if (!await runtime.sameBinding(config))
-        throw new Hold("Review manager binding changed during the slot");
-      return true;
-    });
-    const current = yield* step("read-wake-claim", { returns: Schema.Json }, Effect.gen(function* () {
-      return value(yield* slot().get);
-    }));
-    yield* read("require-wake-claim", async () => {
-      if (current?.runId !== runId)
-        throw new Hold("Review manager wake claim was superseded");
-      return true;
-    });
-    const result = yield* agent.try("manager", {
-      ...expected,
-      project: config.project,
-      title: "Review manager report",
-      brief: brief(runId, state, discovery.prs, inventory.flagged),
-      returns: managerReceipt
-    });
-    yield* read("verify-manager-receipt", async () => {
-      if (!receiptMatches(result, runId, state))
-        throw new Hold("manager receipt missing or invalid");
-      return true;
-    });
-    yield* read("verify-manager-binding", async () => {
-      if (!await runtime.verifySeat(config, expected, result.thread.threadId))
-        throw new Hold("effective manager binding mismatched");
-      return true;
-    });
-    const saved = yield* transaction("record-report", function* () {
-      if (value(yield* slot().get)?.runId !== runId || value(yield* entry("continuity").get)?.sourceSha !== state.sourceSha)
-        return false;
-      const report = { ...result.value, scheduledAt, reasons };
-      yield* entry("last-report").set(report);
-      const updates = inventory.flagged.filter((row) => reviewId(row.id) && row.watermark);
-      yield* entry("reply-watermarks").set({ ...watermarks, ...Object.fromEntries(updates.map((row) => [row.id, row.watermark])) });
-      return value(yield* entry("last-report").get)?.runId === runId;
-    });
-    yield* read("verify-report-write", async () => {
-      if (!saved)
-        throw new Hold("manager receipt was superseded or failed readback");
-      return true;
-    });
-    return { decision: "reported", reasons };
+      return { decision: reasons.length ? "shadow-wake" : "quiet", reasons };
+    return {
+      decision: reasons.length ? "reported" : "quiet",
+      reasons,
+      report: reportFacts(runId, scheduledAt, state, observation)
+    };
   }));
 }
 
 // review-manager-runtime.mjs
 import { execFile as execFile2 } from "node:child_process";
-import { lstat as lstat2, mkdtemp, readFile as readFile2, realpath as realpath2, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
 // binding.mjs
@@ -271,7 +262,6 @@ function bindingMatches(expected, actual) {
 
 // dependabot-runtime.mjs
 import { execFile } from "node:child_process";
-import { lstat, readFile, realpath } from "node:fs/promises";
 
 // ../scripts/t3-workflow-read.js
 var t3_workflow_read_default = `import { lstatSync } from 'node:fs';
@@ -356,92 +346,6 @@ var rpcScript = t3_workflow_read_default + `
 const [origin, tokenPath, method, threadId] = Bun.argv.slice(1);
 console.log(JSON.stringify(await readWorkflowRpc(origin, tokenPath, method, threadId ? { threadId } : {})));
 `;
-async function runtimeRpc(binding, origin, method, threadId) {
-  if (typeof origin !== "string")
-    return null;
-  return json(await run(binding.bun, [
-    "--no-env-file",
-    "-e",
-    rpcScript,
-    origin,
-    binding.registryTokenFile,
-    method,
-    ...threadId ? [threadId] : []
-  ]));
-}
-function roleSelection(snapshot, catalog) {
-  const roles = snapshot?.version === 1 && snapshot.roles?.filter((candidateRole) => candidateRole.id === "axstack-owner");
-  if (!roles || roles.length !== 1 || !Array.isArray(catalog))
-    return null;
-  const [role] = roles;
-  const codex = role.provider === "codex" && role.modeId === "full-access";
-  const claude = role.provider === "claude" && role.modeId === "bypassPermissions";
-  if (!codex && !claude)
-    return null;
-  const instanceId = codex ? "codex" : "claudeAgent";
-  const instances = catalog.filter((entry) => entry.instanceId === instanceId && entry.driver === instanceId);
-  const [instance] = instances;
-  if (instances.length !== 1 || !instance.enabled || !instance.installed || ["error", "disabled"].includes(instance.status) || instance.availability === "unavailable" || instance.supportsTextGeneration === false || instance.supportedRuntimeModes && !instance.supportedRuntimeModes.includes("full-access"))
-    return null;
-  const safeClass = typeof role.modelClass === "string" && /^[a-z]+$/.test(role.modelClass);
-  const family = !safeClass ? null : codex ? new RegExp(`^gpt-([0-9]+(?:\\.[0-9]+)*)-${role.modelClass}$`) : new RegExp(`^claude-${role.modelClass}-([0-9]+-[0-9]+)$`);
-  const models = instance.models.filter((candidateModel) => candidateModel.supportsTextGeneration !== false && (role.model ? candidateModel.slug === role.model : family?.test(candidateModel.slug)));
-  const [model] = models.sort((a, b) => b.slug.localeCompare(a.slug, "en", { numeric: true }));
-  const id = codex ? "reasoningEffort" : "effort";
-  const descriptor = model?.capabilities?.optionDescriptors?.find((item) => item.id === id);
-  if (!descriptor?.options?.some((option) => option.id === role.thinkingOptionId))
-    return null;
-  return {
-    model: { instanceId, model: model.slug, options: [{ id, value: role.thinkingOptionId }] },
-    runtimeMode: "full-access"
-  };
-}
-async function ownerBinding(base, binding) {
-  try {
-    const [roles, state] = await Promise.all([
-      readFile(binding.roles, "utf8"),
-      readFile(base + "/userdata/server-runtime.json", "utf8")
-    ]);
-    const { origin, pid, startedAt } = json(state);
-    const apiConfig = await runtimeRpc(binding, origin, "server.getConfig");
-    const after = json(await readFile(base + "/userdata/server-runtime.json", "utf8"));
-    if (after?.pid !== pid || after?.startedAt !== startedAt || after?.origin !== origin)
-      return null;
-    return roleSelection(json(roles), apiConfig?.providers);
-  } catch {
-    return null;
-  }
-}
-async function driverReadback(base, binding, expected, worktree, threadId, { exclusive = false } = {}) {
-  if (typeof threadId !== "string" || !/^[A-Za-z0-9:_-]{1,160}$/.test(threadId))
-    return null;
-  const loadRuntime = async () => json(await readFile(base + "/userdata/server-runtime.json", "utf8").catch(() => null));
-  const state = await loadRuntime();
-  if (!state?.origin || !state.pid || !state.startedAt)
-    return null;
-  const [view, projection] = await Promise.all([
-    run(binding.t3, ["thread", "show", "--base-dir", base, threadId, "--messages", "12", "--json"]),
-    runtimeRpc(binding, state.origin, "orchestration.getThreadProjection", threadId)
-  ]);
-  const observed = json(view);
-  const thread = observed?.thread;
-  const observedRuntime = await loadRuntime();
-  if (observedRuntime?.pid !== state.pid || observedRuntime.startedAt !== state.startedAt || observedRuntime.origin !== state.origin || projection?.thread?.id !== threadId || projection.thread.runtimeMode !== expected.runtimeMode)
-    return null;
-  const model = projection.thread.modelSelection;
-  const desired = expected.model;
-  if (thread?.threadId !== threadId || thread.status !== "completed" || thread.archived !== false || thread.pinned !== false || thread.createdBy !== "system" || thread.creationSource !== "server" || thread.worktreePath !== worktree || thread.providerInstanceId !== desired.instanceId || thread.model !== desired.model || thread.runtimeMode !== expected.runtimeMode || model?.instanceId !== desired.instanceId || model.model !== desired.model || !Array.isArray(model.options) || model.options.length !== desired.options.length || !desired.options.every((option) => model.options.some((item) => item.id === option.id && item.value === option.value)))
-    return null;
-  if (exclusive) {
-    const threads = json(await run(binding.t3, ["thread", "list", "--base-dir", base, "--project", binding.project, "--json"]));
-    if (!Array.isArray(threads))
-      return null;
-    const attached = threads.filter((item) => item?.worktreePath === worktree);
-    if (attached.length !== 1 || attached[0].threadId !== threadId)
-      return null;
-  }
-  return observed;
-}
 
 // dependabot-pages.mjs
 async function githubPages(request, route, query, key, identity) {
@@ -502,10 +406,10 @@ var loginName = (value) => typeof value === "string" && /^[A-Za-z0-9_\[\]-]{1,80
 var number = (value) => Number.isSafeInteger(value) && value > 0;
 var unique = (values, check) => Array.isArray(values) && values.length > 0 && values.length <= 100 && values.every(check) && new Set(values.map((value) => value.toLowerCase())).size === values.length;
 async function privateRead(file) {
-  const info = await lstat2(file).catch(() => null);
-  if (!info?.isFile() || info.uid !== process.getuid() || info.mode & 63 || info.size > 2 * 1024 * 1024 || await realpath2(file) !== file)
+  const info = await lstat(file).catch(() => null);
+  if (!info?.isFile() || info.uid !== process.getuid() || info.mode & 63 || info.size > 2 * 1024 * 1024 || await realpath(file) !== file)
     return null;
-  return readFile2(file, "utf8");
+  return readFile(file, "utf8");
 }
 async function readPrivateBinding(base) {
   try {
@@ -516,7 +420,7 @@ async function readPrivateBinding(base) {
     if (bytes === null || !bindingMatches(record.bindingDigest, hash(bytes)))
       return null;
     const config = json(bytes);
-    if (!config || !["shadow", "report"].includes(config.mode) || !reviewId(config.projectId) || !["project", "bun", "t3", "roles", "registryTokenFile", "skillsDirectory", "progressCopy"].every((key) => path(config[key])) || !path(config.reapReceipt) || !unique(config.projects, path) || !config.projects.includes(config.project) || !unique(config.repositories, repository) || !config.repositories.includes(config.repository) || config.progressCopy === config.reapReceipt)
+    if (!config || !["shadow", "report"].includes(config.mode) || !reviewId(config.projectId) || !["project", "bun", "t3", "skillsDirectory", "progressCopy"].every((key) => path(config[key])) || !path(config.reapReceipt) || !unique(config.projects, path) || !config.projects.includes(config.project) || !unique(config.repositories, repository) || !config.repositories.includes(config.repository) || config.progressCopy === config.reapReceipt)
       return null;
     return config;
   } catch {
@@ -668,26 +572,19 @@ async function quietFacts(config, progress, input) {
       writeFile(dir + "/input.json", JSON.stringify(input), { mode: 384 }),
       writeFile(dir + "/progress.md", progress, { mode: 384 })
     ]);
-    const report = await executeQuiet(config, dir + "/input.json", dir + "/progress.md", input.observedAt);
-    if (!Array.isArray(report?.terms))
-      return null;
-    return { version: report.version, terms: report.terms.map((term) => ({ id: term?.id ?? null, status: term?.status ?? null })) };
+    return projectQuietFacts(await executeQuiet(config, dir + "/input.json", dir + "/progress.md", input.observedAt));
   } finally {
     await rm(dir, { recursive: true });
   }
 }
 function reviewRuntime(base) {
-  const sameBinding = async (config) => JSON.stringify(await readPrivateBinding(base)) === JSON.stringify(config);
   return {
     binding: () => readPrivateBinding(base),
-    sameBinding,
     importProgress: (config) => privateRead(config.progressCopy),
     reap: readReapReceipt,
     discover: discoverReviewPRs,
     inventory: (config, state, watermarks) => threads(base, config, state, watermarks),
-    quietFacts,
-    resolveSeat: (config) => ownerBinding(base, config),
-    verifySeat: async (config, expected, threadId) => await sameBinding(config) && JSON.stringify((await ownerBinding(base, config))?.model) === JSON.stringify(expected.model) && (await driverReadback(base, config, expected, null, threadId))?.thread?.projectId === config.projectId
+    quietFacts
   };
 }
 
