@@ -237,13 +237,15 @@ For parking:
 
 1. Call `unwatch_pull_request` for each watched member.
 2. Post or update the text card saying "answer the prompt".
-3. Call `update_scheduled_task` `enabled:false` and read it back.
+3. Park the [owner backstop workflow](../../axstack-watch/references/workflow-backstops.md#driver-control)
+   and verify the run state. On native fallback, call `update_scheduled_task`
+   `enabled:false` and read it back.
 4. Cancel queued copies of the run-watch prompt.
 5. Use the harness question tool.
 
 Include the PR URL, cause, head and base in the question, with the recommended
 option first and numbered replies.
-If disable or its read-back fails, reconcile the exact schedule ID.
+On native fallback, if disable or its read-back fails, reconcile the exact schedule ID.
 For either failed-disable branch, update the existing text card by posting a
 corrected version under the same hold key without a new alert.
 When verified enabled, roll back to the unparked user-decision state, re-arm
@@ -261,7 +263,8 @@ On an answer from the question tool or chat:
 
 1. Reconcile current PR and run state.
 2. Bind the answer to the hold key, head and base.
-3. Re-enable the schedule.
+3. Re-arm the workflow for authorized work that resumes. On native fallback,
+   re-enable the schedule.
 4. Re-arm watches using the [native-watch recovery procedure](t3-runtime.md#native-pr-links-and-watches).
 5. Continue.
 
