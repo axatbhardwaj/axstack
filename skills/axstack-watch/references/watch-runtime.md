@@ -33,9 +33,10 @@ merge-ready. An own PR published after the watch stops arms a new watch under
 after verified readback, subject to the user's explicit publication boundary.
 
 The initiating T3 thread remains the sole driver and `progress.md` writer.
-Use the [owner backstop workflow](workflow-backstops.md) on a locally opted-in
-host after verified cutover. Apply the same cadence and stop conditions below
-through the workflow control record.
+On a host with a local MIG-5 opt-in, start the
+[owner backstop workflow](workflow-backstops.md) by default. Apply the cadence
+and stop conditions below through the workflow control record. Use the native
+fallback for the cases in the workflow reference.
 
 For native fallback, initially use the bound run watch from [T3 runtime](../../axstack/references/t3-runtime.md):
 `schedule_task` with `bindToCurrentThread:true`, `everyMs:3600000`, a stable
@@ -47,7 +48,7 @@ The chat-run watch never expires or waits for re-authorization while PRs remain 
 If the native schedule has a lifetime, the driver re-arms it at a wake.
 Use `update_scheduled_task` on the recorded schedule ID for cadence changes and re-arming.
 For parked holds, follow [Parked user-reply holds](../../axstack/references/contracts.md#parked-user-reply-holds).
-While parked, keep the bound run watch disabled until the answer.
+On native fallback, while parked, keep the bound run watch disabled until the answer.
 A parking unwatch never triggers native re-arm or the 5-minute recovery cadence.
 For forge-resolved human waits, including user merge and human review,
 with no unsettled worker and no PR needing watch events, set the run watch cadence to 60 minutes
@@ -56,7 +57,7 @@ When work restarts, re-evaluate cadence against the recovery conditions below.
 Keep native PR watches for forge-resolved waits.
 Never status-check running delegate_task children on scheduled wakes.
 Delegate existence alone arms no schedule: native completion delivers receipts.
-The Driver-owned 5-minute lifecycle schedule (`everyMs:300000`) covers a
+On native fallback, the Driver-owned 5-minute lifecycle schedule (`everyMs:300000`) covers a
 launched-fallback Writer without native completion. Keep the Driver's 60-minute
 own-PR/release backstop and own-PR watch-unavailable/rate-limited 5-minute
 fallback; recovery never polls launched Writers. Only named external-dependency
@@ -75,17 +76,19 @@ keeps the 5-minute cadence (`everyMs:300000`) while any launched writer exists.
 Delegated-child questions retain native completion paths, and an existing own-PR/release
 watch uses the 60-minute backstop when other recovery conditions are clear.
 An open PR left unwatched by a user Stop never triggers the 5-minute recovery cadence.
-If native `watch_pull_request` is unavailable or unarmed for any open member,
-or re-arming fails, restore the bound chat-run schedule to 5 minutes (`everyMs:300000`).
+On native fallback, if native `watch_pull_request` is unavailable or unarmed for
+any open member, or re-arming fails, restore the bound chat-run schedule to
+5 minutes (`everyMs:300000`). Apply the same recovery condition to the
+workflow's 5-minute `recovery` deadline.
 Otherwise, use the 60-minute backstop.
 On the next event on a watched PR, re-evaluate the wake cadence against the
 fallback conditions in the same turn.
 Apply these conditions before ending each driver turn, including after initial
 arming or a work restart; the parking and forge-resolved wait rules above still apply.
-Read back each schedule update and record its receipt; an uncertain update holds affected work.
+Read back each timer update and record its receipt. An uncertain update holds affected work.
 Each wake reconciles unsettled launched-fallback Writer runs before running the authorized maintenance loop.
 A failed run holds incomplete work even when its writer sent no receipt.
-A missing schedule capability holds activation. Delegated roles follow T3 runtime.
+On native fallback, a missing schedule capability holds activation. Delegated roles follow T3 runtime.
 T3 supplies chat-run watch wakes through native events and schedules on the fallback path.
 Drivers never poll delegated tasks between wakes.
 
