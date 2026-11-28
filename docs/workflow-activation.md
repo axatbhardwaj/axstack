@@ -69,7 +69,7 @@ axstack workflow observe --base-dir "$HOME/.t3" --conformance /absolute/private/
 ```
 
 Expect `axstack-pr-triage@1 registered` and the native daily trigger in the
-observation. Opt-in does not start a triage run. Configure the watchdog from
+observation. Opt-in does not start a triage run. Configure sweep health from
 the observed trigger described in [workflow health](workflow-health.md#trigger-bindings).
 Keep the first three eligible nights as a report-only trial. For each, record
 the workflow run ID, coverage, effective binding and report thread or hold.
@@ -285,7 +285,7 @@ axstack workflow opt-in --name axstack-release-reinstall --binding /absolute/pri
 ```
 
 Read back `axstack-release-reinstall@2` in the native registry. Use the
-on-demand watchdog policy and keep the binding and script bytes stable.
+on-demand health policy and keep the binding and script bytes stable.
 The release driver starts and observes each authorized
 [reinstall](host-operations.md#release-reinstall). Use the documented version
 removal procedure after outstanding runs drain.
