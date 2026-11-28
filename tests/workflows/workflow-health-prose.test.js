@@ -5,6 +5,7 @@ import { checkRule, prohibits, requires, sentences } from './prose-contract.js';
 const read = (path) => Bun.file(new URL(`../../skills/${path}`, import.meta.url));
 const watchdogPath = read('axstack/workflows/watchdog-prompt.md');
 const voa = readFileSync(new URL('../../skills/voa/SKILL.md', import.meta.url), 'utf8');
+const docs = readFileSync(new URL('../../docs/workflow-health.md', import.meta.url), 'utf8');
 
 test('the watchdog is read-only and never grants authority or clears holds', async () => {
   const prompt = await watchdogPath.exists() ? await watchdogPath.text() : '';
@@ -44,7 +45,7 @@ test('the watchdog permits only the packaged probe start under recorded binding 
   expect(rejectsBroadGrant(`${prompt} The watchdog may start workflows.`)).toBe(false);
 });
 
-test('the sweep reports workflow health per host and reads the latest watchdog report', () => {
+test('the sweep reports workflow health per host', () => {
   const health = [
     /\b(?:report|list|surface)\b/i, /\b(?:per host|for each host)\b/i,
     /\bpaus\w*/i, /\b(?:stale|wedged)\b/i, /\bworkflow\w*\b/i,
@@ -53,21 +54,45 @@ test('the sweep reports workflow health per host and reads the latest watchdog r
   checkRule(voa, (text) => requires(text, ...health),
     'For each host, surface paused or wedged workflow runs and definition registration failures.',
     [[health[0], 'Skip']], health);
-  const latest = [/\b(?:read|inspect)\b/i, /\b(?:latest|most recent)\b/i, /\bwatchdog\b/i, /\b(?:report|findings)\b/i];
-  checkRule(voa, (text) => requires(text, ...latest),
-    'Inspect the most recent watchdog findings.', [[latest[0], 'Skip']], latest);
 });
 
-test('the watchdog keeps its cadence, own-thread report and unknown host coverage', async () => {
+test('the existing sweep collects and evaluates workflow health on every pass', () => {
+  const cadence = [/\b(?:every|each)\b/i, /\b(?:sweep|pass)\b/i];
+  const collect = [
+    ...cadence, /\b(?:run|invoke|execute)\b/i, /axstack workflow observe\b/,
+    /\bprivate watchdog binding\b/i, /\bopted[- ]in hosts?\b/i,
+  ];
+  const evaluate = [...cadence, /\b(?:pass|feed|pipe)\b/i, /axstack workflow health --input -/];
+  for (const text of [voa, docs]) {
+    checkRule(text, (value) => requires(value, ...collect),
+      'On each sweep, execute axstack workflow observe for every opted-in host with the private watchdog binding.',
+      [[collect[2], 'Skip'], [cadence[0], 'occasional']], collect);
+    checkRule(text, (value) => requires(value, ...evaluate),
+      'On each pass, feed the collected JSON to axstack workflow health --input -.',
+      [[evaluate[2], 'Skip'], [cadence[0], 'occasional']], evaluate);
+  }
+});
+
+test('the watchdog check runs in VOA with no separate watchdog schedule', async () => {
   const prompt = await watchdogPath.text();
-  const cadence = [/\b(?:every|each|once per)\b/i, /\b(?:30[- ]minutes?|half[- ]hour)\b/i];
-  checkRule(prompt, (text) => requires(text, ...cadence), 'Observe the fleet every half hour.',
-    [[cadence[1], 'five minutes']], cadence);
+  const cadence = [/\b(?:every|each)\b/i, /\bVOA\b/i, /\b(?:status )?sweep\b/i, /\b(?:run|perform|conduct)\b/i];
+  checkRule(prompt, (text) => requires(text, ...cadence), 'Perform the check on every VOA sweep.',
+    [[cadence[0], 'occasional']], cadence);
+  const retired = /\b(?:there is no|without|do not keep|do not create)\b/i;
+  const separate = [/\b(?:separate|standalone)\b/i, /\bwatchdog schedule\b/i];
+  for (const text of [prompt, docs]) {
+    checkRule(text, (value) => prohibits(value, retired, ...separate),
+      'The sweep runs without a standalone watchdog schedule.', [[retired, 'keeps']], separate);
+  }
+});
+
+test('the watchdog keeps its per-host report in the sweep thread and preserves unknown coverage', async () => {
+  const prompt = await watchdogPath.text();
   const ownThread = [
     /\b(?:report|list|publish)\b/i, /\b(?:per host|for each host)\b/i,
-    /\bin (?:this|its own|the bound) (?:watchdog )?thread\b/i,
+    /\bin (?:the|this) (?:VOA |status )?sweep thread\b/i,
   ];
-  checkRule(prompt, (text) => requires(text, ...ownThread), 'List findings for each host in its own watchdog thread.',
+  checkRule(prompt, (text) => requires(text, ...ownThread), 'List findings for each host in the VOA sweep thread.',
     [[ownThread[2], 'in another thread']], ownThread);
   const coverage = [/\b(?:keep|mark|show)\b/i, /\b(?:unreachable|uncontactable)\b/i, /\b(?:unknown|unverified)\b/i];
   checkRule(prompt, (text) => requires(text, ...coverage), 'Mark uncontactable hosts unverified.',

@@ -398,9 +398,9 @@ the failed attempt's branch is kept until salvage. Unknown liveness holds
 replacement; reconcile the old writer before admitting another.
 
 The bound lifecycle rule below applies only to owned launched-fallback Writers
-awaiting completion. After verified cutover, the driver's active
+awaiting completion. With a local MIG-5 opt-in, the driver starts the
 [owner backstop workflow](../../axstack-watch/references/workflow-backstops.md)
-covers this rule at the 5-minute writer cadence. On native fallback,
+by default at the 5-minute writer cadence. On native fallback,
 with an unsettled launched thread, the driver turn must end only while a bound
 `schedule_task` with `bindToCurrentThread:true` is armed at the 5-minute lifecycle
 cadence `everyMs:300000` under
@@ -468,8 +468,9 @@ same turn when GraphQL quota permits, using the recovery steps below.
 Record the stop reason T3 gives.
 Re-arm only after a stop not caused by the user.
 For a "could not read" stop, run `gh api rate_limit --jq .resources.graphql` as a diagnostic only.
-When GraphQL remaining is near 0, defer re-arming until reset: set the bound
-schedule to 5 minutes and re-arm on the next wake after reset.
+When GraphQL remaining is near 0, defer re-arming until reset and set the
+workflow recovery timer or fallback bound schedule to 5 minutes, then re-arm
+on the next wake after reset.
 Record the GraphQL reset time in the run record.
 Never wait for a GraphQL reset inside a turn.
 Before re-arming, first unsettle the driver thread with `t3_thread_organize`
@@ -491,8 +492,8 @@ for the 60-minute backstop, 5-minute recovery, and schedule update read-back.
 An open PR left unwatched by a user Stop never triggers the 5-minute recovery cadence.
 After T3 auto-settles a multi-PR driver on one PR merge, it re-arms remaining
 open members through the recovery steps before ending the turn.
-If rate-limited, use the 5-minute schedule and next-wake recovery above.
-The schedule reconciles delivered receipts, readiness and release, plus launched-fallback Writer runs.
+If rate-limited, use the 5-minute recovery cadence and next-wake recovery above.
+The timer wake reconciles delivered receipts, readiness and release, plus launched-fallback Writer runs.
 When a PR merges or closes, or its watch is torn down, call `unwatch_pull_request`
 and keep its link.
 

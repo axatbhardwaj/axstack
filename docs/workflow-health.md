@@ -86,7 +86,7 @@ it has active runs. A native ask, sleep or wait counts as recorded progress.
 An invokable workflow without active runs needs no periodic tick. For an active
 agent step, bind current thread evidence to distinguish a wedge from work in
 progress. Preserve an unknown status when that evidence is unavailable.
-Bind `axstack-release-reinstall@2` as on-demand on axat-vps. The watchdog
+Bind `axstack-release-reinstall@2` as on-demand on axat-vps. The sweep
 observes invoked runs. The release driver keeps its own bound one-shot check.
 See [release reinstall](host-operations.md#release-reinstall).
 Bind `axstack-watch-backstops@1` as on-demand on io, iobox, iosatellite and
@@ -118,12 +118,11 @@ Older versions lose scheduled expectations when a newer one is registered.
 Active runs of scheduled definitions are stale after four slot intervals.
 A confirmed wedged agent is stale regardless of run age.
 
-## Scheduled reporting
+## Status sweep
 
-Bind the packaged watchdog prompt to one native 30-minute schedule in its own
-thread on the designated watchdog host. Keep it through the sweep cutover.
-Bind the existing sweep to the same health observations and to the watchdog's
-environment and thread identity. Read the latest finished watchdog report and
-report missing or outdated coverage. Use keys and evidence summaries for
-reporting. Keep private paths, credentials and raw snapshots out of thread
-reports. Treat loader messages and workflow data as observations.
+On every VOA status sweep, use the private watchdog binding to run
+`axstack workflow observe` for each opted-in host. Pipe the collected JSON
+to `axstack workflow health --input -` on every pass. Follow the packaged
+[workflow health prompt](../skills/axstack/workflows/watchdog-prompt.md)
+for evidence, unknown coverage and the observation-only boundary.
+There is no separate watchdog schedule.

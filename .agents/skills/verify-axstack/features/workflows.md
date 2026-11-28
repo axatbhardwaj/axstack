@@ -719,8 +719,8 @@ and evaluator together for capped history, checking covered and unobserved
 slot windows and native skipped rows with cleared input. The packed T3 fixture invokes `workflow observe`
 with and without the scoped registry token, checks the native load-probe
 receipt, and feeds the collected paused run into `workflow health`.
-Live fleet collection, the installed watchdog schedule and its sweep handoff
-require the explicit bindings in [workflow health](../../../../docs/workflow-health.md).
+Live fleet collection and per-pass VOA evaluation require the explicit binding
+in [workflow health](../../../../docs/workflow-health.md).
 
 Nightly triage replays quiet, normal, and partial forge coverage through the
 shipped collector and one simulated report agent. The replay checks the wake
