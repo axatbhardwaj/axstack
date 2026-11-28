@@ -6,6 +6,7 @@ const read = (path) => readFileSync(new URL('../../skills/' + path, import.meta.
 const owner = read('axstack-watch/references/workflow-backstops.md');
 const watch = read('axstack-watch/references/watch-runtime.md');
 const runtime = read('axstack/references/t3-runtime.md');
+const autopilot = read('axstack/references/autopilot.md');
 
 function rule(name, text, concepts, rewording, ...inversions) {
   test(`owner backstop instructions: ${name}`, () => {
@@ -36,10 +37,26 @@ test('owner backstop instructions: wakes cannot clear holds', () => {
     [[prohibition, 'clears']], concepts);
 });
 
-rule('the workflow takes over the writer cadence after verified cutover', runtime,
-  [/(?:after|following) verified cutover/i, /owner backstop workflow/i, /5[- ]minute/i, /\bwriter\b/i],
-  'Following verified cutover, the owner backstop workflow supplies the 5-minute cadence for a launched writer.',
-  [/after|following/i, 'before'], [/5[- ]minute/i, '60-minute']);
+const localOptIn = /local (?:MIG-5 )?opt[- ]in|locally opted[- ]in/i;
+const defaultTimer = /by default|as the (?:standard|default) (?:timer|backstop)/i;
+const start = /(?:start|run|use)s? (?:the )?(?:axstack-watch-backstops@1|owner backstop workflow)/i;
+for (const [entry, text] of Object.entries({ owner, watch, runtime, autopilot })) {
+  rule(`${entry} defaults to the workflow on locally opted-in hosts`, text,
+    [localOptIn, defaultTimer, start],
+    'On locally opted-in hosts, run the owner backstop workflow as the standard timer.',
+    [start, 'start native timers'], [localOptIn, 'absent opt-in'], [defaultTimer, 'as a last resort']);
+}
+
+const useNative = /(?:use|retain|restore|return to|re-enable) (?:the )?native timers?/i;
+rule('iobook and hosts without opt-in use native timers', owner,
+  [useNative, /iobook/i, /without (?:a )?(?:local )?opt[- ]in|lacking (?:a )?(?:local )?opt[- ]in/i],
+  'For iobook and hosts lacking a local opt-in, retain native timers.',
+  [useNative, 'start the workflow'], [/without|lacking/i, 'with']);
+
+rule('rollback and workflow recovery failure use native timers', owner,
+  [useNative, /roll[- ]?back/i, /workflow recovery fails|failed workflow recovery/i],
+  'After failed workflow recovery or during rollback, return to native timers.',
+  [useNative, 'leave native timers disabled'], [/workflow recovery fails|failed workflow recovery/i, 'successful workflow recovery']);
 
 rule('the driver routes workflow timers through the schedule digest path', watch,
   [/treat|classify|handle/i, /workflow timer wakes?/i, /schedule wakes?/i, /\bdigest\b/i],
