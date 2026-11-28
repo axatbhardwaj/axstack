@@ -1,10 +1,13 @@
 # Owner watch backstops
 
-On io, iobox, iosatellite and axat-vps, the owning driver can use
-`axstack-watch-backstops@1` after local opt-in and verified cutover. iobook
-uses the [native fallback](watch-runtime.md#chat-run-watch). Keep native
-`watch_pull_request` for PR events. The workflow supplies timer wakes to the
-same driver thread. It runs on demand and has no host-wide trigger.
+With a local MIG-5 opt-in, the owning driver starts `axstack-watch-backstops@1`
+by default for the 60-minute watch, 5-minute lifecycle and hourly autopilot
+backstops. The opted-in hosts are io, iobox, iosatellite and axat-vps. Use
+native timers on iobook and on hosts without a local opt-in.
+Restore native timers during rollback or when workflow recovery fails.
+See [native fallback](watch-runtime.md#chat-run-watch). Keep native
+`watch_pull_request` for PR events. The workflow runs on demand and delivers
+timer wakes to the same driver thread. It has no host-wide trigger.
 
 ## Driver control
 
@@ -15,7 +18,7 @@ for an existing local `orchestration:read` bearer, and an absolute
 accept ASCII letters, digits, slash, period, underscore, colon and hyphen.
 Register with `axstack workflow opt-in --name axstack-watch-backstops --binding "$BINDING" --conformance "$RECEIPT" --yes`.
 Read back the exact version and passing host-local POCs 2, 3, 6 and 7.
-Bind the watchdog policy as on-demand with `progressTimeoutMs: 14400000`.
+Bind the sweep health policy as on-demand with `progressTimeoutMs: 14400000`.
 
 The owning driver creates `<ownersDirectory>/<ownerId>.json` and replaces
 it atomically on each relevant transition. Read back its exact bytes.
